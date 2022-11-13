@@ -1,5 +1,5 @@
 
-use wasmer::{imports, Instance, Module, Store, TypedFunction, Value, EngineBuilder, Function, FunctionEnv, FunctionEnvMut, Memory, WasmPtr};
+use wasmer::{imports, Instance, Module, Store, TypedFunction, Value, EngineBuilder, Function, FunctionEnv, FunctionEnvMut, Memory, WasmPtr, MemoryType, ValueType};
 use wasmer_compiler_cranelift::Cranelift;
 
 use std::sync::Arc;
@@ -33,13 +33,45 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     fn foo(_env: FunctionEnvMut<MyEnv>) {
         println!("Foo called");
     }
-
-
     let foo_typed = Function::new_typed_with_env(&mut store, &env, foo);
+
+
+
+    // https://github.com/wasmerio/wasmer/issues/3274
+    let my_memory = Memory::new(&mut store, MemoryType::new(1, None, false)).unwrap();
+    let env_with_mem = FunctionEnv::new(&mut store, EnvWithMemory {memory: my_memory});
+    struct EnvWithMemory {
+        memory: Memory,
+    };
+    fn print_string(_env: FunctionEnvMut<EnvWithMemory>, pos: u32, len: u32) {
+    }
+    let print_string_typed = Function::new_typed_with_env(&mut store, &env_with_mem, print_string);
+
+
+
+
+    //    pub fn log_record(p: * const u8 , len: u64);
+    
+    fn log_record(env: FunctionEnvMut<EnvWithMemory>, ptr: WasmPtr<[u8; 8]>, len: u32){
+        println!("Pointer: {ptr:?}, len: {len}");
+        let mem = env.data().memory.view(&env);
+        let outbuf: WasmPtr<u8> = unsafe{ std::mem::transmute(ptr) };
+        println!("outbuf: {outbuf:?}");
+        let mut v = [0u8; 8];
+        let s = outbuf.slice(&mem, 8).unwrap();
+        s.write_slice(&mut v[..]);
+        println!("outbuf: {s:?}");
+        println!("v: {v:?}");    
+    }
+    let log_record_typed = Function::new_typed_with_env(&mut store, &env_with_mem, log_record);
+
 
     let import_object = imports! {
         "env" => {
             "foo" => foo_typed,
+            "print_string" => print_string_typed,
+            "log_record" => log_record_typed,
+            // "get_memory_typed" => get_memory_typed,
         }
     };
 
@@ -121,6 +153,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let call_handler = instance.exports.get_function("call_handler")?;
         let call_handler_typed: TypedFunction<(), ()> = call_handler.typed(&mut store)?;
         let _res = call_handler_typed.call(&mut store)?;
+    }
+
+    // Try the logger
+    {
+        let log_setup = instance.exports.get_function("log_setup")?;
+        let log_setup_typed: TypedFunction<(), ()> = log_setup.typed(&mut store)?;
+        let _res = log_setup_typed.call(&mut store)?;
+        let log_test = instance.exports.get_function("log_test")?;
+        let log_test_typed: TypedFunction<(), ()> = log_test.typed(&mut store)?;
+        let _res = log_test_typed.call(&mut store)?;
     }
 
     Ok(())

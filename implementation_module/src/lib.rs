@@ -83,7 +83,6 @@ impl Handler for MyHandler {
 #[no_mangle]
 pub extern "C" 
 fn setup_handler(){
-    info!("Setup handler");
     register_handler(Box::new(MyHandler{}));
 }
 
@@ -96,9 +95,10 @@ fn call_handler() {
 
 // Log setup.
 extern "C" {
-    // Ehh, how to emit a large chunk? :| 
-    pub fn log_record();
+    // Ehh, how to emit a large chunk? :|
+    pub fn log_record(p: * const [u8; 8] , len: u32);
 }
+
 use log::{Record, Level, Metadata, LevelFilter};
 static MY_LOGGER: MyLogger = MyLogger;
 struct MyLogger;
@@ -110,6 +110,11 @@ impl log::Log for MyLogger {
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
+            // let foo = "mystring";
+            let foo = [1, 2, 3, 4, 5, 6, 7, 8u8];
+            unsafe {
+                log_record(&foo as *const [u8; 8], foo.len() as u32);
+            }
             println!("{} - {}", record.level(), record.args());
         }
     }
@@ -123,3 +128,8 @@ fn log_setup() {
     log::set_max_level(LevelFilter::Info);
 }
 
+#[no_mangle]
+pub extern "C" 
+fn log_test(){
+    info!("test info log {}", 3);
+}
