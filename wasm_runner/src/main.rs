@@ -1,5 +1,7 @@
-
-use wasmer::{imports, Instance, Module, Store, TypedFunction, Value, EngineBuilder, Function, FunctionEnv, FunctionEnvMut, Memory, WasmPtr, MemoryType, ValueType};
+use wasmer::{
+    imports, EngineBuilder, Function, FunctionEnv, FunctionEnvMut, Instance, Memory, MemoryType,
+    Module, Store, TypedFunction, Value, ValueType, WasmPtr,
+};
 use wasmer_compiler_cranelift::Cranelift;
 
 use std::sync::Arc;
@@ -35,24 +37,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     let foo_typed = Function::new_typed_with_env(&mut store, &env, foo);
 
-
-
     // https://github.com/wasmerio/wasmer/issues/3274
     // https://github.com/wasmerio/wasmer/issues/2255
-    let mut my_memory = std::sync::Arc::new(std::sync::Mutex::new(Memory::new(&mut store, MemoryType::new(1, None, false)).unwrap()));
+    let mut my_memory = std::sync::Arc::new(std::sync::Mutex::new(
+        Memory::new(&mut store, MemoryType::new(1, None, false)).unwrap(),
+    ));
     struct EnvWithMemory {
         memory: std::sync::Arc<std::sync::Mutex<Memory>>,
     };
-    let env_with_mem = FunctionEnv::new(&mut store, EnvWithMemory {memory: my_memory.clone()});
-    fn print_string(_env: FunctionEnvMut<EnvWithMemory>, pos: u32, len: u32) {
-    }
+    let env_with_mem = FunctionEnv::new(
+        &mut store,
+        EnvWithMemory {
+            memory: my_memory.clone(),
+        },
+    );
+    fn print_string(_env: FunctionEnvMut<EnvWithMemory>, pos: u32, len: u32) {}
     let print_string_typed = Function::new_typed_with_env(&mut store, &env_with_mem, print_string);
 
-
-
     //    pub fn log_record(p: * const u8 , len: u64);
-    
-    fn log_record(env: FunctionEnvMut<EnvWithMemory>, ptr: WasmPtr<u8>, len: u32){
+
+    fn log_record(env: FunctionEnvMut<EnvWithMemory>, ptr: WasmPtr<u8>, len: u32) {
         println!("Pointer: {ptr:?}, len: {len}");
         let locked_memory = env.data().memory.lock().expect("klsdjflsd");
         let mem = locked_memory.view(&env);
@@ -69,7 +73,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     let log_record_typed = Function::new_typed_with_env(&mut store, &env_with_mem, log_record);
 
-
     let import_object = imports! {
         "env" => {
             "foo" => foo_typed,
@@ -80,13 +83,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Load the wasm module.
-    let serialized_module_file = "../implementation_module/target/wasm32-unknown-unknown/debug/implementation_module.wasm";
+    let serialized_module_file =
+        "../implementation_module/target/wasm32-unknown-unknown/debug/implementation_module.wasm";
     let module = Module::from_file(&store, serialized_module_file)?;
     println!("Module: {module:?}");
     for export_ in module.exports() {
         println!("{:?}", export_.ty());
     }
-
 
     println!("Instantiating module...");
     let instance = Instance::new(&mut store, &module, &import_object)?;
@@ -95,7 +98,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let memory = instance.exports.get_memory("memory")?.clone();
     // *std::sync::Arc::<std::sync::Mutex::<wasmer::Memory>>::get_mut(&mut my_memory).get_mut().unwrap() = std::sync::Mutex::new(memory);
     *my_memory.lock().unwrap() = memory;
-
 
     println!("points: {:?}", get_remaining_points(&mut store, &instance));
 
@@ -110,7 +112,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let result = sum.call(&mut store, &args)?;
         println!("points: {:?}", get_remaining_points(&mut store, &instance));
 
-
         println!("Results: {:?}", result);
         assert_eq!(result.to_vec(), vec![Value::I32(1 + 5)]);
 
@@ -123,7 +124,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Results: {:?}", result);
         assert_eq!(result, 6);
         println!("points: {:?}", get_remaining_points(&mut store, &instance));
-
     }
 
     // test foo
@@ -133,7 +133,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let _res = foo_typed.call(&mut store)?;
     }
 
-    // test alloc 
+    // test alloc
     {
         let sum_with_alloc = instance.exports.get_function("sum_with_alloc")?;
         let sum_with_alloc_typed: TypedFunction<u64, u64> = sum_with_alloc.typed(&mut store)?;
@@ -141,7 +141,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(result, 197);
     }
 
-    // test opaque state 
+    // test opaque state
     {
         let set_state = instance.exports.get_function("set_state")?;
         let get_state = instance.exports.get_function("get_state")?;
