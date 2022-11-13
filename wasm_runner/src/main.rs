@@ -89,23 +89,39 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     {
         let call_foo = instance.exports.get_function("call_foo")?;
         let foo_typed: TypedFunction<(), ()> = call_foo.typed(&mut store)?;
-        let res = foo_typed.call(&mut store)?;
+        let _res = foo_typed.call(&mut store)?;
     }
 
     // test alloc 
     {
         let sum_with_alloc = instance.exports.get_function("sum_with_alloc")?;
-        let sum_with_alloc_typed: TypedFunction<(u64), u64> = sum_with_alloc.typed(&mut store)?;
+        let sum_with_alloc_typed: TypedFunction<u64, u64> = sum_with_alloc.typed(&mut store)?;
         let result = sum_with_alloc_typed.call(&mut store, 100)?;
         assert_eq!(result, 197);
-        
+    }
+
+    // test opaque state 
+    {
+        let set_state = instance.exports.get_function("set_state")?;
+        let get_state = instance.exports.get_function("get_state")?;
+        let set_state_typed: TypedFunction<u32, ()> = set_state.typed(&mut store)?;
+        let get_state_typed: TypedFunction<(), u32> = get_state.typed(&mut store)?;
+        let _result = set_state_typed.call(&mut store, 100)?;
+        assert_eq!(get_state_typed.call(&mut store)?, 100u32);
+        let _result = set_state_typed.call(&mut store, 101)?;
+        assert_eq!(get_state_typed.call(&mut store)?, 101u32);
+    }
+
+    // Try the handler
+    {
+        let setup_handler = instance.exports.get_function("setup_handler")?;
+        let setup_handler_typed: TypedFunction<(), ()> = setup_handler.typed(&mut store)?;
+        let _res = setup_handler_typed.call(&mut store)?;
+
+        let call_handler = instance.exports.get_function("call_handler")?;
+        let call_handler_typed: TypedFunction<(), ()> = call_handler.typed(&mut store)?;
+        let _res = call_handler_typed.call(&mut store)?;
     }
 
     Ok(())
 }
-
-#[test]
-fn test_exported_function() -> Result<(), Box<dyn std::error::Error>> {
-    main()
-}
-
