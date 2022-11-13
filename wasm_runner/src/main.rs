@@ -58,11 +58,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mem = locked_memory.view(&env);
         // let outbuf: WasmPtr<u8> = unsafe{ std::mem::transmute(ptr) };
         println!("ptr: {ptr:?}");
-        let mut v = [0u8; 8];
-        let s = ptr.slice(&mem, 8).unwrap();
-        s.read_slice(&mut v[..]);
+        let mut read_back = Vec::<u8>::new();
+        read_back.resize(len as usize, 0);
+        // let mut v = [0u8; len];
+        let mem_slice = ptr.slice(&mem, len).unwrap();
+        mem_slice.read_slice(&mut read_back[..]);
+        println!("read_back: {read_back:?}");
+        let s = std::str::from_utf8(&read_back).unwrap();
         println!("outbuf: {s:?}");
-        println!("v: {v:?}");    
     }
     let log_record_typed = Function::new_typed_with_env(&mut store, &env_with_mem, log_record);
 

@@ -112,12 +112,12 @@ impl log::Log for MyLogger {
         if self.enabled(record.metadata()) {
             // let foo = "mystring";
             // let foo = [1, 2, 3, 4, 5, 6, 7, 8u8];
-            let foo = vec![1u8, 33, 3, 4, 5, 6, 7, 8];
+            // let foo = vec![1u8, 33, 3, 4, 5, 6, 7, 8];
             // let foo = [1, 2, 3, 4, 5, 6, 7, 8u8];
+            let z = format!("{} - {}", record.level(), record.args()).to_string();
             unsafe {
-                log_record(&foo[0] as *const u8, foo.len() as u32);
+                log_record(&z.as_bytes()[0] as *const u8, z.len() as u32);
             }
-            println!("{} - {}", record.level(), record.args());
         }
     }
     fn flush(&self) {}
