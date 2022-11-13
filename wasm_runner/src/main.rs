@@ -1,5 +1,5 @@
 
-use wasmer::{imports, wat2wasm, Instance, Module, Store, TypedFunction, Value, EngineBuilder, Function, FunctionEnv, FunctionEnvMut};
+use wasmer::{imports, Instance, Module, Store, TypedFunction, Value, EngineBuilder, Function, FunctionEnv, FunctionEnvMut};
 use wasmer_compiler_cranelift::Cranelift;
 
 use std::sync::Arc;
@@ -31,7 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     struct MyEnv;
     let env = FunctionEnv::new(&mut store, MyEnv {});
     fn foo(_env: FunctionEnvMut<MyEnv>) {
-        println!("Jkdslfjlsd");
+        println!("Foo called");
     }
 
 
@@ -48,7 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let module = Module::from_file(&store, serialized_module_file)?;
     println!("Module: {module:?}");
     for export_ in module.exports() {
-        export_.ty();
+        println!("{:?}", export_.ty());
     }
 
 
@@ -58,28 +58,48 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("points: {:?}", get_remaining_points(&mut store, &instance));
 
-    // Get the function.
-    let sum = instance.exports.get_function("sum")?;
+    // Test sum.
+    {
+        // Get the function.
+        let sum = instance.exports.get_function("sum")?;
 
-    println!("Calling `sum` function...");
+        println!("Calling `sum` function...");
 
-    let args = [Value::I32(1), Value::I32(5)];
-    let result = sum.call(&mut store, &args)?;
-    println!("points: {:?}", get_remaining_points(&mut store, &instance));
+        let args = [Value::I32(1), Value::I32(5)];
+        let result = sum.call(&mut store, &args)?;
+        println!("points: {:?}", get_remaining_points(&mut store, &instance));
 
 
-    println!("Results: {:?}", result);
-    assert_eq!(result.to_vec(), vec![Value::I32(1 + 5 + 3)]);
+        println!("Results: {:?}", result);
+        assert_eq!(result.to_vec(), vec![Value::I32(1 + 5)]);
 
-    // Call it as a typed function.
-    let sum_typed: TypedFunction<(i32, i32), i32> = sum.typed(&mut store)?;
+        // Call it as a typed function.
+        let sum_typed: TypedFunction<(i32, i32), i32> = sum.typed(&mut store)?;
 
-    println!("Calling `sum` function (natively)...");
-    let result = sum_typed.call(&mut store, 3, 4)?;
+        println!("Calling `sum` function (natively)...");
+        let result = sum_typed.call(&mut store, 1, 5)?;
 
-    println!("Results: {:?}", result);
-    assert_eq!(result, 10);
-    println!("points: {:?}", get_remaining_points(&mut store, &instance));
+        println!("Results: {:?}", result);
+        assert_eq!(result, 6);
+        println!("points: {:?}", get_remaining_points(&mut store, &instance));
+
+    }
+
+    // test foo
+    {
+        let call_foo = instance.exports.get_function("call_foo")?;
+        let foo_typed: TypedFunction<(), ()> = call_foo.typed(&mut store)?;
+        let res = foo_typed.call(&mut store)?;
+    }
+
+    // test alloc 
+    {
+        let sum_with_alloc = instance.exports.get_function("sum_with_alloc")?;
+        let sum_with_alloc_typed: TypedFunction<(u64), u64> = sum_with_alloc.typed(&mut store)?;
+        let result = sum_with_alloc_typed.call(&mut store, 100)?;
+        assert_eq!(result, 197);
+        
+    }
 
     Ok(())
 }
