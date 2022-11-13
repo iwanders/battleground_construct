@@ -79,7 +79,7 @@ pub extern "C" fn call_handler() {
 
 // Log setup.
 extern "C" {
-    // Ehh, how to emit a large chunk? :|
+    // Send a pointer, other side inspects memory and mucks around with it.
     pub fn log_record(p: *const u8, len: u32);
 }
 
@@ -113,3 +113,26 @@ pub extern "C" fn log_setup() {
 pub extern "C" fn log_test() {
     info!("test info log {}", 3);
 }
+
+
+
+static INPUT_BUFFER: Mutex<Vec<u8>> = Mutex::new(Vec::new());
+
+#[no_mangle]
+pub extern "C" 
+fn prepare_input(len: u32) -> *mut u8 {
+    let mut buffer = INPUT_BUFFER.lock().expect("cannot be poisoned");
+    buffer.clear();
+    buffer.resize(len as usize, 0);
+    buffer.as_mut_ptr()
+}
+
+#[no_mangle]
+pub extern "C" fn use_input(len: u32) {
+    info!("Input buffer now holds: {:?}", &INPUT_BUFFER.lock().expect("cannot be poisoned")[..len as usize]);
+}
+
+
+
+
+

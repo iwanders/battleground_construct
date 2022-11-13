@@ -164,7 +164,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let _res = call_handler_typed.call(&mut store)?;
     }
 
-    // Try the logger
+    // Try the logger, this also does guest -> host
     {
         let log_setup = instance.exports.get_function("log_setup")?;
         let log_setup_typed: TypedFunction<(), ()> = log_setup.typed(&mut store)?;
@@ -172,6 +172,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let log_test = instance.exports.get_function("log_test")?;
         let log_test_typed: TypedFunction<(), ()> = log_test.typed(&mut store)?;
         let _res = log_test_typed.call(&mut store)?;
+    }
+
+    // Test input, this does host -> guest
+    {
+        let prepare_input = instance.exports.get_function("prepare_input")?;
+        let prepare_input_typed: TypedFunction<u32, WasmPtr<u8>> = prepare_input.typed(&mut store)?;
+        
+        let content = [0u8, 1, 2, 3,4 ,5,6 ,7, 8];
+        let len = content.len() as u32;
+        let res_ptr = prepare_input_typed.call(&mut store, len)?;
+        // Now we have the pointer... we can write into that, somehow.
+        let memory = instance.exports.get_memory("memory")?.clone();
+        let view = memory.view(&store);
+        let mem_slice = res_ptr.slice(&view, len).unwrap();
+        mem_slice.write_slice(&content);
+
+
+        let use_input = instance.exports.get_function("use_input")?;
+        let use_input_typed: TypedFunction<u32, ()> = use_input.typed(&mut store)?;
+        let _res = use_input_typed.call(&mut store, len)?;
     }
 
     Ok(())
