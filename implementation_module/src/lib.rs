@@ -2,6 +2,9 @@
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
 
+use log::{info, warn};
+
+
 extern "C" {
     pub fn foo();
 }
@@ -80,6 +83,7 @@ impl Handler for MyHandler {
 #[no_mangle]
 pub extern "C" 
 fn setup_handler(){
+    info!("Setup handler");
     register_handler(Box::new(MyHandler{}));
 }
 
@@ -87,8 +91,35 @@ fn setup_handler(){
 pub extern "C" 
 fn call_handler() {
     HANDLER.lock().unwrap().as_mut().unwrap().update();
-    HANDLER.lock().unwrap().as_mut().unwrap().update();
-    HANDLER.lock().unwrap().as_mut().unwrap().update()
 }
 
+
+// Log setup.
+extern "C" {
+    // Ehh, how to emit a large chunk? :| 
+    pub fn log_record();
+}
+use log::{Record, Level, Metadata, LevelFilter};
+static MY_LOGGER: MyLogger = MyLogger;
+struct MyLogger;
+
+impl log::Log for MyLogger {
+    fn enabled(&self, metadata: &Metadata) -> bool {
+        metadata.level() <= Level::Info
+    }
+
+    fn log(&self, record: &Record) {
+        if self.enabled(record.metadata()) {
+            println!("{} - {}", record.level(), record.args());
+        }
+    }
+    fn flush(&self) {}
+}
+
+#[no_mangle]
+pub extern "C" 
+fn log_setup() {
+    log::set_logger(&MY_LOGGER).unwrap();
+    log::set_max_level(LevelFilter::Info);
+}
 

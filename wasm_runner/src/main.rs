@@ -1,5 +1,5 @@
 
-use wasmer::{imports, Instance, Module, Store, TypedFunction, Value, EngineBuilder, Function, FunctionEnv, FunctionEnvMut};
+use wasmer::{imports, Instance, Module, Store, TypedFunction, Value, EngineBuilder, Function, FunctionEnv, FunctionEnvMut, Memory, WasmPtr};
 use wasmer_compiler_cranelift::Cranelift;
 
 use std::sync::Arc;
