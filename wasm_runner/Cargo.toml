@@ -1,0 +1,13 @@
+[package]
+name = "wasm_runner"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+wasmer = {version="3.0.0-rc.2", features=["cranelift"]}
+wasmer-wasi = { version = "=3.0.0-rc.2" }
+wasmer-compiler-cranelift = { version = "=3.0.0-rc.2"}
+
+wasmer-middlewares = { version = "=3.0.0-rc.2" }
+
