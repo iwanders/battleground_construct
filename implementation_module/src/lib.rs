@@ -129,9 +129,16 @@ fn prepare_input(len: u32) -> *mut u8 {
 
 #[no_mangle]
 pub extern "C" fn use_input(len: u32) {
-    info!("Input buffer now holds: {:?}", &INPUT_BUFFER.lock().expect("cannot be poisoned")[..len as usize]);
+    warn!("Input buffer now holds: {:?}", &INPUT_BUFFER.lock().expect("cannot be poisoned")[..len as usize]);
 }
 
+
+
+
+#[no_mangle]
+pub extern "C" fn test_sin(v: f32) -> f32{
+    v.sin()
+}
 
 
 

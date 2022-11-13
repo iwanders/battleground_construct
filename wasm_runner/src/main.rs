@@ -1,6 +1,6 @@
 use wasmer::{
     imports, EngineBuilder, Function, FunctionEnv, FunctionEnvMut, Instance, Memory, MemoryType,
-    Module, Store, TypedFunction, Value, ValueType, WasmPtr,
+    Module, Store, TypedFunction, Value, WasmPtr,
 };
 use wasmer_compiler_cranelift::Cranelift;
 
@@ -10,7 +10,7 @@ use wasmer::wasmparser::Operator;
 use wasmer::CompilerConfig;
 
 use wasmer_middlewares::{
-    metering::{get_remaining_points, set_remaining_points, MeteringPoints},
+    metering::{get_remaining_points, set_remaining_points},
     Metering,
 };
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -39,22 +39,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // https://github.com/wasmerio/wasmer/issues/3274
     // https://github.com/wasmerio/wasmer/issues/2255
-    let mut my_memory = std::sync::Arc::new(std::sync::Mutex::new(
+
+    // Put memory in an arc, we initialise it with a dummy here, then later replace it with the
+    // program's real memory.
+    let my_memory = std::sync::Arc::new(std::sync::Mutex::new(
         Memory::new(&mut store, MemoryType::new(1, None, false)).unwrap(),
     ));
     struct EnvWithMemory {
         memory: std::sync::Arc<std::sync::Mutex<Memory>>,
-    };
+    }
+
     let env_with_mem = FunctionEnv::new(
         &mut store,
         EnvWithMemory {
             memory: my_memory.clone(),
         },
     );
-    fn print_string(_env: FunctionEnvMut<EnvWithMemory>, pos: u32, len: u32) {}
-    let print_string_typed = Function::new_typed_with_env(&mut store, &env_with_mem, print_string);
 
-    //    pub fn log_record(p: * const u8 , len: u64);
 
     fn log_record(env: FunctionEnvMut<EnvWithMemory>, ptr: WasmPtr<u8>, len: u32) {
         println!("Pointer: {ptr:?}, len: {len}");
@@ -76,7 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let import_object = imports! {
         "env" => {
             "foo" => foo_typed,
-            "print_string" => print_string_typed,
+            // "print_string" => print_string_typed,
             "log_record" => log_record_typed,
             // "get_memory_typed" => get_memory_typed,
         }
@@ -99,7 +100,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // *std::sync::Arc::<std::sync::Mutex::<wasmer::Memory>>::get_mut(&mut my_memory).get_mut().unwrap() = std::sync::Mutex::new(memory);
     *my_memory.lock().unwrap() = memory;
 
+
     println!("points: {:?}", get_remaining_points(&mut store, &instance));
+
+    set_remaining_points(&mut store, &instance, 10000000);
 
     // Test sum.
     {
@@ -192,6 +196,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let use_input = instance.exports.get_function("use_input")?;
         let use_input_typed: TypedFunction<u32, ()> = use_input.typed(&mut store)?;
         let _res = use_input_typed.call(&mut store, len)?;
+    }
+
+    // test sin
+    {
+        let test_sin = instance.exports.get_function("test_sin")?;
+        let test_sin_typed: TypedFunction<f32, f32> = test_sin.typed(&mut store)?;
+        assert_eq!(test_sin_typed.call(&mut store, 1.0)?, 1.0f32.sin());
+        assert_eq!(test_sin_typed.call(&mut store, 2.0)?, 2.0f32.sin());
     }
 
     Ok(())
