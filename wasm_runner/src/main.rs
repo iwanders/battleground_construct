@@ -38,28 +38,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 
     // https://github.com/wasmerio/wasmer/issues/3274
-    let my_memory = Memory::new(&mut store, MemoryType::new(1, None, false)).unwrap();
-    let env_with_mem = FunctionEnv::new(&mut store, EnvWithMemory {memory: my_memory});
+    // https://github.com/wasmerio/wasmer/issues/2255
+    let mut my_memory = std::sync::Arc::new(std::sync::Mutex::new(Memory::new(&mut store, MemoryType::new(1, None, false)).unwrap()));
     struct EnvWithMemory {
-        memory: Memory,
+        memory: std::sync::Arc<std::sync::Mutex<Memory>>,
     };
+    let env_with_mem = FunctionEnv::new(&mut store, EnvWithMemory {memory: my_memory.clone()});
     fn print_string(_env: FunctionEnvMut<EnvWithMemory>, pos: u32, len: u32) {
     }
     let print_string_typed = Function::new_typed_with_env(&mut store, &env_with_mem, print_string);
 
 
 
-
     //    pub fn log_record(p: * const u8 , len: u64);
     
-    fn log_record(env: FunctionEnvMut<EnvWithMemory>, ptr: WasmPtr<[u8; 8]>, len: u32){
+    fn log_record(env: FunctionEnvMut<EnvWithMemory>, ptr: WasmPtr<u8>, len: u32){
         println!("Pointer: {ptr:?}, len: {len}");
-        let mem = env.data().memory.view(&env);
-        let outbuf: WasmPtr<u8> = unsafe{ std::mem::transmute(ptr) };
-        println!("outbuf: {outbuf:?}");
+        let locked_memory = env.data().memory.lock().expect("klsdjflsd");
+        let mem = locked_memory.view(&env);
+        // let outbuf: WasmPtr<u8> = unsafe{ std::mem::transmute(ptr) };
+        println!("ptr: {ptr:?}");
         let mut v = [0u8; 8];
-        let s = outbuf.slice(&mem, 8).unwrap();
-        s.write_slice(&mut v[..]);
+        let s = ptr.slice(&mem, 8).unwrap();
+        s.read_slice(&mut v[..]);
         println!("outbuf: {s:?}");
         println!("v: {v:?}");    
     }
@@ -86,6 +87,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Instantiating module...");
     let instance = Instance::new(&mut store, &module, &import_object)?;
+
+    // Now that we have the instance, swap the pointer from the my_memory.
+    let memory = instance.exports.get_memory("memory")?.clone();
+    // *std::sync::Arc::<std::sync::Mutex::<wasmer::Memory>>::get_mut(&mut my_memory).get_mut().unwrap() = std::sync::Mutex::new(memory);
+    *my_memory.lock().unwrap() = memory;
 
 
     println!("points: {:?}", get_remaining_points(&mut store, &instance));

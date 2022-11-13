@@ -96,7 +96,7 @@ fn call_handler() {
 // Log setup.
 extern "C" {
     // Ehh, how to emit a large chunk? :|
-    pub fn log_record(p: * const [u8; 8] , len: u32);
+    pub fn log_record(p: * const u8, len: u32);
 }
 
 use log::{Record, Level, Metadata, LevelFilter};
@@ -111,9 +111,11 @@ impl log::Log for MyLogger {
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
             // let foo = "mystring";
-            let foo = [1, 2, 3, 4, 5, 6, 7, 8u8];
+            // let foo = [1, 2, 3, 4, 5, 6, 7, 8u8];
+            let foo = vec![1u8, 33, 3, 4, 5, 6, 7, 8];
+            // let foo = [1, 2, 3, 4, 5, 6, 7, 8u8];
             unsafe {
-                log_record(&foo as *const [u8; 8], foo.len() as u32);
+                log_record(&foo[0] as *const u8, foo.len() as u32);
             }
             println!("{} - {}", record.level(), record.args());
         }
