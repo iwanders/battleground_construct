@@ -1,15 +1,50 @@
 use std::any::TypeId;
 use std::marker::PhantomData;
 
+use std::any::Any;
+
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub struct EntityId(usize);
 
 /// Things in the world.
 pub trait Entity {}
 
-/// Entities have a component.
-pub trait Component : std::any::Any {
+
+// from https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=f0cee315491dc3c3b6b3f467d6a3b072
+pub trait AsAny {
+    fn as_any_ref(&self) -> &dyn Any;
+    
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+    
+    fn as_any_box(self: Box<Self>) -> Box<dyn Any>;
 }
+
+
+/// Entities have a component.
+pub trait Component : AsAny {
+
+}
+
+impl<T> AsAny for T
+where
+    T: Any,
+{
+    // This cast cannot be written in a default implementation so cannot be
+    // moved to the original trait without implementing it for every type.
+    fn as_any_ref(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn as_any_box(self: Box<Self>) -> Box<dyn Any> {
+        self
+    }
+}
+
+
 
 /// Systems operate on components.
 pub trait System {
@@ -47,9 +82,9 @@ impl<'a, T: Component + 'static> Iterator for ComponentIterator<'a, T> {
         // let z = (&record.1.as_ref() as &dyn std::any::Any);
         // let value = z.downcast_ref::<Box<dyn Component>>().unwrap();
         self.index = current + 1;
-        // let v = (&record.1.as_ref() as &dyn std::any::Any);
-        // Some((record.0.clone(), v.downcast_ref::<T>().unwrap()))
-        return None
+        use std::ops::Deref;
+        Some((record.0.clone(), record.1.deref().as_any_ref().downcast_ref::<T>().unwrap()))
+        // return None
         // WIP here.
     }
 }
@@ -147,7 +182,7 @@ mod test {
 
         let monster_id = world.add_entity(Box::new(Agent {}));
         world.add_component(monster_id.clone(), Health(1.0));
-        world.add_component(monster_id.clone(), Awesomeness(0.0));
+        world.add_component(monster_id.clone(), Awesomeness(0.5));
 
         let mut systems = Systems::new();
         systems.add_system(Box::new(AwesomenessReporter{}));
