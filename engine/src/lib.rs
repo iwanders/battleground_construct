@@ -81,7 +81,7 @@ impl<'a, T: Component + 'static> Iterator for ComponentIteratorMut<'a, T> {
                     // let (head, tail) = RefMut::map_split(borrow, |slice| (&mut slice[0], &mut slice[1..]));
                     let (head, tail) = RefMut::map_split(borrow, |slice| {
                         let (a, b) = slice.split_at_mut(1);
-                        (&mut a[0],b)
+                        (&mut a[0], b)
                     });
                     self.entries.replace(tail);
                     Some((
@@ -99,7 +99,6 @@ impl<'a, T: Component + 'static> Iterator for ComponentIteratorMut<'a, T> {
         }
     }
 }
-
 
 impl World {
     pub fn new() -> Self {
@@ -134,8 +133,10 @@ impl World {
         }
     }
 
-    pub fn component_iter_mut<'a, C: Component + 'static>(&'a mut self) -> ComponentIteratorMut<'a, C> {
-        let v = self.components.get_mut(&TypeId::of::<C>());
+    /// Method is not const, to allow different component types to be accessed in mutable fashion
+    /// at the same time. But it will panic if we're doing a double borrow.
+    pub fn component_iter_mut<'a, C: Component + 'static>(&'a self) -> ComponentIteratorMut<'a, C> {
+        let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
             panic!("yikes");
         }
@@ -146,7 +147,7 @@ impl World {
         }
     }
 
-
+    pub fn remove_entity(&mut self, entity: EntityId) {}
 
     fn make_id(&mut self) -> EntityId {
         self.index += 1;
@@ -178,6 +179,7 @@ impl Systems {
 mod test {
     use super::*;
 
+    #[derive(Debug)]
     struct Health(f32);
     impl Component for Health {}
 
@@ -205,6 +207,21 @@ mod test {
         }
     }
 
+    struct HealthPropagator {}
+    impl System for HealthPropagator {
+        fn update(&mut self, world: &mut World) {
+            for (entity_awesomeness, awesomeness_component) in world.component_iter::<Awesomeness>()
+            {
+                for (entity_health, mut health) in world.component_iter_mut::<Health>() {
+                    if entity_awesomeness == entity_health {
+                        println!("Entity: {entity_awesomeness:?} - adding: {awesomeness_component:?} to {health:?}");
+                        health.0 += awesomeness_component.0;
+                    }
+                }
+            }
+        }
+    }
+
     #[test]
     fn test_things() {
         let mut world = World::new();
@@ -219,6 +236,7 @@ mod test {
 
         let mut systems = Systems::new();
         systems.add_system(Box::new(AwesomenessReporter {}));
+        systems.add_system(Box::new(HealthPropagator {}));
         systems.update(&mut world);
     }
 }
