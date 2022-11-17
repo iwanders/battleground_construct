@@ -62,7 +62,7 @@ use std::cell::RefMut;
 
 pub struct ComponentIteratorMut<'a, T: Component + 'static> {
     entries:
-        std::collections::hash_map::IterMut<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>,
+        std::collections::hash_map::Iter<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>,
     phantom: std::marker::PhantomData<T>,
 }
 
@@ -129,13 +129,13 @@ impl World {
 
     /// Method is not const, to allow different component types to be accessed in mutable fashion
     /// at the same time. But it will panic if we're doing a double borrow.
-    pub fn component_iter_mut<'a, C: Component + 'static>(&'a mut self) -> ComponentIteratorMut<'a, C> {
-        let v = self.components.get_mut(&TypeId::of::<C>());
+    pub fn component_iter_mut<'a, C: Component + 'static>(&'a self) -> ComponentIteratorMut<'a, C> {
+        let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
             panic!("yikes");
         }
         ComponentIteratorMut::<'a, C> {
-            entries: v.unwrap().iter_mut(),
+            entries: v.unwrap().iter(),
 
             phantom: PhantomData,
         }
@@ -206,12 +206,12 @@ mod test {
         fn update(&mut self, world: &mut World) {
             for (entity_awesomeness, awesomeness_component) in world.component_iter::<Awesomeness>()
             {
-                // for (entity_health, mut health) in world.component_iter_mut::<Health>() {
-                    // if entity_awesomeness == entity_health {
-                        // println!("Entity: {entity_awesomeness:?} - adding: {awesomeness_component:?} to {health:?}");
-                        // health.0 += awesomeness_component.0;
-                    // }
-                // }
+                for (entity_health, mut health) in world.component_iter_mut::<Health>() {
+                    if entity_awesomeness == entity_health {
+                        println!("Entity: {entity_awesomeness:?} - adding: {awesomeness_component:?} to {health:?}");
+                        health.0 += awesomeness_component.0;
+                    }
+                }
             }
         }
     }
