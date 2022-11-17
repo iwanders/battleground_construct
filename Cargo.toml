@@ -1,0 +1,10 @@
+[workspace]
+
+members = [
+    "engine",
+    "battleground_construct",
+
+]
+
+[profile.release]
+opt-level = 3

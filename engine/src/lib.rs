@@ -12,7 +12,13 @@ pub trait Component: AsAny {}
 
 /// Systems operate on components.
 pub trait System {
+    // I think this should technically be a free function without state, but that's not object safe.
+    // So lets just allow mutability for now.
     fn update(&mut self, world: &mut World);
+}
+
+pub mod prelude {
+    pub use super::{EntityId, Component, System, World};
 }
 
 use std::cell::Ref;
@@ -27,7 +33,7 @@ pub struct World {
     >,
 }
 
-// Adapted from https://stackoverflow.com/a/68737585
+// for vectors; https://stackoverflow.com/a/68737585
 pub struct ComponentIterator<'a, T: Component + 'static> {
     entries: std::collections::hash_map::Iter<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>,
     phantom: std::marker::PhantomData<T>,
