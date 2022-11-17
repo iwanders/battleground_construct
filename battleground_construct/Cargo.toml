@@ -7,3 +7,4 @@ edition = "2021"
 [dependencies]
 engine = { path = "../engine" }
 
+cgmath = "0.18.0"
