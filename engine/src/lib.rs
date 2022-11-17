@@ -61,8 +61,7 @@ impl<'a, T: Component + 'static> Iterator for ComponentIterator<'a, T> {
 use std::cell::RefMut;
 
 pub struct ComponentIteratorMut<'a, T: Component + 'static> {
-    entries:
-        std::collections::hash_map::Iter<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>,
+    entries: std::collections::hash_map::Iter<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>,
     phantom: std::marker::PhantomData<T>,
 }
 
@@ -72,7 +71,6 @@ impl<'a, T: Component + 'static> Iterator for ComponentIteratorMut<'a, T> {
     fn next(&mut self) -> Option<Self::Item> {
         let next = self.entries.next();
         use std::ops::DerefMut;
-        use std::ops::Deref;
 
         match next {
             Some(v) => Some((
@@ -99,7 +97,7 @@ impl World {
         new_id
     }
 
-    pub fn add_component<C: Component + 'static>(&mut self, entity: EntityId, component: C) {
+    pub fn add_component<C: Component + 'static>(&mut self, entity: &EntityId, component: C) {
         let mut v = self.components.get_mut(&TypeId::of::<C>());
         if v.is_none() {
             self.components
@@ -107,7 +105,7 @@ impl World {
             v = self.components.get_mut(&TypeId::of::<C>());
         }
         let v = v.unwrap();
-        v.insert(entity, std::cell::RefCell::new(Box::new(component)));
+        v.insert(entity.clone(), std::cell::RefCell::new(Box::new(component)));
     }
 
     pub fn component_iter<'a, C: Component + 'static>(&'a self) -> ComponentIterator<'a, C> {
@@ -124,7 +122,7 @@ impl World {
 
     pub fn remove_entity(&mut self, entity: &EntityId) {
         self.entities.remove(entity);
-        for (t, comps) in self.components.iter_mut() {
+        for (_t, comps) in self.components.iter_mut() {
             comps.remove(entity);
         }
     }
@@ -143,7 +141,10 @@ impl World {
         }
     }
 
-    pub fn component<'a, C: Component + 'static>(&'a self, entity: &EntityId) -> Option<std::cell::Ref<'a, C>> {
+    pub fn component<'a, C: Component + 'static>(
+        &'a self,
+        entity: &EntityId,
+    ) -> Option<std::cell::Ref<'a, C>> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
             panic!("yikes");
@@ -151,34 +152,33 @@ impl World {
         use std::ops::Deref;
         let v = v.unwrap().get(&entity);
         match v {
-            Some(rc_component) => {
-                Some(std::cell::Ref::map(rc_component.borrow(), |v| {
-                    v.deref()
-                        .as_any_ref()
-                        .downcast_ref::<C>()
-                        .expect("Unwrap should succeed")
-                }))
-            },
+            Some(rc_component) => Some(std::cell::Ref::map(rc_component.borrow(), |v| {
+                v.deref()
+                    .as_any_ref()
+                    .downcast_ref::<C>()
+                    .expect("Unwrap should succeed")
+            })),
             None => None,
         }
     }
-    pub fn component_mut<'a, C: Component + 'static>(&'a self, entity: &EntityId) -> Option<std::cell::RefMut<'a, C>> {
+    pub fn component_mut<'a, C: Component + 'static>(
+        &'a self,
+        entity: &EntityId,
+    ) -> Option<std::cell::RefMut<'a, C>> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
             panic!("yikes");
         }
-        use std::ops::Deref;
+
         use std::ops::DerefMut;
         let v = v.unwrap().get(&entity);
         match v {
-            Some(rc_component) => {
-                Some(std::cell::RefMut::map(rc_component.borrow_mut(), |v| {
-                    v.deref_mut()
-                        .as_any_mut()
-                        .downcast_mut::<C>()
-                        .expect("Unwrap should succeed")
-                }))
-            },
+            Some(rc_component) => Some(std::cell::RefMut::map(rc_component.borrow_mut(), |v| {
+                v.deref_mut()
+                    .as_any_mut()
+                    .downcast_mut::<C>()
+                    .expect("Unwrap should succeed")
+            })),
             None => None,
         }
     }
@@ -218,50 +218,37 @@ mod test {
     impl Component for Health {}
 
     #[derive(Debug)]
-    struct Awesomeness(f32);
-    impl Component for Awesomeness {}
+    struct Regeneration(f32);
+    impl Component for Regeneration {}
 
     struct Agent {}
     impl Entity for Agent {}
 
-    struct AwesomenessReporter {}
-    impl System for AwesomenessReporter {
-        fn update(&mut self, world: &mut World) {
-            // get iterator for a type.
-            for (entity, awesomeness_component) in world.component_iter::<Awesomeness>() {
-                println!("Entity: {entity:?} - component: {awesomeness_component:?}");
-            }
-            for (entity, mut awesomeness_component) in world.component_iter_mut::<Awesomeness>() {
-            awesomeness_component.0 += 0.1;
-            println!("Entity: {entity:?} - component: {awesomeness_component:?}");
-            }
-            for (entity, awesomeness_component) in world.component_iter::<Awesomeness>() {
-                println!("Entity: {entity:?} - component: {awesomeness_component:?}");
-            }
-        }
-    }
 
+    // Adds health based on regeneration component.
     struct HealthPropagator {}
     impl System for HealthPropagator {
         fn update(&mut self, world: &mut World) {
-            for (entity_awesomeness, awesomeness_component) in world.component_iter::<Awesomeness>()
+            // Mutable iteration inside immutable one!
+            for (entity_awesomeness, regeneration_component) in world.component_iter::<Regeneration>()
             {
                 for (entity_health, mut health) in world.component_iter_mut::<Health>() {
                     if entity_awesomeness == entity_health {
-                        println!("Entity: {entity_awesomeness:?} - adding: {awesomeness_component:?} to {health:?}");
-                        health.0 += awesomeness_component.0;
+                        println!("Entity: {entity_awesomeness:?} - adding: {regeneration_component:?} to {health:?}");
+                        health.0 += regeneration_component.0;
                     }
                 }
             }
         }
     }
+
+    // Removes any entity below 0.0 health.
     struct DeleteLowHealth {}
     impl System for DeleteLowHealth {
         fn update(&mut self, world: &mut World) {
-            let mut to_delete:  std::collections::HashSet<EntityId> = Default::default();
-            for (entity, health) in world.component_iter_mut::<Health>() 
-            {
-                if (health.0 <= 1.5) {
+            let mut to_delete: std::collections::HashSet<EntityId> = Default::default();
+            for (entity, health) in world.component_iter_mut::<Health>() {
+                if health.0 <= 0.0 {
                     to_delete.insert(entity);
                 }
             }
@@ -277,20 +264,37 @@ mod test {
         let mut world = World::new();
 
         let player_id = world.add_entity(Box::new(Agent {}));
-        world.add_component(player_id.clone(), Health(1.0));
-        world.add_component(player_id.clone(), Awesomeness(0.0));
+        world.add_component(&player_id, Health(1.0));
+        world.add_component(&player_id, Regeneration(0.0));
 
         let monster_id = world.add_entity(Box::new(Agent {}));
-        world.add_component(monster_id.clone(), Health(1.0));
-        world.add_component(monster_id.clone(), Awesomeness(0.5));
-        assert_eq!(world.component::<Awesomeness>(&monster_id).unwrap().0, 0.5);
-        (world.component_mut::<Awesomeness>(&monster_id).unwrap()).0 = 1.5;
-        assert_eq!(world.component::<Awesomeness>(&monster_id).unwrap().0, 1.5);
+        world.add_component(&monster_id, Health(1.0));
+        world.add_component(&monster_id, Regeneration(0.5));
+
+        // Test the assignment of values in a component by entity id.
+        assert_eq!(world.component::<Regeneration>(&monster_id).unwrap().0, 0.5);
+        world.component_mut::<Regeneration>(&monster_id).unwrap().0 = 1.5;
+        assert_eq!(world.component::<Regeneration>(&monster_id).unwrap().0, 1.5);
 
         let mut systems = Systems::new();
-        systems.add_system(Box::new(AwesomenessReporter {}));
+
         systems.add_system(Box::new(HealthPropagator {}));
         systems.add_system(Box::new(DeleteLowHealth {}));
+        systems.update(&mut world);
+
+        // Check new states.
+        assert_eq!(world.component::<Regeneration>(&monster_id).unwrap().0, 1.5);
+        assert_eq!(world.component::<Health>(&monster_id).unwrap().0, 2.5);
+
+        assert_eq!(world.component::<Regeneration>(&player_id).unwrap().0, 0.0);
+        assert_eq!(world.component::<Health>(&player_id).unwrap().0, 1.0);
+
+
+        // lets set the monster awesomeness to negative.
+        world.component_mut::<Regeneration>(&monster_id).unwrap().0 = -1.0;
+        systems.update(&mut world);
+        systems.update(&mut world);
+        systems.update(&mut world);
         systems.update(&mut world);
     }
 }
