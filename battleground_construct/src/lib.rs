@@ -5,7 +5,6 @@ use engine::{Systems};
 
 
 struct Construct {
-    clock_id: EntityId,
     world: World,
     systems: Systems,
 }
@@ -18,7 +17,6 @@ impl Construct {
         let mut systems = engine::Systems::new();
         systems.add_system(Box::new(ClockSystem{}));
         Construct{
-            clock_id,
             world,
             systems,
         }
@@ -43,7 +41,7 @@ mod test {
         construct.update();
         construct.update();
         construct.update();
-        let (_entity, mut clock) = construct.world()
+        let (_entity, clock) = construct.world()
             .component_iter_mut::<Clock>()
             .next()
             .expect("Should have one clock");
