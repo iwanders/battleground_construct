@@ -1,7 +1,8 @@
 use std::any::TypeId;
 use std::marker::PhantomData;
 
-use std::any::Any;
+mod as_any;
+pub use as_any::AsAny;
 
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub struct EntityId(usize);
@@ -9,85 +10,89 @@ pub struct EntityId(usize);
 /// Things in the world.
 pub trait Entity {}
 
-
-// from https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=f0cee315491dc3c3b6b3f467d6a3b072
-pub trait AsAny {
-    fn as_any_ref(&self) -> &dyn Any;
-    
-    fn as_any_mut(&mut self) -> &mut dyn Any;
-    
-    fn as_any_box(self: Box<Self>) -> Box<dyn Any>;
-}
-
-
 /// Entities have a component.
-pub trait Component : AsAny {
-
-}
-
-impl<T> AsAny for T
-where
-    T: Any,
-{
-    // This cast cannot be written in a default implementation so cannot be
-    // moved to the original trait without implementing it for every type.
-    fn as_any_ref(&self) -> &dyn Any {
-        self
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-
-    fn as_any_box(self: Box<Self>) -> Box<dyn Any> {
-        self
-    }
-}
-
-
+pub trait Component: AsAny {}
 
 /// Systems operate on components.
 pub trait System {
     fn update(&mut self, world: &mut World);
 }
 
+use std::cell::Ref;
+
 #[derive(Default)]
 pub struct World {
     index: usize,
     entities: std::collections::HashMap<EntityId, Box<dyn Entity>>,
-    components: std::collections::HashMap<std::any::TypeId, Vec<(EntityId, Box<dyn Component>)>>,
+    components: std::collections::HashMap<
+        std::any::TypeId,
+        std::cell::RefCell<Vec<(EntityId, Box<dyn Component>)>>,
+    >,
 }
 
+// Adapted from https://stackoverflow.com/a/68737585
 pub struct ComponentIterator<'a, T: Component + 'static> {
-    entries: &'a Vec<(EntityId, Box<dyn Component>)>,
+    entries: Option<std::cell::Ref<'a, [(EntityId, Box<dyn Component>)]>>,
     index: usize,
     phantom: std::marker::PhantomData<T>,
 }
 
-// Implement `Iterator` for `Fibonacci`.
-// The `Iterator` trait only requires a method to be defined for the `next` element.
 impl<'a, T: Component + 'static> Iterator for ComponentIterator<'a, T> {
-    type Item = (EntityId, &'a T);
+    type Item = (EntityId, Ref<'a, T>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.entries.take() {
+            Some(borrow) => match *borrow {
+                [] => None,
+                [_, ..] => {
+                    let (head, tail) = Ref::map_split(borrow, |slice| (&slice[0], &slice[1..]));
+                    self.entries.replace(tail);
+                    Some((
+                        head.0.clone(),
+                        Ref::map(head, |v| {
+                            (*v.1)
+                                .as_any_ref()
+                                .downcast_ref::<T>()
+                                .expect("Unwrap should succeed")
+                        }),
+                    ))
+                }
+            },
+            None => None,
+        }
+    }
+}
+/*
+pub struct ComponentIteratorMut<'a, T: Component + 'static> {
+    entries: &'a mut Vec<(EntityId, Box<dyn Component>)>,
+    index: usize,
+    phantom: std::marker::PhantomData<T>,
+}
+
+
+impl<'a, T: Component + 'static> Iterator for ComponentIteratorMut<'a, T> {
+    type Item = (EntityId, &'a mut T);
 
     fn next(&mut self) -> Option<Self::Item> {
         let current = self.index;
         if current >= self.entries.len() {
             return None;
         }
-        let record = &self.entries[current];
 
-        let record = record;
-        // println!("type id: {:x?}", (&record.1 as &dyn std::any::Any).type_id());
-        // println!("req id:  {:x?}",  TypeId::of::<Box<dyn Component>>());
-        // let z = (&record.1.as_ref() as &dyn std::any::Any);
-        // let value = z.downcast_ref::<Box<dyn Component>>().unwrap();
+
+        let record = self.entries.get_mut(current).unwrap();
+
+
         self.index = current + 1;
         use std::ops::Deref;
-        Some((record.0.clone(), record.1.deref().as_any_ref().downcast_ref::<T>().unwrap()))
-        // return None
-        // WIP here.
+        use std::ops::DerefMut;
+
+        Some((
+            record.0.clone(),
+            record.1.deref_mut().as_any_mut().downcast_mut::<T>().unwrap(),
+        ))
     }
-}
+}*/
 
 impl World {
     pub fn new() -> Self {
@@ -103,10 +108,11 @@ impl World {
     pub fn add_component<C: Component + 'static>(&mut self, entity: EntityId, component: C) {
         let mut v = self.components.get_mut(&TypeId::of::<C>());
         if v.is_none() {
-            self.components.insert(TypeId::of::<C>(), vec![]);
+            self.components
+                .insert(TypeId::of::<C>(), std::cell::RefCell::new(vec![]));
             v = self.components.get_mut(&TypeId::of::<C>());
         }
-        v.unwrap().push((entity, Box::new(component)));
+        v.unwrap().get_mut().push((entity, Box::new(component)));
     }
 
     pub fn component_iter<'a, C: Component + 'static>(&'a self) -> ComponentIterator<'a, C> {
@@ -115,11 +121,25 @@ impl World {
             panic!("yikes");
         }
         ComponentIterator::<'a, C> {
+            entries: Some(Ref::map(v.unwrap().borrow(), |v| &v[..])),
+            index: 0,
+            phantom: PhantomData,
+        }
+    }
+
+    /*
+    pub fn component_iter_mut<'a, C: Component + 'static>(&'a mut self) -> ComponentIteratorMut<'a, C> {
+        let v = self.components.get_mut(&TypeId::of::<C>());
+        if v.is_none() {
+            panic!("yikes");
+        }
+        ComponentIteratorMut::<'a, C> {
             entries: v.unwrap(),
             index: 0,
             phantom: PhantomData,
         }
     }
+    */
 
     fn make_id(&mut self) -> EntityId {
         self.index += 1;
@@ -139,7 +159,6 @@ impl Systems {
     pub fn add_system(&mut self, system: Box<dyn System>) {
         self.systems.push(system);
     }
-
 
     pub fn update(&mut self, world: &mut World) {
         for s in self.systems.iter_mut() {
@@ -185,7 +204,7 @@ mod test {
         world.add_component(monster_id.clone(), Awesomeness(0.5));
 
         let mut systems = Systems::new();
-        systems.add_system(Box::new(AwesomenessReporter{}));
+        systems.add_system(Box::new(AwesomenessReporter {}));
         systems.update(&mut world);
     }
 }
