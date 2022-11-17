@@ -224,7 +224,6 @@ mod test {
     struct Agent {}
     impl Entity for Agent {}
 
-
     // Adds health based on regeneration component.
     struct HealthPropagator {}
     impl System for HealthPropagator {
@@ -266,6 +265,7 @@ mod test {
         let player_id = world.add_entity(Box::new(Agent {}));
         world.add_component(&player_id, Health(1.0));
         world.add_component(&player_id, Regeneration(0.0));
+        world.add_component(&player_id, Position{x: 0.0, y: 0.0, yaw: 0.0});
 
         let monster_id = world.add_entity(Box::new(Agent {}));
         world.add_component(&monster_id, Health(1.0));
@@ -275,6 +275,15 @@ mod test {
         assert_eq!(world.component::<Regeneration>(&monster_id).unwrap().0, 0.5);
         world.component_mut::<Regeneration>(&monster_id).unwrap().0 = 1.5;
         assert_eq!(world.component::<Regeneration>(&monster_id).unwrap().0, 1.5);
+
+        {
+            // Check that we can read another component of the same type by id.
+            for (entity_health, mut _health) in world.component_iter_mut::<Health>() {
+                if entity_health == player_id {
+                    let mut _z = world.component_mut::<Health>(&monster_id);
+                }
+            }
+        }
 
         let mut systems = Systems::new();
 
