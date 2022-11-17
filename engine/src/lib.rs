@@ -7,9 +7,6 @@ pub use as_any::AsAny;
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub struct EntityId(usize);
 
-/// Things in the world.
-pub trait Entity {}
-
 /// Entities have a component.
 pub trait Component: AsAny {}
 
@@ -23,7 +20,7 @@ use std::cell::Ref;
 #[derive(Default)]
 pub struct World {
     index: usize,
-    entities: std::collections::HashMap<EntityId, Box<dyn Entity>>,
+    entities: std::collections::HashSet<EntityId>,
     components: std::collections::HashMap<
         std::any::TypeId,
         std::collections::HashMap<EntityId, std::cell::RefCell<Box<dyn Component>>>,
@@ -91,9 +88,9 @@ impl World {
         Default::default()
     }
 
-    pub fn add_entity(&mut self, entity: Box<dyn Entity>) -> EntityId {
+    pub fn add_entity(&mut self) -> EntityId {
         let new_id = self.make_id();
-        self.entities.insert(new_id.clone(), entity);
+        self.entities.insert(new_id.clone());
         new_id
     }
 
@@ -121,9 +118,10 @@ impl World {
     }
 
     pub fn remove_entity(&mut self, entity: &EntityId) {
-        self.entities.remove(entity);
-        for (_t, comps) in self.components.iter_mut() {
-            comps.remove(entity);
+        if self.entities.remove(entity) {
+            for (_t, comps) in self.components.iter_mut() {
+                comps.remove(entity);
+            }
         }
     }
 
@@ -221,9 +219,6 @@ mod test {
     struct Regeneration(f32);
     impl Component for Regeneration {}
 
-    struct Agent {}
-    impl Entity for Agent {}
-
     // Adds health based on regeneration component.
     struct HealthPropagator {}
     impl System for HealthPropagator {
@@ -262,12 +257,11 @@ mod test {
     fn test_things() {
         let mut world = World::new();
 
-        let player_id = world.add_entity(Box::new(Agent {}));
+        let player_id = world.add_entity();
         world.add_component(&player_id, Health(1.0));
         world.add_component(&player_id, Regeneration(0.0));
-        world.add_component(&player_id, Position{x: 0.0, y: 0.0, yaw: 0.0});
 
-        let monster_id = world.add_entity(Box::new(Agent {}));
+        let monster_id = world.add_entity();
         world.add_component(&monster_id, Health(1.0));
         world.add_component(&monster_id, Regeneration(0.5));
 
