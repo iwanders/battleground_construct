@@ -62,37 +62,44 @@ impl<'a, T: Component + 'static> Iterator for ComponentIterator<'a, T> {
         }
     }
 }
-/*
+
+use std::cell::RefMut;
 pub struct ComponentIteratorMut<'a, T: Component + 'static> {
-    entries: &'a mut Vec<(EntityId, Box<dyn Component>)>,
+    entries: Option<std::cell::RefMut<'a, [(EntityId, Box<dyn Component>)]>>,
     index: usize,
     phantom: std::marker::PhantomData<T>,
 }
 
-
 impl<'a, T: Component + 'static> Iterator for ComponentIteratorMut<'a, T> {
-    type Item = (EntityId, &'a mut T);
+    type Item = (EntityId, RefMut<'a, T>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let current = self.index;
-        if current >= self.entries.len() {
-            return None;
+        match self.entries.take() {
+            Some(borrow) => match *borrow {
+                [] => None,
+                [_, ..] => {
+                    // let (head, tail) = RefMut::map_split(borrow, |slice| (&mut slice[0], &mut slice[1..]));
+                    let (head, tail) = RefMut::map_split(borrow, |slice| {
+                        let (a, b) = slice.split_at_mut(1);
+                        (&mut a[0],b)
+                    });
+                    self.entries.replace(tail);
+                    Some((
+                        head.0.clone(),
+                        RefMut::map(head, |v| {
+                            (*v.1)
+                                .as_any_mut()
+                                .downcast_mut::<T>()
+                                .expect("Unwrap should succeed")
+                        }),
+                    ))
+                }
+            },
+            None => None,
         }
-
-
-        let record = self.entries.get_mut(current).unwrap();
-
-
-        self.index = current + 1;
-        use std::ops::Deref;
-        use std::ops::DerefMut;
-
-        Some((
-            record.0.clone(),
-            record.1.deref_mut().as_any_mut().downcast_mut::<T>().unwrap(),
-        ))
     }
-}*/
+}
+
 
 impl World {
     pub fn new() -> Self {
@@ -127,19 +134,19 @@ impl World {
         }
     }
 
-    /*
     pub fn component_iter_mut<'a, C: Component + 'static>(&'a mut self) -> ComponentIteratorMut<'a, C> {
         let v = self.components.get_mut(&TypeId::of::<C>());
         if v.is_none() {
             panic!("yikes");
         }
         ComponentIteratorMut::<'a, C> {
-            entries: v.unwrap(),
+            entries: Some(RefMut::map(v.unwrap().borrow_mut(), |v| &mut v[..])),
             index: 0,
             phantom: PhantomData,
         }
     }
-    */
+
+
 
     fn make_id(&mut self) -> EntityId {
         self.index += 1;
@@ -185,6 +192,13 @@ mod test {
     impl System for AwesomenessReporter {
         fn update(&mut self, world: &mut World) {
             // get iterator for a type.
+            for (entity, awesomeness_component) in world.component_iter::<Awesomeness>() {
+                println!("Entity: {entity:?} - component: {awesomeness_component:?}");
+            }
+            for (entity, mut awesomeness_component) in world.component_iter_mut::<Awesomeness>() {
+                awesomeness_component.0 += 10.0;
+                println!("Entity: {entity:?} - component: {awesomeness_component:?}");
+            }
             for (entity, awesomeness_component) in world.component_iter::<Awesomeness>() {
                 println!("Entity: {entity:?} - component: {awesomeness_component:?}");
             }
