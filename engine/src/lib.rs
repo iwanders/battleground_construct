@@ -107,11 +107,6 @@ impl World {
             v = self.components.get_mut(&TypeId::of::<C>());
         }
         let v = v.unwrap();
-        // let mut c = v.get_mut(&entity);
-        // if c.is_none() {
-        // v.insert(entity, Default::default());
-        // c = v.get_mut(&entity);
-        // }
         v.insert(entity, std::cell::RefCell::new(Box::new(component)));
     }
 
@@ -124,6 +119,13 @@ impl World {
             entries: v.unwrap().iter(),
 
             phantom: PhantomData,
+        }
+    }
+
+    pub fn remove_entity(&mut self, entity: &EntityId) {
+        self.entities.remove(entity);
+        for (t, comps) in self.components.iter_mut() {
+            comps.remove(entity);
         }
     }
 
@@ -141,7 +143,8 @@ impl World {
         }
     }
 
-    pub fn remove_entity(&mut self, entity: EntityId) {}
+    // pub fn component<'a, C: Component + 'static>(&self, entity: EntityId) -> std::cell::Ref<'a, Component> {
+    // }
 
     fn make_id(&mut self) -> EntityId {
         self.index += 1;
@@ -192,7 +195,7 @@ mod test {
                 println!("Entity: {entity:?} - component: {awesomeness_component:?}");
             }
             for (entity, mut awesomeness_component) in world.component_iter_mut::<Awesomeness>() {
-            awesomeness_component.0 += 10.0;
+            awesomeness_component.0 += 0.1;
             println!("Entity: {entity:?} - component: {awesomeness_component:?}");
             }
             for (entity, awesomeness_component) in world.component_iter::<Awesomeness>() {
@@ -215,7 +218,22 @@ mod test {
             }
         }
     }
-    /**/
+    struct DeleteLowHealth {}
+    impl System for DeleteLowHealth {
+        fn update(&mut self, world: &mut World) {
+            let mut to_delete:  std::collections::HashSet<EntityId> = Default::default();
+            for (entity, health) in world.component_iter_mut::<Health>() 
+            {
+                if (health.0 <= 1.5) {
+                    to_delete.insert(entity);
+                }
+            }
+            for e in to_delete {
+                println!("Removing {e:?}");
+                world.remove_entity(&e);
+            }
+        }
+    }
 
     #[test]
     fn test_things() {
@@ -232,6 +250,7 @@ mod test {
         let mut systems = Systems::new();
         systems.add_system(Box::new(AwesomenessReporter {}));
         systems.add_system(Box::new(HealthPropagator {}));
+        systems.add_system(Box::new(DeleteLowHealth {}));
         systems.update(&mut world);
     }
 }
