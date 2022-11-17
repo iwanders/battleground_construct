@@ -26,14 +26,13 @@ pub struct World {
     entities: std::collections::HashMap<EntityId, Box<dyn Entity>>,
     components: std::collections::HashMap<
         std::any::TypeId,
-        std::cell::RefCell<Vec<(EntityId, Box<dyn Component>)>>,
+        std::collections::HashMap<EntityId, std::cell::RefCell<Box<dyn Component>>>,
     >,
 }
 
 // Adapted from https://stackoverflow.com/a/68737585
 pub struct ComponentIterator<'a, T: Component + 'static> {
-    entries: Option<std::cell::Ref<'a, [(EntityId, Box<dyn Component>)]>>,
-    index: usize,
+    entries: std::collections::hash_map::Iter<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>,
     phantom: std::marker::PhantomData<T>,
 }
 
@@ -41,32 +40,29 @@ impl<'a, T: Component + 'static> Iterator for ComponentIterator<'a, T> {
     type Item = (EntityId, Ref<'a, T>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.entries.take() {
-            Some(borrow) => match *borrow {
-                [] => None,
-                [_, ..] => {
-                    let (head, tail) = Ref::map_split(borrow, |slice| (&slice[0], &slice[1..]));
-                    self.entries.replace(tail);
-                    Some((
-                        head.0.clone(),
-                        Ref::map(head, |v| {
-                            (*v.1)
-                                .as_any_ref()
-                                .downcast_ref::<T>()
-                                .expect("Unwrap should succeed")
-                        }),
-                    ))
-                }
-            },
+        let next = self.entries.next();
+        use std::ops::Deref;
+
+        match next {
+            Some(v) => Some((
+                v.0.clone(),
+                std::cell::Ref::map(v.1.borrow(), |v| {
+                    v.deref()
+                        .as_any_ref()
+                        .downcast_ref::<T>()
+                        .expect("Unwrap should succeed")
+                }),
+            )),
             None => None,
         }
     }
 }
 
 use std::cell::RefMut;
+
 pub struct ComponentIteratorMut<'a, T: Component + 'static> {
-    entries: Option<std::cell::RefMut<'a, [(EntityId, Box<dyn Component>)]>>,
-    index: usize,
+    entries:
+        std::collections::hash_map::IterMut<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>,
     phantom: std::marker::PhantomData<T>,
 }
 
@@ -74,32 +70,24 @@ impl<'a, T: Component + 'static> Iterator for ComponentIteratorMut<'a, T> {
     type Item = (EntityId, RefMut<'a, T>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.entries.take() {
-            Some(borrow) => match *borrow {
-                [] => None,
-                [_, ..] => {
-                    // let (head, tail) = RefMut::map_split(borrow, |slice| (&mut slice[0], &mut slice[1..]));
-                    let (head, tail) = RefMut::map_split(borrow, |slice| {
-                        let (a, b) = slice.split_at_mut(1);
-                        (&mut a[0], b)
-                    });
-                    self.entries.replace(tail);
-                    Some((
-                        head.0.clone(),
-                        RefMut::map(head, |v| {
-                            (*v.1)
-                                .as_any_mut()
-                                .downcast_mut::<T>()
-                                .expect("Unwrap should succeed")
-                        }),
-                    ))
-                }
-            },
+        let next = self.entries.next();
+        use std::ops::DerefMut;
+        use std::ops::Deref;
+
+        match next {
+            Some(v) => Some((
+                v.0.clone(),
+                std::cell::RefMut::map(v.1.borrow_mut(), |v| {
+                    v.deref_mut()
+                        .as_any_mut()
+                        .downcast_mut::<T>()
+                        .expect("Unwrap should succeed")
+                }),
+            )),
             None => None,
         }
     }
 }
-
 impl World {
     pub fn new() -> Self {
         Default::default()
@@ -115,10 +103,16 @@ impl World {
         let mut v = self.components.get_mut(&TypeId::of::<C>());
         if v.is_none() {
             self.components
-                .insert(TypeId::of::<C>(), std::cell::RefCell::new(vec![]));
+                .insert(TypeId::of::<C>(), Default::default());
             v = self.components.get_mut(&TypeId::of::<C>());
         }
-        v.unwrap().get_mut().push((entity, Box::new(component)));
+        let v = v.unwrap();
+        // let mut c = v.get_mut(&entity);
+        // if c.is_none() {
+        // v.insert(entity, Default::default());
+        // c = v.get_mut(&entity);
+        // }
+        v.insert(entity, std::cell::RefCell::new(Box::new(component)));
     }
 
     pub fn component_iter<'a, C: Component + 'static>(&'a self) -> ComponentIterator<'a, C> {
@@ -127,22 +121,22 @@ impl World {
             panic!("yikes");
         }
         ComponentIterator::<'a, C> {
-            entries: Some(Ref::map(v.unwrap().borrow(), |v| &v[..])),
-            index: 0,
+            entries: v.unwrap().iter(),
+
             phantom: PhantomData,
         }
     }
 
     /// Method is not const, to allow different component types to be accessed in mutable fashion
     /// at the same time. But it will panic if we're doing a double borrow.
-    pub fn component_iter_mut<'a, C: Component + 'static>(&'a self) -> ComponentIteratorMut<'a, C> {
-        let v = self.components.get(&TypeId::of::<C>());
+    pub fn component_iter_mut<'a, C: Component + 'static>(&'a mut self) -> ComponentIteratorMut<'a, C> {
+        let v = self.components.get_mut(&TypeId::of::<C>());
         if v.is_none() {
             panic!("yikes");
         }
         ComponentIteratorMut::<'a, C> {
-            entries: Some(RefMut::map(v.unwrap().borrow_mut(), |v| &mut v[..])),
-            index: 0,
+            entries: v.unwrap().iter_mut(),
+
             phantom: PhantomData,
         }
     }
@@ -198,8 +192,8 @@ mod test {
                 println!("Entity: {entity:?} - component: {awesomeness_component:?}");
             }
             for (entity, mut awesomeness_component) in world.component_iter_mut::<Awesomeness>() {
-                awesomeness_component.0 += 10.0;
-                println!("Entity: {entity:?} - component: {awesomeness_component:?}");
+            awesomeness_component.0 += 10.0;
+            println!("Entity: {entity:?} - component: {awesomeness_component:?}");
             }
             for (entity, awesomeness_component) in world.component_iter::<Awesomeness>() {
                 println!("Entity: {entity:?} - component: {awesomeness_component:?}");
@@ -212,15 +206,16 @@ mod test {
         fn update(&mut self, world: &mut World) {
             for (entity_awesomeness, awesomeness_component) in world.component_iter::<Awesomeness>()
             {
-                for (entity_health, mut health) in world.component_iter_mut::<Health>() {
-                    if entity_awesomeness == entity_health {
-                        println!("Entity: {entity_awesomeness:?} - adding: {awesomeness_component:?} to {health:?}");
-                        health.0 += awesomeness_component.0;
-                    }
-                }
+                // for (entity_health, mut health) in world.component_iter_mut::<Health>() {
+                    // if entity_awesomeness == entity_health {
+                        // println!("Entity: {entity_awesomeness:?} - adding: {awesomeness_component:?} to {health:?}");
+                        // health.0 += awesomeness_component.0;
+                    // }
+                // }
             }
         }
     }
+    /**/
 
     #[test]
     fn test_things() {
