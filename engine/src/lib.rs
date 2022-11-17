@@ -143,8 +143,45 @@ impl World {
         }
     }
 
-    // pub fn component<'a, C: Component + 'static>(&self, entity: EntityId) -> std::cell::Ref<'a, Component> {
-    // }
+    pub fn component<'a, C: Component + 'static>(&'a self, entity: &EntityId) -> Option<std::cell::Ref<'a, C>> {
+        let v = self.components.get(&TypeId::of::<C>());
+        if v.is_none() {
+            panic!("yikes");
+        }
+        use std::ops::Deref;
+        let v = v.unwrap().get(&entity);
+        match v {
+            Some(rc_component) => {
+                Some(std::cell::Ref::map(rc_component.borrow(), |v| {
+                    v.deref()
+                        .as_any_ref()
+                        .downcast_ref::<C>()
+                        .expect("Unwrap should succeed")
+                }))
+            },
+            None => None,
+        }
+    }
+    pub fn component_mut<'a, C: Component + 'static>(&'a self, entity: &EntityId) -> Option<std::cell::RefMut<'a, C>> {
+        let v = self.components.get(&TypeId::of::<C>());
+        if v.is_none() {
+            panic!("yikes");
+        }
+        use std::ops::Deref;
+        use std::ops::DerefMut;
+        let v = v.unwrap().get(&entity);
+        match v {
+            Some(rc_component) => {
+                Some(std::cell::RefMut::map(rc_component.borrow_mut(), |v| {
+                    v.deref_mut()
+                        .as_any_mut()
+                        .downcast_mut::<C>()
+                        .expect("Unwrap should succeed")
+                }))
+            },
+            None => None,
+        }
+    }
 
     fn make_id(&mut self) -> EntityId {
         self.index += 1;
@@ -246,6 +283,9 @@ mod test {
         let monster_id = world.add_entity(Box::new(Agent {}));
         world.add_component(monster_id.clone(), Health(1.0));
         world.add_component(monster_id.clone(), Awesomeness(0.5));
+        assert_eq!(world.component::<Awesomeness>(&monster_id).unwrap().0, 0.5);
+        (world.component_mut::<Awesomeness>(&monster_id).unwrap()).0 = 1.5;
+        assert_eq!(world.component::<Awesomeness>(&monster_id).unwrap().0, 1.5);
 
         let mut systems = Systems::new();
         systems.add_system(Box::new(AwesomenessReporter {}));
