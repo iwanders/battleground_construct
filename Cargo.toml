@@ -3,7 +3,7 @@
 members = [
     "engine",
     "battleground_construct",
-
+    "battleground_viewer",
 ]
 
 [profile.release]

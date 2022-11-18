@@ -14,6 +14,12 @@ impl Velocity {
             w: cgmath::Vector3::new(0.0, 0.0, 0.0),
         }
     }
+    pub fn from_se2(x: f32, y: f32, yaw: f32) -> Self {
+        Velocity {
+            v: cgmath::Vector3::new(x, y, 0.0),
+            w: cgmath::Vector3::new(0.0, 0.0, yaw),
+        }
+    }
 
     pub fn from_velocities(v: cgmath::Vector3<f32>, w: cgmath::Vector3<f32>) -> Self {
         Velocity { v, w }
