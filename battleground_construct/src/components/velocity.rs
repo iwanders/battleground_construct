@@ -47,7 +47,7 @@ mod test {
         v.v[0] = 1.0;
 
         let mut p = start;
-        for i in 0..100 {
+        for _i in 0..100 {
             p = (p.h * v.integrate(dt)).into();
         }
 

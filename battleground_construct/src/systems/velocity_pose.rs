@@ -6,7 +6,7 @@ use engine::prelude::*;
 pub struct VelocityPose {}
 impl System for VelocityPose {
     fn update(&mut self, world: &mut World) {
-        let (_entity, mut clock) = world
+        let (_entity, clock) = world
             .component_iter_mut::<Clock>()
             .next()
             .expect("Should have one clock");

@@ -6,8 +6,8 @@ use engine::prelude::*;
 pub struct AccelerationVelocity {}
 impl System for AccelerationVelocity {
     fn update(&mut self, world: &mut World) {
-        let (_entity, mut clock) = world
-            .component_iter_mut::<Clock>()
+        let (_entity, clock) = world
+            .component_iter::<Clock>()
             .next()
             .expect("Should have one clock");
         let dt = clock.step_as_f32();
