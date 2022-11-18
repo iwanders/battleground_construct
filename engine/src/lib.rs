@@ -18,7 +18,7 @@ pub trait System {
 }
 
 pub mod prelude {
-    pub use super::{EntityId, Component, System, World};
+    pub use super::{Component, EntityId, System, World};
 }
 
 use std::cell::Ref;
@@ -114,7 +114,10 @@ impl World {
     pub fn component_iter<'a, C: Component + 'static>(&'a self) -> ComponentIterator<'a, C> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
-            panic!("Yikes, tried to get <{}>, but that doesn't exist in this world.", std::any::type_name::<C>());
+            panic!(
+                "Yikes, tried to get <{}>, but that doesn't exist in this world.",
+                std::any::type_name::<C>()
+            );
         }
         ComponentIterator::<'a, C> {
             entries: v.unwrap().iter(),
@@ -136,7 +139,10 @@ impl World {
     pub fn component_iter_mut<'a, C: Component + 'static>(&'a self) -> ComponentIteratorMut<'a, C> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
-            panic!("Yikes, tried to get <{}>, but that doesn't exist in this world.", std::any::type_name::<C>());
+            panic!(
+                "Yikes, tried to get <{}>, but that doesn't exist in this world.",
+                std::any::type_name::<C>()
+            );
         }
         ComponentIteratorMut::<'a, C> {
             entries: v.unwrap().iter(),
@@ -151,7 +157,10 @@ impl World {
     ) -> Option<std::cell::Ref<'a, C>> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
-            panic!("Yikes, tried to get <{}>, but that doesn't exist in this world.", std::any::type_name::<C>());
+            panic!(
+                "Yikes, tried to get <{}>, but that doesn't exist in this world.",
+                std::any::type_name::<C>()
+            );
         }
         use std::ops::Deref;
         let v = v.unwrap().get(&entity);
@@ -171,7 +180,10 @@ impl World {
     ) -> Option<std::cell::RefMut<'a, C>> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
-            panic!("Yikes, tried to get <{}>, but that doesn't exist in this world.", std::any::type_name::<C>());
+            panic!(
+                "Yikes, tried to get <{}>, but that doesn't exist in this world.",
+                std::any::type_name::<C>()
+            );
         }
 
         use std::ops::DerefMut;
@@ -230,7 +242,8 @@ mod test {
     impl System for HealthPropagator {
         fn update(&mut self, world: &mut World) {
             // Mutable iteration inside immutable one!
-            for (entity_awesomeness, regeneration_component) in world.component_iter::<Regeneration>()
+            for (entity_awesomeness, regeneration_component) in
+                world.component_iter::<Regeneration>()
             {
                 for (entity_health, mut health) in world.component_iter_mut::<Health>() {
                     if entity_awesomeness == entity_health {
@@ -297,7 +310,6 @@ mod test {
 
         assert_eq!(world.component::<Regeneration>(&player_id).unwrap().0, 0.0);
         assert_eq!(world.component::<Health>(&player_id).unwrap().0, 1.0);
-
 
         // lets set the monster awesomeness to negative.
         world.component_mut::<Regeneration>(&monster_id).unwrap().0 = -1.0;

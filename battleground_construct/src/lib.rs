@@ -1,4 +1,5 @@
 pub mod components;
+pub mod display;
 pub mod systems;
 use components::clock::{Clock, ClockSystem};
 use engine::prelude::*;
@@ -19,23 +20,32 @@ impl Construct {
         let vehicle_id = world.add_entity();
         world.add_component(&vehicle_id, components::pose::Pose::new());
         world.add_component(&vehicle_id, components::velocity::Velocity::new());
-        world.add_component(&vehicle_id, components::differential_drive_base::DifferentialDriveBase::new());
-        world.add_component(&vehicle_id, components::bounding_box::BoundingBox::new());
+        world.add_component(
+            &vehicle_id,
+            components::differential_drive_base::DifferentialDriveBase::new(),
+        );
+        world.add_component(&vehicle_id, display::tank_body::TankBody::new());
 
         let mut systems = engine::Systems::new();
         systems.add_system(Box::new(ClockSystem {}));
-        systems.add_system(Box::new(systems::kinematics_differential_drive::KinematicsDifferentialDrive {}));
-        systems.add_system(Box::new(systems::velocity_pose::VelocityPose{}));
+        systems.add_system(Box::new(
+            systems::kinematics_differential_drive::KinematicsDifferentialDrive {},
+        ));
+        systems.add_system(Box::new(systems::velocity_pose::VelocityPose {}));
 
-        Construct { vehicle_id, world, systems }
+        Construct {
+            vehicle_id,
+            world,
+            systems,
+        }
     }
 
     pub fn update(&mut self) {
         self.systems.update(&mut self.world);
     }
 
-    pub fn world(&mut self) -> &mut World {
-        &mut self.world
+    pub fn world(&self) -> &World {
+        &self.world
     }
 
     pub fn vehicle_id(&self) -> EntityId {

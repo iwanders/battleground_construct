@@ -19,3 +19,9 @@ impl From<cgmath::Matrix4<f32>> for Pose {
         Pose { h: v }
     }
 }
+
+impl Into<cgmath::Matrix4<f32>> for Pose {
+    fn into(self) -> cgmath::Matrix4<f32> {
+        self.h
+    }
+}
