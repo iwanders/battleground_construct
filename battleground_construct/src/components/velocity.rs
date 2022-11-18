@@ -14,10 +14,10 @@ impl Velocity {
             w: cgmath::Vector3::new(0.0, 0.0, 0.0),
         }
     }
-    pub fn from_se2(x: f32, y: f32, yaw: f32) -> Self {
+    pub fn from_se2(x: f32, z: f32, yaw: f32) -> Self {
         Velocity {
-            v: cgmath::Vector3::new(x, y, 0.0),
-            w: cgmath::Vector3::new(0.0, 0.0, yaw),
+            v: cgmath::Vector3::new(x, 0.0, z),
+            w: cgmath::Vector3::new(0.0, yaw, 0.0),
         }
     }
 
@@ -30,9 +30,9 @@ impl Velocity {
             self.v[0] * dt,
             self.v[1] * dt,
             self.v[2] * dt,
-        )) * cgmath::Matrix4::<f32>::from_angle_x(cgmath::Rad(self.w[0]))
-            * cgmath::Matrix4::<f32>::from_angle_y(cgmath::Rad(self.w[1]))
-            * cgmath::Matrix4::<f32>::from_angle_z(cgmath::Rad(self.w[2]))
+        )) * cgmath::Matrix4::<f32>::from_angle_x(cgmath::Rad(self.w[0]) * dt)
+            * cgmath::Matrix4::<f32>::from_angle_y(cgmath::Rad(self.w[1]) * dt)
+            * cgmath::Matrix4::<f32>::from_angle_z(cgmath::Rad(self.w[2]) * dt)
     }
 
     pub fn integrate_pose(&self, pose: &super::pose::Pose, dt: f32) -> super::pose::Pose {
