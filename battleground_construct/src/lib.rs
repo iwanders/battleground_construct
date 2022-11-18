@@ -1,3 +1,5 @@
+// https://rust-lang.github.io/api-guidelines/naming.html
+
 pub mod components;
 pub mod display;
 pub mod systems;
@@ -26,12 +28,20 @@ impl Construct {
         );
         world.add_component(&vehicle_id, display::tank_body::TankBody::new());
 
+        let turret_id = world.add_entity();
+        world.add_component(&turret_id, components::revolute::Revolute::new());
+        world.add_component(&turret_id, components::pose::Pose::new());
+        world.add_component(&turret_id, components::parent::Parent::new(vehicle_id.clone()));
+        world.add_component(&turret_id, display::tank_turret::TankTurret::new());
+
+
         let mut systems = engine::Systems::new();
         systems.add_system(Box::new(ClockSystem {}));
         systems.add_system(Box::new(
             systems::kinematics_differential_drive::KinematicsDifferentialDrive {},
         ));
-        systems.add_system(Box::new(systems::velocity_pose::VelocityPose {}));
+        systems.add_system(Box::new(systems::velocity_pose::VelocityPose{}));
+        systems.add_system(Box::new(systems::revolute_pose::RevolutePose{}));
 
         Construct {
             vehicle_id,
