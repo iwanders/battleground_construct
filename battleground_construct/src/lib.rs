@@ -5,6 +5,7 @@ use engine::prelude::*;
 use engine::Systems;
 
 pub struct Construct {
+    vehicle_id: EntityId,
     world: World,
     systems: Systems,
 }
@@ -26,7 +27,7 @@ impl Construct {
         systems.add_system(Box::new(systems::kinematics_differential_drive::KinematicsDifferentialDrive {}));
         systems.add_system(Box::new(systems::velocity_pose::VelocityPose{}));
 
-        Construct { world, systems }
+        Construct { vehicle_id, world, systems }
     }
 
     pub fn update(&mut self) {
@@ -35,6 +36,10 @@ impl Construct {
 
     pub fn world(&mut self) -> &mut World {
         &mut self.world
+    }
+
+    pub fn vehicle_id(&self) -> EntityId {
+        self.vehicle_id.clone()
     }
 }
 
