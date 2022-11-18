@@ -1,5 +1,6 @@
 use engine::prelude::*;
 
+#[derive(Copy, Debug, Clone)]
 pub struct Velocity {
     /// Translation component.
     pub v: cgmath::Vector3<f32>,

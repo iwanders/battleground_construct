@@ -1,5 +1,6 @@
 use engine::prelude::*;
 
+#[derive(Copy, Debug, Clone)]
 pub struct Clock {
     epoch: std::time::Instant,
     current: std::time::Instant,
