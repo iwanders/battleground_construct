@@ -110,8 +110,10 @@ pub fn main() {
         // Set the cube's position... 
         let vehicle_id = construct.vehicle_id();
         let mut pose = *construct.world().component::<components::pose::Pose>(&vehicle_id).expect("Should have a pose for the vehicle");
+        let bbox = *construct.world().component::<components::bounding_box::BoundingBox>(&vehicle_id).expect("Should have a pose for the vehicle");
+        let size = bbox.dimensions();
         pose.h.w[2] += 2.0;
-        cube.set_transformation(pose.h);
+        cube.set_transformation(pose.h * Mat4::from_nonuniform_scale(size[0], size[1], size[2]));
 
         camera.set_viewport(frame_input.viewport);
         control.handle_events(&mut camera, &mut frame_input.events);
