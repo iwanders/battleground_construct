@@ -2,26 +2,26 @@ use engine::prelude::*;
 use super::primitives::*;
 
 #[derive(Copy, Debug, Clone)]
-pub struct TankBody {
+pub struct TankTurret {
     pub width: f32,
     pub length: f32,
     pub height: f32,
     pub z_offset: f32,
 }
 
-impl TankBody {
+impl TankTurret {
     pub fn new() -> Self {
-        TankBody {
-            width: 1.0,
-            length: 2.0,
-            height: 0.25,
-            z_offset: 0.5,
+        TankTurret {
+            width: 0.5,
+            length: 0.7,
+            height: 0.1,
+            z_offset: 0.0,
         }
     }
 }
-impl Component for TankBody {}
+impl Component for TankTurret {}
 
-impl Drawable for TankBody {
+impl Drawable for TankTurret {
     fn drawables(&self) -> Vec<Element> {
         vec![
             Element{

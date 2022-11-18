@@ -2,9 +2,8 @@ use three_d::*;
 
 use battleground_construct::components;
 use battleground_construct::display;
+use battleground_construct::display::primitives::Drawable;
 use battleground_construct::Construct;
- use battleground_construct::display::primitives::Drawable;
-
 
 struct Limiter {
     pub period: std::time::Duration,
@@ -41,24 +40,37 @@ struct ConstructViewer {
     limiter: Limiter,
 }
 
-fn element_to_gm(context: &Context, el: &display::primitives::Element) -> Gm<Mesh, PhysicalMaterial>{
+fn element_to_gm(
+    context: &Context,
+    el: &display::primitives::Element,
+) -> Gm<Mesh, PhysicalMaterial> {
     let mut mesh = {
         match el.primitive {
             display::primitives::Primitive::Cuboid(cuboid) => {
                 let mut m = CpuMesh::cube();
-                m.transform(&Mat4::from_nonuniform_scale(cuboid.length, cuboid.width, cuboid.height)).unwrap();
+                m.transform(&Mat4::from_nonuniform_scale(
+                    cuboid.length,
+                    cuboid.width,
+                    cuboid.height,
+                ))
+                .unwrap();
                 m
-            },
+            }
             display::primitives::Primitive::Sphere(sphere) => {
                 let mut m = CpuMesh::sphere(16);
                 m.transform(&Mat4::from_scale(sphere.radius)).unwrap();
                 m
-            },
+            }
             display::primitives::Primitive::Cylinder(cylinder) => {
                 let mut m = CpuMesh::cylinder(16);
-                m.transform(&Mat4::from_nonuniform_scale(cylinder.height, cylinder.radius, cylinder.radius)).unwrap();
+                m.transform(&Mat4::from_nonuniform_scale(
+                    cylinder.height,
+                    cylinder.radius,
+                    cylinder.radius,
+                ))
+                .unwrap();
                 m
-            },
+            }
         }
     };
     mesh.transform(&el.transform).unwrap();
@@ -66,7 +78,6 @@ fn element_to_gm(context: &Context, el: &display::primitives::Element) -> Gm<Mes
     let mut drawable = Gm::new(
         mesh,
         three_d::renderer::material::PhysicalMaterial::new_opaque(
-            
             &context,
             &CpuMaterial {
                 albedo: Color {
@@ -81,7 +92,6 @@ fn element_to_gm(context: &Context, el: &display::primitives::Element) -> Gm<Mes
     );
     drawable
 }
-
 
 impl ConstructViewer {
     pub fn new(construct: Construct) -> Self {
@@ -206,7 +216,13 @@ impl ConstructViewer {
             .world()
             .component::<display::tank_body::TankBody>(&vehicle_id)
             .expect("Should have a body");
-        let mut body_meshes = body.drawables().iter().map(|v|{element_to_gm(context, v)}).collect::<Vec<Gm<Mesh, PhysicalMaterial>>>();
+
+        let mut body_meshes = body
+            .drawables()
+            .iter()
+            .map(|v| element_to_gm(context, v))
+            .collect::<Vec<Gm<Mesh, PhysicalMaterial>>>();
+
         for gm in body_meshes.iter_mut() {
             gm.geometry.set_transformation(pose.into());
         }
