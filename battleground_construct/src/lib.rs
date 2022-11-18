@@ -4,7 +4,7 @@ use components::clock::{Clock, ClockSystem};
 use engine::prelude::*;
 use engine::Systems;
 
-struct Construct {
+pub struct Construct {
     world: World,
     systems: Systems,
 }

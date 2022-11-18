@@ -47,7 +47,7 @@ fn test_ball()
         vel.dv[2] = -9.81;
     }
 
-    for i in 0..100 {
+    for i in 0..20 {
 
         let current_time = world.component::<Clock>(&clock_id).expect("Should have a clock").elapsed_as_f32();
         systems.update(&mut world);
@@ -60,6 +60,6 @@ fn test_ball()
             x = pose.h.w[0],y = pose.h.w[1],z = pose.h.w[2],
             dx = vel.v[0],dy = vel.v[1],dz = vel.v[2],
             ddx = accel.dv[0],ddy = accel.dv[1],ddz = accel.dv[2]);
-        assert!((pose.h.w[2] - analytical_z).abs() < 0.01 || (analytical_z < 0.0));
+        assert!((pose.h.w[2] - analytical_z).abs() < 0.01);
     }
 }
