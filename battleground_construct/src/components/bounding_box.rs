@@ -19,4 +19,3 @@ impl BoundingBox {
     }
 }
 impl Component for BoundingBox {}
-
