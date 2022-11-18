@@ -1,5 +1,6 @@
 use engine::prelude::*;
 
+#[derive(Copy, Debug, Clone)]
 pub struct DifferentialDriveBase {
     pub track_width: f32,
     pub wheel_velocity_bounds: (f32, f32),
@@ -11,7 +12,7 @@ impl DifferentialDriveBase {
         DifferentialDriveBase {
             track_width: 1.0,
             wheel_velocity_bounds: (-1.0, 1.0),
-            wheel_velocity: (0.2, 0.8),
+            wheel_velocity: (0.6, 0.8),
         }
     }
 

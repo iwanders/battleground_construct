@@ -1,5 +1,6 @@
 use engine::prelude::*;
 
+#[derive(Copy, Debug, Clone)]
 pub struct Pose {
     pub h: cgmath::Matrix4<f32>,
 }
