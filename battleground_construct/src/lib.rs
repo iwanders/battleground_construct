@@ -1,8 +1,8 @@
 pub mod components;
+pub mod systems;
 use components::clock::{Clock, ClockSystem};
 use engine::prelude::*;
-use engine::{Systems};
-
+use engine::Systems;
 
 struct Construct {
     world: World,
@@ -15,18 +15,15 @@ impl Construct {
         let clock_id = world.add_entity();
         world.add_component(&clock_id, Clock::new());
         let mut systems = engine::Systems::new();
-        systems.add_system(Box::new(ClockSystem{}));
-        Construct{
-            world,
-            systems,
-        }
+        systems.add_system(Box::new(ClockSystem {}));
+        Construct { world, systems }
     }
 
     pub fn update(&mut self) {
         self.systems.update(&mut self.world);
     }
 
-    pub fn world(&mut self) -> &mut World{
+    pub fn world(&mut self) -> &mut World {
         &mut self.world
     }
 }
@@ -41,7 +38,8 @@ mod test {
         construct.update();
         construct.update();
         construct.update();
-        let (_entity, clock) = construct.world()
+        let (_entity, clock) = construct
+            .world()
             .component_iter_mut::<Clock>()
             .next()
             .expect("Should have one clock");

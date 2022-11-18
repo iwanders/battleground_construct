@@ -114,7 +114,7 @@ impl World {
     pub fn component_iter<'a, C: Component + 'static>(&'a self) -> ComponentIterator<'a, C> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
-            panic!("yikes");
+            panic!("Yikes, tried to get <{}>, but that doesn't exist in this world.", std::any::type_name::<C>());
         }
         ComponentIterator::<'a, C> {
             entries: v.unwrap().iter(),
@@ -136,7 +136,7 @@ impl World {
     pub fn component_iter_mut<'a, C: Component + 'static>(&'a self) -> ComponentIteratorMut<'a, C> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
-            panic!("yikes");
+            panic!("Yikes, tried to get <{}>, but that doesn't exist in this world.", std::any::type_name::<C>());
         }
         ComponentIteratorMut::<'a, C> {
             entries: v.unwrap().iter(),
@@ -151,7 +151,7 @@ impl World {
     ) -> Option<std::cell::Ref<'a, C>> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
-            panic!("yikes");
+            panic!("Yikes, tried to get <{}>, but that doesn't exist in this world.", std::any::type_name::<C>());
         }
         use std::ops::Deref;
         let v = v.unwrap().get(&entity);
@@ -171,7 +171,7 @@ impl World {
     ) -> Option<std::cell::RefMut<'a, C>> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
-            panic!("yikes");
+            panic!("Yikes, tried to get <{}>, but that doesn't exist in this world.", std::any::type_name::<C>());
         }
 
         use std::ops::DerefMut;
