@@ -39,7 +39,7 @@ pub fn main() {
         window.viewport(),
         vec3(5.0, 2.0, 2.5),
         vec3(0.0, 0.0, -0.5),
-        vec3(0.0, 1.0, 0.0),
+        vec3(0.0, 0.0, 1.0),
         degrees(45.0),
         0.1,
         1000.0,
@@ -74,7 +74,7 @@ pub fn main() {
             },
         ),
     );
-    ground_plane.set_transformation(Mat4::from_translation(vec3(0.0, 0.0, 0.0)) * Mat4::from_scale(1000.0) * Mat4::from_angle_x(Rad(std::f32::consts::PI / 2.0)));
+    ground_plane.set_transformation(Mat4::from_translation(vec3(0.0, 0.0, 0.0)) * Mat4::from_scale(1000.0));// * Mat4::from_angle_x(Rad(std::f32::consts::PI / 2.0)
 
 
     let mut cube = Gm::new(
@@ -97,7 +97,7 @@ pub fn main() {
 
 
     let light0 = three_d::renderer::light::AmbientLight::new(&context, 0.3, Color::WHITE);
-    let mut light1 = DirectionalLight::new(&context, 1.0, Color::WHITE, &vec3(0.0, -5.5, 0.0));
+    let mut light1 = DirectionalLight::new(&context, 1.0, Color::WHITE, &vec3(0.0, 0.0, -5.5));
 
 
     let mut limiter = Limiter::new(0.01);
@@ -110,7 +110,7 @@ pub fn main() {
         // Set the cube's position... 
         let vehicle_id = construct.vehicle_id();
         let mut pose = *construct.world().component::<components::pose::Pose>(&vehicle_id).expect("Should have a pose for the vehicle");
-        pose.h.w[1] += 2.0;
+        pose.h.w[2] += 2.0;
         cube.set_transformation(pose.h);
 
         camera.set_viewport(frame_input.viewport);
