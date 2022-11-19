@@ -35,7 +35,7 @@ pub struct World {
 
 // for vectors; https://stackoverflow.com/a/68737585
 pub struct ComponentIterator<'a, T: Component + 'static> {
-    entries: std::collections::hash_map::Iter<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>,
+    entries: Option<std::collections::hash_map::Iter<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>>,
     phantom: std::marker::PhantomData<T>,
 }
 
@@ -43,7 +43,10 @@ impl<'a, T: Component + 'static> Iterator for ComponentIterator<'a, T> {
     type Item = (EntityId, Ref<'a, T>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let next = self.entries.next();
+        if self.entries.is_none() {
+            return None;
+        }
+        let next = self.entries.as_mut().unwrap().next();
         use std::ops::Deref;
 
         match next {
@@ -64,7 +67,7 @@ impl<'a, T: Component + 'static> Iterator for ComponentIterator<'a, T> {
 use std::cell::RefMut;
 
 pub struct ComponentIteratorMut<'a, T: Component + 'static> {
-    entries: std::collections::hash_map::Iter<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>,
+    entries: Option<std::collections::hash_map::Iter<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>>,
     phantom: std::marker::PhantomData<T>,
 }
 
@@ -72,7 +75,11 @@ impl<'a, T: Component + 'static> Iterator for ComponentIteratorMut<'a, T> {
     type Item = (EntityId, RefMut<'a, T>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let next = self.entries.next();
+        if self.entries.is_none() {
+            return None;
+        }
+
+        let next = self.entries.as_mut().unwrap().next();
         use std::ops::DerefMut;
 
         match next {
@@ -114,14 +121,13 @@ impl World {
     pub fn component_iter<'a, C: Component + 'static>(&'a self) -> ComponentIterator<'a, C> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
-            panic!(
-                "Yikes, tried to get <{}>, but that doesn't exist in this world.",
-                std::any::type_name::<C>()
-            );
+            return ComponentIterator::<'a, C> {
+                entries: None,
+                phantom: PhantomData,
+            };
         }
         ComponentIterator::<'a, C> {
-            entries: v.unwrap().iter(),
-
+            entries: Some(v.unwrap().iter()),
             phantom: PhantomData,
         }
     }
@@ -139,13 +145,15 @@ impl World {
     pub fn component_iter_mut<'a, C: Component + 'static>(&'a self) -> ComponentIteratorMut<'a, C> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
-            panic!(
-                "Yikes, tried to get <{}>, but that doesn't exist in this world.",
-                std::any::type_name::<C>()
-            );
+            return 
+            ComponentIteratorMut::<'a, C> {
+                entries: None,
+
+                phantom: PhantomData,
+            };
         }
         ComponentIteratorMut::<'a, C> {
-            entries: v.unwrap().iter(),
+            entries: Some(v.unwrap().iter()),
 
             phantom: PhantomData,
         }
@@ -157,10 +165,7 @@ impl World {
     ) -> Option<std::cell::Ref<'a, C>> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
-            panic!(
-                "Yikes, tried to get <{}>, but that doesn't exist in this world.",
-                std::any::type_name::<C>()
-            );
+            return None;
         }
         use std::ops::Deref;
         let v = v.unwrap().get(&entity);
@@ -180,10 +185,7 @@ impl World {
     ) -> Option<std::cell::RefMut<'a, C>> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
-            panic!(
-                "Yikes, tried to get <{}>, but that doesn't exist in this world.",
-                std::any::type_name::<C>()
-            );
+            return None;
         }
 
         use std::ops::DerefMut;
