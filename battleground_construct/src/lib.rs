@@ -35,13 +35,19 @@ impl Construct {
                 );
                 world.add_component(&vehicle_id, display::tank_body::TankBody::new());
 
+                let turret_offset = world.add_entity();
+                let mut pose = components::pose::Pose::new();
+                pose.h.w[2] =  0.85;
+                world.add_component(&turret_offset, pose);
+                world.add_component(&turret_offset, components::parent::Parent::new(vehicle_id.clone()));
+
                 let turret_id = world.add_entity();
-                let mut turret_revolute = components::revolute::Revolute::new_with_transform(Mat4::from_translation(Vec3::new(0.0, 0.0, 0.85)));
+                let mut turret_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
                 turret_revolute.set_velocity(0.1);
-                turret_revolute.set_axis(Vec3::new(0.0, 0.0, 1.0));
+
                 world.add_component(&turret_id, turret_revolute);
                 world.add_component(&turret_id, components::pose::Pose::new());
-                world.add_component(&turret_id, components::parent::Parent::new(vehicle_id.clone()));
+                world.add_component(&turret_id, components::parent::Parent::new(turret_offset.clone()));
                 world.add_component(&turret_id, display::tank_turret::TankTurret::new());
             }
         }
