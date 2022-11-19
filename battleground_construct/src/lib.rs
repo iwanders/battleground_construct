@@ -35,19 +35,16 @@ impl Construct {
                 );
                 world.add_component(&vehicle_id, display::tank_body::TankBody::new());
 
-                let turret_offset = world.add_entity();
-                let mut pose = components::pose::Pose::new();
-                pose.h.w[2] =  0.85;
-                world.add_component(&turret_offset, pose);
-                world.add_component(&turret_offset, components::parent::Parent::new(vehicle_id.clone()));
-
                 let turret_id = world.add_entity();
                 let mut turret_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
                 turret_revolute.set_velocity(0.1);
 
                 world.add_component(&turret_id, turret_revolute);
+                let mut turret_offset = components::pose::PreTransform::new();
+                turret_offset.h.w[2] = 0.85;
+                world.add_component(&turret_id, turret_offset);
                 world.add_component(&turret_id, components::pose::Pose::new());
-                world.add_component(&turret_id, components::parent::Parent::new(turret_offset.clone()));
+                world.add_component(&turret_id, components::parent::Parent::new(vehicle_id.clone()));
                 world.add_component(&turret_id, display::tank_turret::TankTurret::new());
             }
         }
@@ -81,9 +78,11 @@ impl Construct {
         loop {
             let pose = self.world().component::<components::pose::Pose>(&current_id);
             if let Some(pose) = pose {
-                    // let current = gm.geometry.transformation();
                     current_pose = *pose * current_pose;
-                    // gm.geometry.set_transformation(updated);
+            }
+            let pre_pose = self.world().component::<components::pose::PreTransform>(&current_id);
+            if let Some(pre_pose) = pre_pose {
+                    current_pose = (**pre_pose) * current_pose;
             }
             if let Some(parent) = self
                 .world()

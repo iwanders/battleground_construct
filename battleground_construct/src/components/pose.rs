@@ -39,3 +39,30 @@ impl std::ops::Mul<Pose> for Pose {
         Pose{h: self.h * v.h}
     }
 }
+
+/// Transform to go before the Pose operation, from world coordinates to entity coordinates.
+#[derive(Copy, Debug, Clone)]
+pub struct PreTransform(Pose);
+impl std::ops::Deref for PreTransform {
+    type Target = Pose;
+    fn deref(&self) -> &<Self as std::ops::Deref>::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for PreTransform {
+    fn deref_mut(&mut self) -> &mut <Self as std::ops::Deref>::Target {
+        &mut self.0
+    }
+}
+
+impl PreTransform {
+    pub fn new() -> Self {
+        PreTransform (
+            Pose::new()
+        )
+    }
+}
+impl Component for PreTransform {}
+
+
