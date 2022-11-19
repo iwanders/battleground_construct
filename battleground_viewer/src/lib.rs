@@ -118,9 +118,9 @@ impl ConstructViewer {
         let mut control = OrbitControl::new(*camera.target(), 1.0, 100.0);
 
         let ambient_light =
-            three_d::renderer::light::AmbientLight::new(&context, 0.3, Color::WHITE);
+            three_d::renderer::light::AmbientLight::new(&context, 1.0, Color::WHITE);
         let mut directional_light =
-            DirectionalLight::new(&context, 1.0, Color::WHITE, &vec3(0.0, 0.0, -5.5));
+            DirectionalLight::new(&context, 1.5, Color::WHITE, &vec3(0.0, 0.0, -5.5));
 
         ConstructViewer {
             camera,

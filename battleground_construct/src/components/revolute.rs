@@ -7,6 +7,7 @@ pub struct Revolute {
     pub velocity_bounds: (f32, f32),
     pub velocity: f32,
     pub position: f32,
+    pub axis: cgmath::Vector3<f32>,
     pub transform: cgmath::Matrix4::<f32>,
 }
 
@@ -18,9 +19,14 @@ impl Revolute {
         Revolute {
             velocity: 0.0,
             position: 0.0,
+            axis: cgmath::Vector3::<f32>::new(1.0, 0.0, 0.0),
             velocity_bounds: (-1.0, 1.0),
             transform,
         }
+    }
+
+    pub fn set_axis(&mut self, axis:cgmath::Vector3::<f32>) {
+        self.axis = axis;
     }
 
     pub fn set_velocity(&mut self, velocity: f32) {
@@ -41,11 +47,10 @@ impl Revolute {
 
     pub fn integrate(&mut self, dt: f32){
         self.position = (self.position + dt * self.velocity).rem_euclid(std::f32::consts::PI * 2.0);
-        
     }
 
     pub fn to_pose(&self) -> Pose {
-        (cgmath::Matrix4::<f32>::from_angle_x(cgmath::Rad(self.position)) * self.transform).into()
+        (cgmath::Matrix4::<f32>::from_axis_angle(self.axis, cgmath::Rad(self.position)) * self.transform).into()
     }
 }
 impl Component for Revolute {}
