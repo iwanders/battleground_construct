@@ -44,6 +44,17 @@ impl Construct {
                 world.add_component(&turret_id, components::pose::Pose::new());
                 world.add_component(&turret_id, components::parent::Parent::new(vehicle_id.clone()));
                 world.add_component(&turret_id, display::tank_turret::TankTurret::new());
+
+
+                let barrel_id = world.add_entity();
+                let mut barrel_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 1.0, 0.0));
+                barrel_revolute.set_velocity(0.1);
+                world.add_component(&barrel_id, barrel_revolute);
+                world.add_component(&barrel_id, components::pose::PreTransform::from_translation(Vec3::new(0.5, 0.0, 0.0)));
+                world.add_component(&barrel_id, components::pose::Pose::new());
+                world.add_component(&barrel_id, components::parent::Parent::new(turret_id.clone()));
+                world.add_component(&barrel_id, display::tank_barrel::TankBarrel::new());
+                
             }
         }
 

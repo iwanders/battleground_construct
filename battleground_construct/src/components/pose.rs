@@ -13,7 +13,6 @@ pub struct PreTransform {
 
 macro_rules! create_transform_component {
     ($the_type:ty) => {
-
         impl $the_type {
             pub fn new() -> Self {
                 Self {
