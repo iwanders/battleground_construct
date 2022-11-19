@@ -74,6 +74,28 @@ impl Construct {
     pub fn world(&self) -> &World {
         &self.world
     }
+
+    pub fn entity_pose(&self, entity: &EntityId) -> components::pose::Pose {
+        let mut current_id = entity.clone();
+        let mut current_pose = components::pose::Pose::new();
+        loop {
+            let pose = self.world().component::<components::pose::Pose>(&current_id);
+            if let Some(pose) = pose {
+                    // let current = gm.geometry.transformation();
+                    current_pose = *pose * current_pose;
+                    // gm.geometry.set_transformation(updated);
+            }
+            if let Some(parent) = self
+                .world()
+                .component::<components::parent::Parent>(&current_id)
+            {
+                current_id = parent.parent().clone();
+            } else {
+                break;
+            }
+        }
+        current_pose
+    }
 }
 
 #[cfg(test)]
