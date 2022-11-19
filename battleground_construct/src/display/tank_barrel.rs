@@ -23,7 +23,7 @@ impl Drawable for TankBarrel {
     fn drawables(&self) -> Vec<Element> {
         vec![
             Element{
-                transform:  Mat4::from_translation(Vec3::new(self.length, 0.0, 0.0)),
+                transform:  Mat4::from_translation(Vec3::new(self.length / 2.0, 0.0, 0.0)),
                 primitive: Primitive::Cuboid(Cuboid{width: self.width, height: self.height, length: self.length}),
                 color: Color{r: 255, g: 191, b: 0, a: 255},
             },
