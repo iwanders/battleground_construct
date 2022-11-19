@@ -255,6 +255,11 @@ impl ConstructViewer {
             &mut component_to_meshes::<display::tank_turret::TankTurret>(context, construct),
         );
 
+        res.append(
+            &mut component_to_meshes::<display::tank_barrel::TankBarrel>(context, construct),
+        );
+
+
         res
     }
 }
