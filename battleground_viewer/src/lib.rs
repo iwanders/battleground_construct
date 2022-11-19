@@ -87,6 +87,14 @@ fn element_to_gm(
                     b: el.color.b,
                     a: el.color.a,
                 },
+                emissive: Color {
+                    r: el.color.r,
+                    g: el.color.g,
+                    b: el.color.b,
+                    a: el.color.a,
+                },
+                //roughness: 0.0,
+                //metallic: 0.0,
                 ..Default::default()
             },
         ),
@@ -163,9 +171,9 @@ impl ConstructViewer {
         let mut control = OrbitControl::new(*camera.target(), 1.0, 100.0);
 
         let ambient_light =
-            three_d::renderer::light::AmbientLight::new(&context, 1.0, Color::WHITE);
+            three_d::renderer::light::AmbientLight::new(&context, 0.1, Color::WHITE);
         let mut directional_light =
-            DirectionalLight::new(&context, 1.5, Color::WHITE, &vec3(0.0, 0.0, -5.5));
+            DirectionalLight::new(&context, 1.5, Color::WHITE, &vec3(0.0, 0.0, -1.0));
 
         ConstructViewer {
             camera,
@@ -203,8 +211,8 @@ impl ConstructViewer {
             let elements = Self::render_construct(&self.context, &self.construct);
 
             // Skip the ground plane in the shadow map, otherwise we get no resolution.
-            // self.directional_light
-            // .generate_shadow_map(2048, elements.iter().skip(1).map(|x| &x.geometry));
+            self.directional_light
+            .generate_shadow_map(2048, elements.iter().skip(1).map(|x| &x.geometry));
 
             screen.render(
                 &self.camera,
