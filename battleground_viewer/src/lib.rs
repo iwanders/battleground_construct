@@ -80,7 +80,7 @@ fn element_to_gm(
     let mesh = Mesh::new(&context, &mesh);
     let mut drawable = Gm::new(
         mesh,
-        three_d::renderer::material::PhysicalMaterial::new_opaque(
+        three_d::renderer::material::PhysicalMaterial::new(
             &context,
             &CpuMaterial {
                 albedo: Color {
@@ -259,6 +259,9 @@ impl ConstructViewer {
 
         res.append(
             &mut component_to_meshes::<display::tank_barrel::TankBarrel>(context, construct),
+        );
+        res.append(
+            &mut component_to_meshes::<display::debug_box::DebugBox>(context, construct),
         );
 
 
