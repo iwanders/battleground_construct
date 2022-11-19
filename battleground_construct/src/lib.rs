@@ -40,9 +40,7 @@ impl Construct {
                 turret_revolute.set_velocity(0.1);
 
                 world.add_component(&turret_id, turret_revolute);
-                let mut turret_offset = components::pose::PreTransform::new();
-                turret_offset.h.w[2] = 0.85;
-                world.add_component(&turret_id, turret_offset);
+                world.add_component(&turret_id, components::pose::PreTransform::from_translation(Vec3::new(0.0, 0.0, 0.85)));
                 world.add_component(&turret_id, components::pose::Pose::new());
                 world.add_component(&turret_id, components::parent::Parent::new(vehicle_id.clone()));
                 world.add_component(&turret_id, display::tank_turret::TankTurret::new());
@@ -82,7 +80,7 @@ impl Construct {
             }
             let pre_pose = self.world().component::<components::pose::PreTransform>(&current_id);
             if let Some(pre_pose) = pre_pose {
-                    current_pose = (**pre_pose) * current_pose;
+                    current_pose = (pre_pose.transform() * current_pose.transform()).into();
             }
             if let Some(parent) = self
                 .world()
