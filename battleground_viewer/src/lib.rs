@@ -4,6 +4,7 @@ use battleground_construct::components;
 use battleground_construct::display;
 use battleground_construct::display::primitives::Drawable;
 use battleground_construct::Construct;
+use engine::prelude::*;
 
 struct Limiter {
     pub period: std::time::Duration,
@@ -93,6 +94,50 @@ fn element_to_gm(
     drawable
 }
 
+fn component_to_meshes<C: Component + Drawable + 'static>(
+    context: &Context,
+    construct: &Construct,
+) -> Vec<Gm<Mesh, PhysicalMaterial>> {
+    let mut res: Vec<Gm<Mesh, PhysicalMaterial>> = vec![];
+
+    for (element_id, component_with_drawables) in construct.world().component_iter::<C>() {
+        // println!("turret: {turret:?}");
+        let mut meshes = component_with_drawables
+            .drawables()
+            .iter()
+            .map(|v| element_to_gm(context, v))
+            .collect::<Vec<Gm<Mesh, PhysicalMaterial>>>();
+
+        let mut current_id = element_id;
+
+        // Collapse this up the stack.
+        loop {
+            // println!("Current: {current_id:?}");
+            let pose = construct
+                .world()
+                .component::<components::pose::Pose>(&current_id);
+            if let Some(pose) = pose {
+                for gm in meshes.iter_mut() {
+                    let current = gm.geometry.transformation();
+                    let updated = Into::<Mat4>::into(*pose) * current;
+                    gm.geometry.set_transformation(updated);
+                }
+            }
+            if let Some(parent) = construct
+                .world()
+                .component::<components::parent::Parent>(&current_id)
+            {
+                current_id = parent.parent().clone();
+            } else {
+                break;
+            }
+        }
+
+        res.append(&mut meshes);
+    }
+    res
+}
+
 impl ConstructViewer {
     pub fn new(construct: Construct) -> Self {
         let window = Window::new(WindowSettings {
@@ -104,7 +149,7 @@ impl ConstructViewer {
 
         let context = window.gl();
 
-        let limiter = Limiter::new(0.01);
+        let limiter = Limiter::new(0.001);
 
         let mut camera = Camera::new_perspective(
             window.viewport(),
@@ -139,6 +184,13 @@ impl ConstructViewer {
         self.window.render_loop(move |mut frame_input: FrameInput| {
             if self.limiter.elapsed() {
                 self.construct.update();
+                let (_entity, mut clock) = self
+                    .construct
+                    .world()
+                    .component_iter_mut::<components::clock::Clock>()
+                    .next()
+                    .expect("Should have one clock");
+                // println!("Realtime ratio: {}", clock.ratio_of_realtime());
             }
 
             self.camera.set_viewport(frame_input.viewport);
@@ -151,8 +203,8 @@ impl ConstructViewer {
             let elements = Self::render_construct(&self.context, &self.construct);
 
             // Skip the ground plane in the shadow map, otherwise we get no resolution.
-            self.directional_light
-                .generate_shadow_map(1024, elements.iter().skip(1).map(|x| &x.geometry));
+            // self.directional_light
+            // .generate_shadow_map(2048, elements.iter().skip(1).map(|x| &x.geometry));
 
             screen.render(
                 &self.camera,
@@ -205,67 +257,12 @@ impl ConstructViewer {
         );
         res.push(cube);
 
-        // Set the cube's position...
-        let vehicle_id = construct.vehicle_id();
-        let mut pose = *construct
-            .world()
-            .component::<components::pose::Pose>(&vehicle_id)
-            .expect("Should have a pose for the vehicle");
-
-        let body = construct
-            .world()
-            .component::<display::tank_body::TankBody>(&vehicle_id)
-            .expect("Should have a body");
-
-        let mut body_meshes = body
-            .drawables()
-            .iter()
-            .map(|v| element_to_gm(context, v))
-            .collect::<Vec<Gm<Mesh, PhysicalMaterial>>>();
-
-        for gm in body_meshes.iter_mut() {
-            gm.geometry.set_transformation(pose.into());
-        }
-        res.append(&mut body_meshes);
-
-        for (turret_id, turret) in construct
-            .world()
-            .component_iter::<display::tank_turret::TankTurret>()
-        {
-            println!("turret: {turret:?}");
-            let mut turret_meshes = turret
-                .drawables()
-                .iter()
-                .map(|v| element_to_gm(context, v))
-                .collect::<Vec<Gm<Mesh, PhysicalMaterial>>>();
-
-            let mut current_id = turret_id;
-
-            // Collapse this up the stack.
-            loop {
-                println!("Current: {current_id:?}");
-                let pose = construct
-                    .world()
-                    .component::<components::pose::Pose>(&current_id);
-                if let Some(pose) = pose {
-                    for gm in turret_meshes.iter_mut() {
-                        let current = gm.geometry.transformation();
-                        let updated = Into::<Mat4>::into(*pose) * current;
-                        gm.geometry.set_transformation(updated);
-                    }
-                }
-                if let Some(parent) = construct
-                    .world()
-                    .component::<components::parent::Parent>(&current_id)
-                {
-                    current_id = parent.parent().clone();
-                } else {
-                    break;
-                }
-            }
-
-            res.append(&mut turret_meshes);
-        }
+        res.append(&mut component_to_meshes::<display::tank_body::TankBody>(
+            context, construct,
+        ));
+        res.append(
+            &mut component_to_meshes::<display::tank_turret::TankTurret>(context, construct),
+        );
 
         res
     }

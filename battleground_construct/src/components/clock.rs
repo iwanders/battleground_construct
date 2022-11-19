@@ -25,6 +25,12 @@ impl Clock {
     pub fn tick(&mut self) {
         self.current += self.step;
     }
+
+    pub fn ratio_of_realtime(&self) -> f32 {
+        let sim = (self.current - self.epoch).as_secs_f32();
+        let realtime = (std::time::Instant::now() - self.epoch).as_secs_f32();
+        sim / realtime
+    }
 }
 
 impl Component for Clock {}
