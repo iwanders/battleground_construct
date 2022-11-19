@@ -195,7 +195,7 @@ impl ConstructViewer {
 
             // Skip the ground plane in the shadow map, otherwise we get no resolution.
             self.directional_light
-            .generate_shadow_map(2048, elements.iter().skip(1).map(|x| &x.geometry));
+                .generate_shadow_map(2048, elements.iter().skip(1).map(|x| &x.geometry));
 
             screen.render(
                 &self.camera,
