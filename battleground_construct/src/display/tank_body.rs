@@ -15,7 +15,7 @@ impl TankBody {
             width: 1.0,
             length: 2.0,
             height: 0.25,
-            z_offset: 0.5,
+            z_offset: 0.25,
         }
     }
 }

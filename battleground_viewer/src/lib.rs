@@ -49,10 +49,12 @@ fn element_to_gm(
         match el.primitive {
             display::primitives::Primitive::Cuboid(cuboid) => {
                 let mut m = CpuMesh::cube();
+                // Returns an axis aligned unconnected cube mesh with positions in the range [-1..1] in all axes.
+                // So default box is not identity.
                 m.transform(&Mat4::from_nonuniform_scale(
-                    cuboid.length,
-                    cuboid.width,
-                    cuboid.height,
+                    cuboid.length / 2.0,
+                    cuboid.width / 2.0,
+                    cuboid.height / 2.0,
                 ))
                 .unwrap();
                 m
