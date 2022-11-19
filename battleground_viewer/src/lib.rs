@@ -109,38 +109,21 @@ fn component_to_meshes<C: Component + Drawable + 'static>(
     let mut res: Vec<Gm<Mesh, PhysicalMaterial>> = vec![];
 
     for (element_id, component_with_drawables) in construct.world().component_iter::<C>() {
-        // println!("turret: {turret:?}");
         let mut meshes = component_with_drawables
             .drawables()
             .iter()
             .map(|v| element_to_gm(context, v))
             .collect::<Vec<Gm<Mesh, PhysicalMaterial>>>();
 
-        let mut current_id = element_id;
+        // Get the world pose for this entity, and thus mesh.
+        let world_pose = construct.entity_pose(&element_id);
 
         // Collapse this up the stack.
-        loop {
-            // println!("Current: {current_id:?}");
-            let pose = construct
-                .world()
-                .component::<components::pose::Pose>(&current_id);
-            if let Some(pose) = pose {
-                for gm in meshes.iter_mut() {
-                    let current = gm.geometry.transformation();
-                    let updated = Into::<Mat4>::into(*pose) * current;
-                    gm.geometry.set_transformation(updated);
-                }
-            }
-            if let Some(parent) = construct
-                .world()
-                .component::<components::parent::Parent>(&current_id)
-            {
-                current_id = parent.parent().clone();
-            } else {
-                break;
-            }
+        for gm in meshes.iter_mut() {
+            let current = gm.geometry.transformation();
+            let updated = *(world_pose) * current;
+            gm.geometry.set_transformation(updated);
         }
-
         res.append(&mut meshes);
     }
     res
