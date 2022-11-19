@@ -226,8 +226,46 @@ impl ConstructViewer {
         for gm in body_meshes.iter_mut() {
             gm.geometry.set_transformation(pose.into());
         }
-
         res.append(&mut body_meshes);
+
+        for (turret_id, turret) in construct
+            .world()
+            .component_iter::<display::tank_turret::TankTurret>()
+        {
+            println!("turret: {turret:?}");
+            let mut turret_meshes = turret
+                .drawables()
+                .iter()
+                .map(|v| element_to_gm(context, v))
+                .collect::<Vec<Gm<Mesh, PhysicalMaterial>>>();
+
+            let mut current_id = turret_id;
+
+            // Collapse this up the stack.
+            loop {
+                println!("Current: {current_id:?}");
+                let pose = construct
+                    .world()
+                    .component::<components::pose::Pose>(&current_id);
+                if let Some(pose) = pose {
+                    for gm in turret_meshes.iter_mut() {
+                        let current = gm.geometry.transformation();
+                        let updated = Into::<Mat4>::into(*pose) * current;
+                        gm.geometry.set_transformation(updated);
+                    }
+                }
+                if let Some(parent) = construct
+                    .world()
+                    .component::<components::parent::Parent>(&current_id)
+                {
+                    current_id = parent.parent().clone();
+                } else {
+                    break;
+                }
+            }
+
+            res.append(&mut turret_meshes);
+        }
 
         res
     }

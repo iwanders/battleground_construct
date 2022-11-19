@@ -40,7 +40,8 @@ impl Revolute {
     }
 
     pub fn integrate(&mut self, dt: f32){
-        self.position += (dt * self.velocity).rem_euclid(std::f32::consts::PI * 2.0);
+        self.position = (self.position + dt * self.velocity).rem_euclid(std::f32::consts::PI * 2.0);
+        
     }
 
     pub fn to_pose(&self) -> Pose {
