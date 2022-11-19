@@ -27,7 +27,7 @@ impl Drawable for TankTurret {
             Element{
                 transform:  Mat4::from_translation(Vec3::new(0.0, 0.0, self.z_offset)),
                 primitive: Primitive::Cuboid(Cuboid{width: self.width, height: self.height, length: self.length}),
-                color: Color{r: 0, g: 255, b: 0, a: 255},
+                color: Color{r: 255, g: 191, b: 0, a: 255},
             },
         ]
     }

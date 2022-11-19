@@ -6,6 +6,7 @@ pub mod systems;
 use components::clock::{Clock, ClockSystem};
 use engine::prelude::*;
 use engine::Systems;
+use crate::display::primitives::{Vec3, Mat4};
 
 pub struct Construct {
     vehicle_id: EntityId,
@@ -29,7 +30,9 @@ impl Construct {
         world.add_component(&vehicle_id, display::tank_body::TankBody::new());
 
         let turret_id = world.add_entity();
-        world.add_component(&turret_id, components::revolute::Revolute::new());
+        let mut turret_revolute = components::revolute::Revolute::new_with_transform(Mat4::from_translation(Vec3::new(0.0, 0.0, 1.0)));
+        turret_revolute.set_velocity(-0.2);
+        world.add_component(&turret_id, turret_revolute);
         world.add_component(&turret_id, components::pose::Pose::new());
         world.add_component(&turret_id, components::parent::Parent::new(vehicle_id.clone()));
         world.add_component(&turret_id, display::tank_turret::TankTurret::new());

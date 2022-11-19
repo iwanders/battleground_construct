@@ -11,6 +11,16 @@ impl Parent {
             parent
         }
     }
+    pub fn parent(&self) -> &EntityId {
+        &self.parent
+    }
 }
 impl Component for Parent {}
+
+
+impl Into<EntityId> for Parent {
+    fn into(self) -> EntityId {
+        self.parent
+    }
+}
 
