@@ -1,6 +1,5 @@
 use three_d::*;
 
-use battleground_construct::components;
 use battleground_construct::display;
 use battleground_construct::display::primitives::Drawable;
 use battleground_construct::Construct;
@@ -33,6 +32,7 @@ struct ConstructViewer {
     context: three_d::core::Context,
     ambient_light: three_d::renderer::light::AmbientLight,
     directional_light: DirectionalLight,
+    // control: FlyControl,
     control: OrbitControl,
     window: Window,
 
@@ -78,7 +78,7 @@ fn element_to_gm(
     };
     mesh.transform(&el.transform).unwrap();
     let mesh = Mesh::new(&context, &mesh);
-    let mut drawable = Gm::new(
+    let drawable = Gm::new(
         mesh,
         three_d::renderer::material::PhysicalMaterial::new(
             &context,
@@ -144,7 +144,7 @@ impl ConstructViewer {
 
         let limiter = Limiter::new(0.001);
 
-        let mut camera = Camera::new_perspective(
+        let camera = Camera::new_perspective(
             window.viewport(),
             vec3(5.0, 2.0, 2.5),
             vec3(0.0, 0.0, -0.5),
@@ -153,11 +153,21 @@ impl ConstructViewer {
             0.1,
             1000.0,
         );
-        let mut control = OrbitControl::new(*camera.target(), 1.0, 100.0);
+        let config = three_d::renderer::control::OrbitControlConfig {
+            speed_orbit_horizontal: 0.1,
+            speed_orbit_vertical: 0.1,
+            speed_zoom: 2.0,
+            speed_orbit_target_left: Some(0.1),
+            speed_orbit_target_up: Some(0.1),
+            ..Default::default()
+        };
+
+        let control = OrbitControl::new_with_config(config);
+        // let mut control = FlyControl::new(0.1);
 
         let ambient_light =
             three_d::renderer::light::AmbientLight::new(&context, 0.1, Color::WHITE);
-        let mut directional_light =
+        let directional_light =
             DirectionalLight::new(&context, 1.5, Color::WHITE, &vec3(0.0, 0.0, -1.0));
 
         ConstructViewer {
@@ -177,20 +187,22 @@ impl ConstructViewer {
         self.window.render_loop(move |mut frame_input: FrameInput| {
             if self.limiter.elapsed() {
                 self.construct.update();
-                let (_entity, mut clock) = self
+                /*
+                let (_entity, clock) = self
                     .construct
                     .world()
                     .component_iter_mut::<components::clock::Clock>()
                     .next()
                     .expect("Should have one clock");
-                // println!("Realtime ratio: {}", clock.ratio_of_realtime());
+                println!("Realtime ratio: {}", clock.ratio_of_realtime());
+                */
             }
 
             self.camera.set_viewport(frame_input.viewport);
             self.control
                 .handle_events(&mut self.camera, &mut frame_input.events);
 
-            let mut screen = frame_input.screen();
+            let screen = frame_input.screen();
             screen.clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0));
 
             let elements = Self::render_construct(&self.context, &self.construct);
@@ -260,10 +272,9 @@ impl ConstructViewer {
         res.append(
             &mut component_to_meshes::<display::tank_barrel::TankBarrel>(context, construct),
         );
-        res.append(
-            &mut component_to_meshes::<display::debug_box::DebugBox>(context, construct),
-        );
-
+        res.append(&mut component_to_meshes::<display::debug_box::DebugBox>(
+            context, construct,
+        ));
 
         res
     }
