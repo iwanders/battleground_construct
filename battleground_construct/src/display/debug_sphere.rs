@@ -8,9 +8,7 @@ pub struct DebugSphere {
 
 impl DebugSphere {
     pub fn with_radius(radius: f32) -> Self {
-        DebugSphere {
-            radius
-        }
+        DebugSphere { radius }
     }
     pub fn new() -> Self {
         Self::with_radius(1.0)
