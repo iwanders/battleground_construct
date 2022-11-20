@@ -155,7 +155,7 @@ impl ConstructViewer {
 
         let camera = Camera::new_perspective(
             window.viewport(),
-            vec3(5.0, 2.0, 2.5),
+            vec3(-5.0, 2.0, 1.5),
             vec3(0.0, 0.0, -0.5),
             vec3(0.0, 0.0, 1.0),
             degrees(45.0),
