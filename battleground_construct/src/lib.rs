@@ -48,7 +48,7 @@ impl Construct {
 
                 let barrel_id = world.add_entity();
                 let mut barrel_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 1.0, 0.0));
-                barrel_revolute.set_velocity(1.5);
+                barrel_revolute.set_velocity(0.0);
                 world.add_component(&barrel_id, barrel_revolute);
                 world.add_component(&barrel_id, components::pose::PreTransform::from_translation(Vec3::new(0.25, 0.0, 0.0)));
                 world.add_component(&barrel_id, components::pose::Pose::new());
@@ -58,6 +58,8 @@ impl Construct {
 
                 let nozzle_id = world.add_entity();
                 world.add_component(&nozzle_id, components::parent::Parent::new(barrel_id.clone()));
+                world.add_component(&nozzle_id, components::damage_dealer::DamageDealer::new(0.1));
+                world.add_component(&nozzle_id, components::cannon::Cannon::new());
                 world.add_component(&nozzle_id, components::pose::PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)));
                 world.add_component(&nozzle_id, display::debug_box::DebugBox::from_size(0.2));
                 
@@ -72,6 +74,7 @@ impl Construct {
         ));
         systems.add_system(Box::new(systems::velocity_pose::VelocityPose{}));
         systems.add_system(Box::new(systems::revolute_pose::RevolutePose{}));
+        systems.add_system(Box::new(systems::cannon_trigger::CannonTrigger{}));
 
         Construct {
             world,
@@ -88,27 +91,7 @@ impl Construct {
     }
 
     pub fn entity_pose(&self, entity: &EntityId) -> components::pose::Pose {
-        let mut current_id = entity.clone();
-        let mut current_pose = components::pose::Pose::new();
-        loop {
-            let pose = self.world().component::<components::pose::Pose>(&current_id);
-            if let Some(pose) = pose {
-                    current_pose = *pose * current_pose;
-            }
-            let pre_pose = self.world().component::<components::pose::PreTransform>(&current_id);
-            if let Some(pre_pose) = pre_pose {
-                    current_pose = (pre_pose.transform() * current_pose.transform()).into();
-            }
-            if let Some(parent) = self
-                .world()
-                .component::<components::parent::Parent>(&current_id)
-            {
-                current_id = parent.parent().clone();
-            } else {
-                break;
-            }
-        }
-        current_pose
+        components::pose::world_pose(&self.world, entity)
     }
 }
 
