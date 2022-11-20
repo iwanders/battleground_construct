@@ -39,15 +39,8 @@ impl System for CannonTrigger {
 
             
             // We added the pose, we can now hack up the muzzle_pose.
-            let muzzle_pose = muzzle_pose.transform().clone();
-            println!("Muzzle: {muzzle_pose:?}");
-            // Multiply the direction with the vector to get the velocity vector.
-            let direction = cgmath::Matrix3::<f32>::from_cols(muzzle_pose.x.truncate(), muzzle_pose.y.truncate(), muzzle_pose.z.truncate());
-            println!("direction: {direction:?}");
-            use cgmath::SquareMatrix;
-            let v = direction * cgmath::Vector3::<f32>::new(muzzle_velocity, 0.0, 0.0);
-            // let v = cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0);
-            println!("v: {v:?}");
+            // Velocity is in local frame...
+            let v = cgmath::Vector3::<f32>::new(muzzle_velocity, 0.0, 0.0);
             let projectile_velocity = Velocity::from_velocities(v, cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0));
             world.add_component::<Velocity>(&projectile_id, projectile_velocity);
             world.add_component(&projectile_id, crate::display::debug_box::DebugBox::from_size(0.2));
