@@ -48,8 +48,11 @@ impl System for CannonTrigger {
             );
 
             // Calculate the velocity vector in the global frame.
-            let v = muzzle_pose.transform()
-                * cgmath::Vector4::<f32>::new(muzzle_velocity, 0.0, 0.0, 1.0);
+            let mut muzzle_pose = muzzle_pose.transform().clone();
+            // zero out the translation components.
+            muzzle_pose.w[0] = 0.0;
+            muzzle_pose.w[1] = 0.0;
+            let v = muzzle_pose * cgmath::Vector4::<f32>::new(muzzle_velocity, 0.0, 0.0, 1.0);
             let projectile_velocity =
                 Velocity::from_velocities(v.truncate(), cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0));
 
