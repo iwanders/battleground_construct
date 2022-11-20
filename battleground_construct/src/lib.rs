@@ -1,5 +1,10 @@
 // https://rust-lang.github.io/api-guidelines/naming.html
 
+/*
+    Todo:
+        - Propagate velocities such that bullets get the correct initial velocity.
+*/
+
 pub mod components;
 pub mod display;
 pub mod systems;
@@ -98,6 +103,7 @@ impl Construct {
         systems.add_system(Box::new(systems::velocity_pose::VelocityPose {}));
         systems.add_system(Box::new(systems::revolute_pose::RevolutePose {}));
         systems.add_system(Box::new(systems::cannon_trigger::CannonTrigger {}));
+        systems.add_system(Box::new(systems::projectile_floor::ProjectileFloor {}));
 
         Construct { world, systems }
     }
