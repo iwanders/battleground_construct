@@ -11,3 +11,5 @@ pub mod point_projectile;
 pub mod pose;
 pub mod revolute;
 pub mod velocity;
+pub mod hit_sphere;
+pub mod hit_by;

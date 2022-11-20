@@ -153,6 +153,12 @@ impl World {
         }
     }
 
+    pub fn remove_entities(&mut self, entities: &[EntityId]) {
+        for entity in entities.iter() {
+            self.remove_entity(entity)
+        }
+    }
+
     pub fn entity_count(&self) -> usize{
         self.entities.len()
     }

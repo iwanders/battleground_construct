@@ -5,6 +5,8 @@ use battleground_construct::display::primitives::Drawable;
 use battleground_construct::Construct;
 use engine::prelude::*;
 
+const PRINT_DURATIONS: bool = false;
+
 struct Limiter {
     pub period: std::time::Duration,
     pub last_time: std::time::Instant,
@@ -195,7 +197,9 @@ impl ConstructViewer {
             while self.construct.elapsed_as_f64() < self.limiter.elapsed_as_f64() {
                 let now = std::time::Instant::now();
                 self.construct.update();
-                println!("construct taken: {}, entities: {}", now.elapsed().as_secs_f64(), self.construct.world().entity_count());
+                if PRINT_DURATIONS {
+                    println!("construct taken: {:1.8}, entities: {}", now.elapsed().as_secs_f64(), self.construct.world().entity_count());
+                }
             }
             /*
             if self.limiter.rate_elapsed() {
@@ -218,7 +222,9 @@ impl ConstructViewer {
 
             let now = std::time::Instant::now();
             let elements = Self::render_construct(&self.context, &self.construct);
-            println!("elements: {}", now.elapsed().as_secs_f64());
+            if PRINT_DURATIONS {
+                println!("elements: {}", now.elapsed().as_secs_f64());
+            }
 
             // Skip the ground plane in the shadow map, otherwise we get no resolution.
             self.directional_light
@@ -230,7 +236,10 @@ impl ConstructViewer {
                 elements.iter(),
                 &[&self.ambient_light, &self.directional_light],
             );
-            println!("render: {}", now.elapsed().as_secs_f64());
+
+            if PRINT_DURATIONS {
+                println!("render: {}", now.elapsed().as_secs_f64());
+            }
 
             FrameOutput::default()
         });
@@ -292,6 +301,10 @@ impl ConstructViewer {
         );
 
         res.append(&mut component_to_meshes::<display::debug_box::DebugBox>(
+            context, construct,
+        ));
+
+        res.append(&mut component_to_meshes::<display::debug_sphere::DebugSphere>(
             context, construct,
         ));
 

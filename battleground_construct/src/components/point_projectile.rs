@@ -9,8 +9,8 @@ impl PointProjectile {
     pub fn new(source: EntityId) -> Self {
         PointProjectile { source }
     }
-    pub fn source(&self) -> &EntityId {
-        &self.source
+    pub fn source(&self) -> EntityId {
+        self.source
     }
 }
 impl Component for PointProjectile {}
