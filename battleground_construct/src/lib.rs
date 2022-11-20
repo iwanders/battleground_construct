@@ -6,7 +6,7 @@ pub mod systems;
 use components::clock::{Clock, ClockSystem};
 use engine::prelude::*;
 use engine::Systems;
-use crate::display::primitives::{Vec3, Mat4};
+use crate::display::primitives::{Vec3};
 
 pub struct Construct {
     world: World,

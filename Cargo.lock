@@ -1232,9 +1232,8 @@ dependencies = [
 
 [[package]]
 name = "three-d"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f4125ec0cd1009fa85c8443249b464d368bafadfe6e41dc9f9ded974312f4b4"
+version = "0.15.0"
+source = "git+https://github.com/iwanders/asny-three-d?branch=orbit-control-improvements#72a4ce95df20bcf3972452a7910119398f76cc56"
 dependencies = [
  "cgmath",
  "egui",
