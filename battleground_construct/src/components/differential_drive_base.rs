@@ -12,7 +12,7 @@ impl DifferentialDriveBase {
         DifferentialDriveBase {
             track_width: 1.0,
             wheel_velocity_bounds: (-1.0, 1.0),
-            wheel_velocity: (0.6, 0.8),
+            wheel_velocity: (0.0, 0.0),
         }
     }
 

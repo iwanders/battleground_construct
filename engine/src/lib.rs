@@ -118,6 +118,15 @@ impl World {
         v.insert(entity.clone(), std::cell::RefCell::new(Box::new(component)));
     }
 
+    pub fn component_entities<C: Component + 'static>(&self) -> Vec<EntityId> {
+        let v = self.components.get(&TypeId::of::<C>());
+        if v.is_none() {
+            return vec![]
+        }
+        let v = v.unwrap();
+        v.keys().map(|x|{x.clone()}).collect::<_>()
+    }
+
     pub fn component_iter<'a, C: Component + 'static>(&'a self) -> ComponentIterator<'a, C> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {

@@ -30,6 +30,9 @@ macro_rules! create_transform_component {
             pub fn transform(&self) -> &cgmath::Matrix4::<f32> {
                 &self.h
             }
+            pub fn transform_mut(&mut self) -> &mut cgmath::Matrix4::<f32> {
+                &mut self.h
+            }
         }
         impl Component for $the_type {}
 
@@ -64,3 +67,26 @@ macro_rules! create_transform_component {
 }
 create_transform_component!(Pose);
 create_transform_component!(PreTransform);
+
+pub fn world_pose(world: &World, entity: &EntityId) -> Pose {
+    let mut current_id = entity.clone();
+    let mut current_pose = Pose::new();
+    loop {
+        let pose = world.component::<Pose>(&current_id);
+        if let Some(pose) = pose {
+                current_pose = *pose * current_pose;
+        }
+        let pre_pose = world.component::<PreTransform>(&current_id);
+        if let Some(pre_pose) = pre_pose {
+                current_pose = (pre_pose.transform() * current_pose.transform()).into();
+        }
+        if let Some(parent) = world
+            .component::<super::parent::Parent>(&current_id)
+        {
+            current_id = parent.parent().clone();
+        } else {
+            break;
+        }
+    }
+    current_pose
+}
