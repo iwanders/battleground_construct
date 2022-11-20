@@ -16,6 +16,13 @@ impl Acceleration {
         }
     }
 
+    pub fn gravity() -> Self {
+        Acceleration {
+            dv: cgmath::Vector3::new(0.0, 0.0, -9.81),
+            dw: cgmath::Vector3::new(0.0, 0.0, 0.0),
+        }
+    }
+
     pub fn integrate_velocity(
         &self,
         velocity: &super::velocity::Velocity,

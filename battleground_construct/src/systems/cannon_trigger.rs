@@ -1,5 +1,6 @@
 use super::components::cannon::Cannon;
 use super::components::pose::Pose;
+// use super::components::velocity::GlobalVelocity;
 use super::components::velocity::Velocity;
 use super::components::point_projectile::PointProjectile;
 use super::Clock;
@@ -31,19 +32,22 @@ impl System for CannonTrigger {
             let muzzle_pose = super::components::pose::world_pose(world, &cannon_entity);
 
 
-            // get the pose of the cannon in the world coordinates.
-            // spawn a new projectile.
+            // Get the pose of the cannon in the world coordinates. Then create the pose with the
+            // Orientation in the global frame.
             let projectile_id = world.add_entity();
             world.add_component::<PointProjectile>(&projectile_id, PointProjectile::new(cannon_entity.clone()));
-            world.add_component::<Pose>(&projectile_id, muzzle_pose.clone());
+            world.add_component::<Pose>(&projectile_id, Pose::from_mat4(cgmath::Matrix4::<f32>::from_translation(muzzle_pose.clone().w.truncate())));
 
-            
-            // We added the pose, we can now hack up the muzzle_pose.
-            // Velocity is in local frame...
-            let v = cgmath::Vector3::<f32>::new(muzzle_velocity, 0.0, 0.0);
-            let projectile_velocity = Velocity::from_velocities(v, cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0));
+            // Calculate the velocity vector in the global frame.
+            let v = muzzle_pose.transform() * cgmath::Vector4::<f32>::new(muzzle_velocity, 0.0, 0.0, 1.0);
+            let projectile_velocity = Velocity::from_velocities(v.truncate(), cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0));
+
+            // And add the velocity to the projectile.
             world.add_component::<Velocity>(&projectile_id, projectile_velocity);
             world.add_component(&projectile_id, crate::display::debug_box::DebugBox::from_size(0.2));
+
+            // Clearly not the place for this to be... but works for now.
+            world.add_component(&projectile_id, super::components::acceleration::Acceleration::gravity());
                 
             
         }
