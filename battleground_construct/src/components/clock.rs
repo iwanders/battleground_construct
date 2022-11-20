@@ -13,7 +13,7 @@ impl Clock {
         Clock {
             epoch: v,
             current: v,
-            step: std::time::Duration::from_secs_f32(0.01),
+            step: std::time::Duration::from_secs_f32(0.001),
         }
     }
     pub fn step_as_f32(&self) -> f32 {

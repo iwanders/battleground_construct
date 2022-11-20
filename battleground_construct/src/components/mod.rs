@@ -4,6 +4,8 @@ pub mod cannon;
 pub mod clock;
 pub mod damage_dealer;
 pub mod differential_drive_base;
+pub mod group;
+pub mod health;
 pub mod parent;
 pub mod point_projectile;
 pub mod pose;

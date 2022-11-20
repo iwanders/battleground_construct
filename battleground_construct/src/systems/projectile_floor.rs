@@ -1,5 +1,5 @@
-use super::components::pose::Pose;
 use super::components::point_projectile::PointProjectile;
+use super::components::pose::Pose;
 use engine::prelude::*;
 
 pub struct ProjectileFloor {}
