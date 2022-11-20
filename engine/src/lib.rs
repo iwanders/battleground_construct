@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 mod as_any;
 pub use as_any::AsAny;
 
-#[derive(Debug, Clone, Eq, Hash, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
 pub struct EntityId(usize);
 
 /// Entities have a component.
