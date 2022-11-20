@@ -44,7 +44,8 @@ impl System for CannonTrigger {
 
             // And add the velocity to the projectile.
             world.add_component::<Velocity>(&projectile_id, projectile_velocity);
-            world.add_component(&projectile_id, crate::display::debug_box::DebugBox::from_size(0.2));
+            // world.add_component(&projectile_id, crate::display::debug_box::DebugBox::from_size(0.2));
+            world.add_component(&projectile_id, crate::display::tank_bullet::TankBullet::new());
 
             // Clearly not the place for this to be... but works for now.
             world.add_component(&projectile_id, super::components::acceleration::Acceleration::gravity());
