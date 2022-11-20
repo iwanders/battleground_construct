@@ -12,7 +12,7 @@ impl Cannon {
         Self{
             reload_time: 0.1,
             last_fire_time: -2.0, // spawn ready to fire.
-            muzzle_velocity: 5.0,
+            muzzle_velocity: 10.0,
         }
     }
     pub fn is_ready(&self, current_time: f32) -> bool {

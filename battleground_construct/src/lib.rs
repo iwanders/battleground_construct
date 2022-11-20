@@ -72,6 +72,7 @@ impl Construct {
         systems.add_system(Box::new(
             systems::kinematics_differential_drive::KinematicsDifferentialDrive {},
         ));
+        systems.add_system(Box::new(systems::acceleration_velocity::AccelerationVelocity{}));
         systems.add_system(Box::new(systems::velocity_pose::VelocityPose{}));
         systems.add_system(Box::new(systems::revolute_pose::RevolutePose{}));
         systems.add_system(Box::new(systems::cannon_trigger::CannonTrigger{}));
