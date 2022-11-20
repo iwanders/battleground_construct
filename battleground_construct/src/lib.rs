@@ -24,8 +24,8 @@ impl Construct {
         let clock_id = world.add_entity();
         world.add_component(&clock_id, Clock::new());
 
-        for x in 0..10 {
-            for y in 0..10 {
+        for x in 0..1 {
+            for y in 0..1 {
                 let vehicle_id = world.add_entity();
                 let mut pose = components::pose::Pose::new();
                 pose.h.w[0] = (x as f32) * 5.0;
