@@ -9,7 +9,7 @@ pub struct Cannon {
 
 impl Cannon {
     pub fn new() -> Self {
-        Self{
+        Self {
             reload_time: 0.1,
             last_fire_time: -2.0, // spawn ready to fire.
             muzzle_velocity: 10.0,

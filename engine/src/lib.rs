@@ -35,7 +35,9 @@ pub struct World {
 
 // for vectors; https://stackoverflow.com/a/68737585
 pub struct ComponentIterator<'a, T: Component + 'static> {
-    entries: Option<std::collections::hash_map::Iter<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>>,
+    entries: Option<
+        std::collections::hash_map::Iter<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>,
+    >,
     phantom: std::marker::PhantomData<T>,
 }
 
@@ -67,7 +69,9 @@ impl<'a, T: Component + 'static> Iterator for ComponentIterator<'a, T> {
 use std::cell::RefMut;
 
 pub struct ComponentIteratorMut<'a, T: Component + 'static> {
-    entries: Option<std::collections::hash_map::Iter<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>>,
+    entries: Option<
+        std::collections::hash_map::Iter<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>,
+    >,
     phantom: std::marker::PhantomData<T>,
 }
 
@@ -121,10 +125,10 @@ impl World {
     pub fn component_entities<C: Component + 'static>(&self) -> Vec<EntityId> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
-            return vec![]
+            return vec![];
         }
         let v = v.unwrap();
-        v.keys().map(|x|{x.clone()}).collect::<_>()
+        v.keys().map(|x| x.clone()).collect::<_>()
     }
 
     pub fn component_iter<'a, C: Component + 'static>(&'a self) -> ComponentIterator<'a, C> {
@@ -154,8 +158,7 @@ impl World {
     pub fn component_iter_mut<'a, C: Component + 'static>(&'a self) -> ComponentIteratorMut<'a, C> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
-            return 
-            ComponentIteratorMut::<'a, C> {
+            return ComponentIteratorMut::<'a, C> {
                 entries: None,
 
                 phantom: PhantomData,
