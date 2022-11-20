@@ -144,6 +144,21 @@ impl World {
             phantom: PhantomData,
         }
     }
+    pub fn remove_components<C: Component + 'static>(&mut self, entities: &[EntityId]) -> Vec<Box<C>> {
+        let v = self.components.get_mut(&TypeId::of::<C>());
+        if v.is_none() {
+            return vec![];
+        }
+        let v = v.unwrap();
+        let mut res = vec![];
+        for entity in entities.iter() {
+            if let Some(old_entry) = v.remove(entity) {
+                res.push(std::cell::RefCell::into_inner(old_entry).as_any_box().downcast::<C>().unwrap());
+            }
+        }
+        res
+    }
+
 
     pub fn remove_entity(&mut self, entity: &EntityId) {
         if self.entities.remove(entity) {
