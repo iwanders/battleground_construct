@@ -8,16 +8,23 @@ use engine::prelude::*;
 struct Limiter {
     pub period: std::time::Duration,
     pub last_time: std::time::Instant,
+    pub epoch: std::time::Instant,
 }
 
 impl Limiter {
     pub fn new(period: f32) -> Self {
         Limiter {
+            epoch: std::time::Instant::now(),
             period: std::time::Duration::from_secs_f32(period),
             last_time: std::time::Instant::now(),
         }
     }
-    pub fn elapsed(&mut self) -> bool {
+
+    pub fn elapsed_as_f64(&self) -> f64{
+        self.epoch.elapsed().as_secs_f64()
+    }
+
+    pub fn rate_elapsed(&mut self) -> bool {
         let now = std::time::Instant::now();
         if (now - self.last_time) > self.period {
             self.last_time = now;
@@ -185,18 +192,22 @@ impl ConstructViewer {
     // Consumes the viewer...
     fn view_loop(mut self) -> () {
         self.window.render_loop(move |mut frame_input: FrameInput| {
-            if self.limiter.elapsed() {
+            while self.construct.elapsed_as_f64() < self.limiter.elapsed_as_f64() {
+                let now = std::time::Instant::now();
                 self.construct.update();
-                /*
+                println!("construct taken: {}, entities: {}", now.elapsed().as_secs_f64(), self.construct.world().entity_count());
+            }
+            /*
+            if self.limiter.rate_elapsed() {
                 let (_entity, clock) = self
                     .construct
                     .world()
-                    .component_iter_mut::<components::clock::Clock>()
+                    .component_iter_mut::<battleground_construct::components::clock::Clock>()
                     .next()
                     .expect("Should have one clock");
                 println!("Realtime ratio: {}", clock.ratio_of_realtime());
-                */
             }
+            */
 
             self.camera.set_viewport(frame_input.viewport);
             self.control
@@ -205,17 +216,21 @@ impl ConstructViewer {
             let screen = frame_input.screen();
             screen.clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0));
 
+            let now = std::time::Instant::now();
             let elements = Self::render_construct(&self.context, &self.construct);
+            println!("elements: {}", now.elapsed().as_secs_f64());
 
             // Skip the ground plane in the shadow map, otherwise we get no resolution.
             self.directional_light
                 .generate_shadow_map(2048, elements.iter().skip(1).map(|x| &x.geometry));
 
+            let now = std::time::Instant::now();
             screen.render(
                 &self.camera,
                 elements.iter(),
                 &[&self.ambient_light, &self.directional_light],
             );
+            println!("render: {}", now.elapsed().as_secs_f64());
 
             FrameOutput::default()
         });

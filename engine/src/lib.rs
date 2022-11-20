@@ -153,6 +153,10 @@ impl World {
         }
     }
 
+    pub fn entity_count(&self) -> usize{
+        self.entities.len()
+    }
+
     /// Method is not const, to allow different component types to be accessed in mutable fashion
     /// at the same time. But it will panic if we're doing a double borrow.
     pub fn component_iter_mut<'a, C: Component + 'static>(&'a self) -> ComponentIteratorMut<'a, C> {
