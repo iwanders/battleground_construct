@@ -1,5 +1,5 @@
-use engine::prelude::*;
 use super::primitives::*;
+use engine::prelude::*;
 
 #[derive(Copy, Debug, Clone)]
 pub struct TankTurret {
@@ -23,12 +23,19 @@ impl Component for TankTurret {}
 
 impl Drawable for TankTurret {
     fn drawables(&self) -> Vec<Element> {
-        vec![
-            Element{
-                transform:  Mat4::from_translation(Vec3::new(0.0, 0.0, self.z_offset)),
-                primitive: Primitive::Cuboid(Cuboid{width: self.width, height: self.height, length: self.length}),
-                color: Color{r: 255, g: 191, b: 0, a: 255},
+        vec![Element {
+            transform: Mat4::from_translation(Vec3::new(0.0, 0.0, self.z_offset)),
+            primitive: Primitive::Cuboid(Cuboid {
+                width: self.width,
+                height: self.height,
+                length: self.length,
+            }),
+            color: Color {
+                r: 255,
+                g: 191,
+                b: 0,
+                a: 255,
             },
-        ]
+        }]
     }
 }

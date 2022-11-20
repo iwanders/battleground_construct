@@ -49,12 +49,16 @@ macro_rules! create_velocity_implementation {
             pub fn integrate_pose(&self, pose: &super::pose::Pose, dt: f32) -> super::pose::Pose {
                 (pose.h * self.integrate(dt)).into()
             }
-            pub fn integrate_global_pose(&self, pose: &super::pose::Pose, dt: f32) -> super::pose::Pose {
+            pub fn integrate_global_pose(
+                &self,
+                pose: &super::pose::Pose,
+                dt: f32,
+            ) -> super::pose::Pose {
                 (self.integrate(dt) * pose.h).into()
             }
         }
         impl Component for $the_type {}
-    }
+    };
 }
 create_velocity_implementation!(Velocity);
 // create_velocity_implementation!(GlobalVelocity);

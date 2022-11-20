@@ -2,14 +2,12 @@ use engine::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct PointProjectile {
-    source: EntityId
+    source: EntityId,
 }
 
 impl PointProjectile {
     pub fn new(source: EntityId) -> Self {
-        PointProjectile {
-            source
-        }
+        PointProjectile { source }
     }
     pub fn source(&self) -> &EntityId {
         &self.source

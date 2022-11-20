@@ -1,5 +1,5 @@
-use engine::prelude::*;
 use super::primitives::*;
+use engine::prelude::*;
 
 #[derive(Copy, Debug, Clone)]
 pub struct DebugBox {
@@ -28,12 +28,19 @@ impl Component for DebugBox {}
 
 impl Drawable for DebugBox {
     fn drawables(&self) -> Vec<Element> {
-        vec![
-            Element{
-                transform:  Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
-                primitive: Primitive::Cuboid(Cuboid{width: self.width, height: self.height, length: self.length}),
-                color: Color{r: 255, g: 0, b: 255, a: 128},
+        vec![Element {
+            transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+            primitive: Primitive::Cuboid(Cuboid {
+                width: self.width,
+                height: self.height,
+                length: self.length,
+            }),
+            color: Color {
+                r: 255,
+                g: 0,
+                b: 255,
+                a: 128,
             },
-        ]
+        }]
     }
 }
