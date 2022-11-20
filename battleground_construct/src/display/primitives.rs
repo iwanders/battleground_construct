@@ -30,20 +30,23 @@ pub enum Primitive {
 }
 
 impl std::hash::Hash for Primitive {
-    fn hash<H>(&self, state: &mut H) where H: std::hash::Hasher {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: std::hash::Hasher,
+    {
         match *self {
             Primitive::Cuboid(cube) => {
                 cube.width.to_bits().hash(state);
                 cube.length.to_bits().hash(state);
                 cube.height.to_bits().hash(state);
-            },
+            }
             Primitive::Sphere(sphere) => {
                 sphere.radius.to_bits().hash(state);
-            },
+            }
             Primitive::Cylinder(cylinder) => {
                 cylinder.radius.to_bits().hash(state);
                 cylinder.height.to_bits().hash(state);
-            },
+            }
         }
     }
 }

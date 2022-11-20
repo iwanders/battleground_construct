@@ -29,9 +29,14 @@ pub struct TankSpawnConfig {
     pub shooting: bool,
 }
 
-pub fn spawn_tank(world: &mut World, config: TankSpawnConfig){
+pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
+    let mut tank_group_ids: Vec<EntityId> = vec![];
+
+    // Create the base tank, root element with the health.
     let vehicle_id = world.add_entity();
+    tank_group_ids.push(vehicle_id.clone());
     let mut pose = components::pose::Pose::new();
+
     pose.h.w[0] = config.x;
     pose.h.w[1] = config.y;
     world.add_component(&vehicle_id, pose);
@@ -40,8 +45,11 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig){
     base.set_velocities(config.left_wheel, config.right_wheel);
     world.add_component(&vehicle_id, base);
     world.add_component(&vehicle_id, display::tank_body::TankBody::new());
+    world.add_component(&vehicle_id, components::health::Health::new());
 
+    // Add the turrent entity.
     let turret_id = world.add_entity();
+    tank_group_ids.push(turret_id.clone());
     let mut turret_revolute =
         components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
     turret_revolute.set_velocity(config.turret_velocity);
@@ -49,11 +57,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig){
     world.add_component(&turret_id, turret_revolute);
     world.add_component(
         &turret_id,
-        components::pose::PreTransform::from_translation(Vec3::new(
-            0.0,
-            0.0,
-            0.375 + 0.1 / 2.0,
-        )),
+        components::pose::PreTransform::from_translation(Vec3::new(0.0, 0.0, 0.375 + 0.1 / 2.0)),
     );
     world.add_component(&turret_id, components::pose::Pose::new());
     world.add_component(
@@ -62,7 +66,9 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig){
     );
     world.add_component(&turret_id, display::tank_turret::TankTurret::new());
 
+    // Add the barrel entity
     let barrel_id = world.add_entity();
+    tank_group_ids.push(barrel_id.clone());
     let mut barrel_revolute =
         components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 1.0, 0.0));
     barrel_revolute.set_velocity(config.barrel_velocity);
@@ -78,8 +84,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig){
     );
     world.add_component(&barrel_id, display::tank_barrel::TankBarrel::new());
 
-    if config.shooting {
+    // If the tank is shooting, at the nozzle and associated components
+    let nozzle_id = if config.shooting {
         let nozzle_id = world.add_entity();
+        tank_group_ids.push(nozzle_id.clone());
         world.add_component(
             &nozzle_id,
             components::parent::Parent::new(barrel_id.clone()),
@@ -93,8 +101,30 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig){
             &nozzle_id,
             components::pose::PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
         );
+        Some(nozzle_id)
+    } else {
+        None
+    };
+
+    // Finally, add the group to each of the components.
+    world.add_component(
+        &vehicle_id,
+        components::group::Group::from(&tank_group_ids[..]),
+    );
+    world.add_component(
+        &turret_id,
+        components::group::Group::from(&tank_group_ids[..]),
+    );
+    world.add_component(
+        &barrel_id,
+        components::group::Group::from(&tank_group_ids[..]),
+    );
+    if let Some(nozzle_id) = nozzle_id {
+        world.add_component(
+            &nozzle_id,
+            components::group::Group::from(&tank_group_ids[..]),
+        );
     }
-    // world.add_component(&nozzle_id, display::debug_box::DebugBox::from_size(0.2));
 }
 
 impl Construct {
@@ -103,22 +133,28 @@ impl Construct {
         let clock_id = world.add_entity();
         world.add_component(&clock_id, Clock::new());
 
-        spawn_tank(&mut world, TankSpawnConfig{
-            x: 0.0,
-            y: 0.0,
-            left_wheel: 0.6,
-            right_wheel: 0.6,
-            barrel_velocity: -0.1,
-            shooting: true,
-            ..Default::default()
-        });
+        spawn_tank(
+            &mut world,
+            TankSpawnConfig {
+                x: 0.0,
+                y: 0.0,
+                left_wheel: 0.6,
+                right_wheel: 0.6,
+                barrel_velocity: -0.1,
+                shooting: true,
+                ..Default::default()
+            },
+        );
         for x in 1..10 {
             for y in 1..10 {
-                spawn_tank(&mut world, TankSpawnConfig{
-                    x: x as f32 * 5.0,
-                    y: -y as f32 * 5.0 + 10.0,
-                    ..Default::default()
-                });
+                spawn_tank(
+                    &mut world,
+                    TankSpawnConfig {
+                        x: x as f32 * 5.0,
+                        y: -y as f32 * 5.0 + 10.0,
+                        ..Default::default()
+                    },
+                );
             }
         }
 
