@@ -24,8 +24,8 @@ impl Construct {
         let clock_id = world.add_entity();
         world.add_component(&clock_id, Clock::new());
 
-        for x in 0..1 {
-            for y in 0..1 {
+        for x in 0..10 {
+            for y in 0..10 {
                 let vehicle_id = world.add_entity();
                 let mut pose = components::pose::Pose::new();
                 pose.h.w[0] = (x as f32) * 5.0;
@@ -88,7 +88,7 @@ impl Construct {
                     &nozzle_id,
                     components::pose::PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
                 );
-                world.add_component(&nozzle_id, display::debug_box::DebugBox::from_size(0.2));
+                // world.add_component(&nozzle_id, display::debug_box::DebugBox::from_size(0.2));
             }
         }
 
@@ -118,6 +118,15 @@ impl Construct {
 
     pub fn entity_pose(&self, entity: &EntityId) -> components::pose::Pose {
         components::pose::world_pose(&self.world, entity)
+    }
+
+    pub fn elapsed_as_f64(&self) -> f64 {
+        let (_entity, clock) = self
+            .world
+            .component_iter_mut::<crate::components::clock::Clock>()
+            .next()
+            .expect("Should have one clock");
+        clock.elapsed_as_f32().into()
     }
 }
 
