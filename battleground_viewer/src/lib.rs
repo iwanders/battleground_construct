@@ -22,7 +22,7 @@ impl Limiter {
         }
     }
 
-    pub fn elapsed_as_f64(&self) -> f64{
+    pub fn elapsed_as_f64(&self) -> f64 {
         self.epoch.elapsed().as_secs_f64()
     }
 
@@ -198,7 +198,11 @@ impl ConstructViewer {
                 let now = std::time::Instant::now();
                 self.construct.update();
                 if PRINT_DURATIONS {
-                    println!("construct taken: {:1.8}, entities: {}", now.elapsed().as_secs_f64(), self.construct.world().entity_count());
+                    println!(
+                        "construct taken: {:1.8}, entities: {}",
+                        now.elapsed().as_secs_f64(),
+                        self.construct.world().entity_count()
+                    );
                 }
             }
             /*
@@ -304,9 +308,9 @@ impl ConstructViewer {
             context, construct,
         ));
 
-        res.append(&mut component_to_meshes::<display::debug_sphere::DebugSphere>(
-            context, construct,
-        ));
+        res.append(
+            &mut component_to_meshes::<display::debug_sphere::DebugSphere>(context, construct),
+        );
 
         res
     }

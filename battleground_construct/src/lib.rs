@@ -45,8 +45,11 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     base.set_velocities(config.left_wheel, config.right_wheel);
     world.add_component(&vehicle_id, base);
     world.add_component(&vehicle_id, display::tank_body::TankBody::new());
-    world.add_component(&vehicle_id, components::hit_sphere::HitSphere::with_radius(1.0));
-    world.add_component(&vehicle_id, display::debug_sphere::DebugSphere::with_radius(1.0));
+    world.add_component(
+        &vehicle_id,
+        components::hit_sphere::HitSphere::with_radius(1.0),
+    );
+    // world.add_component(&vehicle_id, display::debug_sphere::DebugSphere::with_radius(1.0));
     world.add_component(&vehicle_id, components::health::Health::new());
 
     // Add the turrent entity.
@@ -172,9 +175,11 @@ impl Construct {
         systems.add_system(Box::new(systems::revolute_pose::RevolutePose {}));
         systems.add_system(Box::new(systems::cannon_trigger::CannonTrigger {}));
         systems.add_system(Box::new(systems::projectile_floor::ProjectileFloor {}));
-        systems.add_system(Box::new(systems::projectile_hit::ProjectileHit{}));
+        systems.add_system(Box::new(systems::projectile_hit::ProjectileHit {}));
         // Must go after the hit calculation.
-        systems.add_system(Box::new(systems::tank_hit_by::TankHitBy{}));
+        systems.add_system(Box::new(systems::tank_hit_by::TankHitBy {}));
+        // All handling of hits done with the projectiles still present.
+        systems.add_system(Box::new(systems::health_tank_body::HealthTankBody {}));
 
         Construct { world, systems }
     }

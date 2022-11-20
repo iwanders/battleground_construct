@@ -7,6 +7,7 @@ pub struct TankBody {
     pub length: f32,
     pub height: f32,
     pub z_offset: f32,
+    color: Color,
 }
 
 impl TankBody {
@@ -16,7 +17,16 @@ impl TankBody {
             length: 2.0,
             height: 0.25,
             z_offset: 0.25,
+            color: Color {
+                r: 0,
+                g: 255,
+                b: 0,
+                a: 255,
+            },
         }
+    }
+    pub fn set_color(&mut self, color: Color) {
+        self.color = color;
     }
 }
 impl Component for TankBody {}
@@ -30,12 +40,7 @@ impl Drawable for TankBody {
                 height: self.height,
                 length: self.length,
             }),
-            color: Color {
-                r: 0,
-                g: 255,
-                b: 0,
-                a: 255,
-            },
+            color: self.color,
         }]
     }
 }
