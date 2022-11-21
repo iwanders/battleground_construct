@@ -293,9 +293,9 @@ impl ConstructViewer {
         res.append(&mut component_to_meshes::<display::tank_body::TankBody>(
             context, construct,
         ));
-        res.append(&mut component_to_meshes::<display::tank_tracks::TankTracks>(
-            context, construct,
-        ));
+        res.append(
+            &mut component_to_meshes::<display::tank_tracks::TankTracks>(context, construct),
+        );
         res.append(
             &mut component_to_meshes::<display::tank_turret::TankTurret>(context, construct),
         );
