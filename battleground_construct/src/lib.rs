@@ -45,6 +45,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     base.set_velocities(config.left_wheel, config.right_wheel);
     world.add_component(&vehicle_id, base);
     world.add_component(&vehicle_id, display::tank_body::TankBody::new());
+    world.add_component(&vehicle_id, display::tank_tracks::TankTracks::new());
     world.add_component(
         &vehicle_id,
         components::hit_sphere::HitSphere::with_radius(1.0),
