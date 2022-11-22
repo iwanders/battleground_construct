@@ -2,7 +2,7 @@ use super::primitives::*;
 use engine::prelude::*;
 
 // Tracks are cool... fixed velocity atm, but they destroy framerate.
-const RENDER_TRACKS: bool = false;
+const RENDER_TRACKS: bool = true;
 
 #[derive(Copy, Debug, Clone)]
 pub struct TankTracks {

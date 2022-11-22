@@ -3,6 +3,7 @@ use three_d::*;
 use battleground_construct::display;
 use battleground_construct::display::primitives::Drawable;
 use battleground_construct::Construct;
+use battleground_construct::util::cgmath::ToQuaternion;
 use engine::prelude::*;
 
 const PRINT_DURATIONS: bool = false;
@@ -48,14 +49,129 @@ struct ConstructViewer {
     construct: Construct,
 
     limiter: Limiter,
+
+    persistence: RenderPersistence,
 }
 
-fn element_to_gm(
+struct InstancedEntity {
+    gm: three_d::renderer::object::Gm<three_d::renderer::geometry::InstancedMesh, PhysicalMaterial>,
+    transforms: Vec<Mat4>,
+    colors: Vec<Color>,
+}
+impl InstancedEntity {
+    pub fn new(context: &Context, cpu_mesh: &CpuMesh) -> Self {
+        let instances: three_d::renderer::geometry::Instances = Default::default();
+        InstancedEntity {
+            gm: Gm::new(
+                InstancedMesh::new(context, &instances, cpu_mesh),
+                three_d::renderer::material::PhysicalMaterial::new(
+                    &context,
+                    &CpuMaterial {
+                        albedo: Color {
+                            r: 255,
+                            g: 255,
+                            b: 255,
+                            a: 255,
+                        },
+                        ..Default::default()
+                    },
+                ),
+            ),
+            transforms: vec![],
+            colors: vec![],
+        }
+    }
+
+    pub fn gm(
+        &self,
+    ) -> &three_d::renderer::object::Gm<three_d::renderer::geometry::InstancedMesh, PhysicalMaterial>
+    {
+        &self.gm
+    }
+
+    pub fn update_instances(&mut self) {
+        let mut instances: three_d::renderer::geometry::Instances = Default::default();
+        instances.translations = self
+            .transforms
+            .iter()
+            .map(|m| m.w.truncate())
+            .collect::<_>();
+
+        // The transforms we have a homogeneous matrices, so the top left 3x3 is a rotation matrix.
+        // We need to express that as a quaternion here.
+        instances.rotations = Some(self.transforms.iter().map(|m|{m.to_quaternion()}).collect::<_>());
+
+        // Scaling is not done, this is ALWAYS done in the mesh itself, since all transforms are
+        // homogeneous transforms.
+        instances.colors = Some(self.colors.clone());
+        self.gm.geometry.set_instances(&instances);
+    }
+}
+
+#[derive(Default)]
+struct RenderPersistence {
+    static_gms: Vec<Gm<Mesh, PhysicalMaterial>>,
+    instanced_meshes:
+        std::collections::HashMap<crate::display::primitives::Primitive, InstancedEntity>,
+}
+
+impl RenderPersistence {
+    pub fn update_instances(&mut self) {
+        for instance_entity in self.instanced_meshes.values_mut() {
+            instance_entity.update_instances()
+        }
+    }
+
+    pub fn reset_instances(&mut self) {
+        self.instanced_meshes.clear();
+    }
+
+    pub fn populate_default(&mut self, context: &Context) {
+        let mut ground_plane = Gm::new(
+            Mesh::new(&context, &CpuMesh::square()),
+            PhysicalMaterial::new_opaque(
+                &context,
+                &CpuMaterial {
+                    albedo: Color::new_opaque(128, 128, 128),
+                    ..Default::default()
+                },
+            ),
+        );
+        ground_plane.set_transformation(
+            Mat4::from_translation(vec3(0.0, 0.0, 0.0)) * Mat4::from_scale(1000.0),
+        );
+        self.static_gms.push(ground_plane);
+
+        let mut cube = Gm::new(
+            Mesh::new(&context, &CpuMesh::cube()),
+            three_d::renderer::material::PhysicalMaterial::new_opaque(
+                &context,
+                &CpuMaterial {
+                    albedo: Color {
+                        r: 0,
+                        g: 0,
+                        b: 255,
+                        a: 255,
+                    },
+                    ..Default::default()
+                },
+            ),
+        );
+        cube.set_transformation(
+            Mat4::from_translation(vec3(0.0, 0.0, 1.0)) * Mat4::from_scale(0.2),
+        );
+        self.static_gms.push(cube);
+    }
+}
+
+fn elements_to_render(
+    persistence: &mut RenderPersistence,
     context: &Context,
     el: &display::primitives::Element,
-) -> Gm<Mesh, PhysicalMaterial> {
-    let mut mesh = {
-        match el.primitive {
+    entity_transform: &Matrix4<f32>,
+) {
+    if !persistence.instanced_meshes.contains_key(&el.primitive) {
+        let primitive_mesh = match el.primitive {
             display::primitives::Primitive::Cuboid(cuboid) => {
                 let mut m = CpuMesh::cube();
                 // Returns an axis aligned unconnected cube mesh with positions in the range [-1..1] in all axes.
@@ -83,61 +199,40 @@ fn element_to_gm(
                 .unwrap();
                 m
             }
-        }
-    };
-    mesh.transform(&el.transform).unwrap();
-    let mesh = Mesh::new(&context, &mesh);
-    let drawable = Gm::new(
-        mesh,
-        three_d::renderer::material::PhysicalMaterial::new(
-            &context,
-            &CpuMaterial {
-                albedo: Color {
-                    r: el.color.r,
-                    g: el.color.g,
-                    b: el.color.b,
-                    a: el.color.a,
-                },
-                emissive: Color {
-                    r: el.color.r,
-                    g: el.color.g,
-                    b: el.color.b,
-                    a: el.color.a,
-                },
-                //roughness: 0.0,
-                //metallic: 0.0,
-                ..Default::default()
-            },
-        ),
-    );
-    drawable
+        };
+        persistence
+            .instanced_meshes
+            .insert(el.primitive, InstancedEntity::new(context, &primitive_mesh));
+    }
+
+    let instanced = persistence
+        .instanced_meshes
+        .get_mut(&el.primitive)
+        .expect("just checked it, will be there");
+    instanced.transforms.push(entity_transform * el.transform);
+    instanced.colors.push(Color {
+        r: el.color.r,
+        g: el.color.g,
+        b: el.color.b,
+        a: el.color.a,
+    });
 }
 
 fn component_to_meshes<C: Component + Drawable + 'static>(
+    persistence: &mut RenderPersistence,
     context: &Context,
     construct: &Construct,
-) -> Vec<Gm<Mesh, PhysicalMaterial>> {
-    let mut res: Vec<Gm<Mesh, PhysicalMaterial>> = vec![];
+)  {
+
 
     for (element_id, component_with_drawables) in construct.world().component_iter::<C>() {
-        let mut meshes = component_with_drawables
-            .drawables()
-            .iter()
-            .map(|v| element_to_gm(context, v))
-            .collect::<Vec<Gm<Mesh, PhysicalMaterial>>>();
-
-        // Get the world pose for this entity, and thus mesh.
+        // Get the world pose for this entity, to add draw transform local to this component.
         let world_pose = construct.entity_pose(&element_id);
-
-        // Collapse this up the stack.
-        for gm in meshes.iter_mut() {
-            let current = gm.geometry.transformation();
-            let updated = *(world_pose) * current;
-            gm.geometry.set_transformation(updated);
+        for el in component_with_drawables.drawables() {
+            elements_to_render(persistence, context, &el, world_pose.transform())
         }
-        res.append(&mut meshes);
     }
-    res
+
 }
 
 impl ConstructViewer {
@@ -179,6 +274,9 @@ impl ConstructViewer {
         let directional_light =
             DirectionalLight::new(&context, 1.5, Color::WHITE, &vec3(0.0, 0.0, -1.0));
 
+        let mut persistence: RenderPersistence = Default::default();
+        persistence.populate_default(&context);
+
         ConstructViewer {
             camera,
             context,
@@ -188,6 +286,7 @@ impl ConstructViewer {
             window,
             construct,
             limiter,
+            persistence,
         }
     }
 
@@ -225,21 +324,33 @@ impl ConstructViewer {
             screen.clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0));
 
             let now = std::time::Instant::now();
-            let elements = Self::render_construct(&self.context, &self.construct);
+            let elements =
+                Self::render_construct(&mut self.persistence, &self.context, &self.construct);
+
+            self.persistence.update_instances();
+
             if PRINT_DURATIONS {
                 println!("elements: {}", now.elapsed().as_secs_f64());
             }
 
             // Skip the ground plane in the shadow map, otherwise we get no resolution.
-            self.directional_light
-                .generate_shadow_map(2048, elements.iter().skip(1).map(|x| &x.geometry));
+            self.directional_light.generate_shadow_map(2048, self.persistence.instanced_meshes.values().map(|x| &x.gm.geometry));
 
             let now = std::time::Instant::now();
+
             screen.render(
                 &self.camera,
-                elements.iter(),
+                self.persistence.instanced_meshes.values().map(|x| x.gm()),
                 &[&self.ambient_light, &self.directional_light],
             );
+
+            screen.render(
+                &self.camera,
+                self.persistence.static_gms.iter(),
+                &[&self.ambient_light, &self.directional_light],
+            );
+
+            self.persistence.reset_instances();
 
             if PRINT_DURATIONS {
                 println!("render: {}", now.elapsed().as_secs_f64());
@@ -250,72 +361,19 @@ impl ConstructViewer {
     }
 
     pub fn render_construct(
+        peristence: &mut RenderPersistence,
         context: &Context,
         construct: &Construct,
-    ) -> Vec<Gm<Mesh, PhysicalMaterial>> {
-        let mut res = vec![];
+    ) {
+        component_to_meshes::<display::tank_body::TankBody>(peristence, context, construct);
+        component_to_meshes::<display::tank_tracks::TankTracks>(peristence, context, construct);
 
-        let mut ground_plane = Gm::new(
-            Mesh::new(&context, &CpuMesh::square()),
-            PhysicalMaterial::new_opaque(
-                &context,
-                &CpuMaterial {
-                    albedo: Color::new_opaque(128, 128, 128),
-                    ..Default::default()
-                },
-            ),
-        );
-        ground_plane.set_transformation(
-            Mat4::from_translation(vec3(0.0, 0.0, 0.0)) * Mat4::from_scale(1000.0),
-        );
-        res.push(ground_plane);
+        component_to_meshes::<display::tank_turret::TankTurret>(peristence, context, construct);
+        component_to_meshes::<display::tank_barrel::TankBarrel>(peristence, context, construct);
+        component_to_meshes::<display::tank_bullet::TankBullet>(peristence, context, construct);
 
-        let mut cube = Gm::new(
-            Mesh::new(&context, &CpuMesh::cube()),
-            three_d::renderer::material::PhysicalMaterial::new_opaque(
-                &context,
-                &CpuMaterial {
-                    albedo: Color {
-                        r: 0,
-                        g: 0,
-                        b: 255,
-                        a: 255,
-                    },
-                    ..Default::default()
-                },
-            ),
-        );
-        cube.set_transformation(
-            Mat4::from_translation(vec3(0.0, 0.0, 1.0)) * Mat4::from_scale(0.2),
-        );
-        res.push(cube);
-
-        res.append(&mut component_to_meshes::<display::tank_body::TankBody>(
-            context, construct,
-        ));
-        res.append(
-            &mut component_to_meshes::<display::tank_tracks::TankTracks>(context, construct),
-        );
-        res.append(
-            &mut component_to_meshes::<display::tank_turret::TankTurret>(context, construct),
-        );
-
-        res.append(
-            &mut component_to_meshes::<display::tank_barrel::TankBarrel>(context, construct),
-        );
-        res.append(
-            &mut component_to_meshes::<display::tank_bullet::TankBullet>(context, construct),
-        );
-
-        res.append(&mut component_to_meshes::<display::debug_box::DebugBox>(
-            context, construct,
-        ));
-
-        res.append(
-            &mut component_to_meshes::<display::debug_sphere::DebugSphere>(context, construct),
-        );
-
-        res
+        component_to_meshes::<display::debug_box::DebugBox>(peristence, context, construct);
+        component_to_meshes::<display::debug_sphere::DebugSphere>(peristence, context, construct);
     }
 }
 

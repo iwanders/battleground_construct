@@ -8,6 +8,7 @@
 pub mod components;
 pub mod display;
 pub mod systems;
+pub mod util;
 use crate::display::primitives::Vec3;
 use components::clock::{Clock, ClockSystem};
 use engine::prelude::*;
@@ -158,6 +159,10 @@ impl Construct {
                     TankSpawnConfig {
                         x: x as f32 * 5.0,
                         y: -y as f32 * 5.0 + 10.0,
+                shooting: true,
+                left_wheel: 1.0,
+                right_wheel: 0.6,
+                barrel_velocity: -0.1,
                         ..Default::default()
                     },
                 );

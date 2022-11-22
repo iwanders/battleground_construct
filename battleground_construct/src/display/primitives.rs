@@ -10,19 +10,23 @@ pub struct Cuboid {
     // Direction in z.
     pub height: f32,
 }
+impl Eq for Cuboid {}
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Sphere {
     pub radius: f32,
 }
+impl Eq for Sphere {}
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Cylinder {
     pub radius: f32,
     pub height: f32,
 }
+impl Eq for Cylinder {}
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Primitive {
     Cuboid(Cuboid),
     Sphere(Sphere),
@@ -36,14 +40,17 @@ impl std::hash::Hash for Primitive {
     {
         match *self {
             Primitive::Cuboid(cube) => {
+                0usize.hash(state);
                 cube.width.to_bits().hash(state);
                 cube.length.to_bits().hash(state);
                 cube.height.to_bits().hash(state);
             }
             Primitive::Sphere(sphere) => {
+                1usize.hash(state);
                 sphere.radius.to_bits().hash(state);
             }
             Primitive::Cylinder(cylinder) => {
+                2usize.hash(state);
                 cylinder.radius.to_bits().hash(state);
                 cylinder.height.to_bits().hash(state);
             }
