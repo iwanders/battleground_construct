@@ -145,24 +145,24 @@ impl Construct {
             TankSpawnConfig {
                 x: 0.0,
                 y: 0.0,
-                left_wheel: 0.6,
+                left_wheel: 0.1,
                 right_wheel: 0.6,
                 barrel_velocity: -0.1,
                 shooting: true,
                 ..Default::default()
             },
         );
-        for x in 1..10 {
-            for y in 1..10 {
+        for x in 1..0 {
+            for y in 1..0 {
                 spawn_tank(
                     &mut world,
                     TankSpawnConfig {
                         x: x as f32 * 5.0,
                         y: -y as f32 * 5.0 + 10.0,
-                shooting: true,
-                left_wheel: 1.0,
-                right_wheel: 0.6,
-                barrel_velocity: -0.1,
+                        shooting: true,
+                        left_wheel: 1.0,
+                        right_wheel: 0.0,
+                        barrel_velocity: -0.1,
                         ..Default::default()
                     },
                 );
@@ -186,6 +186,7 @@ impl Construct {
         systems.add_system(Box::new(systems::tank_hit_by::TankHitBy {}));
         // All handling of hits done with the projectiles still present.
         systems.add_system(Box::new(systems::health_tank_body::HealthTankBody {}));
+        systems.add_system(Box::new(systems::display_tank_tracks::DisplayTankTracks {}));
 
         Construct { world, systems }
     }

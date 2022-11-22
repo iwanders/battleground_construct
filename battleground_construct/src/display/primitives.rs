@@ -25,7 +25,6 @@ pub struct Cylinder {
 }
 impl Eq for Cylinder {}
 
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Primitive {
     Cuboid(Cuboid),

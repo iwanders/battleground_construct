@@ -30,7 +30,7 @@ impl System for TankHitBy {
                 .damage();
             let mut health = world.component_mut::<Health>(&root_entity).unwrap();
             let new_health = health.subtract(damage);
-            println!("New health: {new_health}");
+            // println!("New health: {new_health}");
             projectile_entities.push(projectile_entity);
         }
 

@@ -42,7 +42,7 @@ impl System for ProjectileHit {
                     let dist = diff.x * diff.x + diff.y * diff.y + diff.z + diff.z;
                     let inside = dist < (sphere.radius() * sphere.radius());
                     if inside {
-                        println!("{projectile_entity:?} is inside of {sphere_entity:?}!");
+                        // println!("{projectile_entity:?} is inside of {sphere_entity:?}!");
                         hit_projectile_source.push((
                             *sphere_entity,
                             *projectile_entity,

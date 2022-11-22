@@ -1,17 +1,19 @@
 use super::primitives::*;
 use engine::prelude::*;
 
-// Tracks are cool... fixed velocity atm, but they destroy framerate.
+// Tracks are cool... and now feasible for the renderer!
 const RENDER_TRACKS: bool = true;
 
 #[derive(Copy, Debug, Clone)]
 pub struct TankTracks {
-    pub width: f32,
-    pub length: f32,
-    pub height: f32,
-    pub track_width: f32,
-    pub track_height: f32,
-    pub epoch: std::time::Instant,
+    width: f32,
+    length: f32,
+    height: f32,
+    track_width: f32,
+    track_height: f32,
+
+    left_distance: f32,
+    right_distance: f32,
 }
 
 impl TankTracks {
@@ -22,8 +24,15 @@ impl TankTracks {
             height: 0.2,
             track_width: 1.0,
             track_height: 0.1,
-            epoch: std::time::Instant::now(),
+            left_distance: 0.0,
+            right_distance: 0.0,
         }
+    }
+
+    pub fn add_track_distance(&mut self, left_delta: f32, right_delta: f32) {
+        let total_length = 2.0 * self.length + 2.0 * self.height;
+        self.left_distance = (self.left_distance + left_delta).rem_euclid(total_length);
+        self.right_distance = (self.right_distance + right_delta).rem_euclid(total_length);
     }
 }
 impl Component for TankTracks {}
@@ -63,14 +72,14 @@ impl Drawable for TankTracks {
         ];
 
         if RENDER_TRACKS {
-            let t = self.epoch.elapsed().as_secs_f32();
             // Track length;
             let length = self.length;
             let height = self.height;
             let total_length = 2.0 * length + 2.0 * height;
             let bar_size = 0.05;
+            let bar_width = self.width + 0.1;
             let bar = Primitive::Cuboid(Cuboid {
-                width: 0.5,
+                width: bar_width,
                 height: bar_size,
                 length: bar_size,
             });
@@ -79,7 +88,7 @@ impl Drawable for TankTracks {
             let pos = |v: f32| {
                 let v = v.rem_euclid(total_length);
                 match v {
-                    _ if 0.0 < v && v < length => {
+                    _ if 0.0 <= v && v < length => {
                         // bottom section.
                         Mat4::from_translation(Vec3::new(
                             v - self.length / 2.0,
@@ -123,15 +132,14 @@ impl Drawable for TankTracks {
                 a: 255,
             };
 
-            let v = 0.6;
-            let offset = -v * t;
-            let offset_normalized = offset.rem_euclid(total_length);
+            // Did the math in the wrong order... fix that here.
+            let left_offset_normalized = total_length - self.left_distance;
+            let right_offset_normalized = total_length - self.right_distance;
 
             let bars = 20;
             for i in 0..bars {
-                let this_bar_pos = pos(i as f32 * (total_length / bars as f32) + offset_normalized);
                 z.push(Element {
-                    transform: this_bar_pos
+                    transform: pos(i as f32 * (total_length / bars as f32) + left_offset_normalized)
                         * Mat4::from_translation(Vec3::new(
                             0.0,
                             self.track_width / 2.0,
@@ -141,12 +149,13 @@ impl Drawable for TankTracks {
                     color: color,
                 });
                 z.push(Element {
-                    transform: this_bar_pos
-                        * Mat4::from_translation(Vec3::new(
-                            0.0,
-                            -self.track_width / 2.0,
-                            self.track_height,
-                        )),
+                    transform: pos(
+                        i as f32 * (total_length / bars as f32) + right_offset_normalized
+                    ) * Mat4::from_translation(Vec3::new(
+                        0.0,
+                        -self.track_width / 2.0,
+                        self.track_height,
+                    )),
                     primitive: bar,
                     color: color,
                 });

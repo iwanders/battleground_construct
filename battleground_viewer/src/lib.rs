@@ -2,8 +2,8 @@ use three_d::*;
 
 use battleground_construct::display;
 use battleground_construct::display::primitives::Drawable;
-use battleground_construct::Construct;
 use battleground_construct::util::cgmath::ToQuaternion;
+use battleground_construct::Construct;
 use engine::prelude::*;
 
 const PRINT_DURATIONS: bool = false;
@@ -99,7 +99,12 @@ impl InstancedEntity {
 
         // The transforms we have a homogeneous matrices, so the top left 3x3 is a rotation matrix.
         // We need to express that as a quaternion here.
-        instances.rotations = Some(self.transforms.iter().map(|m|{m.to_quaternion()}).collect::<_>());
+        instances.rotations = Some(
+            self.transforms
+                .iter()
+                .map(|m| m.to_quaternion())
+                .collect::<_>(),
+        );
 
         // Scaling is not done, this is ALWAYS done in the mesh itself, since all transforms are
         // homogeneous transforms.
@@ -159,6 +164,26 @@ impl RenderPersistence {
         );
         cube.set_transformation(
             Mat4::from_translation(vec3(0.0, 0.0, 1.0)) * Mat4::from_scale(0.2),
+        );
+        self.static_gms.push(cube);
+
+        let mut cube = Gm::new(
+            Mesh::new(&context, &CpuMesh::cube()),
+            three_d::renderer::material::PhysicalMaterial::new_opaque(
+                &context,
+                &CpuMaterial {
+                    albedo: Color {
+                        r: 255,
+                        g: 0,
+                        b: 0,
+                        a: 255,
+                    },
+                    ..Default::default()
+                },
+            ),
+        );
+        cube.set_transformation(
+            Mat4::from_translation(vec3(1.0, 0.0, 0.0)) * Mat4::from_scale(0.2),
         );
         self.static_gms.push(cube);
     }
@@ -222,9 +247,7 @@ fn component_to_meshes<C: Component + Drawable + 'static>(
     persistence: &mut RenderPersistence,
     context: &Context,
     construct: &Construct,
-)  {
-
-
+) {
     for (element_id, component_with_drawables) in construct.world().component_iter::<C>() {
         // Get the world pose for this entity, to add draw transform local to this component.
         let world_pose = construct.entity_pose(&element_id);
@@ -232,7 +255,6 @@ fn component_to_meshes<C: Component + Drawable + 'static>(
             elements_to_render(persistence, context, &el, world_pose.transform())
         }
     }
-
 }
 
 impl ConstructViewer {
@@ -334,7 +356,13 @@ impl ConstructViewer {
             }
 
             // Skip the ground plane in the shadow map, otherwise we get no resolution.
-            self.directional_light.generate_shadow_map(2048, self.persistence.instanced_meshes.values().map(|x| &x.gm.geometry));
+            self.directional_light.generate_shadow_map(
+                2048,
+                self.persistence
+                    .instanced_meshes
+                    .values()
+                    .map(|x| &x.gm.geometry),
+            );
 
             let now = std::time::Instant::now();
 
