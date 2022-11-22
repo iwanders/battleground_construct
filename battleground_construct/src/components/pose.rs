@@ -23,6 +23,13 @@ macro_rules! create_transform_component {
             pub fn from_translation(v: cgmath::Vector3<f32>) -> Self {
                 Self::from_mat4(cgmath::Matrix4::<f32>::from_translation(v))
             }
+            pub fn from_xyz(x: f32, y: f32, z: f32) -> Self {
+                Self::from_mat4(cgmath::Matrix4::<f32>::from_translation(cgmath::Vector3::<
+                    f32,
+                >::new(
+                    x, y, z
+                )))
+            }
             pub fn from_mat4(h: cgmath::Matrix4<f32>) -> Self {
                 Self { h }
             }
@@ -31,6 +38,9 @@ macro_rules! create_transform_component {
             }
             pub fn transform_mut(&mut self) -> &mut cgmath::Matrix4<f32> {
                 &mut self.h
+            }
+            pub fn rotated_angle_z<A: Into<cgmath::Rad<f32>>>(self, v: A) -> Self {
+                (self.h * cgmath::Matrix4::<f32>::from_angle_z(v)).into()
             }
         }
         impl Component for $the_type {}

@@ -346,9 +346,7 @@ impl ConstructViewer {
             screen.clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0));
 
             let now = std::time::Instant::now();
-            let elements =
-                Self::render_construct(&mut self.persistence, &self.context, &self.construct);
-
+            Self::render_construct(&mut self.persistence, &self.context, &self.construct);
             self.persistence.update_instances();
 
             if PRINT_DURATIONS {
@@ -402,6 +400,8 @@ impl ConstructViewer {
 
         component_to_meshes::<display::debug_box::DebugBox>(peristence, context, construct);
         component_to_meshes::<display::debug_sphere::DebugSphere>(peristence, context, construct);
+
+        component_to_meshes::<display::flag::Flag>(peristence, context, construct);
     }
 }
 

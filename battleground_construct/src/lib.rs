@@ -32,11 +32,14 @@ pub struct TankSpawnConfig {
 
 pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     let mut tank_group_ids: Vec<EntityId> = vec![];
+    use components::group::Group;
+    use components::parent::Parent;
+    use components::pose::{Pose, PreTransform};
 
     // Create the base tank, root element with the health.
     let vehicle_id = world.add_entity();
     tank_group_ids.push(vehicle_id.clone());
-    let mut pose = components::pose::Pose::new();
+    let mut pose = Pose::new();
 
     pose.h.w[0] = config.x;
     pose.h.w[1] = config.y;
@@ -64,13 +67,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     world.add_component(&turret_id, turret_revolute);
     world.add_component(
         &turret_id,
-        components::pose::PreTransform::from_translation(Vec3::new(0.0, 0.0, 0.375 + 0.1 / 2.0)),
+        PreTransform::from_translation(Vec3::new(0.0, 0.0, 0.375 + 0.1 / 2.0)),
     );
     world.add_component(&turret_id, components::pose::Pose::new());
-    world.add_component(
-        &turret_id,
-        components::parent::Parent::new(vehicle_id.clone()),
-    );
+    world.add_component(&turret_id, Parent::new(vehicle_id.clone()));
     world.add_component(&turret_id, display::tank_turret::TankTurret::new());
 
     // Add the barrel entity
@@ -82,23 +82,17 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     world.add_component(&barrel_id, barrel_revolute);
     world.add_component(
         &barrel_id,
-        components::pose::PreTransform::from_translation(Vec3::new(0.25, 0.0, 0.0)),
+        PreTransform::from_translation(Vec3::new(0.25, 0.0, 0.0)),
     );
     world.add_component(&barrel_id, components::pose::Pose::new());
-    world.add_component(
-        &barrel_id,
-        components::parent::Parent::new(turret_id.clone()),
-    );
+    world.add_component(&barrel_id, Parent::new(turret_id.clone()));
     world.add_component(&barrel_id, display::tank_barrel::TankBarrel::new());
 
     // If the tank is shooting, at the nozzle and associated components
     let nozzle_id = if config.shooting {
         let nozzle_id = world.add_entity();
         tank_group_ids.push(nozzle_id.clone());
-        world.add_component(
-            &nozzle_id,
-            components::parent::Parent::new(barrel_id.clone()),
-        );
+        world.add_component(&nozzle_id, Parent::new(barrel_id.clone()));
         world.add_component(
             &nozzle_id,
             components::damage_dealer::DamageDealer::new(0.1),
@@ -106,31 +100,31 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
         world.add_component(&nozzle_id, components::cannon::Cannon::new());
         world.add_component(
             &nozzle_id,
-            components::pose::PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
+            PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
         );
         Some(nozzle_id)
     } else {
         None
     };
 
+    let flag_id = world.add_entity();
+    world.add_component(
+        &flag_id,
+        Pose::from_xyz(-0.8, -0.4, 0.3).rotated_angle_z(cgmath::Deg(180.0)),
+    );
+    world.add_component(
+        &flag_id,
+        display::flag::Flag::from_scale_color(0.5, display::Color::GREEN),
+    );
+    world.add_component(&flag_id, Parent::new(vehicle_id.clone()));
+    tank_group_ids.push(flag_id.clone());
+
     // Finally, add the group to each of the components.
-    world.add_component(
-        &vehicle_id,
-        components::group::Group::from(&tank_group_ids[..]),
-    );
-    world.add_component(
-        &turret_id,
-        components::group::Group::from(&tank_group_ids[..]),
-    );
-    world.add_component(
-        &barrel_id,
-        components::group::Group::from(&tank_group_ids[..]),
-    );
+    world.add_component(&vehicle_id, Group::from(&tank_group_ids[..]));
+    world.add_component(&turret_id, Group::from(&tank_group_ids[..]));
+    world.add_component(&barrel_id, Group::from(&tank_group_ids[..]));
     if let Some(nozzle_id) = nozzle_id {
-        world.add_component(
-            &nozzle_id,
-            components::group::Group::from(&tank_group_ids[..]),
-        );
+        world.add_component(&nozzle_id, Group::from(&tank_group_ids[..]));
     }
 }
 
@@ -139,6 +133,17 @@ impl Construct {
         let mut world = World::new();
         let clock_id = world.add_entity();
         world.add_component(&clock_id, Clock::new());
+
+        let flag_id = world.add_entity();
+        world.add_component(&flag_id, components::pose::Pose::from_xyz(-1.0, -1.0, 0.0));
+        world.add_component(&flag_id, display::flag::Flag::new());
+
+        let flag_id = world.add_entity();
+        world.add_component(&flag_id, components::pose::Pose::from_xyz(1.0, -1.0, 0.0));
+        world.add_component(
+            &flag_id,
+            display::flag::Flag::from_scale_color(0.5, display::Color::GREEN),
+        );
 
         spawn_tank(
             &mut world,
