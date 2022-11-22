@@ -126,9 +126,9 @@ impl Drawable for TankTracks {
                 }
             };
             let color = Color {
-                r: 30,
-                g: 30,
-                b: 30,
+                r: 50,
+                g: 50,
+                b: 50,
                 a: 255,
             };
 
