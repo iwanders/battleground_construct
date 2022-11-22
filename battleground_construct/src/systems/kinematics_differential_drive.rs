@@ -13,7 +13,7 @@ impl System for KinematicsDifferentialDrive {
                 let wheel_velocities = base.wheel_velocities();
                 let track_width = base.track_width();
                 let linear_velocity = (wheel_velocities.0 + wheel_velocities.1) / 2.0;
-                let angular_velocity = (wheel_velocities.0 - wheel_velocities.1) / track_width;
+                let angular_velocity = (wheel_velocities.1 - wheel_velocities.0) / track_width;
                 *vel = Velocity::from_se2(linear_velocity, 0.0, angular_velocity);
             }
         }

@@ -145,8 +145,8 @@ impl Construct {
             TankSpawnConfig {
                 x: 0.0,
                 y: 0.0,
-                left_wheel: 0.1,
-                right_wheel: 0.6,
+                left_wheel: 0.2,
+                right_wheel: 0.1,
                 barrel_velocity: -0.1,
                 shooting: true,
                 ..Default::default()
