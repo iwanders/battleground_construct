@@ -157,8 +157,8 @@ impl Construct {
                 ..Default::default()
             },
         );
-        for x in 1..5 {
-            for y in 1..5 {
+        for x in 1..2 {
+            for y in 1..2 {
                 spawn_tank(
                     &mut world,
                     TankSpawnConfig {
