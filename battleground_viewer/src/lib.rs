@@ -32,7 +32,7 @@ impl Material for FireworksMaterial {
                 destination_rgb_multiplier: BlendMultiplierType::One,
                 destination_alpha_multiplier: BlendMultiplierType::One,
             },
-            depth_test: DepthTest::Always,
+            depth_test: DepthTest::LessOrEqual,
             write_mask: WriteMask::COLOR,
         }
     }
@@ -351,7 +351,7 @@ impl ConstructViewer {
     fn view_loop(mut self) -> () {
         let mut rng = rand::thread_rng();
 
-        let explosion_speed = 1.0;
+        let explosion_speed = 0.5;
         let explosion_time = 3.0;
         let colors = [
             Color::new_opaque(255, 255, 178),
@@ -428,17 +428,6 @@ impl ConstructViewer {
 
             let now = std::time::Instant::now();
 
-            screen.render(
-                &self.camera,
-                self.persistence.instanced_meshes.values().map(|x| x.gm()),
-                &[&self.ambient_light, &self.directional_light],
-            );
-
-            screen.render(
-                &self.camera,
-                self.persistence.static_gms.iter(),
-                &[&self.ambient_light, &self.directional_light],
-            );
 
             //----------------------------------------------------------------
             let radius = 0.1;
@@ -448,7 +437,7 @@ impl ConstructViewer {
                 color_index = (color_index + 1) % colors.len();
                 fireworks.material.color = colors[color_index];
                 fireworks.time = 0.0;
-                let start_position = vec3(0.0, 0.0, 2.0);
+                let start_position = vec3(-1.0, 0.0, 1.0);
 
                 let start_positions = (0..300).map(|_| start_position).collect();
                 let colors = Some(
@@ -462,14 +451,15 @@ impl ConstructViewer {
                         })
                         .collect(),
                 );
+                let R = 0.5;
                 let mut start_velocities = Vec::new();
                 for _ in 0..300 {
                     let theta = rng.gen::<f32>() * 2.0 - 1.0;
                     let phi = rng.gen::<f32>() * 2.0 * std::f32::consts::PI;
                     let explosion_direction = vec3(
-                        theta.acos().sin() * phi.cos(),
-                        theta.acos().sin() * phi.sin(),
-                        theta,
+                        R * theta.acos().sin() * phi.cos(),
+                        R * theta.acos().sin() * phi.sin(),
+                        R * theta,
                     );
                     start_velocities.push(
                         (rng.gen::<f32>() * 0.2 + 0.9) * explosion_speed * explosion_direction,
@@ -496,8 +486,37 @@ impl ConstructViewer {
                 .invert()
                 .unwrap(),
             );
-            screen
-                .render(&self.camera, &fireworks, &[]);
+
+            
+            // screen.render(
+                // &self.camera,
+                // self.persistence.instanced_meshes.values().map(|x| x.gm()),
+                // &[&self.ambient_light, &self.directional_light],
+            // );
+
+            // screen.render(
+                // &self.camera,
+                // self.persistence.static_gms.iter(),
+                // &[&self.ambient_light, &self.directional_light],
+            // );
+
+            // screen.render(
+                // &self.camera,
+                // &fireworks,
+                // &[&self.ambient_light, &self.directional_light],
+            // );
+
+            let mut renderables: Vec<&dyn Object> = vec![];
+            renderables.push(&fireworks);
+            renderables.append(&mut self.persistence.instanced_meshes.values().map(|x| x.gm() as &dyn Object).collect::<Vec<&dyn Object>>());
+            renderables.append(&mut self.persistence.static_gms.iter().map(|x|{x as &dyn Object}).collect::<Vec<_>>());
+
+            screen.render(
+                &self.camera,
+                &renderables,
+                &[&self.ambient_light, &self.directional_light],
+            );
+
 
             //----------------------------------------------------------------
 
