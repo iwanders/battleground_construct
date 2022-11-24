@@ -151,7 +151,7 @@ impl Construct {
         world.add_component(&particle_id, Flag::from_scale_color(0.5, Color::MAGENTA));
         world.add_component(
             &particle_id,
-            display::particle_emitter::ParticleEmitter::from_scale_color(0.5, Color::MAGENTA),
+            display::particle_emitter::ParticleEmitter::from_scale_color(particle_id, 0.5, Color::MAGENTA),
         );
 
         spawn_tank(

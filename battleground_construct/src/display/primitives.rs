@@ -112,14 +112,21 @@ pub enum EffectType {
 
 #[derive(Debug, Copy, Clone)]
 pub struct Effect {
+    /// Id to track this entity under, the EntityId is always associated to the entity that first
+    /// created this effect. It does NOT tie this effect (nor its lifetime) to this particular
+    /// entity.
+    pub id: (engine::EntityId, u64),
+    /// Description of the effect itself.
     pub effect: EffectType,
-    pub transform: Mat4,
 }
 
 pub trait Drawable {
+    /// Drawable primitives for this frame. Nothing persistent between frames.
     fn drawables(&self) -> Vec<Element> {
         vec![]
     }
+    /// Effects for this frame, these are longer lived and tracked by Id. Effects may be transfered
+    /// between entities.
     fn effects(&self) -> Vec<Effect> {
         vec![]
     }
