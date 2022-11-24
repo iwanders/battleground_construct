@@ -134,15 +134,24 @@ impl Construct {
         let clock_id = world.add_entity();
         world.add_component(&clock_id, Clock::new());
 
+        use components::pose::Pose;
+        use display::flag::Flag;
+        use display::Color;
+
         let flag_id = world.add_entity();
         world.add_component(&flag_id, components::pose::Pose::from_xyz(-1.0, -1.0, 0.0));
         world.add_component(&flag_id, display::flag::Flag::new());
 
         let flag_id = world.add_entity();
         world.add_component(&flag_id, components::pose::Pose::from_xyz(1.0, -1.0, 0.0));
+        world.add_component(&flag_id, Flag::from_scale_color(0.5, Color::GREEN));
+
+        let particle_id = world.add_entity();
+        world.add_component(&particle_id, Pose::from_xyz(-1.0, -1.0, 0.0));
+        world.add_component(&particle_id, Flag::from_scale_color(0.5, Color::MAGENTA));
         world.add_component(
-            &flag_id,
-            display::flag::Flag::from_scale_color(0.5, display::Color::GREEN),
+            &particle_id,
+            display::particle_emitter::ParticleEmitter::from_scale_color(0.5, Color::MAGENTA),
         );
 
         spawn_tank(

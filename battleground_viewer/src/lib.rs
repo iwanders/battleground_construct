@@ -363,7 +363,8 @@ impl ConstructViewer {
             Color::new_opaque(76, 237, 38),
             Color::new_opaque(40, 178, 222),
         ];
-        let mut square = CpuMesh::square();
+        // let mut square = CpuMesh::square();
+        let mut square = CpuMesh::cube();
         square.transform(&Mat4::from_scale(0.05)).unwrap();
         let particles = ParticleSystem::new(&self.context, &Particles::default(), &square);
         let fireworks_material = FireworksMaterial {
@@ -476,6 +477,7 @@ impl ConstructViewer {
             let f = fireworks.time / explosion_time.max(0.0);
             fireworks.material.fade = 1.0 - f * f * f * f;
             // Since our geometry is a square, we always want to view it from the same direction, nomatter how we change the camera.
+            /*
             fireworks.set_transformation(
                 Mat4::from_cols(
                     self.camera.view().x,
@@ -486,6 +488,7 @@ impl ConstructViewer {
                 .invert()
                 .unwrap(),
             );
+            */
 
             
             // screen.render(
@@ -546,6 +549,7 @@ impl ConstructViewer {
         component_to_meshes::<display::debug_sphere::DebugSphere>(peristence, context, construct);
 
         component_to_meshes::<display::flag::Flag>(peristence, context, construct);
+        component_to_meshes::<display::particle_emitter::ParticleEmitter>(peristence, context, construct);
     }
 }
 

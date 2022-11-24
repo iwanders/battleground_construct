@@ -57,7 +57,7 @@ impl std::hash::Hash for Primitive {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Color {
     pub r: u8,
     pub g: u8,
@@ -69,6 +69,12 @@ impl Color {
         r: 255,
         g: 0,
         b: 0,
+        a: 255,
+    };
+    pub const MAGENTA: Color = Color {
+        r: 255,
+        g: 0,
+        b: 255,
         a: 255,
     };
     pub const BLUE: Color = Color {
@@ -92,6 +98,29 @@ pub struct Element {
     pub color: Color,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct ParticleEmitter {
+    pub size: f32,
+    pub color: Color,
+}
+impl Eq for ParticleEmitter {}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum EffectType {
+    ParticleEmitter(ParticleEmitter),
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Effect {
+    pub effect: EffectType,
+    pub transform: Mat4,
+}
+
 pub trait Drawable {
-    fn drawables(&self) -> Vec<Element>;
+    fn drawables(&self) -> Vec<Element> {
+        vec![]
+    }
+    fn effects(&self) -> Vec<Effect> {
+        vec![]
+    }
 }
