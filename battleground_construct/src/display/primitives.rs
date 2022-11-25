@@ -110,12 +110,14 @@ pub enum EffectType {
     ParticleEmitter(ParticleEmitter),
 }
 
+pub type EffectId = (engine::EntityId, u64);
+
 #[derive(Debug, Copy, Clone)]
 pub struct Effect {
     /// Id to track this entity under, the EntityId is always associated to the entity that first
     /// created this effect. It does NOT tie this effect (nor its lifetime) to this particular
     /// entity.
-    pub id: (engine::EntityId, u64),
+    pub id: EffectId,
     /// Description of the effect itself.
     pub effect: EffectType,
 }
