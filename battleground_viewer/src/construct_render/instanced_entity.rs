@@ -11,25 +11,28 @@ pub struct InstancedEntity {
 impl InstancedEntity {
     pub fn new(context: &Context, cpu_mesh: &CpuMesh) -> Self {
         let instances: three_d::renderer::geometry::Instances = Default::default();
+        let mut material = three_d::renderer::material::PhysicalMaterial::new(
+            &context,
+            &CpuMaterial {
+                albedo: Color {
+                    r: 255,
+                    g: 255,
+                    b: 255,
+                    a: 255,
+                },
+                ..Default::default()
+            },
+        );
+        // material.albedo.a = 255;
         InstancedEntity {
-            gm: Gm::new(
-                InstancedMesh::new(context, &instances, cpu_mesh),
-                three_d::renderer::material::PhysicalMaterial::new(
-                    &context,
-                    &CpuMaterial {
-                        albedo: Color {
-                            r: 255,
-                            g: 255,
-                            b: 255,
-                            a: 255,
-                        },
-                        ..Default::default()
-                    },
-                ),
-            ),
+            gm: Gm::new(InstancedMesh::new(context, &instances, cpu_mesh), material),
             transforms: vec![],
             colors: vec![],
         }
+    }
+
+    pub fn set_material(&mut self, material: PhysicalMaterial) {
+        self.gm.material = material;
     }
 
     pub fn gm(
@@ -37,6 +40,10 @@ impl InstancedEntity {
     ) -> &three_d::renderer::object::Gm<three_d::renderer::geometry::InstancedMesh, PhysicalMaterial>
     {
         &self.gm
+    }
+
+    pub fn object(&self) -> &dyn Object {
+        &self.gm as &dyn Object
     }
 
     pub fn update_instances(&mut self) {
@@ -65,5 +72,15 @@ impl InstancedEntity {
     pub fn add(&mut self, transform: Mat4, color: Color) {
         self.transforms.push(transform);
         self.colors.push(color);
+    }
+
+    pub fn set_instances(&mut self, instances: &[(&Mat4, &Color)]) {
+        self.transforms.clear();
+        self.colors.clear();
+        for (p, c) in instances {
+            self.transforms.push(**p);
+            self.colors.push(**c);
+        }
+        self.update_instances();
     }
 }

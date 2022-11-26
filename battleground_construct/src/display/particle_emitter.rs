@@ -24,7 +24,7 @@ impl Drawable for ParticleEmitter {
         vec![Effect {
             id: (self.entity, 0),
             effect: EffectType::ParticleEmitter(super::primitives::ParticleEmitter {
-                size: 0.1,
+                size: 0.05,
                 color: Color {
                     r: 255,
                     g: 0,

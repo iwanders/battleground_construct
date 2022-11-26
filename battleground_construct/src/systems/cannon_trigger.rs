@@ -69,6 +69,15 @@ impl System for CannonTrigger {
                 &projectile_id,
                 super::components::acceleration::Acceleration::gravity(),
             );
+
+            world.add_component(
+                &projectile_id,
+                super::display::particle_emitter::ParticleEmitter::from_scale_color(
+                    projectile_id,
+                    0.05,
+                    super::display::Color::MAGENTA,
+                ),
+            );
         }
     }
 }

@@ -1,8 +1,8 @@
+use crate::construct_render::instanced_entity::InstancedEntity;
 use battleground_construct::display;
 use battleground_construct::display::EffectId;
 use rand::Rng;
 use three_d::*;
-
 pub trait RenderableEffect {
     fn object(&self) -> Option<&dyn Object>;
     fn update(&mut self, camera: &Camera, entity_position: Matrix4<f32>, time: f32);
@@ -44,14 +44,13 @@ impl Material for FireworksMaterial {
 
 pub struct ParticleEmitter {
     // renderable: three_d::Gm<ParticleSystem, FireworksMaterial>,
-    renderable: three_d::Gm<ParticleSystem, three_d::PhysicalMaterial>,
-    particles: three_d::renderer::geometry::Particles,
+    renderable: InstancedEntity,
+    // particles: three_d::renderer::geometry::Particles,
     emit_period: f32,
     last_emit: f32,
     color: three_d::Color,
     fade_time: f32,
-    spawn_times: Vec<f32>,
-    
+    particles: Vec<(Mat4, Color, f32)>,
 }
 
 impl ParticleEmitter {
@@ -61,101 +60,86 @@ impl ParticleEmitter {
         time: f32,
         display: &display::primitives::ParticleEmitter,
     ) -> Self {
-        println!("New prticles");
         let color = Color {
             r: display.color.r,
             g: display.color.g,
             b: display.color.b,
             a: display.color.a,
         };
-        // let mut square = CpuMesh::circle(8);
-        // let mut square = CpuMesh::cube();
-        let mut square = CpuMesh::square();
-        square.transform(&Mat4::from_scale(0.05)).unwrap();
-        let mut particles = ParticleSystem::new(context, &Particles::default(), &square);
-        particles.acceleration = vec3(0.0, 0.0, 0.0);
-        let fireworks_material = FireworksMaterial {
-            color: color,
-            fade: 0.0,
-        };
+        let mut square = CpuMesh::circle(8);
 
-        let material = three_d::renderer::material::PhysicalMaterial::new(
+        square.transform(&Mat4::from_scale(display.size)).unwrap();
+        let mut renderable = InstancedEntity::new(context, &square);
+
+        let mut material = three_d::renderer::material::PhysicalMaterial::new(
             &context,
             &CpuMaterial {
                 albedo: Color {
                     r: 255,
                     g: 255,
                     b: 255,
-                    a: 255,
+                    a: 254,
                 },
                 ..Default::default()
             },
         );
-        let mut fireworks = Gm::new(particles, material);
-        fireworks.time = time;
+        renderable.set_material(material);
 
-        let mut particles : three_d::renderer::geometry::Particles = Default::default();
-        particles.start_positions.push(vec3(0.0, 0.0, 0.0));
-        particles.start_velocities.push(vec3(0.0, 0.0, 0.0));
-        particles.colors = Some(vec![color]);
-        let spawn_times = vec![time];
         Self {
-            renderable: fireworks,
-            emit_period: 0.1,
+            renderable: renderable,
+            emit_period: 0.03,
             last_emit: -1000.0,
-            particles,
             fade_time: 1.0,
-            spawn_times,
-            color
+            particles: vec![],
+            color,
         }
     }
 }
 
 impl RenderableEffect for ParticleEmitter {
     fn object(&self) -> Option<&dyn Object> {
-        Some(&self.renderable as &dyn Object)
+        Some(self.renderable.object())
     }
 
     fn update(&mut self, camera: &Camera, entity_position: Matrix4<f32>, time: f32) {
         // Since our geometry is a square, we always want to view it from the same direction, nomatter how we change the camera.
         if (self.last_emit + self.emit_period) < time {
-            self.particles.start_positions.push(entity_position.w.truncate());
-            self.particles.start_velocities.push(vec3(0.0, 0.0, 0.0));
-            self.particles.colors.as_mut().unwrap().push(self.color);
-            self.spawn_times.push(time);
+            self.particles.push((entity_position, self.color, time));
             self.last_emit = time;
 
             // Update the alphas in all colors.
-            for (color, spawn) in self.particles.colors.as_mut().unwrap().iter_mut().zip(self.spawn_times.iter()) {
-                let age = time - spawn;
+            for (pos, color, spawn) in self.particles.iter_mut() {
+                let age = time - *spawn;
                 let ratio_of_age = (1.0 - (age / self.fade_time)).max(0.0) * 255.0;
                 let alpha = ratio_of_age as u8;
-                println!("Alpha: {alpha}");
                 color.a = alpha;
+
+                *pos = Mat4::from_translation(pos.w.truncate())
+                    * Mat4::from_cols(
+                        camera.view().x,
+                        camera.view().y,
+                        camera.view().z,
+                        vec4(0.0, 0.0, 0.0, 1.0),
+                    )
+                    .invert()
+                    .unwrap();
             }
 
-            self.renderable.set_particles(&self.particles);
+            // drop all transparent things.
+            self.particles = self
+                .particles
+                .iter()
+                .filter(|(_p, color, _s)| color.a != 0)
+                .map(|x| *x)
+                .collect::<_>();
+
+            let p = self
+                .particles
+                .iter()
+                .map(|(p, c, s)| (p, c))
+                .collect::<Vec<_>>();
+
+            self.renderable.set_instances(&p[..]);
         }
-        // fireworks.set_particles(&Particles {
-            // start_positions,
-            // start_velocities,
-            // colors,
-            // ..Default::default()
-        // });
-        self.renderable.set_transformation(
-            Mat4::from_cols(
-                camera.view().x,
-                camera.view().y,
-                camera.view().z,
-                vec4(0.0, 0.0, 0.0, 1.0),
-            )
-            .invert()
-            .unwrap(),
-        );
-        // let f = self.renderable.time / 30.0;
-        // self.renderable.material.fade = 1.0 - f * f * f * f;
-        // self.renderable.material.fade = 1.0;
-        self.renderable.time = time;
     }
 }
-
