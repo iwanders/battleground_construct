@@ -100,7 +100,67 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
             &nozzle_id,
             components::damage_dealer::DamageDealer::new(0.1),
         );
-        world.add_component(&nozzle_id, components::cannon::Cannon::new());
+
+        fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: &EntityId) {
+            use crate::components::point_projectile::PointProjectile;
+            use crate::components::velocity::Velocity;
+            use crate::components::acceleration::Acceleration;
+            use crate::display::particle_emitter::ParticleEmitter;
+            let muzzle_velocity = 20.0;
+            // Get the pose of the cannon in the world coordinates. Then create the pose with the
+            // Orientation in the global frame.
+            let projectile_id = world.add_entity();
+            world.add_component::<PointProjectile>(
+                &projectile_id,
+                PointProjectile::new(cannon_entity.clone()),
+            );
+            world.add_component::<Pose>(
+                &projectile_id,
+                Pose::from_mat4(cgmath::Matrix4::<f32>::from_translation(
+                    muzzle_pose.clone().w.truncate(),
+                )),
+            );
+
+            // Calculate the velocity vector in the global frame.
+            let mut muzzle_pose = muzzle_pose.transform().clone();
+            // zero out the translation components.
+            muzzle_pose.w[0] = 0.0;
+            muzzle_pose.w[1] = 0.0;
+            let v = muzzle_pose * cgmath::Vector4::<f32>::new(muzzle_velocity, 0.0, 0.0, 1.0);
+            let projectile_velocity =
+                Velocity::from_velocities(v.truncate(), cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0));
+
+            // And add the velocity to the projectile.
+            world.add_component::<Velocity>(&projectile_id, projectile_velocity);
+            // world.add_component(&projectile_id, crate::display::debug_box::DebugBox::from_size(0.2));
+            world.add_component(
+                &projectile_id,
+                crate::display::tank_bullet::TankBullet::new(),
+            );
+
+            // Clearly not the place for this to be... but works for now.
+            world.add_component(
+                &projectile_id,
+                crate::components::acceleration::Acceleration::gravity(),
+            );
+
+            world.add_component(
+                &projectile_id,
+                crate::display::particle_emitter::ParticleEmitter::from_scale_color(
+                    projectile_id,
+                    0.05,
+                    crate::display::Color::MAGENTA,
+                ),
+            );
+        };
+
+        use crate::components::cannon::CannonFireEffect;
+        let cannon_config = components::cannon::CannonConfig{
+            reload_time: 2.0,
+            fire_effect: std::rc::Rc::new(cannon_function),
+        };
+
+        world.add_component(&nozzle_id, components::cannon::Cannon::new(cannon_config));
         world.add_component(
             &nozzle_id,
             PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
