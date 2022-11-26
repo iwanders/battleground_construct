@@ -43,7 +43,15 @@ impl Material for FireworksMaterial {
 }
 
 pub struct ParticleEmitter {
-    renderable: three_d::Gm<ParticleSystem, FireworksMaterial>,
+    // renderable: three_d::Gm<ParticleSystem, FireworksMaterial>,
+    renderable: three_d::Gm<ParticleSystem, three_d::PhysicalMaterial>,
+    particles: three_d::renderer::geometry::Particles,
+    emit_period: f32,
+    last_emit: f32,
+    color: three_d::Color,
+    fade_time: f32,
+    spawn_times: Vec<f32>,
+    
 }
 
 impl ParticleEmitter {
@@ -54,7 +62,12 @@ impl ParticleEmitter {
         display: &display::primitives::ParticleEmitter,
     ) -> Self {
         println!("New prticles");
-        let color = Color::new_opaque(255, 255, 178);
+        let color = Color {
+            r: display.color.r,
+            g: display.color.g,
+            b: display.color.b,
+            a: display.color.a,
+        };
         // let mut square = CpuMesh::circle(8);
         // let mut square = CpuMesh::cube();
         let mut square = CpuMesh::square();
@@ -65,46 +78,35 @@ impl ParticleEmitter {
             color: color,
             fade: 0.0,
         };
-        let mut fireworks = Gm::new(particles, fireworks_material);
-        fireworks.time = time;
-        let mut rng = rand::thread_rng();
 
-        let explosion_speed = 0.5;
-        let start_position = entity_position.w.truncate();
-        let start_positions = (0..300).map(|_| start_position).collect();
-        let colors = Some(
-            (0..300)
-                .map(|_| {
-                    Color::new_opaque(
-                        (rng.gen::<f32>() * 100.0 - 50.0) as u8,
-                        (rng.gen::<f32>() * 100.0 - 50.0) as u8,
-                        (rng.gen::<f32>() * 100.0 - 50.0) as u8,
-                    )
-                })
-                .collect(),
+        let material = three_d::renderer::material::PhysicalMaterial::new(
+            &context,
+            &CpuMaterial {
+                albedo: Color {
+                    r: 255,
+                    g: 255,
+                    b: 255,
+                    a: 255,
+                },
+                ..Default::default()
+            },
         );
-        let R = 0.5;
-        let mut start_velocities = Vec::new();
-        for _ in 0..300 {
-            let theta = rng.gen::<f32>() * 2.0 - 1.0;
-            let phi = rng.gen::<f32>() * 2.0 * std::f32::consts::PI;
-            let explosion_direction = vec3(
-                R * theta.acos().sin() * phi.cos(),
-                R * theta.acos().sin() * phi.sin(),
-                R * theta,
-            );
-            start_velocities
-                .push((rng.gen::<f32>() * 0.2 + 0.9) * explosion_speed * explosion_direction);
-        }
-        fireworks.set_particles(&Particles {
-            start_positions,
-            start_velocities,
-            colors,
-            ..Default::default()
-        });
+        let mut fireworks = Gm::new(particles, material);
+        fireworks.time = time;
 
+        let mut particles : three_d::renderer::geometry::Particles = Default::default();
+        particles.start_positions.push(vec3(0.0, 0.0, 0.0));
+        particles.start_velocities.push(vec3(0.0, 0.0, 0.0));
+        particles.colors = Some(vec![color]);
+        let spawn_times = vec![time];
         Self {
             renderable: fireworks,
+            emit_period: 0.1,
+            last_emit: -1000.0,
+            particles,
+            fade_time: 1.0,
+            spawn_times,
+            color
         }
     }
 }
@@ -116,7 +118,30 @@ impl RenderableEffect for ParticleEmitter {
 
     fn update(&mut self, camera: &Camera, entity_position: Matrix4<f32>, time: f32) {
         // Since our geometry is a square, we always want to view it from the same direction, nomatter how we change the camera.
+        if (self.last_emit + self.emit_period) < time {
+            self.particles.start_positions.push(entity_position.w.truncate());
+            self.particles.start_velocities.push(vec3(0.0, 0.0, 0.0));
+            self.particles.colors.as_mut().unwrap().push(self.color);
+            self.spawn_times.push(time);
+            self.last_emit = time;
 
+            // Update the alphas in all colors.
+            for (color, spawn) in self.particles.colors.as_mut().unwrap().iter_mut().zip(self.spawn_times.iter()) {
+                let age = time - spawn;
+                let ratio_of_age = (1.0 - (age / self.fade_time)).max(0.0) * 255.0;
+                let alpha = ratio_of_age as u8;
+                println!("Alpha: {alpha}");
+                color.a = alpha;
+            }
+
+            self.renderable.set_particles(&self.particles);
+        }
+        // fireworks.set_particles(&Particles {
+            // start_positions,
+            // start_velocities,
+            // colors,
+            // ..Default::default()
+        // });
         self.renderable.set_transformation(
             Mat4::from_cols(
                 camera.view().x,
@@ -127,107 +152,10 @@ impl RenderableEffect for ParticleEmitter {
             .invert()
             .unwrap(),
         );
-        let f = self.renderable.time / 30.0;
-        self.renderable.material.fade = 1.0 - f * f * f * f;
+        // let f = self.renderable.time / 30.0;
+        // self.renderable.material.fade = 1.0 - f * f * f * f;
+        // self.renderable.material.fade = 1.0;
         self.renderable.time = time;
     }
 }
 
-/*
-
-
-        let explosion_speed = 0.5;
-        let explosion_time = 3.0;
-        let colors = [
-            Color::new_opaque(255, 255, 178),
-            Color::new_opaque(255, 51, 25),
-            Color::new_opaque(51, 102, 51),
-            Color::new_opaque(127, 127, 204),
-            Color::new_opaque(217, 23, 51),
-            Color::new_opaque(250, 237, 38),
-            Color::new_opaque(76, 237, 38),
-            Color::new_opaque(40, 178, 222),
-        ];
-        // let mut square = CpuMesh::circle(8);
-        // let mut square = CpuMesh::cube();
-        let mut square = CpuMesh::square();
-        square.transform(&Mat4::from_scale(0.05)).unwrap();
-        let particles = ParticleSystem::new(&self.context, &Particles::default(), &square);
-        let fireworks_material = FireworksMaterial {
-            color: colors[0],
-            fade: 0.0,
-        };
-        let mut fireworks = Gm::new(particles, fireworks_material);
-
-
-        println!("fireworks: {:?}", fireworks.acceleration);
-        fireworks.time = explosion_time + 100.0;
-        fireworks.acceleration = vec3(0.0, 0.0, 0.0);
-
-        let mut color_index = 0;
-*/
-
-/*
-
-
-            //----------------------------------------------------------------
-            let radius = 0.1;
-            let elapsed_time = (frame_input.elapsed_time * 0.001) as f32;
-            fireworks.time += elapsed_time;
-            if fireworks.time > explosion_time {
-                color_index = (color_index + 1) % colors.len();
-                fireworks.material.color = colors[color_index];
-                fireworks.time = 0.0;
-                let start_position = vec3(-1.0, 0.0, 1.0);
-
-                let start_positions = (0..300).map(|_| start_position).collect();
-                let colors = Some(
-                    (0..300)
-                        .map(|_| {
-                            Color::new_opaque(
-                                (rng.gen::<f32>() * 100.0 - 50.0) as u8,
-                                (rng.gen::<f32>() * 100.0 - 50.0) as u8,
-                                (rng.gen::<f32>() * 100.0 - 50.0) as u8,
-                            )
-                        })
-                        .collect(),
-                );
-                let R = 0.5;
-                let mut start_velocities = Vec::new();
-                for _ in 0..300 {
-                    let theta = rng.gen::<f32>() * 2.0 - 1.0;
-                    let phi = rng.gen::<f32>() * 2.0 * std::f32::consts::PI;
-                    let explosion_direction = vec3(
-                        R * theta.acos().sin() * phi.cos(),
-                        R * theta.acos().sin() * phi.sin(),
-                        R * theta,
-                    );
-                    start_velocities.push(
-                        (rng.gen::<f32>() * 0.2 + 0.9) * explosion_speed * explosion_direction,
-                    );
-                }
-                fireworks.set_particles(&Particles {
-                    start_positions,
-                    start_velocities,
-                    colors,
-                    ..Default::default()
-                });
-            }
-
-            let f = fireworks.time / explosion_time.max(0.0);
-            fireworks.material.fade = 1.0 - f * f * f * f;
-            // Since our geometry is a square, we always want to view it from the same direction, nomatter how we change the camera.
-
-            fireworks.set_transformation(
-                Mat4::from_cols(
-                    self.camera.view().x,
-                    self.camera.view().y,
-                    self.camera.view().z,
-                    vec4(0.0, 0.0, 0.0, 1.0),
-                )
-                .invert()
-                .unwrap(),
-            );/*
-            */
-
-*/
