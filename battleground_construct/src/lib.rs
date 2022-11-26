@@ -25,7 +25,7 @@ impl Construct {
     pub fn new() -> Self {
         let mut world = World::new();
         let clock_id = world.add_entity();
-        world.add_component(&clock_id, Clock::new());
+        world.add_component(clock_id, Clock::new());
 
         use components::function_pose::FunctionPose;
         use components::pose::Pose;
@@ -33,22 +33,22 @@ impl Construct {
         use display::Color;
 
         let flag_id = world.add_entity();
-        world.add_component(&flag_id, components::pose::Pose::from_xyz(-1.0, -1.0, 0.0));
-        world.add_component(&flag_id, display::flag::Flag::new());
+        world.add_component(flag_id, components::pose::Pose::from_xyz(-1.0, -1.0, 0.0));
+        world.add_component(flag_id, display::flag::Flag::new());
 
         let flag_id = world.add_entity();
-        world.add_component(&flag_id, components::pose::Pose::from_xyz(1.0, -1.0, 0.0));
-        world.add_component(&flag_id, Flag::from_scale_color(0.5, Color::GREEN));
+        world.add_component(flag_id, components::pose::Pose::from_xyz(1.0, -1.0, 0.0));
+        world.add_component(flag_id, Flag::from_scale_color(0.5, Color::GREEN));
 
         let particle_id = world.add_entity();
-        world.add_component(&particle_id, Pose::from_xyz(-1.0, -1.0, 0.0));
-        world.add_component(&particle_id, Flag::from_scale_color(0.5, Color::MAGENTA));
+        world.add_component(particle_id, Pose::from_xyz(-1.0, -1.0, 0.0));
+        world.add_component(particle_id, Flag::from_scale_color(0.5, Color::MAGENTA));
         world.add_component(
-            &particle_id,
+            particle_id,
             FunctionPose::new(|t| Pose::from_xyz(t.sin(), t.cos(), t.sin() + 1.0)),
         );
         world.add_component(
-            &particle_id,
+            particle_id,
             display::particle_emitter::ParticleEmitter::bullet_trail(
                 particle_id,
                 0.05,
@@ -119,7 +119,7 @@ impl Construct {
         &self.world
     }
 
-    pub fn entity_pose(&self, entity: &EntityId) -> components::pose::Pose {
+    pub fn entity_pose(&self, entity: EntityId) -> components::pose::Pose {
         components::pose::world_pose(&self.world, entity)
     }
 

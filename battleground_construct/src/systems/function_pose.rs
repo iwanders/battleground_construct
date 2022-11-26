@@ -13,7 +13,7 @@ impl System for FunctionPose {
         let t = clock.elapsed_as_f32();
 
         for (entity, fun) in world.component_iter::<components::function_pose::FunctionPose>() {
-            if let Some(mut pose) = world.component_mut::<Pose>(&entity) {
+            if let Some(mut pose) = world.component_mut::<Pose>(entity) {
                 *pose = fun.pose(t)
             }
         }

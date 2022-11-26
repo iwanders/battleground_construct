@@ -15,7 +15,7 @@ impl System for RevolutePose {
         for (entity, mut rev) in world.component_iter_mut::<Revolute>() {
             rev.integrate(dt);
             // try to see if we can find a velocity for this entity.
-            if let Some(mut pose) = world.component_mut::<Pose>(&entity) {
+            if let Some(mut pose) = world.component_mut::<Pose>(entity) {
                 // Yes, so now integrate it.
                 let created_pose = rev.to_pose().into();
                 *pose = created_pose;

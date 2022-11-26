@@ -20,7 +20,7 @@ impl System for ProjectileHit {
         let projectile_poses = projectiles
             .drain(..)
             .map(|(projectile_id, source_id)| {
-                let pose = world_pose(world, &projectile_id);
+                let pose = world_pose(world, projectile_id);
                 (projectile_id, source_id, pose)
             })
             .collect::<Vec<(EntityId, EntityId, Pose)>>();
@@ -30,7 +30,7 @@ impl System for ProjectileHit {
             let hitspheres = world.component_iter::<HitSphere>();
             let hit_sphere_with_pose = hitspheres
                 .map(|(entity, sphere)| {
-                    let pose = world_pose(world, &entity);
+                    let pose = world_pose(world, entity);
                     (entity, pose, sphere)
                 })
                 .collect::<Vec<_>>();
@@ -55,7 +55,7 @@ impl System for ProjectileHit {
 
         for (hit_sphere_entity, projectile_entity, source_entity) in hit_projectile_source {
             world.add_component(
-                &hit_sphere_entity,
+                hit_sphere_entity,
                 HitBy::new(projectile_entity, source_entity),
             );
         }

@@ -14,7 +14,7 @@ impl System for AccelerationVelocity {
 
         for (entity, accel) in world.component_iter::<Acceleration>() {
             // try to see if we can find a velocity for this entity.
-            if let Some(mut vel) = world.component_mut::<Velocity>(&entity) {
+            if let Some(mut vel) = world.component_mut::<Velocity>(entity) {
                 // Yes, so now integrate it.
                 *vel = accel.integrate_velocity(&vel, dt);
             }

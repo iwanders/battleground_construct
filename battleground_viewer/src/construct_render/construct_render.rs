@@ -186,7 +186,7 @@ impl ConstructRender {
     ) {
         for (element_id, component_with_drawables) in construct.world().component_iter::<C>() {
             // Get the world pose for this entity, to add draw transform local to this component.
-            let world_pose = construct.entity_pose(&element_id);
+            let world_pose = construct.entity_pose(element_id);
             for el in component_with_drawables.drawables() {
                 self.add_primitive_element(context, &el, world_pose.transform())
             }
@@ -205,7 +205,7 @@ impl ConstructRender {
 
         for (element_id, component_with_drawables) in construct.world().component_iter::<C>() {
             // Get the world pose for this entity, to add draw transform local to this component.
-            let world_pose = construct.entity_pose(&element_id);
+            let world_pose = construct.entity_pose(element_id);
 
             for effect in component_with_drawables.effects() {
                 self.update_effect(

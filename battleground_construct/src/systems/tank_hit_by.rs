@@ -21,14 +21,14 @@ impl System for TankHitBy {
         // Searching done, we can now do the logic.
         for (hit_entity, root_entity) in hit_entity_and_root {
             let (projectile_entity, source_entity) = {
-                let projectile_entity = world.component::<HitBy>(&hit_entity).unwrap();
+                let projectile_entity = world.component::<HitBy>(hit_entity).unwrap();
                 (projectile_entity.projectile(), projectile_entity.source())
             };
             let damage = world
-                .component::<DamageDealer>(&source_entity)
+                .component::<DamageDealer>(source_entity)
                 .unwrap()
                 .damage();
-            let mut health = world.component_mut::<Health>(&root_entity).unwrap();
+            let mut health = world.component_mut::<Health>(root_entity).unwrap();
             let _new_health = health.subtract(damage);
             // println!("New health: {new_health}");
             projectile_entities.push(projectile_entity);

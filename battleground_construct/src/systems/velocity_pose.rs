@@ -14,7 +14,7 @@ impl System for VelocityPose {
 
         for (entity, vel) in world.component_iter::<Velocity>() {
             // try to see if we can find a velocity for this entity.
-            if let Some(mut pose) = world.component_mut::<Pose>(&entity) {
+            if let Some(mut pose) = world.component_mut::<Pose>(entity) {
                 // Yes, so now integrate it.
                 *pose = vel.integrate_pose(&pose, dt);
             }
@@ -33,13 +33,7 @@ mod test {
         let t_max = 700.0;
         let mut t = 0.0;
 
-        fn angle(p: &Pose) -> f32 {
-            p.transform().x[1].atan2(p.transform().x[0])
-        }
-        type Mat4 = cgmath::Matrix4<f32>;
-
         while t < t_max {
-            let previous_pose = pose;
             pose = vel.integrate_pose(&pose, dt);
             t += dt;
 

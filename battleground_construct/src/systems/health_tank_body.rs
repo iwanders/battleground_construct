@@ -8,7 +8,7 @@ impl System for HealthTankBody {
     fn update(&mut self, world: &mut World) {
         for (entity, health) in world.component_iter::<Health>() {
             // try to see if we can find a velocity for this entity.
-            if let Some(mut tank) = world.component_mut::<TankBody>(&entity) {
+            if let Some(mut tank) = world.component_mut::<TankBody>(entity) {
                 // Yes, so now integrate it.
 
                 if health.is_dead() {

@@ -111,7 +111,7 @@ impl World {
         new_id
     }
 
-    pub fn add_component<C: Component + 'static>(&mut self, entity: &EntityId, component: C) {
+    pub fn add_component<C: Component + 'static>(&mut self, entity: EntityId, component: C) {
         let mut v = self.components.get_mut(&TypeId::of::<C>());
         if v.is_none() {
             self.components
@@ -167,17 +167,17 @@ impl World {
         res
     }
 
-    pub fn remove_entity(&mut self, entity: &EntityId) {
-        if self.entities.remove(entity) {
+    pub fn remove_entity(&mut self, entity: EntityId) {
+        if self.entities.remove(&entity) {
             for (_t, comps) in self.components.iter_mut() {
-                comps.remove(entity);
+                comps.remove(&entity);
             }
         }
     }
 
     pub fn remove_entities(&mut self, entities: &[EntityId]) {
         for entity in entities.iter() {
-            self.remove_entity(entity)
+            self.remove_entity(*entity)
         }
     }
 
@@ -205,7 +205,7 @@ impl World {
 
     pub fn component<'a, C: Component + 'static>(
         &'a self,
-        entity: &EntityId,
+        entity: EntityId,
     ) -> Option<std::cell::Ref<'a, C>> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
@@ -225,7 +225,7 @@ impl World {
     }
     pub fn component_mut<'a, C: Component + 'static>(
         &'a self,
-        entity: &EntityId,
+        entity: EntityId,
     ) -> Option<std::cell::RefMut<'a, C>> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
@@ -313,7 +313,7 @@ mod test {
             }
             for e in to_delete {
                 println!("Removing {e:?}");
-                world.remove_entity(&e);
+                world.remove_entity(e);
             }
         }
     }
@@ -323,23 +323,23 @@ mod test {
         let mut world = World::new();
 
         let player_id = world.add_entity();
-        world.add_component(&player_id, Health(1.0));
-        world.add_component(&player_id, Regeneration(0.0));
+        world.add_component(player_id, Health(1.0));
+        world.add_component(player_id, Regeneration(0.0));
 
         let monster_id = world.add_entity();
-        world.add_component(&monster_id, Health(1.0));
-        world.add_component(&monster_id, Regeneration(0.5));
+        world.add_component(monster_id, Health(1.0));
+        world.add_component(monster_id, Regeneration(0.5));
 
         // Test the assignment of values in a component by entity id.
-        assert_eq!(world.component::<Regeneration>(&monster_id).unwrap().0, 0.5);
-        world.component_mut::<Regeneration>(&monster_id).unwrap().0 = 1.5;
-        assert_eq!(world.component::<Regeneration>(&monster_id).unwrap().0, 1.5);
+        assert_eq!(world.component::<Regeneration>(monster_id).unwrap().0, 0.5);
+        world.component_mut::<Regeneration>(monster_id).unwrap().0 = 1.5;
+        assert_eq!(world.component::<Regeneration>(monster_id).unwrap().0, 1.5);
 
         {
             // Check that we can read another component of the same type by id.
             for (entity_health, mut _health) in world.component_iter_mut::<Health>() {
                 if entity_health == player_id {
-                    let mut _z = world.component_mut::<Health>(&monster_id);
+                    let mut _z = world.component_mut::<Health>(monster_id);
                 }
             }
         }
@@ -351,14 +351,14 @@ mod test {
         systems.update(&mut world);
 
         // Check new states.
-        assert_eq!(world.component::<Regeneration>(&monster_id).unwrap().0, 1.5);
-        assert_eq!(world.component::<Health>(&monster_id).unwrap().0, 2.5);
+        assert_eq!(world.component::<Regeneration>(monster_id).unwrap().0, 1.5);
+        assert_eq!(world.component::<Health>(monster_id).unwrap().0, 2.5);
 
-        assert_eq!(world.component::<Regeneration>(&player_id).unwrap().0, 0.0);
-        assert_eq!(world.component::<Health>(&player_id).unwrap().0, 1.0);
+        assert_eq!(world.component::<Regeneration>(player_id).unwrap().0, 0.0);
+        assert_eq!(world.component::<Health>(player_id).unwrap().0, 1.0);
 
         // lets set the monster awesomeness to negative.
-        world.component_mut::<Regeneration>(&monster_id).unwrap().0 = -1.0;
+        world.component_mut::<Regeneration>(monster_id).unwrap().0 = -1.0;
         systems.update(&mut world);
         systems.update(&mut world);
         systems.update(&mut world);

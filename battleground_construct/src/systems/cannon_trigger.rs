@@ -14,9 +14,9 @@ impl System for CannonTrigger {
             clock.elapsed_as_f32()
         };
 
-        for cannon_entity in world.component_entities::<Cannon>().iter() {
+        for cannon_entity in world.component_entities::<Cannon>() {
             let fired = {
-                let mut cannon = world.component_mut::<Cannon>(&cannon_entity).unwrap();
+                let mut cannon = world.component_mut::<Cannon>(cannon_entity).unwrap();
                 if cannon.is_ready(current) {
                     cannon.fire(current);
                     true
@@ -29,9 +29,9 @@ impl System for CannonTrigger {
                 continue;
             }
 
-            let muzzle_pose = super::components::pose::world_pose(world, &cannon_entity);
+            let muzzle_pose = super::components::pose::world_pose(world, cannon_entity);
 
-            let cannon_effect = { world.component::<Cannon>(&cannon_entity).unwrap().effect() };
+            let cannon_effect = { world.component::<Cannon>(cannon_entity).unwrap().effect() };
 
             cannon_effect(world, &muzzle_pose, cannon_entity);
         }
