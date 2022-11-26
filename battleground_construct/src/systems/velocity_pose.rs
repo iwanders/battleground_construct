@@ -1,8 +1,8 @@
 use super::components::pose::Pose;
 use super::components::velocity::Velocity;
 use super::Clock;
-use engine::prelude::*;
 use crate::util::cgmath::ToQuaternion;
+use engine::prelude::*;
 
 pub struct VelocityPose {}
 impl System for VelocityPose {
@@ -24,7 +24,7 @@ impl System for VelocityPose {
 }
 
 #[cfg(test)]
-mod test{
+mod test {
     use super::*;
     #[test]
     fn test_integration_of_quaternion() {
@@ -33,28 +33,41 @@ mod test{
         let mut pose = Pose::from_xyz(100.0, 100.0, 0.0);
         let t_max = 700.0;
         let mut t = 0.0;
+
+        fn angle(p: &Pose) -> f32 {
+            p.transform().x[1].atan2(p.transform().x[0])
+        }
+        type Mat4 = cgmath::Matrix4<f32>;
+
         while t < t_max {
-            let previous_pose = *pose;
+            let previous_pose = pose;
             pose = vel.integrate_pose(&pose, dt);
             t += dt;
-            if t > 600.0 {
-                let diff = previous_pose.w.truncate() - (*pose).w.truncate();
-                let dist = diff.x.powf(2.0) + diff.y.powf(2.0) + diff.z.powf(2.0);
-                let pq = previous_pose.to_quaternion();
-                let q = pose.to_quaternion();
-                let dq = pq - q;
-                let qdist = dq.v.x.powf(2.0) + dq.v.y.powf(2.0) + dq.v.z.powf(2.0) + dq.s.powf(2.0);
-                // println!("vel: {vel:?}");
-                if (qdist > 2.5e-8 || dist > 2.1e-7){
-                    println!("vel: {vel:?}");
-                    println!("dist: {dist:?}");
-                    println!("Previous pose: {previous_pose:?}");
-                    println!("New pose: {pose:?}");
-                    println!("q: {q:?}");
-                    println!("dq: {dq:?}");
-                    println!("qdist: {qdist:?}");
-                }
-            }
+
+            use cgmath::MetricSpace;
+            use cgmath::SquareMatrix;
+
+            // Check that the rotation part of the matrix is still correct.
+            let previous_m3x3 = cgmath::Matrix3::<f32>::from_cols(
+                pose.x.truncate(),
+                pose.y.truncate(),
+                pose.z.truncate(),
+            );
+            let mut transposed = previous_m3x3;
+            transposed.transpose_self();
+            let res = transposed * previous_m3x3;
+            let res_diag = res.diagonal();
+            let expected = cgmath::Vector3::<f32>::new(1.0, 1.0, 1.0);
+            let dist = res_diag.distance2(expected);
+            let det = previous_m3x3.determinant();
+            assert!(
+                dist < 0.0001,
+                "Distance between rotation * rotation.T diagonal exceeps 0.001: {dist:?}, {res:?}"
+            );
+            assert!(
+                (det - 1.0).abs() < 0.001,
+                "Determinant error exceeds 0.001: {det}"
+            );
         }
     }
 }

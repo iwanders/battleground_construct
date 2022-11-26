@@ -261,4 +261,3 @@ mod test {
         assert_eq!(clock.elapsed_as_f32(), clock.step_as_f32() * 3.0);
     }
 }
-

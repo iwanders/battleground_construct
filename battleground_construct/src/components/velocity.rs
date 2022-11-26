@@ -37,17 +37,52 @@ macro_rules! create_velocity_implementation {
             }
 
             pub fn integrate(&self, dt: f32) -> cgmath::Matrix4<f32> {
-                cgmath::Matrix4::<f32>::from_translation(cgmath::Vector3::new(
+                (cgmath::Matrix4::<f32>::from_translation(cgmath::Vector3::new(
                     self.v[0] * dt,
                     self.v[1] * dt,
                     self.v[2] * dt,
                 )) * cgmath::Matrix4::<f32>::from_angle_x(cgmath::Rad(self.w[0]) * dt)
                     * cgmath::Matrix4::<f32>::from_angle_y(cgmath::Rad(self.w[1]) * dt)
-                    * cgmath::Matrix4::<f32>::from_angle_z(cgmath::Rad(self.w[2]) * dt)
+                    * cgmath::Matrix4::<f32>::from_angle_z(cgmath::Rad(self.w[2]) * dt))
             }
 
             pub fn integrate_pose(&self, pose: &super::pose::Pose, dt: f32) -> super::pose::Pose {
-                (pose.h * self.integrate(dt)).into()
+                let res = (pose.h * self.integrate(dt));
+                // return res.into();
+
+                // Re-orthogonalize the rotation part of this matrix.
+                //https://stackoverflow.com/a/23082112
+                // x_new = 0.5*(3-dot(x_ort,x_ort))*x_ort
+                // y_new = 0.5*(3-dot(y_ort,y_ort))*y_ort
+                // z_new = 0.5*(3-dot(z_ort,z_ort))*z_ort
+                use cgmath::InnerSpace;
+
+                let x_ort = res.x.truncate();
+                let y_ort = res.y.truncate();
+                let z_ort = res.z.truncate();
+                let c0 = (0.5 * (3.0 - x_ort.dot(x_ort)) * x_ort);
+                let c1 = (0.5 * (3.0 - y_ort.dot(y_ort)) * y_ort);
+                let c2 = (0.5 * (3.0 - z_ort.dot(z_ort)) * z_ort);
+
+                // Finally, re-normalize the matrix as well.
+                use cgmath::Matrix;
+                use cgmath::SquareMatrix;
+                let m3 = cgmath::Matrix3::<f32>::from_cols(c0, c1, c2);
+                let det = m3.determinant();
+                let c0 = (1.0 / det) * c0;
+                let c1 = (1.0 / det) * c1;
+                let c2 = (1.0 / det) * c2;
+
+                let c3 = res.w;
+
+                // Finally, reconstruct the transform matrix.
+                cgmath::Matrix4::<f32>::from_cols(
+                    c0.extend(0.0),
+                    c1.extend(0.0),
+                    c2.extend(0.0),
+                    c3,
+                )
+                .into()
             }
             pub fn integrate_global_pose(
                 &self,
