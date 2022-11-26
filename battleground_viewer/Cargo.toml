@@ -11,3 +11,4 @@ battleground_construct = { path = "../battleground_construct" }
 #three-d = {version = "0.15.0", features=["egui-gui"], path = "../../../asny-three-d" }
 three-d = {version = "0.15.0", features=["egui-gui"], git = "https://github.com/iwanders/asny-three-d", branch = "orbit-control-improvements"  }
 rand = "0.8.5"
+rand_distr = "0.4.3"

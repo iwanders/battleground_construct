@@ -20,7 +20,10 @@ use three_d::renderer::material::PhysicalMaterial;
 #[derive(Default)]
 pub struct ConstructRender {
     static_gms: Vec<Gm<Mesh, PhysicalMaterial>>,
-    instanced_meshes: std::collections::HashMap<display::primitives::Primitive, InstancedEntity<PhysicalMaterial>>,
+    instanced_meshes: std::collections::HashMap<
+        display::primitives::Primitive,
+        InstancedEntity<PhysicalMaterial>,
+    >,
 
     effects: std::collections::HashMap<EffectId, Box<dyn RenderableEffect>>,
 }
@@ -289,8 +292,10 @@ impl ConstructRender {
                     m
                 }
             };
-            self.instanced_meshes
-                .insert(el.primitive, InstancedEntity::new_physical(context, &primitive_mesh));
+            self.instanced_meshes.insert(
+                el.primitive,
+                InstancedEntity::new_physical(context, &primitive_mesh),
+            );
         }
 
         let instanced = self

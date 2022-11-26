@@ -1,8 +1,10 @@
 use crate::construct_render::instanced_entity::InstancedEntity;
 use battleground_construct::display;
 use battleground_construct::display::EffectId;
+use rand::rngs::ThreadRng;
 use rand::Rng;
 use three_d::*;
+
 pub trait RenderableEffect {
     fn object(&self) -> Option<&dyn Object>;
     fn update(&mut self, camera: &Camera, entity_position: Matrix4<f32>, time: f32);
@@ -42,15 +44,61 @@ impl Material for FireworksMaterial {
     }
 }
 
+type LifeTime = f32;
+
+struct Particle {
+    pos: Mat4,
+    color: Color,
+    spawn_time: f32,
+    expiry_time: f32,
+}
+
+impl Particle {
+    pub fn new(pos: Mat4, color: Color, spawn_time: f32, expiry_time: f32) -> Self {
+        Particle {
+            pos,
+            color,
+            spawn_time,
+            expiry_time,
+        }
+    }
+
+    pub fn expired(&self, time: f32) -> bool {
+        self.expiry_time < time
+    }
+}
+
 pub struct ParticleEmitter {
-    // renderable: three_d::Gm<ParticleSystem, FireworksMaterial>,
-    renderable: InstancedEntity<FireworksMaterial>,
-    // particles: three_d::renderer::geometry::Particles,
-    emit_period: f32,
-    last_emit: f32,
+    renderable: InstancedEntity<PhysicalMaterial>,
+
+    /// Last spawn time.
+    next_spawn_time: f32,
+
+    /// Interval at which to spawn particles.
+    spawn_interval: f32,
+    spawn_jitter: f32,
+
+    /// Lifetime of each particle.
+    lifetime: f32,
+    lifetime_jitter: f32, // gaussian
+
+    /// Color of each particle.
     color: three_d::Color,
-    fade_time: f32,
-    particles: Vec<(Mat4, Color, f32)>,
+
+    // acceleration: Vec3,
+    /// Initial velocity of each particle.
+    velocity: Vec3,
+
+    /// Whether to fade the alpha to the lifetime.
+    fade_alpha_to_lifetime: bool,
+
+    /// Make particles always face the camera
+    face_camera: bool,
+
+    /// Actual container of particles.
+    particles: Vec<Particle>,
+
+    rng: ThreadRng,
 }
 
 impl ParticleEmitter {
@@ -66,21 +114,20 @@ impl ParticleEmitter {
             b: display.color.b,
             a: display.color.a,
         };
-        // let mut square = CpuMesh::circle(8);
-        let mut square = CpuMesh::square();
+        let mut square = CpuMesh::circle(8);
+        // let mut square = CpuMesh::square();
         square.transform(&Mat4::from_scale(display.size)).unwrap();
 
-
-        let z = FireworksMaterial{color: Color {
-                    r: 255,
-                    g: 255,
-                    b: 255,
-                    a: 254,
-                }, fade: 1.0};
+        let z = FireworksMaterial {
+            color: Color {
+                r: 255,
+                g: 255,
+                b: 255,
+                a: 254,
+            },
+            fade: 1.0,
+        };
         // renderable.set_material(z);
-
-
-        let mut renderable = InstancedEntity::<FireworksMaterial>::new(context, &square, z);
 
         let mut material = three_d::renderer::material::PhysicalMaterial::new(
             &context,
@@ -94,13 +141,27 @@ impl ParticleEmitter {
                 ..Default::default()
             },
         );
+
+        let mut renderable = InstancedEntity::new(context, &square, material);
+
         Self {
             renderable: renderable,
-            emit_period: 0.03,
-            last_emit: -1000.0,
-            fade_time: 1.0,
+
+            next_spawn_time: 0.0,
+            spawn_interval: 0.1,
+            spawn_jitter: 0.01,
+            lifetime: 1.0,
+            lifetime_jitter: 0.3,
+
+            velocity: vec3(0.0, 0.0, 0.0),
+
+            fade_alpha_to_lifetime: true,
+            face_camera: true,
+
             particles: vec![],
             color,
+
+            rng: rand::thread_rng(),
         }
     }
 }
@@ -111,19 +172,33 @@ impl RenderableEffect for ParticleEmitter {
     }
 
     fn update(&mut self, camera: &Camera, entity_position: Matrix4<f32>, time: f32) {
-        // Since our geometry is a square, we always want to view it from the same direction, nomatter how we change the camera.
-        if (self.last_emit + self.emit_period) < time {
-            self.particles.push((entity_position, self.color, time));
-            self.last_emit = time;
+        // Spawn new particles.
+        while (self.next_spawn_time < time) {
+            use rand_distr::StandardNormal;
+            let spawn_val: f32 = self.rng.sample(StandardNormal);
+            self.next_spawn_time += self.spawn_interval + spawn_val * self.spawn_jitter;
+            // spawn particle.
+            let pos = entity_position;
+            let color = self.color;
+            let spawn_time = time;
+            let lifetime_val: f32 = self.rng.sample(StandardNormal);
+            let expiry_time = time + self.lifetime + self.lifetime_jitter * lifetime_val;
+            self.particles
+                .push(Particle::new(pos, color, spawn_time, expiry_time));
+        }
 
-            // Update the alphas in all colors.
-            for (pos, color, spawn) in self.particles.iter_mut() {
-                let age = time - *spawn;
-                let ratio_of_age = (1.0 - (age / self.fade_time)).max(0.0) * 255.0;
+        // Update position and alphas
+        for particle in self.particles.iter_mut() {
+            if self.fade_alpha_to_lifetime {
+                let ratio_of_age =
+                    (time - particle.spawn_time) / (particle.expiry_time - particle.spawn_time);
+                let ratio_of_age = (1.0 - (ratio_of_age).max(0.0)) * 255.0;
                 let alpha = ratio_of_age as u8;
-                color.a = alpha;
+                particle.color.a = alpha;
+            }
 
-                *pos = Mat4::from_translation(pos.w.truncate())
+            if self.face_camera {
+                particle.pos = Mat4::from_translation(particle.pos.w.truncate())
                     * Mat4::from_cols(
                         camera.view().x,
                         camera.view().y,
@@ -133,22 +208,21 @@ impl RenderableEffect for ParticleEmitter {
                     .invert()
                     .unwrap();
             }
-
-            // drop all transparent things.
-            self.particles = self
-                .particles
-                .iter()
-                .filter(|(_p, color, _s)| color.a != 0)
-                .map(|x| *x)
-                .collect::<_>();
-
-            let p = self
-                .particles
-                .iter()
-                .map(|(p, c, s)| (p, c))
-                .collect::<Vec<_>>();
-
-            self.renderable.set_instances(&p[..]);
         }
+
+        // drop all transparent things.
+        self.particles = self
+            .particles
+            .drain(..)
+            .filter(|p| !p.expired(time))
+            .collect::<_>();
+
+        let p = self
+            .particles
+            .iter()
+            .map(|p| (&p.pos, &p.color))
+            .collect::<Vec<_>>();
+
+        self.renderable.set_instances(&p[..]);
     }
 }

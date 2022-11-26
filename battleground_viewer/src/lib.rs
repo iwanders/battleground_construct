@@ -112,11 +112,11 @@ impl ConstructViewer {
     // Consumes the viewer...
     fn view_loop(mut self) -> () {
         let jump = 0.0;
-        while self.construct.elapsed_as_f64()  < jump {
+        while self.construct.elapsed_as_f64() < jump {
             self.construct.update();
         }
         // battleground_construct::systems::velocity_pose::print_poses.store(true, std::sync::atomic::Ordering::Relaxed);
-        
+
         self.window.render_loop(move |mut frame_input: FrameInput| {
             while (self.construct.elapsed_as_f64() * 1.0) < (self.limiter.elapsed_as_f64() + jump) {
                 let now = std::time::Instant::now();

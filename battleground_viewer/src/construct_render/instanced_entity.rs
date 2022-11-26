@@ -32,7 +32,6 @@ impl InstancedEntity<three_d::renderer::material::PhysicalMaterial> {
 }
 
 impl<M: Material> InstancedEntity<M> {
-
     pub fn new(context: &Context, cpu_mesh: &CpuMesh, material: M) -> Self {
         let instances: three_d::renderer::geometry::Instances = Default::default();
         InstancedEntity::<M> {
@@ -47,8 +46,7 @@ impl<M: Material> InstancedEntity<M> {
 
     pub fn gm(
         &self,
-    ) -> &three_d::renderer::object::Gm<three_d::renderer::geometry::InstancedMesh, M>
-    {
+    ) -> &three_d::renderer::object::Gm<three_d::renderer::geometry::InstancedMesh, M> {
         &self.gm
     }
 
