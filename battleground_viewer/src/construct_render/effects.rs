@@ -48,15 +48,17 @@ type LifeTime = f32;
 
 struct Particle {
     pos: Mat4,
+    vel: Vec3,
     color: Color,
     spawn_time: f32,
     expiry_time: f32,
 }
 
 impl Particle {
-    pub fn new(pos: Mat4, color: Color, spawn_time: f32, expiry_time: f32) -> Self {
+    pub fn new(pos: Mat4, vel: Vec3, color: Color, spawn_time: f32, expiry_time: f32) -> Self {
         Particle {
             pos,
+            vel,
             color,
             spawn_time,
             expiry_time,
@@ -70,6 +72,9 @@ impl Particle {
 
 pub struct ParticleEmitter {
     renderable: InstancedEntity<PhysicalMaterial>,
+
+    /// Keep track of the last update time, to integrate velocity.
+    last_time: f32,
 
     /// Last spawn time.
     next_spawn_time: f32,
@@ -88,6 +93,7 @@ pub struct ParticleEmitter {
     // acceleration: Vec3,
     /// Initial velocity of each particle.
     velocity: Vec3,
+    velocity_jitter: Vec3,
 
     /// Whether to fade the alpha to the lifetime.
     fade_alpha_to_lifetime: bool,
@@ -145,15 +151,17 @@ impl ParticleEmitter {
         let mut renderable = InstancedEntity::new(context, &square, material);
 
         Self {
+            last_time: time,
             renderable: renderable,
 
-            next_spawn_time: 0.0,
-            spawn_interval: 0.1,
-            spawn_jitter: 0.01,
-            lifetime: 1.0,
-            lifetime_jitter: 0.3,
+            next_spawn_time: time,
+            spawn_interval: 0.01,
+            spawn_jitter: 0.00,
+            lifetime: 0.4,
+            lifetime_jitter: 0.0,
 
             velocity: vec3(0.0, 0.0, 0.0),
+            velocity_jitter: vec3(0.1, 0.1, 0.1),
 
             fade_alpha_to_lifetime: true,
             face_camera: true,
@@ -172,6 +180,7 @@ impl RenderableEffect for ParticleEmitter {
     }
 
     fn update(&mut self, camera: &Camera, entity_position: Matrix4<f32>, time: f32) {
+        let dt = self.last_time - time;
         // Spawn new particles.
         while (self.next_spawn_time < time) {
             use rand_distr::StandardNormal;
@@ -183,12 +192,21 @@ impl RenderableEffect for ParticleEmitter {
             let spawn_time = time;
             let lifetime_val: f32 = self.rng.sample(StandardNormal);
             let expiry_time = time + self.lifetime + self.lifetime_jitter * lifetime_val;
+
+            let v0: f32 = self.rng.sample(StandardNormal);
+            let v1: f32 = self.rng.sample(StandardNormal);
+            let v2: f32 = self.rng.sample(StandardNormal);
+            let vel = self.velocity + vec3(v0 * self.velocity_jitter[0], v1  * self.velocity_jitter[1], v2  * self.velocity_jitter[2]);
+
             self.particles
-                .push(Particle::new(pos, color, spawn_time, expiry_time));
+                .push(Particle::new(pos, vel, color, spawn_time, expiry_time));
         }
 
         // Update position and alphas
         for particle in self.particles.iter_mut() {
+            // Always update position.
+            particle.pos.w = particle.pos.w + particle.vel.extend(0.0) * dt;
+
             if self.fade_alpha_to_lifetime {
                 let ratio_of_age =
                     (time - particle.spawn_time) / (particle.expiry_time - particle.spawn_time);
@@ -196,6 +214,8 @@ impl RenderableEffect for ParticleEmitter {
                 let alpha = ratio_of_age as u8;
                 particle.color.a = alpha;
             }
+
+            
 
             if self.face_camera {
                 particle.pos = Mat4::from_translation(particle.pos.w.truncate())
@@ -224,5 +244,6 @@ impl RenderableEffect for ParticleEmitter {
             .collect::<Vec<_>>();
 
         self.renderable.set_instances(&p[..]);
+        self.last_time = time;
     }
 }
