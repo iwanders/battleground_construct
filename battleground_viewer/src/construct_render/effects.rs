@@ -1,7 +1,6 @@
 use crate::construct_render::instanced_entity::InstancedEntity;
 use crate::construct_render::util::ColorConvert;
 use battleground_construct::display;
-use battleground_construct::display::EffectId;
 use rand::rngs::ThreadRng;
 use rand::Rng;
 use three_d::*;
@@ -109,14 +108,14 @@ pub struct ParticleEmitter {
 impl ParticleEmitter {
     pub fn new(
         context: &Context,
-        entity_position: Matrix4<f32>,
+        _entity_position: Matrix4<f32>,
         time: f32,
         display: &display::primitives::ParticleType,
     ) -> Self {
-        let mut p_color: Color = Default::default();
-        let mut p_size = 1.0f32;
-        let mut lifetime = 0.4;
-        let mut spawn_interval = 0.01;
+        let mut p_color: Color;
+        let p_size: f32;
+        let lifetime = 0.4;
+        let spawn_interval = 0.01;
 
         match display {
             display::primitives::ParticleType::BulletTrail { color, size } => {
@@ -135,21 +134,20 @@ impl ParticleEmitter {
         // renderable.set_material(z);
 
         // let mut material = three_d::renderer::material::PhysicalMaterial::new(
-        let mut material = three_d::renderer::material::ColorMaterial::new(
+        let material = three_d::renderer::material::ColorMaterial::new_transparent(
             &context,
             &CpuMaterial {
                 albedo: Color {
                     r: 255,
                     g: 255,
                     b: 255,
-                    a: 254,
+                    a: 255,
                 },
                 ..Default::default()
             },
         );
-        // material.albedo.a = 255;
 
-        let mut renderable = InstancedEntity::new(context, &square, material);
+        let renderable = InstancedEntity::new(context, &square, material);
 
         Self {
             last_time: time,
@@ -191,7 +189,7 @@ impl RenderableEffect for ParticleEmitter {
             .collect::<_>();
 
         // Spawn new particles.
-        while (self.next_spawn_time < time) {
+        while self.next_spawn_time < time {
             use rand_distr::StandardNormal;
             let spawn_val: f32 = self.rng.sample(StandardNormal);
             self.next_spawn_time += self.spawn_interval + spawn_val * self.spawn_jitter;

@@ -10,7 +10,7 @@ pub struct InstancedEntity<M: Material> {
 impl InstancedEntity<three_d::renderer::material::PhysicalMaterial> {
     pub fn new_physical(context: &Context, cpu_mesh: &CpuMesh) -> Self {
         let instances: three_d::renderer::geometry::Instances = Default::default();
-        let mut material = three_d::renderer::material::PhysicalMaterial::new(
+        let material = three_d::renderer::material::PhysicalMaterial::new_opaque(
             &context,
             &CpuMaterial {
                 albedo: Color {
@@ -39,9 +39,6 @@ impl<M: Material> InstancedEntity<M> {
             transforms: vec![],
             colors: vec![],
         }
-    }
-    pub fn set_material(&mut self, material: M) {
-        self.gm.material = material;
     }
 
     pub fn gm(

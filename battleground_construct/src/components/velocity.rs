@@ -65,7 +65,6 @@ macro_rules! create_velocity_implementation {
                 let c2 = (0.5 * (3.0 - z_ort.dot(z_ort)) * z_ort);
 
                 // Finally, re-normalize the matrix as well.
-                use cgmath::Matrix;
                 use cgmath::SquareMatrix;
                 let m3 = cgmath::Matrix3::<f32>::from_cols(c0, c1, c2);
                 let det = m3.determinant();

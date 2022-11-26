@@ -16,12 +16,11 @@ pub struct TankSpawnConfig {
 }
 
 fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: &EntityId) {
-    use crate::components::acceleration::Acceleration;
     use crate::components::point_projectile::PointProjectile;
     use crate::components::velocity::Velocity;
-    use crate::display::particle_emitter::ParticleEmitter;
-    use components::pose::{Pose, PreTransform};
+
     let muzzle_velocity = 10.0;
+
     // Get the pose of the cannon in the world coordinates. Then create the pose with the
     // Orientation in the global frame.
     let projectile_id = world.add_entity();
@@ -73,7 +72,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     let mut tank_group_ids: Vec<EntityId> = vec![];
     use components::group::Group;
     use components::parent::Parent;
-    use components::pose::{Pose, PreTransform};
+    // use components::pose::{Pose, PreTransform};
 
     // Create the base tank, root element with the health.
     let vehicle_id = world.add_entity();
@@ -140,7 +139,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
             components::damage_dealer::DamageDealer::new(0.1),
         );
 
-        use crate::components::cannon::CannonFireEffect;
         let cannon_config = components::cannon::CannonConfig {
             reload_time: 2.0,
             fire_effect: std::rc::Rc::new(cannon_function),

@@ -1,7 +1,6 @@
 use super::components::pose::Pose;
 use super::components::velocity::Velocity;
 use super::Clock;
-use crate::util::cgmath::ToQuaternion;
 use engine::prelude::*;
 
 pub struct VelocityPose {}

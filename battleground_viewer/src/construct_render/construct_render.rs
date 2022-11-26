@@ -1,4 +1,3 @@
-use rand::Rng;
 use three_d::*;
 
 use super::effects;
@@ -185,8 +184,6 @@ impl ConstructRender {
         context: &Context,
         construct: &Construct,
     ) {
-        let current_time = construct.elapsed_as_f64() as f32;
-
         for (element_id, component_with_drawables) in construct.world().component_iter::<C>() {
             // Get the world pose for this entity, to add draw transform local to this component.
             let world_pose = construct.entity_pose(&element_id);

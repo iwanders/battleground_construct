@@ -1,8 +1,5 @@
 use super::components::cannon::Cannon;
-use super::components::pose::Pose;
-// use super::components::velocity::GlobalVelocity;
-use super::components::point_projectile::PointProjectile;
-use super::components::velocity::Velocity;
+
 use super::Clock;
 use engine::prelude::*;
 
