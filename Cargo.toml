@@ -4,6 +4,7 @@ members = [
     "engine",
     "battleground_construct",
     "battleground_viewer",
+    "example_driving_ai",
 ]
 
 [profile.release]

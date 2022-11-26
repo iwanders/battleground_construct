@@ -11,6 +11,8 @@ pub mod systems;
 pub mod util;
 pub mod vehicles;
 
+pub mod vehicle_control;
+
 use components::clock::{Clock, ClockSystem};
 use engine::prelude::*;
 use engine::Systems;
@@ -23,6 +25,8 @@ pub struct Construct {
 
 impl Construct {
     pub fn new() -> Self {
+        
+
         let mut world = World::new();
         let clock_id = world.add_entity();
         world.add_component(clock_id, Clock::new());

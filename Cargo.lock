@@ -75,6 +75,7 @@ version = "0.1.0"
 dependencies = [
  "cgmath",
  "engine",
+ "libloading",
 ]
 
 [[package]]
@@ -435,6 +436,13 @@ dependencies = [
  "emath",
  "nohash-hasher",
  "parking_lot",
+]
+
+[[package]]
+name = "example_driving_ai"
+version = "0.1.0"
+dependencies = [
+ "battleground_construct",
 ]
 
 [[package]]
