@@ -175,8 +175,8 @@ impl Construct {
                 ..Default::default()
             },
         );
-        for x in 1..2 {
-            for y in 1..2 {
+        for x in 1..10 {
+            for y in 1..10 {
                 spawn_tank(
                     &mut world,
                     TankSpawnConfig {
@@ -204,7 +204,7 @@ impl Construct {
         systems.add_system(Box::new(systems::revolute_pose::RevolutePose {}));
         systems.add_system(Box::new(systems::cannon_trigger::CannonTrigger {}));
         systems.add_system(Box::new(systems::projectile_floor::ProjectileFloor {}));
-        systems.add_system(Box::new(systems::projectile_hit::ProjectileHit {}));
+        // systems.add_system(Box::new(systems::projectile_hit::ProjectileHit {}));
         // Must go after the hit calculation.
         systems.add_system(Box::new(systems::tank_hit_by::TankHitBy {}));
         // All handling of hits done with the projectiles still present.
