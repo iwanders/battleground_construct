@@ -99,15 +99,14 @@ pub struct Element {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct ParticleEmitter {
-    pub size: f32,
-    pub color: Color,
+pub enum ParticleType {
+    BulletTrail { size: f32, color: Color },
 }
-impl Eq for ParticleEmitter {}
+impl Eq for ParticleType {}
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum EffectType {
-    ParticleEmitter(ParticleEmitter),
+    ParticleEmitter(ParticleType),
 }
 
 pub type EffectId = (engine::EntityId, u64);

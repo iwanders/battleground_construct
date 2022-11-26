@@ -1,4 +1,5 @@
 use crate::construct_render::instanced_entity::InstancedEntity;
+use crate::construct_render::util::ColorConvert;
 use battleground_construct::display;
 use battleground_construct::display::EffectId;
 use rand::rngs::ThreadRng;
@@ -112,27 +113,26 @@ impl ParticleEmitter {
         context: &Context,
         entity_position: Matrix4<f32>,
         time: f32,
-        display: &display::primitives::ParticleEmitter,
+        display: &display::primitives::ParticleType,
     ) -> Self {
-        let color = Color {
-            r: display.color.r,
-            g: display.color.g,
-            b: display.color.b,
-            a: display.color.a,
-        };
+        let mut p_color: Color = Default::default();
+        let mut p_size = 1.0f32;
+        let mut lifetime = 0.4;
+        let mut spawn_interval = 0.01;
+
+        match display {
+            display::primitives::ParticleType::BulletTrail { color, size } => {
+                p_color = color.to_color();
+                p_size = *size;
+            }
+        }
+        let color = p_color;
+        let size = p_size;
+
         let mut square = CpuMesh::circle(8);
         // let mut square = CpuMesh::square();
-        square.transform(&Mat4::from_scale(display.size)).unwrap();
+        square.transform(&Mat4::from_scale(size)).unwrap();
 
-        let z = FireworksMaterial {
-            color: Color {
-                r: 255,
-                g: 255,
-                b: 255,
-                a: 254,
-            },
-            fade: 1.0,
-        };
         // renderable.set_material(z);
 
         let mut material = three_d::renderer::material::PhysicalMaterial::new(
@@ -155,9 +155,9 @@ impl ParticleEmitter {
             renderable: renderable,
 
             next_spawn_time: time,
-            spawn_interval: 0.01,
+            spawn_interval: spawn_interval,
             spawn_jitter: 0.00,
-            lifetime: 0.4,
+            lifetime: lifetime,
             lifetime_jitter: 0.0,
 
             velocity: vec3(0.0, 0.0, 0.0),
@@ -196,7 +196,12 @@ impl RenderableEffect for ParticleEmitter {
             let v0: f32 = self.rng.sample(StandardNormal);
             let v1: f32 = self.rng.sample(StandardNormal);
             let v2: f32 = self.rng.sample(StandardNormal);
-            let vel = self.velocity + vec3(v0 * self.velocity_jitter[0], v1  * self.velocity_jitter[1], v2  * self.velocity_jitter[2]);
+            let vel = self.velocity
+                + vec3(
+                    v0 * self.velocity_jitter[0],
+                    v1 * self.velocity_jitter[1],
+                    v2 * self.velocity_jitter[2],
+                );
 
             self.particles
                 .push(Particle::new(pos, vel, color, spawn_time, expiry_time));
@@ -214,8 +219,6 @@ impl RenderableEffect for ParticleEmitter {
                 let alpha = ratio_of_age as u8;
                 particle.color.a = alpha;
             }
-
-            
 
             if self.face_camera {
                 particle.pos = Mat4::from_translation(particle.pos.w.truncate())

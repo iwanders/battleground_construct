@@ -11,17 +11,15 @@ pub mod systems;
 pub mod util;
 pub mod vehicles;
 
-use vehicles::tank::{TankSpawnConfig, spawn_tank};
 use components::clock::{Clock, ClockSystem};
 use engine::prelude::*;
 use engine::Systems;
-
+use vehicles::tank::{spawn_tank, TankSpawnConfig};
 
 pub struct Construct {
     world: World,
     systems: Systems,
 }
-
 
 impl Construct {
     pub fn new() -> Self {
@@ -49,6 +47,7 @@ impl Construct {
             &particle_id,
             FunctionPose::new(|t| Pose::from_xyz(t.sin(), t.cos(), t.sin() + 1.0)),
         );
+        /*
         world.add_component(
             &particle_id,
             display::particle_emitter::ParticleEmitter::from_scale_color(
@@ -56,7 +55,7 @@ impl Construct {
                 0.5,
                 Color::MAGENTA,
             ),
-        );
+        );*/
 
         spawn_tank(
             &mut world,

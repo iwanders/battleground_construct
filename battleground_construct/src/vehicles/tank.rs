@@ -1,9 +1,8 @@
-
-use crate::display::primitives::Vec3;
 use crate::components;
 use crate::display;
+use crate::display::primitives::Vec3;
+use components::pose::{Pose, PreTransform};
 use engine::prelude::*;
-    use components::pose::{Pose, PreTransform};
 
 #[derive(Default)]
 pub struct TankSpawnConfig {
@@ -16,12 +15,10 @@ pub struct TankSpawnConfig {
     pub shooting: bool,
 }
 
-
-
 fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: &EntityId) {
+    use crate::components::acceleration::Acceleration;
     use crate::components::point_projectile::PointProjectile;
     use crate::components::velocity::Velocity;
-    use crate::components::acceleration::Acceleration;
     use crate::display::particle_emitter::ParticleEmitter;
     use components::pose::{Pose, PreTransform};
     let muzzle_velocity = 20.0;
@@ -64,7 +61,7 @@ fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: &Entity
 
     world.add_component(
         &projectile_id,
-        crate::display::particle_emitter::ParticleEmitter::from_scale_color(
+        crate::display::particle_emitter::ParticleEmitter::bullet_trail(
             projectile_id,
             0.05,
             crate::display::Color::MAGENTA,
@@ -143,9 +140,8 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
             components::damage_dealer::DamageDealer::new(0.1),
         );
 
-
         use crate::components::cannon::CannonFireEffect;
-        let cannon_config = components::cannon::CannonConfig{
+        let cannon_config = components::cannon::CannonConfig {
             reload_time: 2.0,
             fire_effect: std::rc::Rc::new(cannon_function),
         };
