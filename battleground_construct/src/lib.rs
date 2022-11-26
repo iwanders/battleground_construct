@@ -57,6 +57,8 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     // world.add_component(&vehicle_id, display::debug_sphere::DebugSphere::with_radius(1.0));
     world.add_component(&vehicle_id, components::health::Health::new());
 
+    /*
+
     // Add the turrent entity.
     let turret_id = world.add_entity();
     tank_group_ids.push(turret_id.clone());
@@ -126,6 +128,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     if let Some(nozzle_id) = nozzle_id {
         world.add_component(&nozzle_id, Group::from(&tank_group_ids[..]));
     }
+    */
 }
 
 impl Construct {
@@ -147,6 +150,7 @@ impl Construct {
         world.add_component(&flag_id, components::pose::Pose::from_xyz(1.0, -1.0, 0.0));
         world.add_component(&flag_id, Flag::from_scale_color(0.5, Color::GREEN));
 
+        /*
         let particle_id = world.add_entity();
         world.add_component(&particle_id, Pose::from_xyz(-1.0, -1.0, 0.0));
         world.add_component(&particle_id, Flag::from_scale_color(0.5, Color::MAGENTA));
@@ -161,8 +165,9 @@ impl Construct {
                 0.5,
                 Color::MAGENTA,
             ),
-        );
+        );*/
 
+        /*
         spawn_tank(
             &mut world,
             TankSpawnConfig {
@@ -174,15 +179,16 @@ impl Construct {
                 shooting: true,
                 ..Default::default()
             },
-        );
-        for x in 1..10 {
-            for y in 1..10 {
+        );*/
+
+        for x in 1..2 {
+            for y in 1..2 {
                 spawn_tank(
                     &mut world,
                     TankSpawnConfig {
-                        x: x as f32 * 5.0,
-                        y: -y as f32 * 5.0 + 10.0,
-                        shooting: true,
+                        x: x as f32 * 5.0 + 100.0,
+                        y: -y as f32 * 5.0 + 10.0 + 100.0,
+                        shooting: false,
                         left_wheel: 0.6,
                         right_wheel: 0.3,
                         barrel_velocity: -0.1,
@@ -252,6 +258,7 @@ mod test {
             .component_iter_mut::<Clock>()
             .next()
             .expect("Should have one clock");
-        assert_eq!(clock.elapsed_as_f32(), 0.03);
+        assert_eq!(clock.elapsed_as_f32(), clock.step_as_f32() * 3.0);
     }
 }
+

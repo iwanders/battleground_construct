@@ -111,8 +111,9 @@ impl ConstructViewer {
 
     // Consumes the viewer...
     fn view_loop(mut self) -> () {
+
         self.window.render_loop(move |mut frame_input: FrameInput| {
-            while self.construct.elapsed_as_f64() < self.limiter.elapsed_as_f64() {
+            while (self.construct.elapsed_as_f64() * 1.0) < (self.limiter.elapsed_as_f64() + jump) {
                 let now = std::time::Instant::now();
                 self.construct.update();
                 if PRINT_DURATIONS {
@@ -152,8 +153,8 @@ impl ConstructViewer {
             }
 
             // Skip the ground plane in the shadow map, otherwise we get no resolution.
-            self.directional_light
-                .generate_shadow_map(2048, self.construct_render.shadow_meshes());
+            // self.directional_light
+                // .generate_shadow_map(2048, self.construct_render.shadow_meshes());
 
             let now = std::time::Instant::now();
 
