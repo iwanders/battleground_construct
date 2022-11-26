@@ -120,6 +120,8 @@ pub struct Effect {
     pub id: EffectId,
     /// Description of the effect itself.
     pub effect: EffectType,
+
+    pub transform: Mat4,
 }
 
 pub trait Drawable {

@@ -1,10 +1,11 @@
+use battleground_construct::display;
 use battleground_construct::display::EffectId;
+use rand::Rng;
 use three_d::*;
 
 pub trait RenderableEffect {
-    fn id(&self) -> EffectId;
-    fn object(&self) -> &dyn Object;
-    fn update(&mut self, time: f32);
+    fn object(&self) -> Option<&dyn Object>;
+    fn update(&mut self, camera: &Camera, entity_position: Matrix4<f32>, time: f32);
 }
 
 #[derive(Clone)]
@@ -41,9 +42,99 @@ impl Material for FireworksMaterial {
     }
 }
 
+pub struct ParticleEmitter {
+    renderable: three_d::Gm<ParticleSystem, FireworksMaterial>,
+}
+
+impl ParticleEmitter {
+    pub fn new(
+        context: &Context,
+        entity_position: Matrix4<f32>,
+        time: f32,
+        display: &display::primitives::ParticleEmitter,
+    ) -> Self {
+        println!("New prticles");
+        let color = Color::new_opaque(255, 255, 178);
+        // let mut square = CpuMesh::circle(8);
+        // let mut square = CpuMesh::cube();
+        let mut square = CpuMesh::square();
+        square.transform(&Mat4::from_scale(0.05)).unwrap();
+        let mut particles = ParticleSystem::new(context, &Particles::default(), &square);
+        particles.acceleration = vec3(0.0, 0.0, 0.0);
+        let fireworks_material = FireworksMaterial {
+            color: color,
+            fade: 0.0,
+        };
+        let mut fireworks = Gm::new(particles, fireworks_material);
+        fireworks.time = time;
+        let mut rng = rand::thread_rng();
+
+        let explosion_speed = 0.5;
+        let start_position = entity_position.w.truncate();
+        let start_positions = (0..300).map(|_| start_position).collect();
+        let colors = Some(
+            (0..300)
+                .map(|_| {
+                    Color::new_opaque(
+                        (rng.gen::<f32>() * 100.0 - 50.0) as u8,
+                        (rng.gen::<f32>() * 100.0 - 50.0) as u8,
+                        (rng.gen::<f32>() * 100.0 - 50.0) as u8,
+                    )
+                })
+                .collect(),
+        );
+        let R = 0.5;
+        let mut start_velocities = Vec::new();
+        for _ in 0..300 {
+            let theta = rng.gen::<f32>() * 2.0 - 1.0;
+            let phi = rng.gen::<f32>() * 2.0 * std::f32::consts::PI;
+            let explosion_direction = vec3(
+                R * theta.acos().sin() * phi.cos(),
+                R * theta.acos().sin() * phi.sin(),
+                R * theta,
+            );
+            start_velocities
+                .push((rng.gen::<f32>() * 0.2 + 0.9) * explosion_speed * explosion_direction);
+        }
+        fireworks.set_particles(&Particles {
+            start_positions,
+            start_velocities,
+            colors,
+            ..Default::default()
+        });
+
+        Self {
+            renderable: fireworks,
+        }
+    }
+}
+
+impl RenderableEffect for ParticleEmitter {
+    fn object(&self) -> Option<&dyn Object> {
+        Some(&self.renderable as &dyn Object)
+    }
+
+    fn update(&mut self, camera: &Camera, entity_position: Matrix4<f32>, time: f32) {
+        // Since our geometry is a square, we always want to view it from the same direction, nomatter how we change the camera.
+
+        self.renderable.set_transformation(
+            Mat4::from_cols(
+                camera.view().x,
+                camera.view().y,
+                camera.view().z,
+                vec4(0.0, 0.0, 0.0, 1.0),
+            )
+            .invert()
+            .unwrap(),
+        );
+        let f = self.renderable.time / 30.0;
+        self.renderable.material.fade = 1.0 - f * f * f * f;
+        self.renderable.time = time;
+    }
+}
+
 /*
 
-        let mut rng = rand::thread_rng();
 
         let explosion_speed = 0.5;
         let explosion_time = 3.0;

@@ -144,7 +144,8 @@ impl ConstructViewer {
             screen.clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0));
 
             let now = std::time::Instant::now();
-            self.construct_render.render(&self.context, &self.construct);
+            self.construct_render
+                .render(&self.camera, &self.context, &self.construct);
 
             if PRINT_DURATIONS {
                 println!("elements: {}", now.elapsed().as_secs_f64());

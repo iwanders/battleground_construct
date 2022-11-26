@@ -11,8 +11,6 @@ pub struct ParticleEmitter {
 
 
 impl ParticleEmitter {
-
-
     pub fn from_scale_color(entity: EntityId, size: f32, color: Color) -> Self {
         ParticleEmitter{
             entity,
@@ -36,7 +34,7 @@ impl Drawable for ParticleEmitter {
                     a: 128,
                 },
             }),
-            // transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+            transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
         }]
     }
 }
