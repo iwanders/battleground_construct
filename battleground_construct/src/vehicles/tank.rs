@@ -64,7 +64,7 @@ fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: &Entity
         crate::display::particle_emitter::ParticleEmitter::bullet_trail(
             projectile_id,
             0.05,
-            crate::display::Color::MAGENTA,
+            crate::display::Color::WHITE,
         ),
     );
 }

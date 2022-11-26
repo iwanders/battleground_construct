@@ -45,7 +45,6 @@ impl Material for FireworksMaterial {
     }
 }
 
-type LifeTime = f32;
 
 struct Particle {
     pos: Mat4,
@@ -72,7 +71,7 @@ impl Particle {
 }
 
 pub struct ParticleEmitter {
-    renderable: InstancedEntity<PhysicalMaterial>,
+    renderable: InstancedEntity<three_d::renderer::material::ColorMaterial>,
 
     /// Keep track of the last update time, to integrate velocity.
     last_time: f32,
@@ -135,7 +134,8 @@ impl ParticleEmitter {
 
         // renderable.set_material(z);
 
-        let mut material = three_d::renderer::material::PhysicalMaterial::new(
+        // let mut material = three_d::renderer::material::PhysicalMaterial::new(
+        let mut material = three_d::renderer::material::ColorMaterial::new(
             &context,
             &CpuMaterial {
                 albedo: Color {
@@ -147,6 +147,7 @@ impl ParticleEmitter {
                 ..Default::default()
             },
         );
+        // material.albedo.a = 255;
 
         let mut renderable = InstancedEntity::new(context, &square, material);
 

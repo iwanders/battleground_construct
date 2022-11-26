@@ -47,15 +47,15 @@ impl Construct {
             &particle_id,
             FunctionPose::new(|t| Pose::from_xyz(t.sin(), t.cos(), t.sin() + 1.0)),
         );
-        /*
         world.add_component(
             &particle_id,
-            display::particle_emitter::ParticleEmitter::from_scale_color(
+            display::particle_emitter::ParticleEmitter::bullet_trail(
                 particle_id,
-                0.5,
-                Color::MAGENTA,
+                0.05,
+                Color::WHITE,
             ),
-        );*/
+        );
+        /**/
 
         spawn_tank(
             &mut world,

@@ -65,6 +65,12 @@ pub struct Color {
     pub a: u8,
 }
 impl Color {
+    pub const WHITE: Color = Color {
+        r: 255,
+        g: 255,
+        b: 255,
+        a: 255,
+    };
     pub const RED: Color = Color {
         r: 255,
         g: 0,
