@@ -134,6 +134,7 @@ impl Construct {
         let clock_id = world.add_entity();
         world.add_component(&clock_id, Clock::new());
 
+        use components::function_pose::FunctionPose;
         use components::pose::Pose;
         use display::flag::Flag;
         use display::Color;
@@ -151,7 +152,15 @@ impl Construct {
         world.add_component(&particle_id, Flag::from_scale_color(0.5, Color::MAGENTA));
         world.add_component(
             &particle_id,
-            display::particle_emitter::ParticleEmitter::from_scale_color(particle_id, 0.5, Color::MAGENTA),
+            FunctionPose::new(|t| Pose::from_xyz(t.sin(), t.cos(), t.sin() + 1.0)),
+        );
+        world.add_component(
+            &particle_id,
+            display::particle_emitter::ParticleEmitter::from_scale_color(
+                particle_id,
+                0.5,
+                Color::MAGENTA,
+            ),
         );
 
         spawn_tank(
@@ -201,6 +210,7 @@ impl Construct {
         // All handling of hits done with the projectiles still present.
         systems.add_system(Box::new(systems::health_tank_body::HealthTankBody {}));
         systems.add_system(Box::new(systems::display_tank_tracks::DisplayTankTracks {}));
+        systems.add_system(Box::new(systems::function_pose::FunctionPose {}));
 
         Construct { world, systems }
     }

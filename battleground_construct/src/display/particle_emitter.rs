@@ -8,11 +8,9 @@ pub struct ParticleEmitter {
     pub particle_color: Color,
 }
 
-
-
 impl ParticleEmitter {
     pub fn from_scale_color(entity: EntityId, size: f32, color: Color) -> Self {
-        ParticleEmitter{
+        ParticleEmitter {
             entity,
             size,
             particle_color: color,

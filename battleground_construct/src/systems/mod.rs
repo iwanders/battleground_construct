@@ -1,6 +1,7 @@
 pub mod acceleration_velocity;
 pub mod cannon_trigger;
 pub mod display_tank_tracks;
+pub mod function_pose;
 pub mod health_tank_body;
 pub mod kinematics_differential_drive;
 pub mod projectile_floor;
