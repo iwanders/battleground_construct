@@ -21,7 +21,7 @@ fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: &Entity
     use crate::components::velocity::Velocity;
     use crate::display::particle_emitter::ParticleEmitter;
     use components::pose::{Pose, PreTransform};
-    let muzzle_velocity = 20.0;
+    let muzzle_velocity = 10.0;
     // Get the pose of the cannon in the world coordinates. Then create the pose with the
     // Orientation in the global frame.
     let projectile_id = world.add_entity();

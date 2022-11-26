@@ -45,7 +45,6 @@ impl Material for FireworksMaterial {
     }
 }
 
-
 struct Particle {
     pos: Mat4,
     vel: Vec3,
@@ -122,6 +121,7 @@ impl ParticleEmitter {
         match display {
             display::primitives::ParticleType::BulletTrail { color, size } => {
                 p_color = color.to_color();
+                p_color.a = 128;
                 p_size = *size;
             }
         }
@@ -182,6 +182,14 @@ impl RenderableEffect for ParticleEmitter {
 
     fn update(&mut self, camera: &Camera, entity_position: Matrix4<f32>, time: f32) {
         let dt = self.last_time - time;
+
+        // Drop particles that are expired.
+        self.particles = self
+            .particles
+            .drain(..)
+            .filter(|p| !p.expired(time))
+            .collect::<_>();
+
         // Spawn new particles.
         while (self.next_spawn_time < time) {
             use rand_distr::StandardNormal;
@@ -216,9 +224,8 @@ impl RenderableEffect for ParticleEmitter {
             if self.fade_alpha_to_lifetime {
                 let ratio_of_age =
                     (time - particle.spawn_time) / (particle.expiry_time - particle.spawn_time);
-                let ratio_of_age = (1.0 - (ratio_of_age).max(0.0)) * 255.0;
-                let alpha = ratio_of_age as u8;
-                particle.color.a = alpha;
+                let alpha_scaled = (1.0 - ratio_of_age) * (self.color.a as f32);
+                particle.color.a = alpha_scaled as u8;
             }
 
             if self.face_camera {
@@ -233,13 +240,6 @@ impl RenderableEffect for ParticleEmitter {
                     .unwrap();
             }
         }
-
-        // drop all transparent things.
-        self.particles = self
-            .particles
-            .drain(..)
-            .filter(|p| !p.expired(time))
-            .collect::<_>();
 
         let p = self
             .particles
