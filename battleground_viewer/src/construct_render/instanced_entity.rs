@@ -2,14 +2,13 @@ use battleground_construct::util::cgmath::ToQuaternion;
 use three_d::*;
 
 /// Thin wrapper around [`InstancedMesh`] to use Mat4 and guarantee color & transforms in sync.
-pub struct InstancedEntity {
-    gm: three_d::renderer::object::Gm<three_d::renderer::geometry::InstancedMesh, PhysicalMaterial>,
+pub struct InstancedEntity<M: Material> {
+    gm: three_d::renderer::object::Gm<three_d::renderer::geometry::InstancedMesh, M>,
     transforms: Vec<Mat4>,
     colors: Vec<Color>,
 }
-
-impl InstancedEntity {
-    pub fn new(context: &Context, cpu_mesh: &CpuMesh) -> Self {
+impl InstancedEntity<three_d::renderer::material::PhysicalMaterial> {
+    pub fn new_physical(context: &Context, cpu_mesh: &CpuMesh) -> Self {
         let instances: three_d::renderer::geometry::Instances = Default::default();
         let mut material = three_d::renderer::material::PhysicalMaterial::new(
             &context,
@@ -24,20 +23,31 @@ impl InstancedEntity {
             },
         );
         // material.albedo.a = 255;
-        InstancedEntity {
+        InstancedEntity::<three_d::renderer::material::PhysicalMaterial> {
             gm: Gm::new(InstancedMesh::new(context, &instances, cpu_mesh), material),
             transforms: vec![],
             colors: vec![],
         }
     }
+}
 
-    pub fn set_material(&mut self, material: PhysicalMaterial) {
+impl<M: Material> InstancedEntity<M> {
+
+    pub fn new(context: &Context, cpu_mesh: &CpuMesh, material: M) -> Self {
+        let instances: three_d::renderer::geometry::Instances = Default::default();
+        InstancedEntity::<M> {
+            gm: Gm::new(InstancedMesh::new(context, &instances, cpu_mesh), material),
+            transforms: vec![],
+            colors: vec![],
+        }
+    }
+    pub fn set_material(&mut self, material: M) {
         self.gm.material = material;
     }
 
     pub fn gm(
         &self,
-    ) -> &three_d::renderer::object::Gm<three_d::renderer::geometry::InstancedMesh, PhysicalMaterial>
+    ) -> &three_d::renderer::object::Gm<three_d::renderer::geometry::InstancedMesh, M>
     {
         &self.gm
     }

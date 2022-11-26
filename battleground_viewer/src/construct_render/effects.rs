@@ -44,7 +44,7 @@ impl Material for FireworksMaterial {
 
 pub struct ParticleEmitter {
     // renderable: three_d::Gm<ParticleSystem, FireworksMaterial>,
-    renderable: InstancedEntity,
+    renderable: InstancedEntity<FireworksMaterial>,
     // particles: three_d::renderer::geometry::Particles,
     emit_period: f32,
     last_emit: f32,
@@ -66,10 +66,21 @@ impl ParticleEmitter {
             b: display.color.b,
             a: display.color.a,
         };
-        let mut square = CpuMesh::circle(8);
-
+        // let mut square = CpuMesh::circle(8);
+        let mut square = CpuMesh::square();
         square.transform(&Mat4::from_scale(display.size)).unwrap();
-        let mut renderable = InstancedEntity::new(context, &square);
+
+
+        let z = FireworksMaterial{color: Color {
+                    r: 255,
+                    g: 255,
+                    b: 255,
+                    a: 254,
+                }, fade: 1.0};
+        // renderable.set_material(z);
+
+
+        let mut renderable = InstancedEntity::<FireworksMaterial>::new(context, &square, z);
 
         let mut material = three_d::renderer::material::PhysicalMaterial::new(
             &context,
@@ -83,8 +94,6 @@ impl ParticleEmitter {
                 ..Default::default()
             },
         );
-        renderable.set_material(material);
-
         Self {
             renderable: renderable,
             emit_period: 0.03,

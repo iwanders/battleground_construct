@@ -14,11 +14,13 @@ use effects::RenderableEffect;
 
 use instanced_entity::InstancedEntity;
 
+use three_d::renderer::material::PhysicalMaterial;
+
 /// The object used to render a construct.
 #[derive(Default)]
 pub struct ConstructRender {
     static_gms: Vec<Gm<Mesh, PhysicalMaterial>>,
-    instanced_meshes: std::collections::HashMap<display::primitives::Primitive, InstancedEntity>,
+    instanced_meshes: std::collections::HashMap<display::primitives::Primitive, InstancedEntity<PhysicalMaterial>>,
 
     effects: std::collections::HashMap<EffectId, Box<dyn RenderableEffect>>,
 }
@@ -288,7 +290,7 @@ impl ConstructRender {
                 }
             };
             self.instanced_meshes
-                .insert(el.primitive, InstancedEntity::new(context, &primitive_mesh));
+                .insert(el.primitive, InstancedEntity::new_physical(context, &primitive_mesh));
         }
 
         let instanced = self

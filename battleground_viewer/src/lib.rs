@@ -91,7 +91,7 @@ impl ConstructViewer {
         let ambient_light =
             three_d::renderer::light::AmbientLight::new(&context, 0.1, Color::WHITE);
         let directional_light =
-            DirectionalLight::new(&context, 1.5, Color::WHITE, &vec3(0.0, 0.0, -1.0));
+            DirectionalLight::new(&context, 1.5, Color::WHITE, &vec3(0.0, 0.2, -1.0));
 
         let mut construct_render: ConstructRender = Default::default();
         construct_render.populate_default(&context);
@@ -111,7 +111,7 @@ impl ConstructViewer {
 
     // Consumes the viewer...
     fn view_loop(mut self) -> () {
-        let jump = 600.0;
+        let jump = 0.0;
         while self.construct.elapsed_as_f64()  < jump {
             self.construct.update();
         }
@@ -158,8 +158,8 @@ impl ConstructViewer {
             }
 
             // Skip the ground plane in the shadow map, otherwise we get no resolution.
-            // self.directional_light
-                // .generate_shadow_map(2048, self.construct_render.shadow_meshes());
+            self.directional_light
+                .generate_shadow_map(2048, self.construct_render.shadow_meshes());
 
             let now = std::time::Instant::now();
 
