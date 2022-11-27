@@ -11,7 +11,7 @@ pub mod systems;
 pub mod util;
 pub mod vehicles;
 
-pub mod vehicle_control;
+use battleground_vehicle_control;
 
 use components::clock::{Clock, ClockSystem};
 use engine::prelude::*;
@@ -25,8 +25,6 @@ pub struct Construct {
 
 impl Construct {
     pub fn new() -> Self {
-        
-
         let mut world = World::new();
         let clock_id = world.add_entity();
         world.add_component(clock_id, Clock::new());
@@ -112,6 +110,7 @@ impl Construct {
         systems.add_system(Box::new(systems::display_tank_tracks::DisplayTankTracks {}));
         systems.add_system(Box::new(systems::function_pose::FunctionPose {}));
         systems.add_system(Box::new(systems::expiry_check::ExpiryCheck {}));
+        systems.add_system(Box::new(systems::vehicle_control::VehicleControl {}));
 
         Construct { world, systems }
     }

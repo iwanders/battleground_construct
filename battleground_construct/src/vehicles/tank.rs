@@ -92,6 +92,13 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
         vehicle_id,
         components::hit_sphere::HitSphere::with_radius(1.0),
     );
+
+    let v = components::vehicle_controller::DummyVehicleControl {};
+    let rc = components::vehicle_controller::VehicleControlStorage::new(Box::new(v));
+    world.add_component(
+        vehicle_id,
+        components::vehicle_controller::VehicleController::new(rc),
+    );
     // world.add_component(vehicle_id, display::debug_sphere::DebugSphere::with_radius(1.0));
     world.add_component(vehicle_id, components::health::Health::new());
 

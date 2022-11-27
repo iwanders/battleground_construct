@@ -1,4 +1,4 @@
-use battleground_construct::vehicle_control::{ControllerSpawn, Error, Interface, VehicleAi};
+use battleground_vehicle_control::{Interface, VehicleAi};
 
 struct SimpleAi {}
 
@@ -9,8 +9,8 @@ impl SimpleAi {
 }
 
 impl VehicleAi for SimpleAi {
-    fn update(&mut self, interface: &mut dyn Interface) {
-    println!("We got called");
+    fn update(&mut self, _interface: &mut dyn Interface) {
+        println!("We got called");
     }
 }
 

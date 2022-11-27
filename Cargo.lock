@@ -73,10 +73,15 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 name = "battleground_construct"
 version = "0.1.0"
 dependencies = [
+ "battleground_vehicle_control",
  "cgmath",
  "engine",
  "libloading",
 ]
+
+[[package]]
+name = "battleground_vehicle_control"
+version = "0.1.0"
 
 [[package]]
 name = "battleground_viewer"
@@ -442,7 +447,7 @@ dependencies = [
 name = "example_driving_ai"
 version = "0.1.0"
 dependencies = [
- "battleground_construct",
+ "battleground_vehicle_control",
 ]
 
 [[package]]

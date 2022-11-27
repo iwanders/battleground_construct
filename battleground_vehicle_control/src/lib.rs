@@ -1,5 +1,5 @@
 /// Plugins will provide a function of this signature.
-pub type ControllerSpawn = extern "Rust" fn () -> Box<dyn VehicleAi>;
+pub type ControllerSpawn = extern "Rust" fn () -> Box<dyn VehicleControl>;
 
 /// Error type used.
 pub type Error = Box<dyn std::error::Error>;
@@ -12,6 +12,6 @@ pub trait Interface {
 }
 
 /// The vehicle ai should implement this trait. Update gets called periodically.
-pub trait VehicleAi {
+pub trait VehicleControl {
     fn update(&mut self, interface: &mut dyn Interface);
 }
