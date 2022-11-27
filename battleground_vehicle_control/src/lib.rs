@@ -21,8 +21,14 @@ pub trait Interface {
     /// Get an f32 register.
     fn get_f32(&self, module: u32, register: u32) -> Result<f32, Error>;
 
+    /// Get an i32 register.
+    fn get_i32(&self, module: u32, register: u32) -> Result<i32, Error>;
+
     /// Set an f32 register.
     fn set_f32(&mut self, module: u32, register: u32, value: f32) -> Result<f32, Error>;
+
+    /// Set an i32 register.
+    fn set_i32(&mut self, module: u32, register: u32, value: i32) -> Result<i32, Error>;
 }
 
 /// The vehicle ai should implement this trait. Update gets called periodically.

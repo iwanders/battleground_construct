@@ -153,10 +153,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     let nozzle_id = world.add_entity();
     tank_group_ids.push(nozzle_id.clone());
     world.add_component(nozzle_id, Parent::new(barrel_id.clone()));
-    world.add_component(nozzle_id, components::damage_dealer::DamageDealer::new(0.1));
+    world.add_component(nozzle_id, components::damage_dealer::DamageDealer::new(0.3));
 
     let cannon_config = components::cannon::CannonConfig {
-        reload_time: 2.0,
+        reload_time: 1.0,
         fire_effect: std::rc::Rc::new(cannon_function),
     };
 
@@ -165,6 +165,13 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
         nozzle_id,
         PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
     );
+
+    register_interface.get_mut().add_module(
+        "cannon",
+        0x1300,
+        components::cannon::CannonControl::new(nozzle_id),
+    );
+    //
 
     // Finally, add the register interface.
     world.add_component(vehicle_id, register_interface);

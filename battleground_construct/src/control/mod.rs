@@ -9,6 +9,9 @@ impl VehicleControl for DummyVehicleControl {
         let revolve_vel = 1;
         let revolve_cmd_vel = 4;
         let barrel = 0x1200;
+        let cannon = 0x1300;
+
+        interface.set_i32(cannon, 0, true as i32).unwrap();
 
         for m_index in interface.modules().unwrap() {
             println!(

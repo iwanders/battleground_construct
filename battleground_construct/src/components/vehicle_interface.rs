@@ -19,7 +19,7 @@ world.add_component(tank_entity, vehicle_control);
 /// A register value record.
 #[derive(Debug)]
 pub enum Value {
-    U32(u32),
+    I32(i32),
     F32(f32),
     String(String),
 }
@@ -39,6 +39,13 @@ impl Register {
             _ => None,
         }
     }
+    /// Retrieve the u32 value from this register.
+    pub fn value_i32(&self) -> Option<i32> {
+        match self.value {
+            Value::I32(v) => Some(v),
+            _ => None,
+        }
+    }
 }
 
 impl Register {
@@ -51,10 +58,10 @@ impl Register {
     }
 
     /// Create a new u32 register.
-    pub fn new_u32(name: &str, value: u32) -> Self {
+    pub fn new_i32(name: &str, value: i32) -> Self {
         Register {
             name: name.to_owned(),
-            value: Value::U32(value),
+            value: Value::I32(value),
         }
     }
 }
@@ -247,6 +254,18 @@ impl battleground_vehicle_control::Interface for RegisterInterface {
             _ => Err(RegisterInterface::wrong_type(module, register)),
         }
     }
+    /// Get an u32 register.
+    fn get_i32(
+        &self,
+        module: u32,
+        register: u32,
+    ) -> Result<i32, battleground_vehicle_control::Error> {
+        let r = self.get_register(module, register)?;
+        match r.value {
+            Value::I32(v) => Ok(v),
+            _ => Err(RegisterInterface::wrong_type(module, register)),
+        }
+    }
 
     /// Set an f32 register.
     fn set_f32(
@@ -258,6 +277,24 @@ impl battleground_vehicle_control::Interface for RegisterInterface {
         let r = self.get_register_mut(module, register)?;
         match &mut r.value {
             Value::F32(v) => {
+                let old = *v;
+                *v = value;
+                Ok(old)
+            }
+            _ => Err(RegisterInterface::wrong_type(module, register)),
+        }
+    }
+
+    /// Set an i32 register.
+    fn set_i32(
+        &mut self,
+        module: u32,
+        register: u32,
+        value: i32,
+    ) -> Result<i32, battleground_vehicle_control::Error> {
+        let r = self.get_register_mut(module, register)?;
+        match &mut r.value {
+            Value::I32(v) => {
                 let old = *v;
                 *v = value;
                 Ok(old)
