@@ -10,6 +10,7 @@ pub mod display;
 pub mod systems;
 pub mod util;
 pub mod vehicles;
+pub mod control;
 
 // use battleground_vehicle_control;
 
@@ -64,11 +65,7 @@ impl Construct {
             TankSpawnConfig {
                 x: 0.0,
                 y: 0.0,
-                left_wheel: 0.2,
-                right_wheel: 0.1,
-                barrel_velocity: -0.1,
-                shooting: true,
-                ..Default::default()
+                controller: Box::new(control::DummyVehicleControl{}),
             },
         );
         /**/
@@ -80,11 +77,7 @@ impl Construct {
                     TankSpawnConfig {
                         x: x as f32 * 5.0,
                         y: -y as f32 * 5.0 + 10.0,
-                        shooting: false,
-                        left_wheel: 0.6,
-                        right_wheel: 0.3,
-                        barrel_velocity: -0.1,
-                        ..Default::default()
+                        controller: Box::new(control::DummyVehicleControl{}),
                     },
                 );
             }

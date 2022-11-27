@@ -4,36 +4,13 @@ use crate::display::primitives::Vec3;
 use components::pose::{Pose, PreTransform};
 use engine::prelude::*;
 
-#[derive(Default)]
+
 pub struct TankSpawnConfig {
     pub x: f32,
     pub y: f32,
-    pub left_wheel: f32,
-    pub right_wheel: f32,
-    pub turret_velocity: f32,
-    pub barrel_velocity: f32,
-    pub shooting: bool,
+    pub controller: Box<dyn battleground_vehicle_control::VehicleControl>,
 }
 
-pub struct DummyVehicleControl {}
-impl battleground_vehicle_control::VehicleControl for DummyVehicleControl {
-    fn update(&mut self, interface: &mut dyn battleground_vehicle_control::Interface) {
-        for m_index in interface.modules().unwrap() {
-            println!(
-                "update, module name: {}",
-                interface.module_name(m_index).unwrap()
-            );
-            for r_index in interface.registers(m_index).unwrap() {
-                println!("  {}", interface.register_name(m_index, r_index).unwrap());
-            }
-        }
-        interface.set_f32(0x0100, 2, 1.0).unwrap();
-        interface.set_f32(0x0100, 3, 1.0).unwrap();
-
-        interface.set_f32(0x0200, 4, 1.0).unwrap();
-        interface.set_f32(0x0300, 4, -1.0).unwrap();
-    }
-}
 
 fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: EntityId) {
     use crate::components::point_projectile::PointProjectile;
@@ -108,9 +85,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     pose.h.w[1] = config.y;
     world.add_component(vehicle_id, pose);
     world.add_component(vehicle_id, components::velocity::Velocity::new());
-    let mut base = components::differential_drive_base::DifferentialDriveBase::new();
-    base.set_velocities(config.left_wheel, config.right_wheel);
-
+    let base = components::differential_drive_base::DifferentialDriveBase::new();
     // Register the base as a controllable.
     register_interface.get_mut().add_module(
         "base",
@@ -126,8 +101,8 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
         components::hit_sphere::HitSphere::with_radius(1.0),
     );
 
-    let v = DummyVehicleControl {};
-    let rc = components::vehicle_controller::VehicleControlStorage::new(Box::new(v));
+
+    let rc = components::vehicle_controller::VehicleControlStorage::new(config.controller);
     world.add_component(
         vehicle_id,
         components::vehicle_controller::VehicleController::new(rc),
@@ -146,9 +121,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     );
 
     tank_group_ids.push(turret_id.clone());
-    let mut turret_revolute =
-        components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
-    turret_revolute.set_velocity(config.turret_velocity);
+    let turret_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
 
     world.add_component(turret_id, turret_revolute);
     world.add_component(
@@ -162,11 +135,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     // Add the barrel entity
     let barrel_id = world.add_entity();
     tank_group_ids.push(barrel_id.clone());
-    let mut barrel_revolute =
-        components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 1.0, 0.0));
-    barrel_revolute.set_velocity(config.barrel_velocity);
-
-
+    let mut barrel_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 1.0, 0.0));
     register_interface.get_mut().add_module(
         "barrel",
         0x0300,
@@ -182,27 +151,24 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     world.add_component(barrel_id, Parent::new(turret_id.clone()));
     world.add_component(barrel_id, display::tank_barrel::TankBarrel::new());
 
-    // If the tank is shooting, at the nozzle and associated components
-    let nozzle_id = if config.shooting {
-        let nozzle_id = world.add_entity();
-        tank_group_ids.push(nozzle_id.clone());
-        world.add_component(nozzle_id, Parent::new(barrel_id.clone()));
-        world.add_component(nozzle_id, components::damage_dealer::DamageDealer::new(0.1));
+    // If the tank is shooting, add the nozzle and associated components
+    let nozzle_id = world.add_entity();
+    tank_group_ids.push(nozzle_id.clone());
+    world.add_component(nozzle_id, Parent::new(barrel_id.clone()));
+    world.add_component(nozzle_id, components::damage_dealer::DamageDealer::new(0.1));
 
-        let cannon_config = components::cannon::CannonConfig {
-            reload_time: 2.0,
-            fire_effect: std::rc::Rc::new(cannon_function),
-        };
-
-        world.add_component(nozzle_id, components::cannon::Cannon::new(cannon_config));
-        world.add_component(
-            nozzle_id,
-            PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
-        );
-        Some(nozzle_id)
-    } else {
-        None
+    let cannon_config = components::cannon::CannonConfig {
+        reload_time: 2.0,
+        fire_effect: std::rc::Rc::new(cannon_function),
     };
+
+    world.add_component(nozzle_id, components::cannon::Cannon::new(cannon_config));
+    world.add_component(
+        nozzle_id,
+        PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
+    );
+    
+
 
     // Finally, add the register interface.
     world.add_component(vehicle_id, register_interface);
@@ -223,7 +189,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     world.add_component(vehicle_id, Group::from(&tank_group_ids[..]));
     world.add_component(turret_id, Group::from(&tank_group_ids[..]));
     world.add_component(barrel_id, Group::from(&tank_group_ids[..]));
-    if let Some(nozzle_id) = nozzle_id {
-        world.add_component(nozzle_id, Group::from(&tank_group_ids[..]));
-    }
+    world.add_component(nozzle_id, Group::from(&tank_group_ids[..]));
+
 }
