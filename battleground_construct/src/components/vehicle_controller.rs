@@ -36,4 +36,3 @@ impl VehicleController {
     }
 }
 impl Component for VehicleController {}
-

@@ -15,18 +15,20 @@ pub struct TankSpawnConfig {
     pub shooting: bool,
 }
 
-
 pub struct DummyVehicleControl {}
 impl battleground_vehicle_control::VehicleControl for DummyVehicleControl {
     fn update(&mut self, interface: &mut dyn battleground_vehicle_control::Interface) {
         for m_index in interface.modules().unwrap() {
-            println!("update, module name: {}", interface.module_name(m_index).unwrap());
-            for r_index in interface.registers(m_index).unwrap()  {
+            println!(
+                "update, module name: {}",
+                interface.module_name(m_index).unwrap()
+            );
+            for r_index in interface.registers(m_index).unwrap() {
                 println!("  {}", interface.register_name(m_index, r_index).unwrap());
             }
         }
-        interface.set_f32(0x0100, 2, 1.0);
-        interface.set_f32(0x0100, 3, 1.0);
+        interface.set_f32(0x0100, 2, 1.0).unwrap();
+        interface.set_f32(0x0100, 3, 1.0).unwrap();
     }
 }
 
@@ -117,11 +119,15 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     // world.add_component(vehicle_id, display::debug_sphere::DebugSphere::with_radius(1.0));
     world.add_component(vehicle_id, components::health::Health::new());
 
-
-    let mut register_interface = components::vehicle_interface::RegisterInterfaceContainer::new(components::vehicle_interface::RegisterInterface::new());
-    register_interface.get_mut().add_module("base", 0x0100, Box::new(components::vehicle_interface::DifferentialDriveBaseControl::new(vehicle_id)));
+    let register_interface = components::vehicle_interface::RegisterInterfaceContainer::new(
+        components::vehicle_interface::RegisterInterface::new(),
+    );
+    register_interface.get_mut().add_module(
+        "base",
+        0x0100,
+        components::differential_drive_base::DifferentialDriveBaseControl::new(vehicle_id),
+    );
     world.add_component(vehicle_id, register_interface);
-
 
     // Add the turrent entity.
     let turret_id = world.add_entity();
