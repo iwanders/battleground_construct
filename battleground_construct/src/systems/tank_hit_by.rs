@@ -34,6 +34,26 @@ impl System for TankHitBy {
             projectile_entities.push(projectile_entity);
         }
 
+        // Salvage the particle generators on the particles.
+        for particle_entity in projectile_entities.iter() {
+            let particles_to_add = if let Some(p) =
+                world.component::<super::display::particle_emitter::ParticleEmitter>(*particle_entity)
+            {
+                Some(*p)
+            } else {
+                None
+            };
+            if let Some(mut copied_particle) = particles_to_add {
+                copied_particle.emitting = false;
+                let impact = world.add_entity();
+                world.add_component(
+                    impact,
+                    super::components::expiry::Expiry::lifetime(5.0),
+                );
+                world.add_component(impact, copied_particle);
+            }
+        }
+
         // The projectiles are now down, their hits are processed.
         world.remove_entities(&projectile_entities);
         // Now, we need to remove the HitBy from the hit entities.

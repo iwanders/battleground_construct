@@ -43,7 +43,7 @@ impl ConstructRender {
             Mat4::from_translation(vec3(0.0, 0.0, 0.0)) * Mat4::from_scale(1000.0),
         );
         self.static_gms.push(ground_plane);
-
+        /*
         let mut cube = Gm::new(
             Mesh::new(&context, &CpuMesh::cube()),
             three_d::renderer::material::PhysicalMaterial::new_opaque(
@@ -83,6 +83,7 @@ impl ConstructRender {
             Mat4::from_translation(vec3(1.0, 0.0, 0.0)) * Mat4::from_scale(0.2),
         );
         self.static_gms.push(cube);
+        */
     }
 
     /// Return a list of geometrise to be used for shadow calculations.

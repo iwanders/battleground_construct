@@ -49,7 +49,7 @@ impl Construct {
         world.add_component(particle_id, Flag::from_scale_color(0.5, Color::MAGENTA));
         world.add_component(
             particle_id,
-            FunctionPose::new(|t| Pose::from_xyz(t.sin(), t.cos(), t.sin() + 1.0)),
+            FunctionPose::new(|t| Pose::from_xyz(t.sin() - 2.0, t.cos() + 2.0, t.sin() + 1.5)),
         );
         world.add_component(
             particle_id,
@@ -77,7 +77,7 @@ impl Construct {
                 spawn_tank(
                     &mut world,
                     TankSpawnConfig {
-                        x: x as f32 * 3.0,
+                        x: x as f32 * 2.0 + 2.0,
                         y: y as f32 * 3.0 - 2.5,
                         yaw: std::f32::consts::PI / 2.0,
                         controller: Box::new(control::DiffDriveForwardsBackwardsControl {
