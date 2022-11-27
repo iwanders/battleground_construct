@@ -37,10 +37,3 @@ impl VehicleController {
 }
 impl Component for VehicleController {}
 
-pub struct DummyVehicleControl {}
-impl battleground_vehicle_control::VehicleControl for DummyVehicleControl {
-    fn update(&mut self, interface: &mut dyn battleground_vehicle_control::Interface) {
-        let register_count =  interface.registers();
-        println!("Update ran: {register_count}");
-    }
-}

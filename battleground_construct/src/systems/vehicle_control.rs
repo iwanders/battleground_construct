@@ -2,18 +2,6 @@ use super::components::vehicle_controller::VehicleController;
 use super::Clock;
 use engine::prelude::*;
 
-struct DummyInterface {}
-impl battleground_vehicle_control::Interface for DummyInterface {
-    fn registers(&self) -> usize {
-        todo!()
-    }
-    fn get_u32(&self, _: usize) -> Result<u32, Box<(dyn std::error::Error + 'static)>> {
-        todo!()
-    }
-    fn set_u32(&mut self, _: usize, _: u32) -> Result<u32, Box<(dyn std::error::Error + 'static)>> {
-        todo!()
-    }
-}
 
 pub struct VehicleControl {}
 impl System for VehicleControl {
@@ -23,17 +11,20 @@ impl System for VehicleControl {
             .next()
             .expect("Should have one clock").1.elapsed_as_f32();
 
-        // First, update the interface
+        // First, collect the interfaces.
         use std::collections::HashMap;
         use crate::components::vehicle_interface::{RegisterInterfaceContainer,RegisterInterface};
+
+        // Create a map of entity -> interface
         let mut interfaces: Vec<(EntityId, RegisterInterfaceContainer)> = world.component_iter::<RegisterInterfaceContainer>().map(|(e, p)|{(e, p.clone())}).collect::<_>();
         let mut interface_map: HashMap<EntityId, RegisterInterfaceContainer> = interfaces.drain(..).collect::<_>();
 
+        // Then, the world is no longer borrowed and we can iterate over the interfaces, passing them the world.
         for (e, interface) in interface_map.iter_mut() {
             interface.get_mut().get_registers(world);
         }
 
-        // Run all vehicle controls
+        // Run all vehicle controls, these ONLY work on interfaces.
         for (entity, mut controller) in world.component_iter_mut::<VehicleController>() {
             if let Some(controller) = controller.should_update(time) {
                 if let Some(interface) = interface_map.get_mut(&entity) {
@@ -41,11 +32,10 @@ impl System for VehicleControl {
                 }
             }
         }
+
+        // Finally, we can again borrow the world and use the interfaces to write back to the world.
         for (e, interface) in interface_map.iter_mut() {
             interface.get_mut().set_components(world);
         }
-
-        /*
-        */
     }
 }

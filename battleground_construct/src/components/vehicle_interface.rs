@@ -10,7 +10,6 @@ pub enum Value {
 
 #[derive(Debug)]
 pub struct Register {
-    id: RegisterId,
     name: String,
     value: Value
 }
@@ -21,28 +20,28 @@ impl Register {
 }
 
 impl Register {
-    pub fn new_f32(id: RegisterId, name: &str, value: f32) -> Self{
+    pub fn new_f32(name: &str, value: f32) -> Self{
         Register{
-            id,
             name: name.to_owned(),
             value: Value::F32(value),
         }
     }
-    pub fn new_u32(id: RegisterId, name: &str, value: u32) -> Self{
+    pub fn new_u32(name: &str, value: u32) -> Self{
         Register{
-            id,
             name: name.to_owned(),
             value: Value::U32(value),
         }
     }
 }
 
+pub type RegisterMap = std::collections::HashMap<RegisterId, Register>;
+
 pub trait VehicleModule {
     /// Read from the components into the registers.
-    fn get_registers(&self, world: &World) -> Vec<Register>;
+    fn get_registers(&self, world: &World, registers: &mut RegisterMap);
 
     /// Set the components' values from the registers.
-    fn set_component(&self, world: &mut World, registers: &[Register]);
+    fn set_component(&self, world: &mut World, registers: &RegisterMap);
 }
 
 pub struct DifferentialDriveBaseControl{
@@ -56,27 +55,33 @@ impl DifferentialDriveBaseControl {
 }
 
 impl VehicleModule for  DifferentialDriveBaseControl {
-    fn get_registers(&self, world: &World) -> Vec<Register>
+    fn get_registers(&self, world: &World, registers: &mut RegisterMap)
     {
-        vec![
-            Register::new_f32(0, "left_wheel_vel", 0.0),
-            Register::new_f32(1, "right_wheel_vel", 0.0),
-            Register::new_f32(2, "left_wheel_command", 0.0),
-            Register::new_f32(3, "right_wheel_command", 0.0),
-            ]
+        registers.clear();
+        if let Some(base) = world.component::<DifferentialDriveBase>(self.entity) {
+            let vels = base.wheel_velocities();
+            registers.insert(0, Register::new_f32("left_wheel_vel", vels.0));
+            registers.insert(1, Register::new_f32("right_wheel_vel", vels.1));
+
+            // commanded is the same as reported atm.
+            registers.insert(2, Register::new_f32("left_wheel_cmd", vels.0));
+            registers.insert(3, Register::new_f32("right_wheel_cmd", vels.1));
+        }
     }
 
-    fn set_component(&self, world: &mut World, registers: &[Register])
+    fn set_component(&self, world: &mut World, registers: &RegisterMap)
     {
         if let Some(mut base) = world.component_mut::<DifferentialDriveBase>(self.entity) {
-            let left_cmd = registers[2].value_f32().expect("Wrong value??");
-            let right_cmd = registers[0].value_f32().expect("Wrong value??");
+            let left_cmd = registers.get(&2).unwrap().value_f32().expect("Wrong value??");
+            let right_cmd = registers.get(&3).unwrap().value_f32().expect("Wrong value??");
+            println!("Setting {left_cmd} and {right_cmd}");
             base.set_velocities(left_cmd, right_cmd);
         }
     }
 
 }
 
+pub type ModuleId = u32;
 pub type RegisterId = u32;
 
 
@@ -96,17 +101,17 @@ world.add_component(tank_entity, vehicle_control);
 
 */
 
-struct Module {
-    module_name: String,
-    module_offset: RegisterId,
+pub struct Module {
+    name: String,
+    index: ModuleId,
     handler: Box<dyn VehicleModule>,
-    registers: Vec<Register>,
+    registers: std::collections::HashMap<RegisterId, Register>,
 }
 
 
 #[derive(Default)]
 pub struct RegisterInterface{
-    modules: Vec<Module>,
+    modules: std::collections::HashMap<ModuleId, Module>,
 }
 
 impl RegisterInterface {
@@ -114,41 +119,108 @@ impl RegisterInterface {
         RegisterInterface::default()
     }
 
-    pub fn add_module(&mut self, module_name: &str, module_offset: RegisterId, handler: Box<dyn VehicleModule>) {
-        self.modules.push(Module{
-            module_name: module_name.to_owned(),
-            module_offset,
+    pub fn add_module(&mut self, name: &str, index: ModuleId, handler: Box<dyn VehicleModule>) {
+        self.modules.insert(index, Module{
+            name: name.to_owned(),
+            index,
             handler,
-            registers: vec![],
-        })
+            registers: Default::default(),
+        });
     }
 
     pub fn get_registers(&mut self, world: &mut World){
-        for m in self.modules.iter_mut(){
-            m.registers = m.handler.get_registers(world);
+        for (id, mut m) in self.modules.iter_mut(){
+            m.handler.get_registers(world, &mut m.registers);
         }
     }
     pub fn set_components(&mut self, world: &mut World){
-        for m in self.modules.iter_mut(){
+        for (id, m) in self.modules.iter_mut(){
             m.handler.set_component(world, &m.registers);
         }
     }
+
+    fn get_module(&self, module: ModuleId) -> Result<&Module, battleground_vehicle_control::Error> {
+        if let Some(m) = self.modules.get(&module) {
+            Ok(m)
+        } else {
+            Err(InterfaceError::no_such_module(module))
+        }
+    }
+
+    fn get_module_mut(&mut self, module: ModuleId) -> Result<&mut Module, battleground_vehicle_control::Error> {
+        if let Some(m) = self.modules.get_mut(&module) {
+            Ok(m)
+        } else {
+            Err(InterfaceError::no_such_module(module))
+        }
+    }
+
+    fn get_register(&self, module: ModuleId, register_index: RegisterId) -> Result<&Register, battleground_vehicle_control::Error> {
+        let m = self.get_module(module)?;
+        if let Some(reg) = m.registers.get(&register_index) {
+            Ok(reg)
+        } else {
+            Err(InterfaceError::no_such_register(module, register_index))
+        }
+    }
+    fn get_register_mut(&mut self, module: ModuleId, register_index: RegisterId) -> Result<&mut Register, battleground_vehicle_control::Error> {
+        let m = self.get_module_mut(module)?;
+        if let Some(reg) = m.registers.get_mut(&register_index) {
+            Ok(reg)
+        } else {
+            Err(InterfaceError::no_such_register(module, register_index))
+        }
+    }
+
 }
 impl Component for RegisterInterface {}
 
 
+use battleground_vehicle_control::InterfaceError;
 impl battleground_vehicle_control::Interface for RegisterInterface {
-    fn registers(&self) -> usize {
-        // todo!()
-        self.modules.iter().map(|v|{v.registers.len()}).sum()
+
+    fn modules(&self) -> Result<Vec<u32>, battleground_vehicle_control::Error>
+    {
+        Ok(self.modules.iter().map(|(module_index, _module)|{*module_index}).collect::<_>())
     }
-    fn get_u32(&self, _: usize) -> Result<u32, Box<(dyn std::error::Error + 'static)>> {
-        // todo!()
-        Ok(0)
+
+    fn registers(&self, module: u32) -> Result<Vec<u32>, battleground_vehicle_control::Error> {
+        let m = self.get_module(module)?;
+        Ok(m.registers.iter().map(|(register_index, _register)|{*register_index}).collect::<_>())
     }
-    fn set_u32(&mut self, _: usize, _: u32) -> Result<u32, Box<(dyn std::error::Error + 'static)>> {
-        // todo!()
-        Ok(0)
+
+    /// Retrieve the name of a particular module.
+    fn module_name(&self, module: u32) -> Result<String, battleground_vehicle_control::Error>
+    {
+        Ok(self.get_module(module)?.name.clone())
+    }
+
+    /// Retrieve a register name
+    fn register_name(&self, module: u32, register: u32) -> Result<String, battleground_vehicle_control::Error>{
+        let r = self.get_register(module, register)?;
+        Ok(r.name.clone())
+    }
+
+    /// Get an f32 register.
+    fn get_f32(&self, module: u32, register: u32) -> Result<f32, battleground_vehicle_control::Error>{
+        let r = self.get_register(module, register)?;
+        match r.value {
+            Value::F32(v) => Ok(v),
+            _ => Err(InterfaceError::wrong_type(module, register)),
+        }
+    }
+
+    /// Set an f32 register.
+    fn set_f32(&mut self, module: u32, register: u32, value: f32) -> Result<f32, battleground_vehicle_control::Error>{
+        let r = self.get_register_mut(module, register)?;
+        match &mut r.value {
+            Value::F32(v) => {
+                let old = *v;
+                *v = value;
+                Ok(old)
+            },
+            _ => Err(InterfaceError::wrong_type(module, register)),
+        }
     }
 }
 

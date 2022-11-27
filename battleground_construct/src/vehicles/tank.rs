@@ -15,6 +15,21 @@ pub struct TankSpawnConfig {
     pub shooting: bool,
 }
 
+
+pub struct DummyVehicleControl {}
+impl battleground_vehicle_control::VehicleControl for DummyVehicleControl {
+    fn update(&mut self, interface: &mut dyn battleground_vehicle_control::Interface) {
+        for m_index in interface.modules().unwrap() {
+            println!("update, module name: {}", interface.module_name(m_index).unwrap());
+            for r_index in interface.registers(m_index).unwrap()  {
+                println!("  {}", interface.register_name(m_index, r_index).unwrap());
+            }
+        }
+        interface.set_f32(0x0100, 2, 1.0);
+        interface.set_f32(0x0100, 3, 1.0);
+    }
+}
+
 fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: EntityId) {
     use crate::components::point_projectile::PointProjectile;
     use crate::components::velocity::Velocity;
@@ -93,7 +108,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
         components::hit_sphere::HitSphere::with_radius(1.0),
     );
 
-    let v = components::vehicle_controller::DummyVehicleControl {};
+    let v = DummyVehicleControl {};
     let rc = components::vehicle_controller::VehicleControlStorage::new(Box::new(v));
     world.add_component(
         vehicle_id,
