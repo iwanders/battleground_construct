@@ -45,3 +45,20 @@ impl System for ClockSystem {
         clock.tick();
     }
 }
+
+use crate::components::vehicle_interface::{Register, RegisterMap, VehicleModule};
+pub struct ClockReader {}
+
+impl ClockReader {
+    pub fn new() -> Self {
+        ClockReader {}
+    }
+}
+
+impl VehicleModule for ClockReader {
+    fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
+        if let Some((_entity, clock)) = world.component_iter_mut::<Clock>().next() {
+            registers.insert(0, Register::new_f32("elapsed", clock.elapsed_as_f32()));
+        }
+    }
+}

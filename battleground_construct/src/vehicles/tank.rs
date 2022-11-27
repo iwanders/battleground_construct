@@ -4,13 +4,12 @@ use crate::display::primitives::Vec3;
 use components::pose::{Pose, PreTransform};
 use engine::prelude::*;
 
-
 pub struct TankSpawnConfig {
     pub x: f32,
     pub y: f32,
+    pub yaw: f32,
     pub controller: Box<dyn battleground_vehicle_control::VehicleControl>,
 }
-
 
 fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: EntityId) {
     use crate::components::point_projectile::PointProjectile;
@@ -70,26 +69,26 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     use components::group::Group;
     use components::parent::Parent;
 
-
     // Create the base tank, root element with the health.
     let vehicle_id = world.add_entity();
     tank_group_ids.push(vehicle_id.clone());
-
 
     let register_interface = components::vehicle_interface::RegisterInterfaceContainer::new(
         components::vehicle_interface::RegisterInterface::new(),
     );
 
-    let mut pose = Pose::new();
-    pose.h.w[0] = config.x;
-    pose.h.w[1] = config.y;
+    let pose = Pose::from_se2(config.x, config.y, config.yaw);
     world.add_component(vehicle_id, pose);
     world.add_component(vehicle_id, components::velocity::Velocity::new());
     let base = components::differential_drive_base::DifferentialDriveBase::new();
     // Register the base as a controllable.
+    register_interface
+        .get_mut()
+        .add_module("clock", 0x0100, components::clock::ClockReader::new());
+
     register_interface.get_mut().add_module(
         "base",
-        0x0100,
+        0x1000,
         components::differential_drive_base::DifferentialDriveBaseControl::new(vehicle_id),
     );
 
@@ -100,7 +99,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
         vehicle_id,
         components::hit_sphere::HitSphere::with_radius(1.0),
     );
-
 
     let rc = components::vehicle_controller::VehicleControlStorage::new(config.controller);
     world.add_component(
@@ -116,7 +114,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     // Register this revolute as a controllable.
     register_interface.get_mut().add_module(
         "turret",
-        0x0200,
+        0x1100,
         components::revolute::RevoluteControl::new(turret_id),
     );
 
@@ -135,10 +133,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     // Add the barrel entity
     let barrel_id = world.add_entity();
     tank_group_ids.push(barrel_id.clone());
-    let mut barrel_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 1.0, 0.0));
+    let barrel_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 1.0, 0.0));
     register_interface.get_mut().add_module(
         "barrel",
-        0x0300,
+        0x1200,
         components::revolute::RevoluteControl::new(barrel_id),
     );
 
@@ -167,8 +165,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
         nozzle_id,
         PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
     );
-    
-
 
     // Finally, add the register interface.
     world.add_component(vehicle_id, register_interface);
@@ -190,5 +186,4 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     world.add_component(turret_id, Group::from(&tank_group_ids[..]));
     world.add_component(barrel_id, Group::from(&tank_group_ids[..]));
     world.add_component(nozzle_id, Group::from(&tank_group_ids[..]));
-
 }

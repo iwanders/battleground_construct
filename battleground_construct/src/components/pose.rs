@@ -23,6 +23,15 @@ macro_rules! create_transform_component {
             pub fn from_translation(v: cgmath::Vector3<f32>) -> Self {
                 Self::from_mat4(cgmath::Matrix4::<f32>::from_translation(v))
             }
+
+            pub fn from_se2(x: f32, y: f32, yaw: f32) -> Self {
+                Self::from_mat4(
+                    cgmath::Matrix4::<f32>::from_translation(cgmath::Vector3::<f32>::new(
+                        x, y, 0.0,
+                    )) * cgmath::Matrix4::<f32>::from_angle_z(cgmath::Rad(yaw)),
+                )
+            }
+
             pub fn from_xyz(x: f32, y: f32, z: f32) -> Self {
                 Self::from_mat4(cgmath::Matrix4::<f32>::from_translation(cgmath::Vector3::<
                     f32,

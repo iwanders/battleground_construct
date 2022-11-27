@@ -3,14 +3,15 @@
 /*
     Todo:
         - Propagate velocities such that bullets get the correct initial velocity.
+        - Fix the way projectiles, hits, damage all works.
 */
 
 pub mod components;
+pub mod control;
 pub mod display;
 pub mod systems;
 pub mod util;
 pub mod vehicles;
-pub mod control;
 
 // use battleground_vehicle_control;
 
@@ -65,19 +66,25 @@ impl Construct {
             TankSpawnConfig {
                 x: 0.0,
                 y: 0.0,
-                controller: Box::new(control::DummyVehicleControl{}),
+                yaw: 0.0,
+                controller: Box::new(control::DummyVehicleControl {}),
             },
         );
         /**/
 
-        for x in 1..2 {
-            for y in 1..3 {
+        for x in 1..5 {
+            for y in -2..2 {
                 spawn_tank(
                     &mut world,
                     TankSpawnConfig {
-                        x: x as f32 * 5.0,
-                        y: -y as f32 * 5.0 + 10.0,
-                        controller: Box::new(control::DummyVehicleControl{}),
+                        x: x as f32 * 3.0,
+                        y: y as f32 * 3.0 - 2.5,
+                        yaw: std::f32::consts::PI / 2.0,
+                        controller: Box::new(control::DiffDriveForwardsBackwardsControl {
+                            velocities: (1.0, 1.0),
+                            last_flip: 0.0,
+                            duration: 5.0,
+                        }),
                     },
                 );
             }
@@ -95,7 +102,7 @@ impl Construct {
         systems.add_system(Box::new(systems::revolute_pose::RevolutePose {}));
         systems.add_system(Box::new(systems::cannon_trigger::CannonTrigger {}));
         systems.add_system(Box::new(systems::projectile_floor::ProjectileFloor {}));
-        // systems.add_system(Box::new(systems::projectile_hit::ProjectileHit {}));
+        systems.add_system(Box::new(systems::projectile_hit::ProjectileHit {}));
         // Must go after the hit calculation.
         systems.add_system(Box::new(systems::tank_hit_by::TankHitBy {}));
         // All handling of hits done with the projectiles still present.

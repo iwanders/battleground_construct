@@ -64,10 +64,10 @@ pub type RegisterMap = std::collections::HashMap<RegisterId, Register>;
 
 pub trait VehicleModule {
     /// Read from the components into the registers.
-    fn get_registers(&self, world: &World, registers: &mut RegisterMap);
+    fn get_registers(&self, _world: &World, _registers: &mut RegisterMap) {}
 
     /// Set the components' values from the registers.
-    fn set_component(&self, world: &mut World, registers: &RegisterMap);
+    fn set_component(&self, _world: &mut World, _registers: &RegisterMap) {}
 }
 
 pub type ModuleId = u32;
@@ -136,7 +136,7 @@ impl RegisterInterface {
         if let Some(m) = self.modules.get(&module) {
             Ok(m)
         } else {
-            Err(InterfaceError::no_such_module(module))
+            Err(Self::no_such_module(module))
         }
     }
 
@@ -147,7 +147,7 @@ impl RegisterInterface {
         if let Some(m) = self.modules.get_mut(&module) {
             Ok(m)
         } else {
-            Err(InterfaceError::no_such_module(module))
+            Err(Self::no_such_module(module))
         }
     }
 
@@ -160,7 +160,7 @@ impl RegisterInterface {
         if let Some(reg) = m.registers.get(&register_index) {
             Ok(reg)
         } else {
-            Err(InterfaceError::no_such_register(module, register_index))
+            Err(Self::no_such_register(module, register_index))
         }
     }
 
@@ -173,8 +173,30 @@ impl RegisterInterface {
         if let Some(reg) = m.registers.get_mut(&register_index) {
             Ok(reg)
         } else {
-            Err(InterfaceError::no_such_register(module, register_index))
+            Err(Self::no_such_register(module, register_index))
         }
+    }
+
+    fn no_such_module(module: u32) -> Box<InterfaceError> {
+        Box::new(InterfaceError {
+            module: module,
+            register: 0,
+            error_type: battleground_vehicle_control::ErrorType::NoSuchModule,
+        })
+    }
+    fn no_such_register(module: u32, register: u32) -> Box<InterfaceError> {
+        Box::new(InterfaceError {
+            module: module,
+            register: register,
+            error_type: battleground_vehicle_control::ErrorType::NoSuchRegister,
+        })
+    }
+    fn wrong_type(module: u32, register: u32) -> Box<InterfaceError> {
+        Box::new(InterfaceError {
+            module: module,
+            register: register,
+            error_type: battleground_vehicle_control::ErrorType::WrongType,
+        })
     }
 }
 // This is useless as a component, we need an interior mutability pattern.
@@ -222,7 +244,7 @@ impl battleground_vehicle_control::Interface for RegisterInterface {
         let r = self.get_register(module, register)?;
         match r.value {
             Value::F32(v) => Ok(v),
-            _ => Err(InterfaceError::wrong_type(module, register)),
+            _ => Err(RegisterInterface::wrong_type(module, register)),
         }
     }
 
@@ -240,7 +262,7 @@ impl battleground_vehicle_control::Interface for RegisterInterface {
                 *v = value;
                 Ok(old)
             }
-            _ => Err(InterfaceError::wrong_type(module, register)),
+            _ => Err(RegisterInterface::wrong_type(module, register)),
         }
     }
 }
