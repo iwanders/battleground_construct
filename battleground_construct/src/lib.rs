@@ -107,6 +107,7 @@ impl Construct {
         systems.add_system(Box::new(systems::health_tank_body::HealthTankBody {}));
         systems.add_system(Box::new(systems::display_tank_tracks::DisplayTankTracks {}));
         systems.add_system(Box::new(systems::function_pose::FunctionPose {}));
+        systems.add_system(Box::new(systems::expiry_check::ExpiryCheck {}));
 
         Construct { world, systems }
     }

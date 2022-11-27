@@ -7,7 +7,13 @@ use three_d::*;
 
 pub trait RenderableEffect {
     fn object(&self) -> Option<&dyn Object>;
-    fn update(&mut self, camera: &Camera, entity_position: Matrix4<f32>, time: f32);
+    fn update(
+        &mut self,
+        effect_type: &display::primitives::EffectType,
+        camera: &Camera,
+        entity_position: Matrix4<f32>,
+        time: f32,
+    );
 }
 
 #[derive(Clone)]
@@ -178,7 +184,15 @@ impl RenderableEffect for ParticleEmitter {
         Some(self.renderable.object())
     }
 
-    fn update(&mut self, camera: &Camera, entity_position: Matrix4<f32>, time: f32) {
+    fn update(
+        &mut self,
+        effect_type: &display::primitives::EffectType,
+        camera: &Camera,
+        entity_position: Matrix4<f32>,
+        time: f32,
+    ) {
+        // let emitting = if let display::primitives::EffectType::ParticleEmitter{emitting,..} = effect_type {*emitting} else {false};
+        let display::primitives::EffectType::ParticleEmitter { emitting, .. } = *effect_type;
         let dt = self.last_time - time;
 
         // Drop particles that are expired.
@@ -189,7 +203,7 @@ impl RenderableEffect for ParticleEmitter {
             .collect::<_>();
 
         // Spawn new particles.
-        while self.next_spawn_time < time {
+        while (self.next_spawn_time < time) && emitting {
             use rand_distr::StandardNormal;
             let spawn_val: f32 = self.rng.sample(StandardNormal);
             self.next_spawn_time += self.spawn_interval + spawn_val * self.spawn_jitter;

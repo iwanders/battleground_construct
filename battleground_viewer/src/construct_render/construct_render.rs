@@ -232,24 +232,24 @@ impl ConstructRender {
         if !self.effects.contains_key(&effect.id) {
             // add this effect.
             match effect.effect {
-                display::primitives::EffectType::ParticleEmitter(particle_emitter) => {
+                display::primitives::EffectType::ParticleEmitter { particle_type, .. } => {
                     self.effects.insert(
                         effect.id,
                         Box::new(effects::ParticleEmitter::new(
                             context,
                             *entity_transform,
                             timestamp,
-                            &particle_emitter,
+                            &particle_type,
                         )),
                     );
                 }
             }
         }
-        let effect = self
+        let effect_renderable = self
             .effects
             .get_mut(&effect.id)
             .expect("just checked it, will be there");
-        effect.update(camera, *entity_transform, timestamp);
+        effect_renderable.update(&effect.effect, camera, *entity_transform, timestamp);
     }
 
     /// Add elements to the instances.

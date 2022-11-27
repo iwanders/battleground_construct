@@ -112,7 +112,10 @@ impl Eq for ParticleType {}
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum EffectType {
-    ParticleEmitter(ParticleType),
+    ParticleEmitter {
+        particle_type: ParticleType,
+        emitting: bool,
+    },
 }
 
 pub type EffectId = (engine::EntityId, u64);

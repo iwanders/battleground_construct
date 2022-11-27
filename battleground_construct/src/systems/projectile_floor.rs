@@ -15,6 +15,24 @@ impl System for ProjectileFloor {
                 }
             };
             if below_floor {
+                {
+                    let particles_to_add = if let Some(p) =
+                        world.component::<super::display::particle_emitter::ParticleEmitter>(entity)
+                    {
+                        Some(*p)
+                    } else {
+                        None
+                    };
+                    if let Some(mut copied_particle) = particles_to_add {
+                        copied_particle.emitting = false;
+                        let impact = world.add_entity();
+                        world.add_component(
+                            impact,
+                            super::components::expiry::Expiry::lifetime(5.0),
+                        );
+                        world.add_component(impact, copied_particle);
+                    }
+                }
                 world.remove_entity(entity);
             }
         }
