@@ -74,7 +74,6 @@ impl VehicleModule for DifferentialDriveBaseControl {
                 .expect("register doesnt exist")
                 .value_f32()
                 .expect("wrong value type"); // denotes mismatch between get_registers and set_component.
-            println!("Setting {left_cmd} and {right_cmd}");
             base.set_velocities(left_cmd, right_cmd);
         }
     }

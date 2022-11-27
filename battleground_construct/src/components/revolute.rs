@@ -38,7 +38,7 @@ impl Revolute {
         self.position
     }
 
-    pub fn velocity_bounds(&mut self) -> (f32, f32) {
+    pub fn velocity_bounds(&self) -> (f32, f32) {
         self.velocity_bounds
     }
 
@@ -51,3 +51,41 @@ impl Revolute {
     }
 }
 impl Component for Revolute {}
+
+use crate::components::vehicle_interface::{Register, RegisterMap, VehicleModule};
+pub struct RevoluteControl {
+    entity: EntityId,
+}
+
+impl RevoluteControl {
+    pub fn new(entity: EntityId) -> Self {
+        RevoluteControl { entity }
+    }
+}
+
+impl VehicleModule for RevoluteControl {
+    fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
+        registers.clear();
+        if let Some(revolute) = world.component::<Revolute>(self.entity) {
+            registers.insert(0, Register::new_f32("position", revolute.position()));
+            registers.insert(1, Register::new_f32("velocity", revolute.velocity()));
+
+            let (vel_min, vel_max) = revolute.velocity_bounds();
+            registers.insert(2, Register::new_f32("velocity_min", vel_min));
+            registers.insert(3, Register::new_f32("velocity_max", vel_max));
+
+            registers.insert(4, Register::new_f32("velocity_cmd", revolute.velocity()));
+        }
+    }
+
+    fn set_component(&self, world: &mut World, registers: &RegisterMap) {
+        if let Some(mut revolute) = world.component_mut::<Revolute>(self.entity) {
+            let vel_cmd = registers
+                .get(&4)
+                .expect("register doesnt exist")
+                .value_f32()
+                .expect("wrong value type");
+            revolute.set_velocity(vel_cmd);
+        }
+    }
+}
