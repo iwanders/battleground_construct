@@ -102,8 +102,11 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     // world.add_component(vehicle_id, display::debug_sphere::DebugSphere::with_radius(1.0));
     world.add_component(vehicle_id, components::health::Health::new());
 
-    /*
-     */
+
+    let mut register_interface = components::vehicle_interface::RegisterInterfaceContainer::new(components::vehicle_interface::RegisterInterface::new());
+    register_interface.get_mut().add_module("base", 0x0100, Box::new(components::vehicle_interface::DifferentialDriveBaseControl::new(vehicle_id)));
+    world.add_component(vehicle_id, register_interface);
+
 
     // Add the turrent entity.
     let turret_id = world.add_entity();

@@ -18,18 +18,34 @@ impl battleground_vehicle_control::Interface for DummyInterface {
 pub struct VehicleControl {}
 impl System for VehicleControl {
     fn update(&mut self, world: &mut World) {
-        let (_entity, clock) = world
+        let time = world
             .component_iter_mut::<Clock>()
             .next()
-            .expect("Should have one clock");
-        let time = clock.elapsed_as_f32();
+            .expect("Should have one clock").1.elapsed_as_f32();
+
+        // First, update the interface
+        use std::collections::HashMap;
+        use crate::components::vehicle_interface::{RegisterInterfaceContainer,RegisterInterface};
+        let mut interfaces: Vec<(EntityId, RegisterInterfaceContainer)> = world.component_iter::<RegisterInterfaceContainer>().map(|(e, p)|{(e, p.clone())}).collect::<_>();
+        let mut interface_map: HashMap<EntityId, RegisterInterfaceContainer> = interfaces.drain(..).collect::<_>();
+
+        for (e, interface) in interface_map.iter_mut() {
+            interface.get_mut().get_registers(world);
+        }
 
         // Run all vehicle controls
         for (entity, mut controller) in world.component_iter_mut::<VehicleController>() {
             if let Some(controller) = controller.should_update(time) {
-                let mut dummy = DummyInterface {};
-                controller.update(&mut dummy);
+                if let Some(interface) = interface_map.get_mut(&entity) {
+                    controller.update(&mut *interface.get_mut());
+                }
             }
         }
+        for (e, interface) in interface_map.iter_mut() {
+            interface.get_mut().set_components(world);
+        }
+
+        /*
+        */
     }
 }
