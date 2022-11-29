@@ -158,7 +158,13 @@ impl RenderableEffect for ParticleEmitter {
         time: f32,
     ) {
         // let emitting = if let display::primitives::EffectType::ParticleEmitter{emitting,..} = effect_type {*emitting} else {false};
-        let display::primitives::EffectType::ParticleEmitter { emitting, .. } = *effect_type;
+        let emitting =
+            if let display::primitives::EffectType::ParticleEmitter { emitting, .. } = *effect_type
+            {
+                emitting
+            } else {
+                panic!("Called renderable effect with wrong effect type");
+            };
         let dt = self.last_time - time;
 
         // Drop particles that are expired.
@@ -227,5 +233,45 @@ impl RenderableEffect for ParticleEmitter {
 
         self.renderable.set_instances(&p[..]);
         self.last_time = time;
+    }
+}
+
+pub struct Deconstructor {
+    renderable: InstancedEntity<three_d::renderer::material::PhysicalMaterial>,
+}
+
+impl Deconstructor {
+    pub fn new(
+        context: &Context,
+        _entity_position: Matrix4<f32>,
+        time: f32,
+        elements: &[display::primitives::Element],
+    ) -> Self {
+        Deconstructor {
+            renderable:
+                InstancedEntity::<three_d::renderer::material::PhysicalMaterial>::new_physical(
+                    &context,
+                    &CpuMesh::cube(),
+                ),
+        }
+    }
+}
+
+impl RenderableEffect for Deconstructor {
+    fn object(&self) -> Option<&dyn Object> {
+        Some(self.renderable.object())
+    }
+
+    fn update(
+        &mut self,
+        effect_type: &display::primitives::EffectType,
+        camera: &Camera,
+        entity_position: Matrix4<f32>,
+        time: f32,
+    ) {
+        self.renderable.set_instances(&[(
+            &Mat4::from_translation(vec3(0.0, 0.0, 0.0)),
+            &Color::new_opaque(255, 0, 0),
+        )]);
     }
 }

@@ -61,6 +61,16 @@ impl Construct {
         );
         /**/
 
+
+
+        let thingy = world.add_entity();
+        world.add_component(thingy, Flag::from_scale_color(0.5, Color::WHITE));
+        world.add_component(thingy, Pose::from_xyz(-2.0, -2.0, 0.0));
+        world.add_component(
+            thingy,
+            display::deconstructor::Deconstructor::new(thingy),
+        );
+
         spawn_tank(
             &mut world,
             TankSpawnConfig {

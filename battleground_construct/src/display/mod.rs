@@ -1,5 +1,6 @@
 pub mod debug_box;
 pub mod debug_sphere;
+pub mod deconstructor;
 pub mod flag;
 pub mod particle_emitter;
 pub mod primitives;

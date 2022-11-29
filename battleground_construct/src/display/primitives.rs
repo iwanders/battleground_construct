@@ -110,17 +110,20 @@ pub enum ParticleType {
 }
 impl Eq for ParticleType {}
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub enum EffectType {
     ParticleEmitter {
         particle_type: ParticleType,
         emitting: bool,
     },
+    Deconstructor {
+        elements: Vec<Element>,
+    },
 }
 
 pub type EffectId = (engine::EntityId, u64);
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct Effect {
     /// Id to track this entity under, the EntityId is always associated to the entity that first
     /// created this effect. It does NOT tie this effect (nor its lifetime) to this particular

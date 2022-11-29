@@ -172,6 +172,11 @@ impl ConstructRender {
                 context, camera, construct,
             ),
         );
+        effect_ids.append(
+            &mut self.component_to_effects::<display::deconstructor::Deconstructor>(
+                context, camera, construct,
+            ),
+        );
 
         // Now we remove all effects that are no longer present
         for k in effect_ids {
@@ -249,6 +254,17 @@ impl ConstructRender {
                             *entity_transform,
                             timestamp,
                             &particle_type,
+                        )),
+                    );
+                }
+                display::primitives::EffectType::Deconstructor { ref elements, .. } => {
+                    self.effects.insert(
+                        effect.id,
+                        Box::new(effects::Deconstructor::new(
+                            context,
+                            *entity_transform,
+                            timestamp,
+                            &elements,
                         )),
                     );
                 }
