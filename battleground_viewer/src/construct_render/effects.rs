@@ -16,40 +16,6 @@ pub trait RenderableEffect {
     );
 }
 
-#[derive(Clone)]
-struct FireworksMaterial {
-    pub color: Color,
-    pub fade: f32,
-}
-
-impl Material for FireworksMaterial {
-    fn fragment_shader_source(&self, _use_vertex_colors: bool, _lights: &[&dyn Light]) -> String {
-        include_str!("shaders/particles.frag").to_string()
-    }
-    fn use_uniforms(&self, program: &Program, _camera: &Camera, _lights: &[&dyn Light]) {
-        program.use_uniform("color", self.color);
-        program.use_uniform("fade", self.fade);
-    }
-    fn render_states(&self) -> RenderStates {
-        RenderStates {
-            cull: Cull::Back,
-            blend: Blend::Enabled {
-                rgb_equation: BlendEquationType::Add,
-                alpha_equation: BlendEquationType::Add,
-                source_rgb_multiplier: BlendMultiplierType::SrcAlpha,
-                source_alpha_multiplier: BlendMultiplierType::Zero,
-                destination_rgb_multiplier: BlendMultiplierType::One,
-                destination_alpha_multiplier: BlendMultiplierType::One,
-            },
-            depth_test: DepthTest::LessOrEqual,
-            write_mask: WriteMask::COLOR,
-        }
-    }
-    fn material_type(&self) -> MaterialType {
-        MaterialType::Transparent
-    }
-}
-
 struct Particle {
     pos: Mat4,
     vel: Vec3,
