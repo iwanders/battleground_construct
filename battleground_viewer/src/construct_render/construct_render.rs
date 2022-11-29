@@ -16,19 +16,19 @@ use instanced_entity::InstancedEntity;
 use three_d::renderer::material::PhysicalMaterial;
 
 /// The object used to render a construct.
-#[derive(Default)]
 pub struct ConstructRender {
     static_gms: Vec<Gm<Mesh, PhysicalMaterial>>,
     instanced_meshes: std::collections::HashMap<
         display::primitives::Primitive,
         InstancedEntity<PhysicalMaterial>,
     >,
+    grid_lines: InstancedEntity<ColorMaterial>,
 
     effects: std::collections::HashMap<EffectId, Box<dyn RenderableEffect>>,
 }
 
 impl ConstructRender {
-    pub fn populate_default(&mut self, context: &Context) {
+    pub fn new(context: &Context) -> Self {
         let mut ground_plane = Gm::new(
             Mesh::new(&context, &CpuMesh::square()),
             PhysicalMaterial::new_opaque(
@@ -42,48 +42,55 @@ impl ConstructRender {
         ground_plane.set_transformation(
             Mat4::from_translation(vec3(0.0, 0.0, 0.0)) * Mat4::from_scale(1000.0),
         );
-        self.static_gms.push(ground_plane);
-        /*
-        let mut cube = Gm::new(
-            Mesh::new(&context, &CpuMesh::cube()),
-            three_d::renderer::material::PhysicalMaterial::new_opaque(
-                &context,
-                &CpuMaterial {
-                    albedo: Color {
-                        r: 0,
-                        g: 0,
-                        b: 255,
-                        a: 255,
-                    },
-                    ..Default::default()
-                },
-            ),
-        );
-        cube.set_transformation(
-            Mat4::from_translation(vec3(0.0, 0.0, 1.0)) * Mat4::from_scale(0.2),
-        );
-        self.static_gms.push(cube);
+        let static_gms = vec![ground_plane];
 
-        let mut cube = Gm::new(
-            Mesh::new(&context, &CpuMesh::cube()),
-            three_d::renderer::material::PhysicalMaterial::new_opaque(
-                &context,
-                &CpuMaterial {
-                    albedo: Color {
-                        r: 255,
-                        g: 0,
-                        b: 0,
-                        a: 255,
-                    },
-                    ..Default::default()
-                },
-            ),
-        );
-        cube.set_transformation(
-            Mat4::from_translation(vec3(1.0, 0.0, 0.0)) * Mat4::from_scale(0.2),
-        );
-        self.static_gms.push(cube);
-        */
+        // At some point we should try to render the grid only underneath robots, or something.
+        let mut grid_lines = InstancedEntity::new_colored(&context, &CpuMesh::cylinder(4));
+        let mut lines = vec![];
+        let lower = -10isize;
+        let upper = 10;
+        let main = 5;
+        let t = 0.01;
+        let sub_color = Color::new_opaque(150, 150, 150);
+        let main_color = Color::new_opaque(255, 255, 255);
+        fn line(
+            x0: isize,
+            y0: isize,
+            x1: isize,
+            y1: isize,
+            width: f32,
+            color: Color,
+        ) -> (Vec3, Vec3, f32, Color) {
+            (
+                vec3(x0 as f32, y0 as f32, 0.0),
+                vec3(x1 as f32, y1 as f32, 0.0),
+                width,
+                color,
+            )
+        }
+        for x in lower + 1..upper {
+            let color = if x.rem_euclid(main) == 0 {
+                main_color
+            } else {
+                sub_color
+            };
+            lines.push(line(x, upper, x, lower, t, color));
+            lines.push(line(lower, x, upper, x, t, color));
+        }
+        lines.push(line(lower - 5, upper, upper + 5, upper, t, main_color));
+        lines.push(line(lower - 5, lower, upper + 5, lower, t, main_color));
+
+        lines.push(line(upper, lower - 5, upper, upper + 5, t, main_color));
+        lines.push(line(lower, lower - 5, lower, upper + 5, t, main_color));
+
+        grid_lines.set_lines(&lines);
+
+        ConstructRender {
+            static_gms,
+            grid_lines,
+            instanced_meshes: Default::default(),
+            effects: Default::default(),
+        }
     }
 
     /// Return a list of geometrise to be used for shadow calculations.
@@ -97,6 +104,7 @@ impl ConstructRender {
     /// Return the objects to be rendered.
     pub fn objects(&self) -> Vec<&dyn Object> {
         let mut renderables: Vec<&dyn Object> = vec![];
+        renderables.push(self.grid_lines.gm());
         // renderables.push(&fireworks);
         renderables.append(
             &mut self

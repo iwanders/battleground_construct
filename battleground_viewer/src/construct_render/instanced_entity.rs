@@ -31,6 +31,30 @@ impl InstancedEntity<three_d::renderer::material::PhysicalMaterial> {
     }
 }
 
+impl InstancedEntity<three_d::renderer::material::ColorMaterial> {
+    pub fn new_colored(context: &Context, cpu_mesh: &CpuMesh) -> Self {
+        let instances: three_d::renderer::geometry::Instances = Default::default();
+        let material = three_d::renderer::material::ColorMaterial::new_opaque(
+            &context,
+            &CpuMaterial {
+                albedo: Color {
+                    r: 255,
+                    g: 255,
+                    b: 255,
+                    a: 255,
+                },
+                ..Default::default()
+            },
+        );
+        // material.albedo.a = 255;
+        InstancedEntity::<three_d::renderer::material::ColorMaterial> {
+            gm: Gm::new(InstancedMesh::new(context, &instances, cpu_mesh), material),
+            transforms: vec![],
+            colors: vec![],
+        }
+    }
+}
+
 impl<M: Material> InstancedEntity<M> {
     pub fn new(context: &Context, cpu_mesh: &CpuMesh, material: M) -> Self {
         let instances: three_d::renderer::geometry::Instances = Default::default();
@@ -87,5 +111,31 @@ impl<M: Material> InstancedEntity<M> {
             self.colors.push(**c);
         }
         self.update_instances();
+    }
+
+    pub fn set_lines(&mut self, lines: &[(Vec3, Vec3, f32, Color)]) {
+        let mut translations = Vec::with_capacity(lines.len());
+        let mut scales = Vec::with_capacity(lines.len());
+        let mut rotations = Vec::with_capacity(lines.len());
+        let mut colors = Vec::with_capacity(lines.len());
+
+        for (p0, p1, width, c) in lines.iter() {
+            translations.push(*p0);
+            scales.push(vec3((*p0 - *p1).magnitude(), width / 2.0, width / 2.0));
+            rotations.push(Quat::from_arc(
+                vec3(1.0, 0.0, 0.0),
+                (p1 - p0).normalize(),
+                None,
+            ));
+            colors.push(*c);
+        }
+        let instances = three_d::renderer::geometry::Instances {
+            translations,
+            rotations: Some(rotations),
+            scales: Some(scales),
+            colors: Some(colors),
+            ..Default::default()
+        };
+        self.gm.geometry.set_instances(&instances);
     }
 }
