@@ -112,15 +112,12 @@ impl<M: Material> InstancedEntity<M> {
         let mut colors = Vec::with_capacity(lines.len());
 
         for (p0, p1, width, c) in lines.iter() {
+            let rotation = Quat::from_arc(vec3(1.0, 0.0, 0.0), (p1 - p0).normalize(), None);
+            let scale =
+                Mat4::from_nonuniform_scale((*p0 - *p1).magnitude(), width / 2.0, width / 2.0);
 
-            let rotation = Quat::from_arc(
-                vec3(1.0, 0.0, 0.0),
-                (p1 - p0).normalize(),
-                None,
-            );
-            let scale = Mat4::from_nonuniform_scale((*p0 - *p1).magnitude(), width / 2.0, width / 2.0);
-
-            transformations.push(Mat4::from_translation(*p0) * <_ as Into<Mat4>>::into(rotation) * scale);
+            transformations
+                .push(Mat4::from_translation(*p0) * <_ as Into<Mat4>>::into(rotation) * scale);
             colors.push(*c);
         }
         let instances = three_d::renderer::geometry::Instances {
