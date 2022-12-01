@@ -236,24 +236,114 @@ impl RenderableEffect for ParticleEmitter {
     }
 }
 
+
+struct DestructorParticle {
+    pos: Mat4,
+    vel: Vec3,
+    color: Color,
+}
+
+
 pub struct Deconstructor {
     renderable: InstancedEntity<three_d::renderer::material::PhysicalMaterial>,
+    particles: Vec<DestructorParticle>,
 }
 
 impl Deconstructor {
     pub fn new(
         context: &Context,
-        _entity_position: Matrix4<f32>,
+        entity_position: Matrix4<f32>,
         time: f32,
         elements: &[display::primitives::Element],
     ) -> Self {
-        Deconstructor {
-            renderable:
-                InstancedEntity::<three_d::renderer::material::PhysicalMaterial>::new_physical(
-                    &context,
-                    &CpuMesh::cube(),
-                ),
+        /* now, here, we do the thing, we slice the primitives...
+            How do we slice a cube?
+            +------------------------
+            |       |
+            |   O   |
+            |       |
+            +-------+--------------
+            |
+            |
+        */
+        let edge_x = 0.05;
+        let edge_y = 0.05;
+        let edge_z = 0.05;
+        let mut renderable =
+            InstancedEntity::<three_d::renderer::material::PhysicalMaterial>::new_physical(
+                &context,
+                &CpuMesh::cube(),
+            );
+
+        let material = three_d::renderer::material::PhysicalMaterial::new(
+            &context,
+            &CpuMaterial {
+                albedo: Color {
+                    r: 255,
+                    g: 255,
+                    b: 255,
+                    a: 128,
+                },
+                ..Default::default()
+            },
+        );
+        renderable.gm_mut().material = material;
+        let mut particles = vec![];
+
+        for el in elements.iter() {
+            match el.primitive {
+                battleground_construct::display::primitives::Primitive::Cuboid(c) => {
+                    // add the original!
+                    let mut c = c;
+                    c.width = 0.12;
+                    let half_width = c.width / 2.0;
+                    let half_length = c.length / 2.0;
+                    let half_height = c.height / 2.0;
+                    particles.push(DestructorParticle{
+                        pos: entity_position * el.transform * Mat4::from_nonuniform_scale(half_width, half_length, half_height),
+                        color: Color::new(0, 0, 255, 128),
+                        vel: vec3(0.0, 0.0, 0.0),
+                    });
+                    // calculate the translations from the center of the cuboid.
+                    let offset_x = c.width.rem_euclid(edge_x) / 2.0;
+                    let offset_y = c.length.rem_euclid(edge_y) / 2.0;
+                    let offset_z = c.height.rem_euclid(edge_z) / 2.0;
+                    let chunks_x = (c.width / edge_x).ceil() as usize;
+                    let chunks_y = (c.length / edge_y).ceil() as usize;
+                    let chunks_z = (c.height / edge_z).ceil() as usize;
+                    for x in 0..chunks_x {
+                        for y in 0..chunks_y {
+                            for z in 0..chunks_z {
+                                /**/
+                                let p = vec3(x as f32 * edge_x + offset_x - half_width, y as f32 * edge_y + offset_y - half_length, z as f32 * edge_z + offset_z - half_height);
+                                let t = 0.001;
+                                let p = p + vec3(x as f32 * t, y as f32 * t, z as f32 * t);
+                                let sx = if (x == 0 || x == chunks_x - 1) { offset_x } else {edge_x / 2.0};
+                                let sy = if (y == 0 || y == chunks_y - 1) { offset_y } else {edge_y / 2.0};
+                                let sz = if (z == 0 || z == chunks_z - 1) { offset_z } else {edge_z / 2.0};
+                                let transformation = Mat4::from_translation(p) * Mat4::from_nonuniform_scale(sx, sy, sz);
+                                
+
+                                particles.push(DestructorParticle{
+                                    pos: entity_position * el.transform * transformation,
+                                    color: Color::new(255, 0, 0, 30),
+                                    vel: vec3(0.0, 0.0, 0.0),
+                                });
+                            }
+                        }
+                    }
+                }
+                battleground_construct::display::primitives::Primitive::Sphere(_) => todo!(),
+                battleground_construct::display::primitives::Primitive::Cylinder(_) => todo!(),
+            }
         }
+        let p = particles
+            .iter()
+            .map(|p| (&p.pos, &p.color))
+            .collect::<Vec<_>>();
+
+        renderable.set_instances(&p);
+        Deconstructor { renderable, particles }
     }
 }
 
@@ -269,9 +359,9 @@ impl RenderableEffect for Deconstructor {
         entity_position: Matrix4<f32>,
         time: f32,
     ) {
-        self.renderable.set_instances(&[(
-            &Mat4::from_translation(vec3(0.0, 0.0, 0.0)),
-            &Color::new_opaque(255, 0, 0),
-        )]);
+        // self.renderable.set_instances(&[(
+            // &Mat4::from_translation(vec3(0.0, 0.0, 0.0)),
+            // &Color::new_opaque(255, 0, 0),
+        // )]);
     }
 }

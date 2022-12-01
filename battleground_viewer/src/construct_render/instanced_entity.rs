@@ -71,26 +71,19 @@ impl<M: Material> InstancedEntity<M> {
         &self.gm
     }
 
+    pub fn gm_mut(
+        &mut self,
+    ) -> &mut three_d::renderer::object::Gm<three_d::renderer::geometry::InstancedMesh, M> {
+        &mut self.gm
+    }
+
     pub fn object(&self) -> &dyn Object {
         &self.gm as &dyn Object
     }
 
     pub fn update_instances(&mut self) {
         let mut instances: three_d::renderer::geometry::Instances = Default::default();
-        instances.translations = self
-            .transforms
-            .iter()
-            .map(|m| m.w.truncate())
-            .collect::<_>();
-
-        // The transforms we have a homogeneous matrices, so the top left 3x3 is a rotation matrix.
-        // We need to express that as a quaternion here.
-        instances.rotations = Some(
-            self.transforms
-                .iter()
-                .map(|m| m.to_quaternion())
-                .collect::<_>(),
-        );
+        instances.transformations = self.transforms.clone();
 
         // Scaling is not done, this is ALWAYS done in the mesh itself, since all transforms are
         // homogeneous transforms.
@@ -114,25 +107,24 @@ impl<M: Material> InstancedEntity<M> {
     }
 
     pub fn set_lines(&mut self, lines: &[(Vec3, Vec3, f32, Color)]) {
-        let mut translations = Vec::with_capacity(lines.len());
-        let mut scales = Vec::with_capacity(lines.len());
-        let mut rotations = Vec::with_capacity(lines.len());
+        let mut instances: three_d::renderer::geometry::Instances = Default::default();
+        let mut transformations = Vec::with_capacity(lines.len());
         let mut colors = Vec::with_capacity(lines.len());
 
         for (p0, p1, width, c) in lines.iter() {
-            translations.push(*p0);
-            scales.push(vec3((*p0 - *p1).magnitude(), width / 2.0, width / 2.0));
-            rotations.push(Quat::from_arc(
+
+            let rotation = Quat::from_arc(
                 vec3(1.0, 0.0, 0.0),
                 (p1 - p0).normalize(),
                 None,
-            ));
+            );
+            let scale = Mat4::from_nonuniform_scale((*p0 - *p1).magnitude(), width / 2.0, width / 2.0);
+
+            transformations.push(Mat4::from_translation(*p0) * <_ as Into<Mat4>>::into(rotation) * scale);
             colors.push(*c);
         }
         let instances = three_d::renderer::geometry::Instances {
-            translations,
-            rotations: Some(rotations),
-            scales: Some(scales),
+            transformations,
             colors: Some(colors),
             ..Default::default()
         };
