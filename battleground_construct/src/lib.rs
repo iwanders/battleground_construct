@@ -61,17 +61,7 @@ impl Construct {
         );
         /**/
 
-
-
-        let thingy = world.add_entity();
-        world.add_component(thingy, Flag::from_scale_color(0.5, Color::WHITE));
-        world.add_component(thingy, Pose::from_xyz(-2.0, -2.0, 0.0));
-        world.add_component(
-            thingy,
-            display::deconstructor::Deconstructor::new(thingy),
-        );
-
-        spawn_tank(
+        let main_tank = spawn_tank(
             &mut world,
             TankSpawnConfig {
                 x: 0.0,
@@ -81,6 +71,31 @@ impl Construct {
             },
         );
         /**/
+
+        let mut tank_entities = vec![];
+        {
+            let g = world
+                .component::<components::group::Group>(main_tank)
+                .unwrap();
+            for part_entity in g.entities().iter().map(|x| *x) {
+                tank_entities.push(part_entity);
+            }
+        }
+
+        let thingy = world.add_entity();
+        let mut destructor = display::deconstructor::Deconstructor::new(thingy);
+
+        for e in tank_entities.iter() {
+            destructor.add_element::<display::tank_body::TankBody>(*e, &world);
+            destructor.add_element::<display::tank_turret::TankTurret>(*e, &world);
+            destructor.add_element::<display::tank_barrel::TankBarrel>(*e, &world);
+        }
+        // world.add_component(thingy, Flag::from_scale_color(0.5, Color::WHITE));
+        // world.add_component(thingy, Pose::from_xyz(0.0, 0.0, 0.0));
+        world.add_component(thingy, destructor);
+        world.add_component(thingy, components::expiry::Expiry::lifetime(50.0));
+        /*
+         */
 
         for x in 1..5 {
             for y in -2..2 {

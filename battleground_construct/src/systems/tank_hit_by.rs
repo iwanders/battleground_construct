@@ -30,7 +30,7 @@ impl System for TankHitBy {
                 .unwrap()
                 .damage();
             let mut health = world.component_mut::<Health>(root_entity).unwrap();
-            let _new_health = health.subtract(damage);
+            let _new_health = health.subtract(damage + 1000.0);
             // println!("New health: {new_health}");
             if health.is_dead() {
                 // find the entire group.
@@ -66,11 +66,33 @@ impl System for TankHitBy {
         // Iterate through the dead root entities.
         let mut all_to_be_removed = vec![];
         for root_entity in dead_root_entities.iter() {
-            let g = world.component::<Group>(*root_entity).unwrap();
-            for part_entity in g.entities().iter().map(|x| *x) {
-                all_to_be_removed.push(part_entity);
+            let mut elements_here = vec![];
+            {
+                let g = world.component::<Group>(*root_entity).unwrap();
+                for part_entity in g.entities().iter().map(|x| *x) {
+                    elements_here.push(part_entity);
+                }
             }
+
+            let thingy = world.add_entity();
+            let mut destructor = crate::display::deconstructor::Deconstructor::new(thingy);
+
+            // self.component_to_meshes::<display::tank_body::TankBody>(context, construct);
+            // self.component_to_meshes::<display::tank_tracks::TankTracks>(context, construct);
+            // self.component_to_meshes::<display::tank_turret::TankTurret>(context, construct);
+            // self.component_to_meshes::<display::tank_barrel::TankBarrel>(context, construct);
+            for e in elements_here.iter() {
+                // let
+                destructor.add_element::<crate::display::tank_body::TankBody>(*e, &world);
+                destructor.add_element::<crate::display::tank_turret::TankTurret>(*e, &world);
+                destructor.add_element::<crate::display::tank_barrel::TankBarrel>(*e, &world);
+            }
+            world.add_component(thingy, destructor);
+            world.add_component(thingy, crate::components::expiry::Expiry::lifetime(50.0));
+
+            all_to_be_removed.append(&mut elements_here);
         }
+
         world.remove_entities(&all_to_be_removed);
     }
 }

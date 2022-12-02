@@ -236,6 +236,10 @@ impl RenderableEffect for ParticleEmitter {
     }
 }
 
+use battleground_construct::util::cgmath::InvertHomogeneous;
+use battleground_construct::util::cgmath::ToHomogenous;
+use battleground_construct::util::cgmath::ToQuaternion;
+use battleground_construct::util::cgmath::ToRotationH;
 struct DestructorParticle {
     pos: Mat4,
     vel: Vec3,
@@ -266,14 +270,14 @@ impl Deconstructor {
                 &CpuMesh::cube(),
             );
 
-        let material = three_d::renderer::material::PhysicalMaterial::new(
+        let material = three_d::renderer::material::PhysicalMaterial::new_transparent(
             &context,
             &CpuMaterial {
                 albedo: Color {
                     r: 255,
                     g: 255,
                     b: 255,
-                    a: 128,
+                    a: 255,
                 },
                 ..Default::default()
             },
@@ -281,34 +285,47 @@ impl Deconstructor {
         renderable.gm_mut().material = material;
         let mut particles = vec![];
 
+        let mut rng = rand::thread_rng();
+        use rand_distr::StandardNormal;
+
+        let mut rand_f32 = move || rng.sample::<f32, StandardNormal>(StandardNormal);
+
         for el in elements.iter() {
             match el.primitive {
                 battleground_construct::display::primitives::Primitive::Cuboid(c) => {
                     let half_width = c.width / 2.0;
                     let half_length = c.length / 2.0;
                     let half_height = c.height / 2.0;
-                    particles.push(DestructorParticle {
-                        pos: entity_position
-                            * el.transform
-                            * Mat4::from_nonuniform_scale(half_width, half_length, half_height),
-                        color: Color::new(0, 0, 255, 128),
-                        vel: vec3(0.0, 0.0, 0.0),
-                    });
+                    if true {
+                        particles.push(DestructorParticle {
+                            pos: entity_position
+                                * el.transform
+                                * Mat4::from_nonuniform_scale(half_width, half_length, half_height),
+                            color: Color::new(0, 0, 255, 255),
+                            vel: vec3(0.0, 0.0, 0.0),
+                        });
+                    }
                     // calculate the translations from the center of the cuboid.
                     let chunks_x = (((c.width / 2.0) / edge_x) as isize) + 1;
-                    let chunks_y = (((c.length / 2.0) / edge_y)  as isize) + 1;
-                    let chunks_z = (((c.height / 2.0) / edge_z)   as isize) + 1;
+                    let chunks_y = (((c.length / 2.0) / edge_y) as isize) + 1;
+                    let chunks_z = (((c.height / 2.0) / edge_z) as isize) + 1;
+                    let center_world = entity_position * el.transform;
                     for x in -chunks_x..chunks_x {
                         for y in -chunks_y..chunks_y {
                             for z in -chunks_z..chunks_z {
                                 let x_start = (x as f32 * edge_x).max(-half_width).min(half_width);
-                                let x_end = ((x + 1) as f32 * edge_x).max(-half_width).min(half_width);
+                                let x_end =
+                                    ((x + 1) as f32 * edge_x).max(-half_width).min(half_width);
 
-                                let y_start = (y as f32 * edge_y).max(-half_length).min(half_length);
-                                let y_end = ((y + 1) as f32 * edge_y).max(-half_length).min(half_length);
+                                let y_start =
+                                    (y as f32 * edge_y).max(-half_length).min(half_length);
+                                let y_end =
+                                    ((y + 1) as f32 * edge_y).max(-half_length).min(half_length);
 
-                                let z_start = (z as f32 * edge_z).max(-half_height).min(half_height);
-                                let z_end = ((z + 1) as f32 * edge_z).max(-half_height).min(half_height);
+                                let z_start =
+                                    (z as f32 * edge_z).max(-half_height).min(half_height);
+                                let z_end =
+                                    ((z + 1) as f32 * edge_z).max(-half_height).min(half_height);
 
                                 if x_start == x_end || y_start == y_end || z_start == z_end {
                                     continue;
@@ -322,13 +339,22 @@ impl Deconstructor {
                                 let sx = (x_end - x_start) / 2.0;
                                 let sy = (y_end - y_start) / 2.0;
                                 let sz = (z_end - z_start) / 2.0;
-                                let transformation = Mat4::from_translation(p)
-                                    * Mat4::from_nonuniform_scale(sx, sy, sz);
+                                let fragment_pos = Mat4::from_translation(p);
+                                let transformation =
+                                    fragment_pos * Mat4::from_nonuniform_scale(sx, sy, sz);
+
+                                let fragment_world_pos =
+                                    entity_position * el.transform * fragment_pos;
+                                let cube_world = fragment_world_pos;
+                                let dir = center_world.w.truncate() - cube_world.w.truncate();
+                                let pos = (fragment_world_pos).to_rotation_h();
+                                let vel = (dir.to_h() * pos).w.truncate() * 0.5;
+                                let vel = vel + vec3(rand_f32(), rand_f32(), rand_f32()) * 0.1;
 
                                 particles.push(DestructorParticle {
                                     pos: entity_position * el.transform * transformation,
-                                    color: Color::new(255, 0, 0, 20),
-                                    vel: vec3(0.0, 0.0, 0.0),
+                                    color: Color::new(el.color.r, el.color.g, el.color.b, 128),
+                                    vel,
                                 });
                             }
                         }
@@ -366,23 +392,29 @@ impl RenderableEffect for Deconstructor {
         time: f32,
     ) {
         let dt = self.last_time - time;
-        use battleground_construct::util::cgmath::ToQuaternion;
-        use battleground_construct::util::cgmath::ToRotationH;
-        use battleground_construct::util::cgmath::InvertHomogeneous;
-        use battleground_construct::util::cgmath::ToHomogenous;
-
+        let dt = dt * 0.00;
         for particle in self.particles.iter_mut() {
             // Always update position.
             let pos = particle.pos.to_rotation_h();
             particle.pos.w = particle.pos.w + particle.vel.extend(0.0) * dt;
             let mut g = vec3(0.0f32, 0.0, -9.81).to_h();
-            particle.vel += ((g * pos)).w.truncate()  * dt ;
+            particle.vel += (g * pos).w.truncate() * dt;
             if particle.pos.w[2] <= 0.0 {
+                particle.vel[0] = particle.vel[0] * 0.5;
+                particle.vel[1] = particle.vel[1] * 0.5;
                 particle.vel[2] = -particle.vel[2] * 0.5;
+                particle.color.a = particle.color.a.saturating_sub(20);
             }
         }
 
-        let p = self.particles
+        self.particles = self
+            .particles
+            .drain(..)
+            .filter(|p| p.color.a != 0)
+            .collect::<_>();
+
+        let p = self
+            .particles
             .iter()
             .map(|p| (&p.pos, &p.color))
             .collect::<Vec<_>>();

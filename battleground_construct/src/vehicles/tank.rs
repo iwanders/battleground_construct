@@ -64,7 +64,7 @@ fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: EntityI
     );
 }
 
-pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
+pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let mut tank_group_ids: Vec<EntityId> = vec![];
     use components::group::Group;
     use components::parent::Parent;
@@ -193,4 +193,5 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) {
     world.add_component(turret_id, Group::from(&tank_group_ids[..]));
     world.add_component(barrel_id, Group::from(&tank_group_ids[..]));
     world.add_component(nozzle_id, Group::from(&tank_group_ids[..]));
+    vehicle_id
 }
