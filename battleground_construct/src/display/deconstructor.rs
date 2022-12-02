@@ -12,13 +12,21 @@ impl Deconstructor {
         Deconstructor {
             entity,
             elements: vec![Element {
-            transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 1.0)),
+            transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 1.0)) * Mat4::from_angle_y(cgmath::Deg(15.0)),
             primitive: Primitive::Cuboid(Cuboid {
                 width: 1.0,
                 height: 1.0,
                 length: 1.0,
             }),
             color: Color::RED,
+        }, Element {
+            transform: Mat4::from_translation(Vec3::new(-2.0, 0.0, 1.0)) * Mat4::from_angle_x(cgmath::Deg(45.0)),
+            primitive: Primitive::Cuboid(Cuboid {
+                width: 1.51,
+                height: 0.32,
+                length: 0.24,
+            }),
+            color: Color::BLUE,
         }],
         }
     }

@@ -245,6 +245,9 @@ struct DestructorParticle {
 pub struct Deconstructor {
     renderable: InstancedEntity<three_d::renderer::material::PhysicalMaterial>,
     particles: Vec<DestructorParticle>,
+
+    /// Keep track of the last update time, to integrate velocity.
+    last_time: f32,
 }
 
 impl Deconstructor {
@@ -254,16 +257,6 @@ impl Deconstructor {
         time: f32,
         elements: &[display::primitives::Element],
     ) -> Self {
-        /* now, here, we do the thing, we slice the primitives...
-            How do we slice a cube?
-            +------------------------
-            |       |
-            |   O   |
-            |       |
-            +-------+--------------
-            |
-            |
-        */
         let edge_x = 0.05;
         let edge_y = 0.05;
         let edge_z = 0.05;
@@ -345,6 +338,7 @@ impl Deconstructor {
                 battleground_construct::display::primitives::Primitive::Cylinder(_) => todo!(),
             }
         }
+        // self.particles = particles;
         let p = particles
             .iter()
             .map(|p| (&p.pos, &p.color))
@@ -352,6 +346,7 @@ impl Deconstructor {
 
         renderable.set_instances(&p);
         Deconstructor {
+            last_time: time,
             renderable,
             particles,
         }
@@ -370,9 +365,29 @@ impl RenderableEffect for Deconstructor {
         entity_position: Matrix4<f32>,
         time: f32,
     ) {
-        // self.renderable.set_instances(&[(
-        // &Mat4::from_translation(vec3(0.0, 0.0, 0.0)),
-        // &Color::new_opaque(255, 0, 0),
-        // )]);
+        let dt = self.last_time - time;
+        use battleground_construct::util::cgmath::ToQuaternion;
+        use battleground_construct::util::cgmath::ToRotationH;
+        use battleground_construct::util::cgmath::InvertHomogeneous;
+        use battleground_construct::util::cgmath::ToHomogenous;
+
+        for particle in self.particles.iter_mut() {
+            // Always update position.
+            let pos = particle.pos.to_rotation_h();
+            particle.pos.w = particle.pos.w + particle.vel.extend(0.0) * dt;
+            let mut g = vec3(0.0f32, 0.0, -9.81).to_h();
+            particle.vel += ((g * pos)).w.truncate()  * dt ;
+            if particle.pos.w[2] <= 0.0 {
+                particle.vel[2] = -particle.vel[2] * 0.5;
+            }
+        }
+
+        let p = self.particles
+            .iter()
+            .map(|p| (&p.pos, &p.color))
+            .collect::<Vec<_>>();
+
+        self.renderable.set_instances(&p);
+        self.last_time = time;
     }
 }
