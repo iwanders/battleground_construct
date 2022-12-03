@@ -13,11 +13,11 @@ pub struct Cuboid<S: BaseNum> {
 
 impl<S: BaseNum + std::fmt::Display> Cuboid<S> {
     #[inline]
-    pub const fn new(width: S, height: S, depth: S) -> Cuboid<S> {
+    pub const fn new(length: S, width: S, height: S) -> Cuboid<S> {
         Cuboid {
-            x: width,
-            y: height,
-            z: depth,
+            x: length,
+            y: width,
+            z: height,
         }
     }
 
@@ -92,88 +92,19 @@ impl<S: BaseNum + std::fmt::Display> Cuboid<S> {
         dim1 && dim2 && dim3
     }
 
-    /*
-    /// Check if the line segment intersects the box
-    pub fn is_intersecting(&self, p0: Vector3<S>, p1: Vector3<S>) -> bool {
-        // https://math.stackexchange.com/a/1164672
-        // but that has singularities.
-        /*
-         *      Amy Williams, Steve Barrus, R. Keith Morley, and Peter Shirley
-         *      "An Efficient and Robust Ray-Box Intersection Algorithm"
-         *      Journal of graphics tools, 10(1):49-54, 2005
-         */
-        // Seems that's pretty much the solution everyone is using.
-
-        let one = S::one();
-        let zero = S::zero();
-
-        // Corners of the box
-        let bounds = [self.min(), self.max()];
-
-        // Direction of the ray
-        let ray_dir = p1 - p0;
-        // Normalize that
-        let ray_dir_inv = Vector3::<S>::new(one / ray_dir.x, one / ray_dir.y, one / ray_dir.z);
-
-        // To avoid branching, make this index lookup.
-        let sign = [(ray_dir_inv.x  < zero) as usize, (ray_dir_inv.y  < zero) as usize, (ray_dir_inv.z  <zero) as usize];
-
-        let mut tmin = (bounds[sign[0]].x - p0.x) * ray_dir_inv.x;
-        let mut tmax = (bounds[1 - sign[0]].x - p0.x) * ray_dir_inv.x;
-
-        let tymin = (bounds[sign[0]].y - p0.y) * ray_dir_inv.y;
-        let tymax = (bounds[1 - sign[0]].y - p0.y) * ray_dir_inv.y;
-
-        if (tmin > tymax) || (tymin > tmax)
-        {
-            return false;
-        }
-        if tymin > tmin
-        {
-            tmin = tymin;
-        }
-        if tymax < tmax
-        {
-            tmax = tymax;
-        }
-
-        let tzmin = (bounds[sign[2]].z - p0.z) * ray_dir_inv.z;
-        let tzmax = (bounds[1 - sign[2]].z - p0.z) * ray_dir_inv.z;
-
-        if (tmin > tzmax) || (tzmin > tmax)
-        {
-            return false;
-        }
-
-        println!("\nclassic");
-        println!("tmax: {tmax}");
-        println!("tmin: {tmin}");
-        println!("p0: {p0:?}");
-        println!("p1: {p1:?}");
-
-
-        // Add condition that check if the line is in the interval.
-        // if (tmin < zero || tmin > one) && (tmax < zero || tmax > one) {
-            // return false;
-        // }
-
-        fn max<S: std::cmp::PartialOrd>(a: S, b: S) -> S {
-            if a > b { a } else { b }
-        }
-        let inside = tmax > max(tmin, zero) && max(tmin, zero) < one;
-        return inside;
-    }
-    */
-
-
     // https://github.com/tavianator/tavianator.com/blob/main/src/2015/ray_box_nan.md
     // has a nice implementation that's branchless.
-    pub fn is_intersecting_branchless(&self, p0: Vector3<S>, p1: Vector3<S>) -> bool{
+    ///
+    /// Check if a line segment is intersecting the box.
+    ///
+    pub fn is_intersecting(&self, p0: Vector3<S>, p1: Vector3<S>) -> bool {
         let bmin = self.min();
         let bmax = self.max();
         let rorigin = p0;
+
         // Direction of the ray
         let ray_dir = p1 - p0;
+
         // Normalize that
         let one = S::one();
         let zero = S::zero();
@@ -181,30 +112,38 @@ impl<S: BaseNum + std::fmt::Display> Cuboid<S> {
 
         // Use a < b, NOT a <= b, the latter doesn't optimise to a single instruction.
         fn min<S: std::cmp::PartialOrd>(a: S, b: S) -> S {
-            if a < b { a } else { b }
+            if a < b {
+                a
+            } else {
+                b
+            }
         }
         fn max<S: std::cmp::PartialOrd>(a: S, b: S) -> S {
-            if a > b { a } else { b }
+            if a > b {
+                a
+            } else {
+                b
+            }
         }
 
         // Unroll manually such that we can avoid the infty.
         let i = 0;
-        let t1 = (bmin[i] - rorigin[i])*rdir_inv[i];
-        let t2 = (bmax[i] - rorigin[i])*rdir_inv[i];
+        let t1 = (bmin[i] - rorigin[i]) * rdir_inv[i];
+        let t2 = (bmax[i] - rorigin[i]) * rdir_inv[i];
 
         let mut tmin = min(t1, t2);
         let mut tmax = max(t1, t2);
 
         let i = 1;
-        let t1 = (bmin[i] - rorigin[i])*rdir_inv[i];
-        let t2 = (bmax[i] - rorigin[i])*rdir_inv[i];
+        let t1 = (bmin[i] - rorigin[i]) * rdir_inv[i];
+        let t2 = (bmax[i] - rorigin[i]) * rdir_inv[i];
 
         let i = 2;
         tmin = max(tmin, min(t1, t2));
         tmax = min(tmax, max(t1, t2));
 
-        let t1 = (bmin[i] - rorigin[i])*rdir_inv[i];
-        let t2 = (bmax[i] - rorigin[i])*rdir_inv[i];
+        let t1 = (bmin[i] - rorigin[i]) * rdir_inv[i];
+        let t2 = (bmax[i] - rorigin[i]) * rdir_inv[i];
 
         tmin = max(tmin, min(t1, t2));
         tmax = min(tmax, max(t1, t2));
@@ -214,7 +153,6 @@ impl<S: BaseNum + std::fmt::Display> Cuboid<S> {
         // println!("tmin: {tmin}");
         // println!("p0: {p0:?}");
         // println!("p1: {p1:?}");
-
 
         // Original:
         // return tmax > max(tmin, zero);
@@ -228,7 +166,12 @@ impl<S: BaseNum + std::fmt::Display> Cuboid<S> {
 
 #[cfg(test)]
 mod test {
-    fn verify_points<S: BaseNum+ std::fmt::Display>(b: &Cuboid<S>, p0: Vector3<S>, p1: Vector3<S>, delta: S) {
+    fn verify_points<S: BaseNum + std::fmt::Display>(
+        b: &Cuboid<S>,
+        p0: Vector3<S>,
+        p1: Vector3<S>,
+        delta: S,
+    ) {
         let rorigin = p0;
         // Direction of the ray
         let ray_dir = p1 - p0;
@@ -236,7 +179,8 @@ mod test {
         let zero = S::zero();
         let one = S::one();
 
-        let point_on_line = |p: S| { use cgmath::ElementWise;
+        let point_on_line = |p: S| {
+            use cgmath::ElementWise;
 
             rorigin + ray_dir.mul_element_wise(p)
         };
@@ -246,7 +190,7 @@ mod test {
             let small_p0 = point_on_line(t);
             let small_p1 = point_on_line(t + delta);
             // let line_check1 = b.is_intersecting(small_p0, small_p1);
-            let line_check2 = b.is_intersecting_branchless(small_p0, small_p1);
+            let line_check2 = b.is_intersecting(small_p0, small_p1);
             let p_check = b.is_inside(small_p0) || b.is_inside(small_p1);
             // assert_eq!(p_check, line_check1, "left: {p_check}, right: {line_check1}, t: {t}");
             assert_eq!(p_check, line_check2);
@@ -293,13 +237,22 @@ mod test {
         use cgmath::vec3;
         let b = Cuboid::new(1.0f32, 1.0, 1.0);
         // assert_eq!(b.is_intersecting(vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0), ), true);
-        assert_eq!(b.is_intersecting_branchless(vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0), ), true);
+        assert_eq!(
+            b.is_intersecting(vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0),),
+            true
+        );
         // assert_eq!(b.is_intersecting(vec3(1.0, 1.5, 1.0), vec3(2.0, 2.0, 2.0), ), false);
-        assert_eq!(b.is_intersecting_branchless(vec3(1.0, 1.5, 1.0), vec3(2.0, 2.0, 2.0), ), false);
+        assert_eq!(
+            b.is_intersecting(vec3(1.0, 1.5, 1.0), vec3(2.0, 2.0, 2.0),),
+            false
+        );
 
         // pointing at box, but not into it.
         // assert_eq!(b.is_intersecting(vec3(3.0, 0.0, 0.0), vec3(5.0, 0.0, 0.0)), false);
-        assert_eq!(b.is_intersecting_branchless(vec3(3.0, 0.0, 0.0), vec3(5.0, 0.0, 0.0)), false);
+        assert_eq!(
+            b.is_intersecting(vec3(3.0, 0.0, 0.0), vec3(5.0, 0.0, 0.0)),
+            false
+        );
 
         verify_points(&b, vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0), 0.001);
         verify_points(&b, vec3(2.0, 0.0, 0.0), vec3(3.0, 0.0, 0.0), 0.001);
@@ -308,5 +261,44 @@ mod test {
         verify_points(&b, vec3(0.25, 0.0, 0.0), vec3(2.25, 0.0, 0.0), 0.01);
         verify_points(&b, vec3(-2.25, 0.0, 0.0), vec3(-0.25, 0.0, 0.0), 0.0001);
         verify_points(&b, vec3(-0.25, 0.0, 0.0), vec3(-2.25, 0.0, 0.0), 0.01);
+    }
+
+    #[test]
+    fn test_fuzz_is_inside() {
+        use rand::prelude::*;
+        use cgmath::vec3;
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(2);
+        for _j in 0..100 {
+            let l = rng.gen::<f32>();
+            let w = rng.gen::<f32>();
+            let h = rng.gen::<f32>();
+            let b = Cuboid::new(l, w, h);
+            for _i in 0..1000 {
+                let x = rng.gen::<f32>() * 5.0;
+                let y = rng.gen::<f32>() * 5.0;
+                let z = rng.gen::<f32>() * 5.0;
+                let inside = (x.abs() < l / 2.0) && (y.abs() < w / 2.0) && (z.abs() < h / 2.0);
+                assert_eq!(inside, b.is_inside(vec3(x, y, z)));
+            }
+        }
+    }
+
+    #[test]
+    fn test_fuzz_is_intersecting() {
+        use rand::prelude::*;
+        use cgmath::vec3;
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(2);
+        for _j in 0..100 {
+            let l = rng.gen::<f32>();
+            let w = rng.gen::<f32>();
+            let h = rng.gen::<f32>();
+            let b = Cuboid::new(l, w, h);
+            for _i in 0..1000 {
+                let x = rng.gen::<f32>() * 5.0;
+                let y = rng.gen::<f32>() * 5.0;
+                let z = rng.gen::<f32>() * 5.0;
+                assert!(b.is_intersecting(vec3(x, y, z), vec3(0.0, 0.0, 0.0)));
+            }
+        }
     }
 }

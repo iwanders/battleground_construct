@@ -77,6 +77,8 @@ dependencies = [
  "cgmath",
  "engine",
  "libloading",
+ "rand",
+ "rand_chacha",
 ]
 
 [[package]]
