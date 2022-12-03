@@ -348,7 +348,7 @@ impl Deconstructor {
                                 let cube_world = fragment_world_pos;
                                 let dir = center_world.w.truncate() - cube_world.w.truncate();
                                 let pos = (fragment_world_pos).to_rotation_h();
-                                let vel = (dir.to_h() * pos).w.truncate() * 0.5;
+                                let vel = (dir.to_h() * pos).w.truncate() * 1.0;
                                 let vel = vel + vec3(rand_f32(), rand_f32(), rand_f32()) * 0.1;
 
                                 particles.push(DestructorParticle {
@@ -392,7 +392,7 @@ impl RenderableEffect for Deconstructor {
         time: f32,
     ) {
         let dt = self.last_time - time;
-        let dt = dt * 0.00;
+        let dt = dt * 0.10;
         for particle in self.particles.iter_mut() {
             // Always update position.
             let pos = particle.pos.to_rotation_h();
