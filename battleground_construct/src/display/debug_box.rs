@@ -23,11 +23,11 @@ impl DebugBox {
             height,
         }
     }
-    pub fn grown(self, value: f32) -> Self{
+    pub fn grown(self, value: f32) -> Self {
         DebugBox {
-            length: self.length+value,
-            width: self.width+value,
-            height: self.height+value,
+            length: self.length + value,
+            width: self.width + value,
+            height: self.height + value,
         }
     }
 }

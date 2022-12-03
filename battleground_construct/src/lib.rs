@@ -100,7 +100,7 @@ impl Construct {
         for x in 1..5 {
             for y in -2..2 {
                 if !(x == 4 && y == -2) {
-                    continue;
+                    // continue;
                 }
                 spawn_tank(
                     &mut world,

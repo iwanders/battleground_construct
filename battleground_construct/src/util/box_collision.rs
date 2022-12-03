@@ -265,8 +265,8 @@ mod test {
 
     #[test]
     fn test_fuzz_is_inside() {
-        use rand::prelude::*;
         use cgmath::vec3;
+        use rand::prelude::*;
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(2);
         for _j in 0..100 {
             let l = rng.gen::<f32>();
@@ -285,8 +285,8 @@ mod test {
 
     #[test]
     fn test_fuzz_is_intersecting() {
-        use rand::prelude::*;
         use cgmath::vec3;
+        use rand::prelude::*;
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(2);
         for _j in 0..100 {
             let l = rng.gen::<f32>();

@@ -111,9 +111,9 @@ impl ConstructViewer {
     // Consumes the viewer...
     fn view_loop(mut self) -> () {
         let jump = 0.0;
-        let stop_sim_at = 5.023;
-        // let stop_sim_at = 20.3;
-        let timespeed = 0.5;
+        // let stop_sim_at = 5.023; // second impact.
+        let stop_sim_at = 2000.3;
+        let timespeed = 1.0;
         while self.construct.elapsed_as_f64() < jump {
             self.construct.update();
         }
@@ -121,7 +121,8 @@ impl ConstructViewer {
 
         self.window.render_loop(move |mut frame_input: FrameInput| {
             while self.construct.elapsed_as_f64() < stop_sim_at
-                && (self.construct.elapsed_as_f64() * (1.0 / timespeed)) < (self.limiter.elapsed_as_f64() + jump)
+                && (self.construct.elapsed_as_f64() * (1.0 / timespeed))
+                    < (self.limiter.elapsed_as_f64() + jump)
             {
                 let now = std::time::Instant::now();
                 self.construct.update();

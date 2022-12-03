@@ -9,7 +9,11 @@ pub struct HitBox {
 
 impl HitBox {
     pub fn new(length: f32, width: f32, height: f32) -> Self {
-        HitBox { length, width, height }
+        HitBox {
+            length,
+            width,
+            height,
+        }
     }
 
     pub fn length(&self) -> f32 {
