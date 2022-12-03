@@ -1,4 +1,3 @@
-use battleground_construct::util::cgmath::ToQuaternion;
 use three_d::*;
 
 /// Thin wrapper around [`InstancedMesh`] to use Mat4 and guarantee color & transforms in sync.
@@ -107,7 +106,6 @@ impl<M: Material> InstancedEntity<M> {
     }
 
     pub fn set_lines(&mut self, lines: &[(Vec3, Vec3, f32, Color)]) {
-        let mut instances: three_d::renderer::geometry::Instances = Default::default();
         let mut transformations = Vec::with_capacity(lines.len());
         let mut colors = Vec::with_capacity(lines.len());
 

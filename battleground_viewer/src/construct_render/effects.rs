@@ -236,9 +236,9 @@ impl RenderableEffect for ParticleEmitter {
     }
 }
 
-use battleground_construct::util::cgmath::InvertHomogeneous;
+// use battleground_construct::util::cgmath::InvertHomogeneous;
 use battleground_construct::util::cgmath::ToHomogenous;
-use battleground_construct::util::cgmath::ToQuaternion;
+// use battleground_construct::util::cgmath::ToQuaternion;
 use battleground_construct::util::cgmath::ToRotationH;
 struct DestructorParticle {
     pos: Mat4,
@@ -313,12 +313,12 @@ impl Deconstructor {
                     for x in -chunks_x..chunks_x {
                         for y in -chunks_y..chunks_y {
                             for z in -chunks_z..chunks_z {
-                                let x_start = (x as f32 * edge_x).max(-half_length).min(half_length);
+                                let x_start =
+                                    (x as f32 * edge_x).max(-half_length).min(half_length);
                                 let x_end =
                                     ((x + 1) as f32 * edge_x).max(-half_length).min(half_length);
 
-                                let y_start =
-                                    (y as f32 * edge_y).max(-half_width).min(half_width);
+                                let y_start = (y as f32 * edge_y).max(-half_width).min(half_width);
                                 let y_end =
                                     ((y + 1) as f32 * edge_y).max(-half_width).min(half_width);
 
@@ -386,9 +386,9 @@ impl RenderableEffect for Deconstructor {
 
     fn update(
         &mut self,
-        effect_type: &display::primitives::EffectType,
-        camera: &Camera,
-        entity_position: Matrix4<f32>,
+        _effect_type: &display::primitives::EffectType,
+        _camera: &Camera,
+        _entity_position: Matrix4<f32>,
         time: f32,
     ) {
         let dt = self.last_time - time;
@@ -397,7 +397,7 @@ impl RenderableEffect for Deconstructor {
             // Always update position.
             let pos = particle.pos.to_rotation_h();
             particle.pos.w = particle.pos.w + particle.vel.extend(0.0) * dt;
-            let mut g = vec3(0.0f32, 0.0, -9.81).to_h();
+            let g = vec3(0.0f32, 0.0, -9.81).to_h();
             particle.vel += (g * pos).w.truncate() * dt;
             if particle.pos.w[2] <= 0.0 {
                 particle.vel[0] = particle.vel[0] * 0.5;

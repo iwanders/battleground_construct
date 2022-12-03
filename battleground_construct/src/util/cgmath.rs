@@ -54,17 +54,17 @@ pub trait InvertHomogeneous<S: BaseFloat> {
 impl<S: BaseFloat> InvertHomogeneous<S> for Matrix4<S> {
     fn to_inv_h(&self) -> cgmath::Matrix4<S> {
         use cgmath::Matrix;
-        let invR = cgmath::Matrix3::<S>::from_cols(
+        let inv_r = cgmath::Matrix3::<S>::from_cols(
             self.x.truncate(),
             self.y.truncate(),
             self.z.truncate(),
         )
         .transpose();
-        let v_inv = -invR * self.w.truncate();
+        let v_inv = -inv_r * self.w.truncate();
         cgmath::Matrix4::<S>::from_cols(
-            invR.x.extend(S::zero()),
-            invR.y.extend(S::zero()),
-            invR.z.extend(S::zero()),
+            inv_r.x.extend(S::zero()),
+            inv_r.y.extend(S::zero()),
+            inv_r.z.extend(S::zero()),
             v_inv.extend(S::one()),
         )
     }
