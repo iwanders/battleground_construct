@@ -66,15 +66,16 @@ impl ConstructViewer {
 
         let limiter = Limiter::new(0.001);
 
-        let camera = Camera::new_perspective(
+        let mut camera = Camera::new_perspective(
             window.viewport(),
-            vec3(-5.0, 2.0, 1.5),
-            vec3(0.0, 0.0, -0.5),
-            vec3(0.0, 0.0, 1.0),
+            vec3(-5.0, 2.0, 1.5), // position
+            vec3(0.0, 0.0, -0.5), // target
+            vec3(0.0, 0.0, 1.0), // up
             degrees(45.0),
             0.1,
             1000.0,
         );
+
         let config = three_d::renderer::control::OrbitControlConfig {
             speed_orbit_horizontal: 0.1,
             speed_orbit_vertical: 0.1,
@@ -110,13 +111,14 @@ impl ConstructViewer {
     // Consumes the viewer...
     fn view_loop(mut self) -> () {
         let jump = 0.0;
+        let stop_sim_at = 0.4;
         while self.construct.elapsed_as_f64() < jump {
             self.construct.update();
         }
         // battleground_construct::systems::velocity_pose::print_poses.store(true, std::sync::atomic::Ordering::Relaxed);
 
         self.window.render_loop(move |mut frame_input: FrameInput| {
-            while (self.construct.elapsed_as_f64() * 1.0) < (self.limiter.elapsed_as_f64() + jump) {
+            while self.construct.elapsed_as_f64() < stop_sim_at && (self.construct.elapsed_as_f64() * 1.0) < (self.limiter.elapsed_as_f64() + jump) {
                 let now = std::time::Instant::now();
                 self.construct.update();
                 if PRINT_DURATIONS {
@@ -127,7 +129,14 @@ impl ConstructViewer {
                     );
                 }
             }
+            println!("Camera pos: {:?}", self.camera.position());
+            println!("Camera target: {:?}", self.camera.target());
 
+        self.camera.set_view(
+            vec3(3.6037714, 3.8550386, 1.1461636), // position
+            vec3(4.9944406, -1.3554618, -0.32582027), // target
+            vec3(0.0, 0.0, 1.0), // up
+        );
             /*
             if self.limiter.rate_elapsed() {
                 let (_entity, clock) = self
