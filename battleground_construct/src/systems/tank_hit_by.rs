@@ -23,7 +23,11 @@ impl System for TankHitBy {
         for (hit_entity, root_entity) in hit_entity_and_root {
             let (projectile_entity, source_entity, impact) = {
                 let projectile_entity = world.component::<HitBy>(hit_entity).unwrap();
-                (projectile_entity.projectile(), projectile_entity.source(), projectile_entity.impact())
+                (
+                    projectile_entity.projectile(),
+                    projectile_entity.source(),
+                    projectile_entity.impact(),
+                )
             };
             let damage = world
                 .component::<DamageDealer>(source_entity)

@@ -13,7 +13,8 @@ impl System for ProjectileHit {
     fn update(&mut self, world: &mut World) {
         // This fails if at any point someone applies a HitSphere to a PointProjectile.
         // Complexity is O(HitSphere * PointProjectile)...
-        let mut hit_projectile_source: Vec<(EntityId, EntityId, EntityId, cgmath::Matrix4<f32>)> = vec![];
+        let mut hit_projectile_source: Vec<(EntityId, EntityId, EntityId, cgmath::Matrix4<f32>)> =
+            vec![];
 
         // Get all projectiles' world poses.
         let mut projectiles = world

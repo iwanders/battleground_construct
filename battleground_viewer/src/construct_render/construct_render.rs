@@ -214,7 +214,7 @@ impl ConstructRender {
         camera: &Camera,
         construct: &Construct,
     ) -> Vec<EffectId> {
-        let current_time = construct.elapsed_as_f64() as f32;
+        let current_time = construct.elapsed_as_f32();
         let mut res = vec![];
 
         for (element_id, component_with_drawables) in construct.world().component_iter::<C>() {

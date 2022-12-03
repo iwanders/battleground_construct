@@ -301,8 +301,7 @@ impl Deconstructor {
                     let half_height = c.height / 2.0;
                     if false {
                         particles.push(DestructorParticle {
-                            pos: entity_position
-                                * el.transform,
+                            pos: entity_position * el.transform,
                             color: Color::new(0, 0, 255, 255),
                             vel: vec3(0.0, 0.0, 0.0),
                             scale: vec3(half_length, half_width, half_height),
@@ -362,8 +361,12 @@ impl Deconstructor {
                                 for (impact_location, magnitude) in impacts.iter() {
                                     let p1 = impact_location.to_translation();
                                     let p0 = fragment_world_pos.to_translation();
-                                    let rotation = Quat::from_arc(vec3(1.0, 0.0, 0.0), (p1 - p0).normalize(), None);
-                                    vel += (rotation * vec3(1.0, 0.0, 0.0))  **magnitude * 10.0;
+                                    let rotation = Quat::from_arc(
+                                        vec3(1.0, 0.0, 0.0),
+                                        (p0 - p1).normalize(),
+                                        None,
+                                    );
+                                    vel += (rotation * vec3(1.0, 0.0, 0.0)) * *magnitude * 10.0;
                                     // println!("Vel after: {vel:?}");
                                 }
 
@@ -403,8 +406,7 @@ impl RenderableEffect for Deconstructor {
         _entity_position: Matrix4<f32>,
         time: f32,
     ) {
-        let dt = self.last_time - time;
-        let dt = dt * 0.10;
+        let dt = time - self.last_time;
 
         for particle in self.particles.iter_mut() {
             // println!();
@@ -414,7 +416,7 @@ impl RenderableEffect for Deconstructor {
             particle.pos.w = particle.pos.w + particle.vel.extend(0.0) * dt;
             // println!("Post pose: {:?}", particle.pos);
             let g = vec3(0.0f32, 0.0, -9.81).to_h();
-            particle.vel += (g * rot).w.truncate() * dt;
+            particle.vel += (g * rot).w.truncate() * (dt * dt);
             if particle.pos.w[2] <= 0.0 {
                 particle.vel[0] = particle.vel[0] * 0.5;
                 particle.vel[1] = particle.vel[1] * 0.5;
@@ -430,7 +432,11 @@ impl RenderableEffect for Deconstructor {
             .collect::<_>();
 
         // Apply the scale to the transforms.
-        let scaled_pos: Vec<Mat4> = self.particles.iter().map(|p|{p.pos * Mat4::from_nonuniform_scale(p.scale.x, p.scale.y, p.scale.z)   }).collect();
+        let scaled_pos: Vec<Mat4> = self
+            .particles
+            .iter()
+            .map(|p| p.pos * Mat4::from_nonuniform_scale(p.scale.x, p.scale.y, p.scale.z))
+            .collect();
         // println!("scaled_pos pose: {:?}", scaled_pos);
 
         let p = (0..self.particles.len())

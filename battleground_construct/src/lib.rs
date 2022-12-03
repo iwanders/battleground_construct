@@ -155,13 +155,13 @@ impl Construct {
         components::pose::world_pose(&self.world, entity)
     }
 
-    pub fn elapsed_as_f64(&self) -> f64 {
+    pub fn elapsed_as_f32(&self) -> f32 {
         let (_entity, clock) = self
             .world
             .component_iter_mut::<crate::components::clock::Clock>()
             .next()
             .expect("Should have one clock");
-        clock.elapsed_as_f32().into()
+        clock.elapsed_as_f32()
     }
 }
 

@@ -9,7 +9,11 @@ pub struct HitBy {
 
 impl HitBy {
     pub fn new(projectile: EntityId, source: EntityId, impact: cgmath::Matrix4<f32>) -> Self {
-        HitBy { projectile, source, impact }
+        HitBy {
+            projectile,
+            source,
+            impact,
+        }
     }
     pub fn source(&self) -> EntityId {
         self.source

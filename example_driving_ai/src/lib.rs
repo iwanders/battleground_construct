@@ -15,7 +15,6 @@ impl VehicleAi for SimpleAi {
 }
 
 #[no_mangle]
-pub extern "Rust" fn create_ai() -> Box<dyn VehicleAi> {
+pub fn create_ai() -> Box<dyn VehicleAi> {
     Box::new(SimpleAi::new())
 }
-

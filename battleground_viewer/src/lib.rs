@@ -23,8 +23,8 @@ impl Limiter {
         }
     }
 
-    pub fn elapsed_as_f64(&self) -> f64 {
-        self.epoch.elapsed().as_secs_f64()
+    pub fn elapsed_as_f32(&self) -> f32 {
+        self.epoch.elapsed().as_secs_f32()
     }
 
     pub fn rate_elapsed(&mut self) -> bool {
@@ -114,22 +114,22 @@ impl ConstructViewer {
         // let stop_sim_at = 5.023; // second impact.
         let stop_sim_at = 2000.3;
         let timespeed = 1.0;
-        while self.construct.elapsed_as_f64() < jump {
+        while self.construct.elapsed_as_f32() < jump {
             self.construct.update();
         }
         // battleground_construct::systems::velocity_pose::print_poses.store(true, std::sync::atomic::Ordering::Relaxed);
 
         self.window.render_loop(move |mut frame_input: FrameInput| {
-            while self.construct.elapsed_as_f64() < stop_sim_at
-                && (self.construct.elapsed_as_f64() * (1.0 / timespeed))
-                    < (self.limiter.elapsed_as_f64() + jump)
+            while self.construct.elapsed_as_f32() < stop_sim_at
+                && (self.construct.elapsed_as_f32() * (1.0 / timespeed))
+                    < (self.limiter.elapsed_as_f32() + jump)
             {
                 let now = std::time::Instant::now();
                 self.construct.update();
                 if PRINT_DURATIONS {
                     println!(
                         "construct taken: {:1.8}, entities: {}",
-                        now.elapsed().as_secs_f64(),
+                        now.elapsed().as_secs_f32(),
                         self.construct.world().entity_count()
                     );
                 }
