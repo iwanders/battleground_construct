@@ -13,13 +13,15 @@ impl VehicleControl for DummyVehicleControl {
 
         interface.set_i32(cannon, 0, true as i32).unwrap();
 
-        for m_index in interface.modules().unwrap() {
-            println!(
-                "update, module name: {}",
-                interface.module_name(m_index).unwrap()
-            );
-            for r_index in interface.registers(m_index).unwrap() {
-                println!("  {}", interface.register_name(m_index, r_index).unwrap());
+        if false {
+            for m_index in interface.modules().unwrap() {
+                println!(
+                    "update, module name: {}",
+                    interface.module_name(m_index).unwrap()
+                );
+                for r_index in interface.registers(m_index).unwrap() {
+                    println!("  {}", interface.register_name(m_index, r_index).unwrap());
+                }
             }
         }
 
@@ -29,13 +31,13 @@ impl VehicleControl for DummyVehicleControl {
             interface.set_f32(barrel, revolve_cmd_vel, -0.1).unwrap();
             return;
         }
-        println!("Clock: {clock}");
+        // println!("Clock: {clock}");
         // base
         // interface.set_f32(0x1000, 2, 1.0).unwrap();
         // interface.set_f32(0x1000, 3, 1.0).unwrap();
 
         let turret_pos = interface.get_f32(turret, revolve_pos).unwrap();
-        println!("turret_pos: {turret_pos}");
+        // println!("turret_pos: {turret_pos}");
         if turret_pos > PI && turret_pos < (PI * 2.0 - PI / 8.0) {
             interface
                 .set_f32(
@@ -55,7 +57,7 @@ impl VehicleControl for DummyVehicleControl {
         }
 
         let barrel_pos = interface.get_f32(barrel, revolve_pos).unwrap();
-        println!("barrel_pos: {barrel_pos}");
+        // println!("barrel_pos: {barrel_pos}");
         if barrel_pos < (PI * 2.0 - PI / 8.0) {
             interface
                 .set_f32(

@@ -94,10 +94,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
 
     world.add_component(vehicle_id, base);
     world.add_component(vehicle_id, display::tank_tracks::TankTracks::new());
-    world.add_component(
-        vehicle_id,
-        components::hit_sphere::HitSphere::with_radius(1.0),
-    );
+    // world.add_component(
+        // vehicle_id,
+        // components::hit_sphere::HitSphere::with_radius(1.0),
+    // );
     
     let body_id = world.add_entity();
     world.add_component(
@@ -205,5 +205,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(turret_id, Group::from(&tank_group_ids[..]));
     world.add_component(barrel_id, Group::from(&tank_group_ids[..]));
     world.add_component(nozzle_id, Group::from(&tank_group_ids[..]));
+    world.add_component(body_id, Group::from(&tank_group_ids[..]));
     vehicle_id
 }

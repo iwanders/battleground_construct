@@ -1,5 +1,13 @@
 use cgmath::{BaseFloat, Matrix4};
 
+pub mod prelude {
+    pub use super::ToQuaternion;
+    pub use super::ToRotationH;
+    pub use super::ToHomogenous;
+    pub use super::InvertHomogeneous;
+    pub use super::ToTranslation;
+}
+
 // https://github.com/rustgd/cgmath/issues/461
 pub trait ToQuaternion<S: BaseFloat> {
     fn to_quaternion(&self) -> cgmath::Quaternion<S>;
@@ -69,3 +77,15 @@ impl<S: BaseFloat> InvertHomogeneous<S> for Matrix4<S> {
         )
     }
 }
+
+
+pub trait ToTranslation<S: BaseFloat> {
+    fn to_translation(&self) -> cgmath::Vector3<S>;
+}
+
+impl<S: BaseFloat> ToTranslation<S> for Matrix4<S> {
+    fn to_translation(&self) -> cgmath::Vector3<S> {
+        self.w.truncate()
+    }
+}
+
