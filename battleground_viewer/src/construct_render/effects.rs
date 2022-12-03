@@ -293,34 +293,34 @@ impl Deconstructor {
         for el in elements.iter() {
             match el.primitive {
                 battleground_construct::display::primitives::Primitive::Cuboid(c) => {
-                    let half_width = c.width / 2.0;
                     let half_length = c.length / 2.0;
+                    let half_width = c.width / 2.0;
                     let half_height = c.height / 2.0;
-                    if true {
+                    if false {
                         particles.push(DestructorParticle {
                             pos: entity_position
                                 * el.transform
-                                * Mat4::from_nonuniform_scale(half_width, half_length, half_height),
+                                * Mat4::from_nonuniform_scale(half_length, half_width, half_height),
                             color: Color::new(0, 0, 255, 255),
                             vel: vec3(0.0, 0.0, 0.0),
                         });
                     }
                     // calculate the translations from the center of the cuboid.
-                    let chunks_x = (((c.width / 2.0) / edge_x) as isize) + 1;
-                    let chunks_y = (((c.length / 2.0) / edge_y) as isize) + 1;
+                    let chunks_x = (((c.length / 2.0) / edge_x) as isize) + 1;
+                    let chunks_y = (((c.width / 2.0) / edge_y) as isize) + 1;
                     let chunks_z = (((c.height / 2.0) / edge_z) as isize) + 1;
                     let center_world = entity_position * el.transform;
                     for x in -chunks_x..chunks_x {
                         for y in -chunks_y..chunks_y {
                             for z in -chunks_z..chunks_z {
-                                let x_start = (x as f32 * edge_x).max(-half_width).min(half_width);
+                                let x_start = (x as f32 * edge_x).max(-half_length).min(half_length);
                                 let x_end =
-                                    ((x + 1) as f32 * edge_x).max(-half_width).min(half_width);
+                                    ((x + 1) as f32 * edge_x).max(-half_length).min(half_length);
 
                                 let y_start =
-                                    (y as f32 * edge_y).max(-half_length).min(half_length);
+                                    (y as f32 * edge_y).max(-half_width).min(half_width);
                                 let y_end =
-                                    ((y + 1) as f32 * edge_y).max(-half_length).min(half_length);
+                                    ((y + 1) as f32 * edge_y).max(-half_width).min(half_width);
 
                                 let z_start =
                                     (z as f32 * edge_z).max(-half_height).min(half_height);
