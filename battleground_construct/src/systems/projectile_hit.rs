@@ -69,6 +69,7 @@ impl System for ProjectileHit {
             };
 
             for (projectile_entity, source_id, projectile_pose) in projectile_poses.iter() {
+                println!("Projectile pose: {projectile_pose:?}");
                 for (sphere_entity, hitbox_pose, hitbox) in hit_box_with_pose.iter() {
                     // convert the projectile pose into the hitbox's local frame.
                     // currently, projectile_pose is world -> projectile.
