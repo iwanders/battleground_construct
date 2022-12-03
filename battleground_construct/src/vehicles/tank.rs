@@ -93,12 +93,21 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
 
     world.add_component(vehicle_id, base);
-    world.add_component(vehicle_id, display::tank_body::TankBody::new());
     world.add_component(vehicle_id, display::tank_tracks::TankTracks::new());
     world.add_component(
         vehicle_id,
         components::hit_sphere::HitSphere::with_radius(1.0),
     );
+    
+    let body_id = world.add_entity();
+    world.add_component(
+        body_id,
+        PreTransform::from_translation(Vec3::new(0.0, 0.0, 0.25)),
+    );
+    world.add_component(body_id, display::tank_body::TankBody::new());
+    world.add_component(body_id, Parent::new(vehicle_id.clone()));
+    tank_group_ids.push(body_id.clone());
+
 
     let rc = components::vehicle_controller::VehicleControlStorage::new(config.controller);
     world.add_component(

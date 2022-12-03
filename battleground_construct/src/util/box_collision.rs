@@ -1,20 +1,20 @@
 use cgmath::{BaseNum, Vector3};
 
-/// Generic cuboid of given dimensions. Cuboid is centered around the origin.
-/// Technicallly a RectangularCuboid.
+/// Generic AxisAlignedBox of given dimensions. AxisAlignedBox is centered around the origin.
+/// Technicallly a RectangularAxisAlignedBox.
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Cuboid<S: BaseNum> {
+pub struct AxisAlignedBox<S: BaseNum> {
     pub x: S, // x
     pub y: S, // y
     pub z: S, // z
 }
 
-impl<S: BaseNum + std::fmt::Display> Cuboid<S> {
+impl<S: BaseNum + std::fmt::Display> AxisAlignedBox<S> {
     #[inline]
-    pub const fn new(length: S, width: S, height: S) -> Cuboid<S> {
-        Cuboid {
+    pub const fn new(length: S, width: S, height: S) -> AxisAlignedBox<S> {
+        AxisAlignedBox {
             x: length,
             y: width,
             z: height,
@@ -167,7 +167,7 @@ impl<S: BaseNum + std::fmt::Display> Cuboid<S> {
 #[cfg(test)]
 mod test {
     fn verify_points<S: BaseNum + std::fmt::Display>(
-        b: &Cuboid<S>,
+        b: &AxisAlignedBox<S>,
         p0: Vector3<S>,
         p1: Vector3<S>,
         delta: S,
@@ -201,7 +201,7 @@ mod test {
     use super::*;
     #[test]
     fn test_is_inside() {
-        let b = Cuboid::new(1.0f32, 1.0, 1.0);
+        let b = AxisAlignedBox::new(1.0f32, 1.0, 1.0);
 
         // x direction.
         assert_eq!(b.is_inside(Vector3::new(-1.0, 0.0, 0.0)), false);
@@ -235,7 +235,7 @@ mod test {
     #[test]
     fn test_is_intersecting() {
         use cgmath::vec3;
-        let b = Cuboid::new(1.0f32, 1.0, 1.0);
+        let b = AxisAlignedBox::new(1.0f32, 1.0, 1.0);
         // assert_eq!(b.is_intersecting(vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0), ), true);
         assert_eq!(
             b.is_intersecting(vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0),),
@@ -272,7 +272,7 @@ mod test {
             let l = rng.gen::<f32>();
             let w = rng.gen::<f32>();
             let h = rng.gen::<f32>();
-            let b = Cuboid::new(l, w, h);
+            let b = AxisAlignedBox::new(l, w, h);
             for _i in 0..1000 {
                 let x = rng.gen::<f32>() * 5.0;
                 let y = rng.gen::<f32>() * 5.0;
@@ -292,7 +292,7 @@ mod test {
             let l = rng.gen::<f32>();
             let w = rng.gen::<f32>();
             let h = rng.gen::<f32>();
-            let b = Cuboid::new(l, w, h);
+            let b = AxisAlignedBox::new(l, w, h);
             for _i in 0..1000 {
                 let x = rng.gen::<f32>() * 5.0;
                 let y = rng.gen::<f32>() * 5.0;
