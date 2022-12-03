@@ -246,6 +246,7 @@ struct DestructorParticle {
     vel: Vec3,
     color: Color,
     scale: Vec3,
+    traveled: f32, // accumulating distance traveled
 }
 
 pub struct Deconstructor {
@@ -254,6 +255,9 @@ pub struct Deconstructor {
 
     /// Keep track of the last update time, to integrate velocity.
     last_time: f32,
+
+    /// Max traveled to fully have faded.
+    max_traveled: f32,
 }
 
 impl Deconstructor {
@@ -299,14 +303,7 @@ impl Deconstructor {
                     let half_length = c.length / 2.0;
                     let half_width = c.width / 2.0;
                     let half_height = c.height / 2.0;
-                    if false {
-                        particles.push(DestructorParticle {
-                            pos: entity_position * el.transform,
-                            color: Color::new(0, 0, 255, 255),
-                            vel: vec3(0.0, 0.0, 0.0),
-                            scale: vec3(half_length, half_width, half_height),
-                        });
-                    }
+
                     // calculate the translations from the center of the cuboid.
                     let chunks_x = (((c.length / 2.0) / edge_x) as isize) + 1;
                     let chunks_y = (((c.width / 2.0) / edge_y) as isize) + 1;
@@ -366,7 +363,9 @@ impl Deconstructor {
                                         (p0 - p1).normalize(),
                                         None,
                                     );
-                                    vel += (rotation * vec3(1.0, 0.0, 0.0)) * *magnitude * 10.0;
+                                    let d = (p1.distance2(p0)).sqrt();
+                                    let mag = magnitude * (1.0 / (d * d));
+                                    vel += (rotation * vec3(1.0, 0.0, 0.0)) * mag;
                                     // println!("Vel after: {vel:?}");
                                 }
 
@@ -375,6 +374,7 @@ impl Deconstructor {
                                     color: Color::new(el.color.r, el.color.g, el.color.b, 128),
                                     vel,
                                     scale: vec3(sx, sy, sz),
+                                    traveled: 0.0,
                                 });
                             }
                         }
@@ -390,6 +390,7 @@ impl Deconstructor {
             last_time: time,
             renderable,
             particles,
+            max_traveled: 5.0,
         }
     }
 }
@@ -413,7 +414,15 @@ impl RenderableEffect for Deconstructor {
             // println!("Pre pose: {:?}", particle.pos);
             // Always update position.
             let rot = particle.pos.to_rotation_h();
+            let before = particle.pos.to_translation();
             particle.pos.w = particle.pos.w + particle.vel.extend(0.0) * dt;
+            let after = particle.pos.to_translation();
+            let d = after.distance2(before).sqrt();
+            particle.traveled += d;
+            let ratio_of_lifetime = 1.0 - (particle.traveled / self.max_traveled).min(1.0);
+            particle.color.a =
+                std::cmp::min(particle.color.a, (255 as f32 * ratio_of_lifetime) as u8);
+
             // println!("Post pose: {:?}", particle.pos);
             let g = vec3(0.0f32, 0.0, -9.81).to_h();
             particle.vel += (g * rot).w.truncate() * (dt * dt);
