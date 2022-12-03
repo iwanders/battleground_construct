@@ -1,5 +1,6 @@
 use super::primitives::*;
 use engine::prelude::*;
+use crate::components::hit_box::HitBox;
 
 #[derive(Copy, Debug, Clone)]
 pub struct TankBody {
@@ -25,6 +26,10 @@ impl TankBody {
     }
     pub fn set_color(&mut self, color: Color) {
         self.color = color;
+    }
+
+    pub fn hitbox(&self) -> HitBox {
+        HitBox::new(self.length, self.width, self.height)
     }
 }
 impl Component for TankBody {}

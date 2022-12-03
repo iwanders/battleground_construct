@@ -104,7 +104,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         body_id,
         PreTransform::from_translation(Vec3::new(0.0, 0.0, 0.25)),
     );
-    world.add_component(body_id, display::tank_body::TankBody::new());
+    let body = display::tank_body::TankBody::new();
+    let hitbox = body.hitbox();
+    world.add_component(body_id, body);
+    world.add_component(body_id, hitbox);
     world.add_component(body_id, Parent::new(vehicle_id.clone()));
     tank_group_ids.push(body_id.clone());
 

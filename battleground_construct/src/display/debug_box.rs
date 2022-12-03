@@ -3,24 +3,31 @@ use engine::prelude::*;
 
 #[derive(Copy, Debug, Clone)]
 pub struct DebugBox {
-    pub width: f32,
     pub length: f32,
+    pub width: f32,
     pub height: f32,
 }
 
 impl DebugBox {
-    pub fn from_size(edge: f32) -> Self {
+    pub fn cube(edge: f32) -> Self {
         DebugBox {
-            width: edge,
             length: edge,
+            width: edge,
             height: edge,
         }
     }
-    pub fn new() -> Self {
+    pub fn new(length: f32, width: f32, height: f32) -> Self {
         DebugBox {
-            width: 1.0,
-            length: 1.0,
-            height: 1.0,
+            length,
+            width,
+            height,
+        }
+    }
+    pub fn grown(self, value: f32) -> Self{
+        DebugBox {
+            length: self.length+value,
+            width: self.width+value,
+            height: self.height+value,
         }
     }
 }
@@ -31,9 +38,9 @@ impl Drawable for DebugBox {
         vec![Element {
             transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
             primitive: Primitive::Cuboid(Cuboid {
+                length: self.length,
                 width: self.width,
                 height: self.height,
-                length: self.length,
             }),
             color: Color {
                 r: 255,

@@ -1,5 +1,4 @@
 pub mod acceleration;
-pub mod bounding_box;
 pub mod cannon;
 pub mod clock;
 pub mod damage_dealer;
@@ -10,6 +9,7 @@ pub mod group;
 pub mod health;
 pub mod hit_by;
 pub mod hit_sphere;
+pub mod hit_box;
 pub mod parent;
 pub mod point_projectile;
 pub mod pose;
