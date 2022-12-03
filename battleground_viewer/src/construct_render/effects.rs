@@ -1,6 +1,7 @@
 use crate::construct_render::instanced_entity::InstancedEntity;
 use crate::construct_render::util::ColorConvert;
 use battleground_construct::display;
+use battleground_construct::util::cgmath::prelude::*;
 use rand::rngs::ThreadRng;
 use rand::Rng;
 use three_d::*;
@@ -244,6 +245,7 @@ struct DestructorParticle {
     pos: Mat4,
     vel: Vec3,
     color: Color,
+    scale: Vec3,
 }
 
 pub struct Deconstructor {
@@ -260,10 +262,11 @@ impl Deconstructor {
         entity_position: Matrix4<f32>,
         time: f32,
         elements: &[display::primitives::Element],
+        impacts: &[(Mat4, f32)],
     ) -> Self {
         let edge_x = 0.05;
-        let edge_y = 0.05;
-        let edge_z = 0.05;
+        let edge_y = edge_x;
+        let edge_z = edge_x;
         let mut renderable =
             InstancedEntity::<three_d::renderer::material::PhysicalMaterial>::new_physical(
                 &context,
@@ -299,10 +302,10 @@ impl Deconstructor {
                     if false {
                         particles.push(DestructorParticle {
                             pos: entity_position
-                                * el.transform
-                                * Mat4::from_nonuniform_scale(half_length, half_width, half_height),
+                                * el.transform,
                             color: Color::new(0, 0, 255, 255),
                             vel: vec3(0.0, 0.0, 0.0),
+                            scale: vec3(half_length, half_width, half_height),
                         });
                     }
                     // calculate the translations from the center of the cuboid.
@@ -340,21 +343,35 @@ impl Deconstructor {
                                 let sy = (y_end - y_start) / 2.0;
                                 let sz = (z_end - z_start) / 2.0;
                                 let fragment_pos = Mat4::from_translation(p);
-                                let transformation =
-                                    fragment_pos * Mat4::from_nonuniform_scale(sx, sy, sz);
 
                                 let fragment_world_pos =
                                     entity_position * el.transform * fragment_pos;
+                                /**/
                                 let cube_world = fragment_world_pos;
                                 let dir = center_world.w.truncate() - cube_world.w.truncate();
                                 let pos = (fragment_world_pos).to_rotation_h();
                                 let vel = (dir.to_h() * pos).w.truncate() * 1.0;
-                                let vel = vel + vec3(rand_f32(), rand_f32(), rand_f32()) * 0.1;
+                                let mut vel = vec3(0.0, 0.0, 0.0);
+
+                                // Add some random jitter.
+                                vel = vel + vec3(rand_f32(), rand_f32(), rand_f32()) * 0.1;
+                                // vel = vec3(10.0, 10.0, 0.0);
+                                // vel = vec3(0.0, 0.0, 0.0);
+                                // println!();
+                                // println!("Vel before: {vel:?}");
+                                for (impact_location, magnitude) in impacts.iter() {
+                                    let p1 = impact_location.to_translation();
+                                    let p0 = fragment_world_pos.to_translation();
+                                    let rotation = Quat::from_arc(vec3(1.0, 0.0, 0.0), (p1 - p0).normalize(), None);
+                                    vel += (rotation * vec3(1.0, 0.0, 0.0))  **magnitude * 10.0;
+                                    // println!("Vel after: {vel:?}");
+                                }
 
                                 particles.push(DestructorParticle {
-                                    pos: entity_position * el.transform * transformation,
+                                    pos: fragment_world_pos,
                                     color: Color::new(el.color.r, el.color.g, el.color.b, 128),
                                     vel,
+                                    scale: vec3(sx, sy, sz),
                                 });
                             }
                         }
@@ -364,13 +381,8 @@ impl Deconstructor {
                 battleground_construct::display::primitives::Primitive::Cylinder(_) => todo!(),
             }
         }
-        // self.particles = particles;
-        let p = particles
-            .iter()
-            .map(|p| (&p.pos, &p.color))
-            .collect::<Vec<_>>();
+        // let particles = vec![particles.pop().unwrap()];
 
-        renderable.set_instances(&p);
         Deconstructor {
             last_time: time,
             renderable,
@@ -393,12 +405,16 @@ impl RenderableEffect for Deconstructor {
     ) {
         let dt = self.last_time - time;
         let dt = dt * 0.10;
+
         for particle in self.particles.iter_mut() {
+            // println!();
+            // println!("Pre pose: {:?}", particle.pos);
             // Always update position.
-            let pos = particle.pos.to_rotation_h();
+            let rot = particle.pos.to_rotation_h();
             particle.pos.w = particle.pos.w + particle.vel.extend(0.0) * dt;
+            // println!("Post pose: {:?}", particle.pos);
             let g = vec3(0.0f32, 0.0, -9.81).to_h();
-            particle.vel += (g * pos).w.truncate() * dt;
+            particle.vel += (g * rot).w.truncate() * dt;
             if particle.pos.w[2] <= 0.0 {
                 particle.vel[0] = particle.vel[0] * 0.5;
                 particle.vel[1] = particle.vel[1] * 0.5;
@@ -413,10 +429,12 @@ impl RenderableEffect for Deconstructor {
             .filter(|p| p.color.a != 0)
             .collect::<_>();
 
-        let p = self
-            .particles
-            .iter()
-            .map(|p| (&p.pos, &p.color))
+        // Apply the scale to the transforms.
+        let scaled_pos: Vec<Mat4> = self.particles.iter().map(|p|{p.pos * Mat4::from_nonuniform_scale(p.scale.x, p.scale.y, p.scale.z)   }).collect();
+        // println!("scaled_pos pose: {:?}", scaled_pos);
+
+        let p = (0..self.particles.len())
+            .map(|i| (&scaled_pos[i], &self.particles[i].color))
             .collect::<Vec<_>>();
 
         self.renderable.set_instances(&p);

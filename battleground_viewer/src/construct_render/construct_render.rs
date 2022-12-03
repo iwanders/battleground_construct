@@ -257,7 +257,11 @@ impl ConstructRender {
                         )),
                     );
                 }
-                display::primitives::EffectType::Deconstructor { ref elements, .. } => {
+                display::primitives::EffectType::Deconstructor {
+                    ref elements,
+                    ref impacts,
+                    ..
+                } => {
                     self.effects.insert(
                         effect.id,
                         Box::new(effects::Deconstructor::new(
@@ -265,6 +269,7 @@ impl ConstructRender {
                             *entity_transform,
                             timestamp,
                             &elements,
+                            &impacts,
                         )),
                     );
                 }

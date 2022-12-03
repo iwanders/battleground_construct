@@ -118,6 +118,7 @@ pub enum EffectType {
     },
     Deconstructor {
         elements: Vec<Element>,
+        impacts: Vec<(Mat4, f32)>,
     },
 }
 

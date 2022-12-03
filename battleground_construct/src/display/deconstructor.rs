@@ -5,6 +5,7 @@ use engine::prelude::*;
 pub struct Deconstructor {
     pub entity: EntityId,
     pub elements: Vec<Element>,
+    pub impacts: Vec<(Mat4, f32)>,
 }
 
 impl Deconstructor {
@@ -12,6 +13,7 @@ impl Deconstructor {
         Deconstructor {
             entity,
             elements: vec![],
+            impacts: vec![],
         }
     }
 
@@ -31,6 +33,10 @@ impl Deconstructor {
             }
         }
     }
+
+    pub fn add_impact(&mut self, impact: Mat4, magnitude: f32) {
+        self.impacts.push((impact, magnitude));
+    }
 }
 impl Component for Deconstructor {}
 
@@ -40,6 +46,7 @@ impl Drawable for Deconstructor {
             id: (self.entity, 0),
             effect: EffectType::Deconstructor {
                 elements: self.elements.clone(),
+                impacts: self.impacts.clone(),
             },
             transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
         }]

@@ -21,9 +21,9 @@ impl System for TankHitBy {
 
         // Searching done, we can now do the logic.
         for (hit_entity, root_entity) in hit_entity_and_root {
-            let (projectile_entity, source_entity) = {
+            let (projectile_entity, source_entity, impact) = {
                 let projectile_entity = world.component::<HitBy>(hit_entity).unwrap();
-                (projectile_entity.projectile(), projectile_entity.source())
+                (projectile_entity.projectile(), projectile_entity.source(), projectile_entity.impact())
             };
             let damage = world
                 .component::<DamageDealer>(source_entity)
@@ -34,7 +34,7 @@ impl System for TankHitBy {
             // println!("New health: {new_health}");
             if health.is_dead() {
                 // find the entire group.
-                dead_root_entities.push(root_entity);
+                dead_root_entities.push((root_entity, impact));
             }
             projectile_entities.push(projectile_entity);
         }
@@ -65,7 +65,7 @@ impl System for TankHitBy {
 
         // Iterate through the dead root entities.
         let mut all_to_be_removed = vec![];
-        for root_entity in dead_root_entities.iter() {
+        for (root_entity, impact) in dead_root_entities.iter() {
             let mut elements_here = vec![];
             {
                 let g = world.component::<Group>(*root_entity).unwrap();
@@ -76,6 +76,7 @@ impl System for TankHitBy {
 
             let thingy = world.add_entity();
             let mut destructor = crate::display::deconstructor::Deconstructor::new(thingy);
+            destructor.add_impact(*impact, 0.3);
 
             // self.component_to_meshes::<display::tank_body::TankBody>(context, construct);
             // self.component_to_meshes::<display::tank_tracks::TankTracks>(context, construct);
