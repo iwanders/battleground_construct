@@ -82,12 +82,7 @@ impl System for TankHitBy {
             let mut destructor = crate::display::deconstructor::Deconstructor::new(thingy);
             destructor.add_impact(*impact, 0.2);
 
-            // self.component_to_meshes::<display::tank_body::TankBody>(context, construct);
-            // self.component_to_meshes::<display::tank_tracks::TankTracks>(context, construct);
-            // self.component_to_meshes::<display::tank_turret::TankTurret>(context, construct);
-            // self.component_to_meshes::<display::tank_barrel::TankBarrel>(context, construct);
             for e in elements_here.iter() {
-                // let
                 destructor.add_element::<crate::display::tank_body::TankBody>(*e, &world);
                 destructor.add_element::<crate::display::tank_turret::TankTurret>(*e, &world);
                 destructor.add_element::<crate::display::tank_barrel::TankBarrel>(*e, &world);

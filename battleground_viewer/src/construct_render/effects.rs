@@ -364,7 +364,6 @@ impl Deconstructor {
                                     let d = (p1.distance2(p0)).sqrt();
                                     let mag = magnitude * (1.0 / (d * d));
                                     vel += (rotation * vec3(1.0, 0.0, 0.0)) * mag;
-                                    // println!("Vel after: {vel:?}");
                                 }
 
                                 particles.push(DestructorParticle {

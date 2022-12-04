@@ -94,10 +94,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
 
     world.add_component(vehicle_id, base);
     world.add_component(vehicle_id, display::tank_tracks::TankTracks::new());
-    // world.add_component(
-    // vehicle_id,
-    // components::hit_sphere::HitSphere::with_radius(1.0),
-    // );
 
     let body_id = world.add_entity();
     world.add_component(
@@ -108,6 +104,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let hitbox = body.hitbox();
     world.add_component(body_id, body);
     world.add_component(body_id, hitbox);
+    // world.add_component(body_id, components::hit_sphere::HitSphere::with_radius(1.0));
     world.add_component(body_id, Parent::new(vehicle_id.clone()));
     tank_group_ids.push(body_id.clone());
 
