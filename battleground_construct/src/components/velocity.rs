@@ -112,12 +112,11 @@ macro_rules! create_velocity_implementation {
 }
 create_velocity_implementation!(Velocity);
 
-
 pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
     // use crate::components::pose::world_pose;
-    use crate::util::cgmath::prelude::*;
     use crate::components::pose::Pose;
     use crate::components::pose::PreTransform;
+    use crate::util::cgmath::prelude::*;
 
     let mut current_id = entity.clone();
     let mut current_velocity = Velocity::new().to_twist();
@@ -152,7 +151,6 @@ pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
         // println!("  pose_t adjoint: {:?}", pose_t.to_adjoint());
         current_velocity = pose_t.to_adjoint() * (combined_vel);
         // println!("  new current_velocity: {current_velocity:?}");
-        
 
         let pre_pose_t = if let Some(pre_pose) = world.component::<PreTransform>(current_id) {
             // println!("Found PreTransform for  {current_id:?}");
@@ -165,7 +163,6 @@ pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
         // println!("  pre_pose_t adjoint: {:?}", pre_pose_t.to_adjoint());
         current_velocity = pre_pose_t.to_adjoint() * current_velocity;
         // println!("  new current_velocity: {current_velocity:?}");
-
 
         if let Some(parent) = world.component::<super::parent::Parent>(current_id) {
             current_id = parent.parent().clone();

@@ -51,8 +51,10 @@ impl Revolute {
     }
 
     pub fn to_twist(&self) -> crate::util::cgmath::prelude::Twist<f32> {
-        use crate::util::cgmath::prelude::*;
-        crate::util::cgmath::prelude::Twist::<f32>::new(cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0), self.axis * self.velocity)
+        crate::util::cgmath::prelude::Twist::<f32>::new(
+            cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0),
+            self.axis * self.velocity,
+        )
     }
 }
 impl Component for Revolute {}

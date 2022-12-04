@@ -4,12 +4,11 @@ use components::clock::{Clock, ClockSystem};
 use engine::prelude::*;
 use engine::Systems;
 
-use components::acceleration::Acceleration;
-use components::pose::{Pose, PreTransform};
-use components::velocity::Velocity;
-use components::parent::Parent;
 use battleground_construct::display::primitives::Vec3;
 use battleground_construct::util::cgmath::prelude::*;
+use components::parent::Parent;
+use components::pose::{Pose, PreTransform};
+use components::velocity::Velocity;
 
 #[test]
 fn revolute_to_velocity() {
@@ -24,7 +23,6 @@ fn revolute_to_velocity() {
     println!("pose_old: {pose_old:?}");
     println!("pose_new: {pose_new:?}");
 
-
     // Roundtrip this.
     let vel_twist = revolute.to_twist();
     println!("vel_twist: {vel_twist:?}");
@@ -34,7 +32,10 @@ fn revolute_to_velocity() {
     // println!("dh: {dh:?}");
     let pose_new = velocity.integrate_pose(&pose_old, dt);
     let pose_new_through_twist = pose_new;
-    assert_eq!(pose_new_through_twist.transform(), pose_new_direct.transform());
+    assert_eq!(
+        pose_new_through_twist.transform(),
+        pose_new_direct.transform()
+    );
 
     println!("pose_old: {pose_old:?}");
     println!("pose_new: {pose_new:?}");
@@ -47,13 +48,10 @@ fn revolute_to_velocity() {
     // rotating counter clockwise about z, looked from above, which is negative y.
     assert_eq!(arm_end_vel.v.y, -1.0);
     println!("arm_end_vel: {arm_end_vel:?}");
-
 }
-
 
 #[test]
 fn test_rotating_arm() {
-    
     let mut world = World::new();
 
     let arm_origin = world.add_entity();
@@ -63,8 +61,7 @@ fn test_rotating_arm() {
     );
     world.add_component(arm_origin, Pose::new());
 
-
-    let arm_rotation = world.add_entity(); 
+    let arm_rotation = world.add_entity();
     // world.add_component(arm_rotation, Parent::new(arm_origin.clone()));
 
     let mut arm_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
@@ -72,8 +69,6 @@ fn test_rotating_arm() {
     world.add_component(arm_rotation, arm_revolute);
     world.add_component(arm_rotation, Pose::new());
     world.add_component(arm_rotation, Velocity::new());
-
-
 
     let arm_tip = world.add_entity();
     world.add_component(arm_tip, Parent::new(arm_rotation.clone()));

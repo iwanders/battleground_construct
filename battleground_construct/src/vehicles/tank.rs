@@ -135,6 +135,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         PreTransform::from_translation(Vec3::new(0.0, 0.0, 0.375 + 0.1 / 2.0)),
     );
     world.add_component(turret_id, components::pose::Pose::new());
+    world.add_component(turret_id, components::velocity::Velocity::new());
     world.add_component(turret_id, Parent::new(vehicle_id.clone()));
     world.add_component(turret_id, display::tank_turret::TankTurret::new());
 
@@ -154,6 +155,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         PreTransform::from_translation(Vec3::new(0.25, 0.0, 0.0)),
     );
     world.add_component(barrel_id, components::pose::Pose::new());
+    world.add_component(barrel_id, components::velocity::Velocity::new());
     world.add_component(barrel_id, Parent::new(turret_id.clone()));
     world.add_component(barrel_id, display::tank_barrel::TankBarrel::new());
 
