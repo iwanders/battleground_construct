@@ -42,6 +42,10 @@ impl Revolute {
         self.velocity_bounds
     }
 
+    pub fn set_velocity_bounds(&mut self, min: f32, max: f32) {
+        self.velocity_bounds = (min, max)
+    }
+
     pub fn integrate(&mut self, dt: f32) {
         self.position = (self.position + dt * self.velocity).rem_euclid(std::f32::consts::PI * 2.0);
     }

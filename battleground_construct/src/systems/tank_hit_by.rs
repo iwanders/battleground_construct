@@ -87,6 +87,7 @@ impl System for TankHitBy {
                 destructor.add_element::<crate::display::tank_turret::TankTurret>(*e, &world);
                 destructor.add_element::<crate::display::tank_barrel::TankBarrel>(*e, &world);
                 destructor.add_element::<crate::display::tank_tracks::TankTracks>(*e, &world);
+                destructor.add_element::<crate::display::radar::Radar>(*e, &world);
             }
             world.add_component(thingy, destructor);
             world.add_component(thingy, crate::components::expiry::Expiry::lifetime(50.0));
