@@ -154,7 +154,7 @@ impl ConstructRender {
         self.component_to_meshes::<display::tank_turret::TankTurret>(context, construct);
         self.component_to_meshes::<display::tank_barrel::TankBarrel>(context, construct);
         self.component_to_meshes::<display::tank_bullet::TankBullet>(context, construct);
-        self.component_to_meshes::<display::radar::Radar>(context, construct);
+        self.component_to_meshes::<display::radar_model::RadarModel>(context, construct);
 
         self.component_to_meshes::<display::debug_box::DebugBox>(context, construct);
         self.component_to_meshes::<display::debug_sphere::DebugSphere>(context, construct);

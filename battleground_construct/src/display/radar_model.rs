@@ -1,9 +1,8 @@
 use super::primitives::*;
-use crate::components::hit_box::HitBox;
 use engine::prelude::*;
 
 #[derive(Copy, Debug, Clone)]
-pub struct Radar {
+pub struct RadarModel {
     pub length: f32,
     pub width: f32,
     pub height: f32,
@@ -11,9 +10,9 @@ pub struct Radar {
     color: Color,
 }
 
-impl Radar {
+impl RadarModel {
     pub fn new() -> Self {
-        Radar {
+        RadarModel {
             length: 0.15,
             width: 0.01,
             height: 0.05,
@@ -29,14 +28,10 @@ impl Radar {
     pub fn set_color(&mut self, color: Color) {
         self.color = color;
     }
-
-    pub fn hitbox(&self) -> HitBox {
-        HitBox::new(self.length, self.width, self.height)
-    }
 }
-impl Component for Radar {}
+impl Component for RadarModel {}
 
-impl Drawable for Radar {
+impl Drawable for RadarModel {
     fn drawables(&self) -> Vec<Element> {
         let ls = self.length / 2.0 * self.angle.sin();
         let lc = self.length / 2.0 * self.angle.cos();

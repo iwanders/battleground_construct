@@ -4,7 +4,7 @@ pub mod deconstructor;
 pub mod flag;
 pub mod particle_emitter;
 pub mod primitives;
-pub mod radar;
+pub mod radar_model;
 pub mod tank_barrel;
 pub mod tank_body;
 pub mod tank_bullet;

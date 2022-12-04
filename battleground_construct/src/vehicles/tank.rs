@@ -186,7 +186,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let mut radar_revolute =
         components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
     radar_revolute.set_velocity_bounds(-std::f32::consts::PI * 2.0, std::f32::consts::PI * 2.0);
-    radar_revolute.set_velocity(6.28);
+    radar_revolute.set_velocity(-6.28);
     register_interface.get_mut().add_module(
         "radar",
         0x1500,
@@ -202,7 +202,8 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(radar_joint, components::velocity::Velocity::new());
     world.add_component(radar_joint, Parent::new(turret_id.clone()));
     // world.add_component(radar_joint, display::debug_box::DebugBox::new(0.1, 0.1, 0.1));
-    world.add_component(radar_joint, display::radar::Radar::new());
+    world.add_component(radar_joint, display::radar_model::RadarModel::new());
+    world.add_component(radar_joint, components::radar::Radar::new());
 
     // Finally, add the register interface.
     world.add_component(vehicle_id, register_interface);
