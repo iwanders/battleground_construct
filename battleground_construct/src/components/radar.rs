@@ -1,3 +1,4 @@
+use crate::display::primitives::Mat4;
 use engine::prelude::*;
 
 #[derive(Copy, Debug, Clone)]
@@ -28,6 +29,8 @@ impl Radar {
     pub fn reflections(&self) -> Vec<Reflection> {
         self.reflections.clone()
     }
+
+    pub fn update_reflections(&mut self, radar_pose: &Mat4, reflectors: &[(Mat4, f32)]) {}
 }
 impl Component for Radar {}
 

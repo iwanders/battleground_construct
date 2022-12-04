@@ -7,6 +7,7 @@ pub mod health_tank_body;
 pub mod kinematics_differential_drive;
 pub mod projectile_floor;
 pub mod projectile_hit;
+pub mod radar_scan;
 pub mod revolute_pose;
 pub mod revolute_velocity;
 pub mod tank_hit_by;

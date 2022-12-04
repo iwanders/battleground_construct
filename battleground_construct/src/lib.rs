@@ -129,6 +129,7 @@ impl Construct {
         systems.add_system(Box::new(systems::velocity_pose::VelocityPose {}));
         // systems.add_system(Box::new(systems::revolute_pose::RevolutePose {}));
         systems.add_system(Box::new(systems::revolute_velocity::RevoluteVelocity {}));
+        systems.add_system(Box::new(systems::radar_scan::RadarScan {}));
         systems.add_system(Box::new(systems::cannon_trigger::CannonTrigger {}));
         systems.add_system(Box::new(systems::projectile_floor::ProjectileFloor {}));
         systems.add_system(Box::new(systems::projectile_hit::ProjectileHit {}));
