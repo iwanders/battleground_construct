@@ -39,8 +39,8 @@ macro_rules! create_velocity_implementation {
                     * cgmath::Matrix4::<f32>::from_angle_z(cgmath::Rad(self.w[2]) * dt))
             }
 
-            pub fn to_twist(&self) -> cgmath::Matrix4<f32> {
-                <Self as Into<cgmath::Matrix4<f32>>>::into(*self)
+            pub fn to_twist(&self) -> crate::util::cgmath::Twist<f32> {
+                crate::util::cgmath::Twist::<f32>::new(self.v, self.w)
             }
 
             pub fn integrate_pose(&self, pose: &super::pose::Pose, dt: f32) -> super::pose::Pose {
@@ -90,7 +90,7 @@ macro_rules! create_velocity_implementation {
         }
         impl Component for $the_type {}
 
-
+        /*
         impl Into<cgmath::Matrix4<f32>> for $the_type {
             fn into(self) -> cgmath::Matrix4<f32> {
                 use crate::util::cgmath::ToCross;
@@ -102,7 +102,7 @@ macro_rules! create_velocity_implementation {
                     self.v.extend(0.0),
                 )
             }
-        }
+        }*/
         impl Into<$the_type> for crate::util::cgmath::Twist<f32> {
             fn into(self) -> $the_type {
                 <$the_type>::from_velocities(self.v, self.w)
@@ -121,42 +121,62 @@ pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
 
     let mut current_id = entity.clone();
     let mut current_velocity = Velocity::new().to_twist();
+    let mut current_pose = Pose::new();
     /*
         Changing frame of a twist.
-        \tilde{T}^{j, l}_k = H^j_i \tilde{T}^{i,l}_k H^i_j
+        twist = Adjoint(Frame) * frame_twist.
     */
-    /*
     loop {
+        // println!("Current id: {current_id:?}");
+
         let pose_t = if let Some(pose) = world.component::<Pose>(current_id) {
+            // println!("Found pose for  {current_id:?}");
             *pose.transform()
         } else {
             *Pose::new().transform()
         };
         let vel_t = if let Some(vel) = world.component::<Velocity>(current_id) {
+            // println!("Found vel for  {current_id:?}");
             vel.to_twist()
         } else {
             Velocity::new().to_twist()
         };
 
-        current_velocity = pose_t.to_inv_h() * (current_velocity + vel_t) * pose_t;
+        current_pose = (pose_t * *current_pose).into();
+        let combined_vel = current_velocity + vel_t;
+
+        // println!("  current_velocity: {current_velocity:?}");
+        // println!("  vel_t: {vel_t:?}");
+        // println!("  combined_vel: {combined_vel:?}");
+        // println!("  pose_t: {pose_t:?}");
+        // println!("  pose_t adjoint: {:?}", pose_t.to_adjoint());
+        current_velocity = pose_t.to_adjoint() * (combined_vel);
+        // println!("  new current_velocity: {current_velocity:?}");
         
+
         let pre_pose_t = if let Some(pre_pose) = world.component::<PreTransform>(current_id) {
+            // println!("Found PreTransform for  {current_id:?}");
             *pre_pose.transform()
         } else {
             *Pose::new().transform()
         };
-        current_velocity = pre_pose_t.to_inv_h() * (current_velocity) * pre_pose_t;
+        current_pose = (pre_pose_t * current_pose.transform()).into();
+        // println!("  pre_pose_t: {pre_pose_t:?}");
+        // println!("  pre_pose_t adjoint: {:?}", pre_pose_t.to_adjoint());
+        current_velocity = pre_pose_t.to_adjoint() * current_velocity;
+        // println!("  new current_velocity: {current_velocity:?}");
 
-        
 
         if let Some(parent) = world.component::<super::parent::Parent>(current_id) {
             current_id = parent.parent().clone();
         } else {
             break;
         }
+        // println!("  parent: {current_id:?}");
     }
-    */
-    Velocity::new()
+    // Now we have the velocity of the origin frame, but we wanted the velocity of the entity;
+    (current_pose.to_adjoint() * current_velocity).into()
+    // current_velocity.into()
 }
 
 #[cfg(test)]

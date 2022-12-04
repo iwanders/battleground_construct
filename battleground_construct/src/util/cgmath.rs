@@ -165,6 +165,16 @@ impl<S: BaseFloat> std::ops::Mul<Twist<S>> for Adjoint<S> {
         }
     }
 }
+impl<S: BaseFloat> std::ops::Add<Twist<S>> for Twist<S> {
+    type Output = Twist<S>;
+
+    fn add(self, other: Twist<S>) -> Self::Output {
+        Twist {
+            w: self.w + other.w,
+            v: self.v + other.v
+        }
+    }
+}
 
 pub trait ToAdjoint<S: BaseFloat> {
     fn to_adjoint(&self) -> Adjoint<S>;

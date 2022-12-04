@@ -14,7 +14,7 @@ impl System for RevoluteVelocity {
 
         for (entity, mut rev) in world.component_iter_mut::<Revolute>() {
             if let Some(mut vel) = world.component_mut::<Velocity>(entity) {
-                // *vel = rev.to_twist().into();
+                *vel = rev.to_twist().into();
             }
         }
     }
