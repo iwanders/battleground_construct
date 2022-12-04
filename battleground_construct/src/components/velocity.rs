@@ -1,5 +1,6 @@
 use engine::prelude::*;
 
+/// Velocity expressed in body frame (in all cases).
 #[derive(Copy, Debug, Clone)]
 pub struct Velocity {
     /// Translation component.
@@ -102,10 +103,62 @@ macro_rules! create_velocity_implementation {
                 )
             }
         }
+        impl Into<$the_type> for cgmath::Matrix4<f32> {
+            fn into(self) -> $the_type {
+                use crate::util::cgmath::prelude::*;
+                let r = self.to_truncate_h().to_unskew();
+                let v = self.w.truncate();
+                <$the_type>::from_velocities(r, v)
+            }
+        }
     };
 }
 create_velocity_implementation!(Velocity);
-// create_velocity_implementation!(GlobalVelocity);
+
+
+pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
+    // use crate::components::pose::world_pose;
+    use crate::util::cgmath::prelude::*;
+    use crate::components::pose::Pose;
+    use crate::components::pose::PreTransform;
+
+    let mut current_id = entity.clone();
+    let mut current_velocity = Velocity::new().to_twist();
+    /*
+        Changing frame of a twist.
+        \tilde{T}^{j, l}_k = H^j_i \tilde{T}^{i,l}_k H^i_j
+    */
+    loop {
+        let pose_t = if let Some(pose) = world.component::<Pose>(current_id) {
+            *pose.transform()
+        } else {
+            *Pose::new().transform()
+        };
+        let vel_t = if let Some(vel) = world.component::<Velocity>(current_id) {
+            vel.to_twist()
+        } else {
+            Velocity::new().to_twist()
+        };
+
+        current_velocity = pose_t.to_inv_h() * (current_velocity + vel_t) * pose_t;
+        
+        let pre_pose_t = if let Some(pre_pose) = world.component::<PreTransform>(current_id) {
+            *pre_pose.transform()
+        } else {
+            *Pose::new().transform()
+        };
+        current_velocity = pre_pose_t.to_inv_h() * (current_velocity) * pre_pose_t;
+
+        
+
+        if let Some(parent) = world.component::<super::parent::Parent>(current_id) {
+            current_id = parent.parent().clone();
+        } else {
+            break;
+        }
+    }
+    current_velocity.into()
+}
 
 #[cfg(test)]
 mod test {

@@ -1,4 +1,4 @@
-use cgmath::{BaseFloat, Matrix4};
+use cgmath::{BaseFloat, Matrix4, Matrix3};
 
 pub mod prelude {
     pub use super::InvertHomogeneous;
@@ -6,7 +6,9 @@ pub mod prelude {
     pub use super::ToQuaternion;
     pub use super::ToRotationH;
     pub use super::ToTranslation;
-    pub use super::ToCross;
+    pub use super::ToCross; // ToSkew?
+    pub use super::UnSkew;
+    pub use super::HomogenousTruncate;
 }
 
 // https://github.com/rustgd/cgmath/issues/461
@@ -23,6 +25,21 @@ impl<S: BaseFloat> ToQuaternion<S> for Matrix4<S> {
             self.z.truncate(),
         );
         m.into()
+    }
+}
+
+
+pub trait HomogenousTruncate<S: BaseFloat> {
+    fn to_truncate_h(&self) -> Matrix3<S>;
+}
+
+impl<S: BaseFloat> HomogenousTruncate<S> for Matrix4<S> {
+    fn to_truncate_h(&self) -> cgmath::Matrix3<S> {
+        cgmath::Matrix3::<S>::from_cols(
+            self.x.truncate(),
+            self.y.truncate(),
+            self.z.truncate(),
+        )
     }
 }
 
@@ -101,6 +118,17 @@ impl<S: BaseFloat> ToCross<S> for cgmath::Vector3<S> {
             cgmath::Vector3::<S>::new(-self.z, S::zero(), self.x),
             cgmath::Vector3::<S>::new(self.y, -self.x, S::zero()))
         
+    }
+}
+
+
+pub trait UnSkew<S: BaseFloat> {
+    fn to_unskew(&self) -> cgmath::Vector3<S>;
+}
+
+impl<S: BaseFloat> UnSkew<S> for cgmath::Matrix3<S> {
+    fn to_unskew(&self) -> cgmath::Vector3<S> {
+        cgmath::Vector3::<S>::new(self.y.z, -self.x.z, self.x.y)
     }
 }
 
