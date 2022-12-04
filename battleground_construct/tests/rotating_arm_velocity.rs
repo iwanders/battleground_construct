@@ -10,8 +10,35 @@ use components::velocity::Velocity;
 use components::parent::Parent;
 use battleground_construct::display::primitives::Vec3;
 
+
+#[test]
+fn revolute_to_velocity() {
+    let dt = 0.01;
+    let mut revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
+    revolute.set_velocity(std::f32::consts::PI / 2.0);
+    let pose_old = revolute.to_pose();
+    revolute.integrate(dt);
+    let pose_new = revolute.to_pose();
+
+    println!("pose_old: {pose_old:?}");
+    println!("pose_new: {pose_new:?}");
+
+    let vel = revolute.to_twist();
+    println!("vel: {vel:?}");
+    // let pose_old = Pose::new();
+    // let dh = vel * dt;
+    let velocity: Velocity = vel.into();
+    // println!("dh: {dh:?}");
+    let pose_new = velocity.integrate_pose(&pose_old, dt);
+    println!("pose_old: {pose_old:?}");
+    println!("pose_new: {pose_new:?}");
+
+}
+
+
 #[test]
 fn test_rotating_arm() {
+    
     let mut world = World::new();
 
     let arm_origin = world.add_entity();
@@ -49,7 +76,8 @@ fn test_rotating_arm() {
     systems.add_system(Box::new(
         systems::acceleration_velocity::AccelerationVelocity {},
     ));
-    systems.add_system(Box::new(systems::revolute_pose::RevolutePose {}));
+    systems.add_system(Box::new(systems::revolute_velocity::RevoluteVelocity {}));
+    // systems.add_system(Box::new(systems::revolute_pose::RevolutePose {}));
     systems.add_system(Box::new(systems::velocity_pose::VelocityPose {}));
     systems.update(&mut world);
 

@@ -49,6 +49,11 @@ impl Revolute {
     pub fn to_pose(&self) -> Pose {
         cgmath::Matrix4::<f32>::from_axis_angle(self.axis, cgmath::Rad(self.position)).into()
     }
+
+    pub fn to_twist(&self) -> crate::util::cgmath::prelude::Twist<f32> {
+        use crate::util::cgmath::prelude::*;
+        crate::util::cgmath::prelude::Twist::<f32>::new(cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0), self.axis * self.velocity)
+    }
 }
 impl Component for Revolute {}
 

@@ -5,10 +5,13 @@ pub mod prelude {
     pub use super::ToHomogenous;
     pub use super::ToQuaternion;
     pub use super::ToRotationH;
+    pub use super::ToRotation;
     pub use super::ToTranslation;
     pub use super::ToCross; // ToSkew?
-    pub use super::UnSkew;
     pub use super::HomogenousTruncate;
+    pub use super::ToAdjoint;
+    pub use super::Twist;
+    pub use super::Adjoint;
 }
 
 // https://github.com/rustgd/cgmath/issues/461
@@ -54,6 +57,19 @@ impl<S: BaseFloat> ToRotationH<S> for Matrix4<S> {
             self.y,
             self.z,
             cgmath::Vector4::<S>::new(S::zero(), S::zero(), S::zero(), S::one()),
+        )
+    }
+}
+pub trait ToRotation<S: BaseFloat> {
+    fn to_rotation(&self) -> Matrix3<S>;
+}
+
+impl<S: BaseFloat> ToRotation<S> for Matrix4<S> {
+    fn to_rotation(&self) -> cgmath::Matrix3<S> {
+        cgmath::Matrix3::<S>::from_cols(
+            self.x.truncate(),
+            self.y.truncate(),
+            self.z.truncate()
         )
     }
 }
@@ -121,14 +137,46 @@ impl<S: BaseFloat> ToCross<S> for cgmath::Vector3<S> {
     }
 }
 
-
-pub trait UnSkew<S: BaseFloat> {
-    fn to_unskew(&self) -> cgmath::Vector3<S>;
+#[derive(Debug, Copy, Clone)]
+pub struct Twist<S: BaseFloat> {
+    pub v: cgmath::Vector3<S>,
+    pub w: cgmath::Vector3<S>,
 }
 
-impl<S: BaseFloat> UnSkew<S> for cgmath::Matrix3<S> {
-    fn to_unskew(&self) -> cgmath::Vector3<S> {
-        cgmath::Vector3::<S>::new(self.y.z, -self.x.z, self.x.y)
+impl<S: BaseFloat> Twist<S> {
+    pub fn new(v: cgmath::Vector3<S>, w: cgmath::Vector3<S>) -> Self {
+        Self {v, w}
     }
 }
+
+#[derive(Debug, Copy, Clone)]
+pub struct Adjoint<S: BaseFloat>{
+    pub r: cgmath::Matrix3<S>,
+    pub p_r: cgmath::Matrix3<S>,
+}
+
+impl<S: BaseFloat> std::ops::Mul<Twist<S>> for Adjoint<S> {
+    type Output = Twist<S>;
+
+    fn mul(self, other: Twist<S>) -> Self::Output {
+        Twist {
+            v: self.r * other.v,
+            w: self.p_r * other.v + self.r * other.w
+        }
+    }
+}
+
+pub trait ToAdjoint<S: BaseFloat> {
+    fn to_adjoint(&self) -> Adjoint<S>;
+}
+
+impl<S: BaseFloat> ToAdjoint<S> for cgmath::Matrix4<S> {
+    fn to_adjoint(&self) -> Adjoint<S> {
+        Adjoint {
+            r: self.to_rotation(),
+            p_r: self.w.truncate().to_cross() * self.to_rotation(),
+        }
+    }
+}
+
 

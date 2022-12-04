@@ -103,12 +103,9 @@ macro_rules! create_velocity_implementation {
                 )
             }
         }
-        impl Into<$the_type> for cgmath::Matrix4<f32> {
+        impl Into<$the_type> for crate::util::cgmath::Twist<f32> {
             fn into(self) -> $the_type {
-                use crate::util::cgmath::prelude::*;
-                let r = self.to_truncate_h().to_unskew();
-                let v = self.w.truncate();
-                <$the_type>::from_velocities(r, v)
+                <$the_type>::from_velocities(self.v, self.w)
             }
         }
     };
@@ -128,6 +125,7 @@ pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
         Changing frame of a twist.
         \tilde{T}^{j, l}_k = H^j_i \tilde{T}^{i,l}_k H^i_j
     */
+    /*
     loop {
         let pose_t = if let Some(pose) = world.component::<Pose>(current_id) {
             *pose.transform()
@@ -157,7 +155,8 @@ pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
             break;
         }
     }
-    current_velocity.into()
+    */
+    Velocity::new()
 }
 
 #[cfg(test)]
