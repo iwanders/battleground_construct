@@ -14,6 +14,7 @@ pub mod parent;
 pub mod point_projectile;
 pub mod pose;
 pub mod radar;
+pub mod radar_reflector;
 pub mod revolute;
 pub mod vehicle_controller;
 pub mod vehicle_interface;
