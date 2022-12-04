@@ -77,8 +77,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         components::vehicle_interface::RegisterInterface::new(),
     );
 
-    let pose = Pose::from_se2(config.x, config.y, config.yaw);
-    world.add_component(vehicle_id, pose);
+    world.add_component(vehicle_id, Pose::from_se2(config.x, config.y, config.yaw));
     world.add_component(vehicle_id, components::velocity::Velocity::new());
     let base = components::differential_drive_base::DifferentialDriveBase::new();
     // Register the base as a controllable.

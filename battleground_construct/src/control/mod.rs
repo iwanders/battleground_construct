@@ -98,7 +98,7 @@ impl VehicleControl for DiffDriveForwardsBackwardsControl {
         }
         // base
         interface.set_f32(0x1000, 2, self.velocities.0).unwrap();
-        interface.set_f32(0x1000, 3, -self.velocities.1).unwrap();
+        interface.set_f32(0x1000, 3, self.velocities.1).unwrap();
         interface.set_f32(turret, revolve_cmd_vel, 3.0).unwrap();
     }
 }

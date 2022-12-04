@@ -297,6 +297,8 @@ impl Deconstructor {
 
         let mut rand_f32 = move || rng.sample::<f32, StandardNormal>(StandardNormal);
 
+        let do_full_explosion = true;
+
         for (el, twist) in elements.iter() {
             match el.primitive {
                 battleground_construct::display::primitives::Primitive::Cuboid(c) => {
@@ -353,10 +355,14 @@ impl Deconstructor {
                                 let cube_world = fragment_world_pos;
                                 let dir = cube_world.w.truncate() - center_world.w.truncate();
                                 let pos = (fragment_world_pos).to_rotation_h();
-                                // vel = vel + (dir.to_h() * pos).w.truncate() * 0.1;
+                                if do_full_explosion {
+                                    vel = vel + (dir.to_h() * pos).w.truncate() * 0.1;
+                                }
 
                                 // Add some random jitter, such that it looks prettier.
-                                // vel = vel + vec3(rand_f32(), rand_f32(), rand_f32()) * 0.1;
+                                if do_full_explosion {
+                                    vel = vel + vec3(rand_f32(), rand_f32(), rand_f32()) * 0.1;
+                                }
 
                                 // Then, add velocities away from the impacts.
                                 for (impact_location, magnitude) in impacts.iter() {
@@ -369,7 +375,9 @@ impl Deconstructor {
                                     );
                                     let d = (p1.distance2(p0)).sqrt();
                                     let mag = magnitude * (1.0 / (d * d));
-                                    // vel += (rotation * vec3(1.0, 0.0, 0.0)) * mag;
+                                    if do_full_explosion {
+                                        vel += (rotation * vec3(1.0, 0.0, 0.0)) * mag;
+                                    }
                                 }
 
                                 particles.push(DestructorParticle {
@@ -393,7 +401,7 @@ impl Deconstructor {
             last_time: time,
             renderable,
             particles,
-            max_traveled: 50.0,
+            max_traveled: 10.0,
         }
     }
 }
