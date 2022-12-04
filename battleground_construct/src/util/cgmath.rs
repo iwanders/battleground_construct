@@ -139,8 +139,8 @@ impl<S: BaseFloat> ToCross<S> for cgmath::Vector3<S> {
 
 #[derive(Debug, Copy, Clone)]
 pub struct Twist<S: BaseFloat> {
-    pub v: cgmath::Vector3<S>,
     pub w: cgmath::Vector3<S>,
+    pub v: cgmath::Vector3<S>,
 }
 
 impl<S: BaseFloat> Twist<S> {
@@ -160,8 +160,8 @@ impl<S: BaseFloat> std::ops::Mul<Twist<S>> for Adjoint<S> {
 
     fn mul(self, other: Twist<S>) -> Self::Output {
         Twist {
-            v: self.r * other.v,
-            w: self.p_r * other.v + self.r * other.w
+            w: self.r * other.w,
+            v: self.p_r * other.w + self.r * other.v
         }
     }
 }

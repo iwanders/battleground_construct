@@ -9,7 +9,7 @@ use components::pose::{Pose, PreTransform};
 use components::velocity::Velocity;
 use components::parent::Parent;
 use battleground_construct::display::primitives::Vec3;
-
+use battleground_construct::util::cgmath::prelude::*;
 
 #[test]
 fn revolute_to_velocity() {
@@ -20,18 +20,31 @@ fn revolute_to_velocity() {
     revolute.integrate(dt);
     let pose_new = revolute.to_pose();
 
+    let pose_new_direct = pose_new;
     println!("pose_old: {pose_old:?}");
     println!("pose_new: {pose_new:?}");
 
-    let vel = revolute.to_twist();
-    println!("vel: {vel:?}");
+
+    // Roundtrip this.
+    let vel_twist = revolute.to_twist();
+    println!("vel_twist: {vel_twist:?}");
     // let pose_old = Pose::new();
     // let dh = vel * dt;
-    let velocity: Velocity = vel.into();
+    let velocity: Velocity = vel_twist.into();
     // println!("dh: {dh:?}");
     let pose_new = velocity.integrate_pose(&pose_old, dt);
+    let pose_new_through_twist = pose_new;
+    assert_eq!(pose_new_through_twist.transform(), pose_new_direct.transform());
+
     println!("pose_old: {pose_old:?}");
     println!("pose_new: {pose_new:?}");
+
+    // Now, lets rotate an arm.
+    let arm = Pose::from_se2(1.0, 0.0, 0.0);
+    println!("arm: {arm:?}");
+    let arm_end_vel = arm.to_adjoint() * vel_twist;
+    println!("arm_adjoint: {:?}", arm.to_adjoint());
+    println!("arm_end_vel: {arm_end_vel:?}");
 
 }
 
