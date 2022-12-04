@@ -8,14 +8,6 @@ pub struct Velocity {
     pub w: cgmath::Vector3<f32>,
 }
 
-#[derive(Copy, Debug, Clone)]
-pub struct GlobalVelocity {
-    /// Translation component.
-    pub v: cgmath::Vector3<f32>,
-    /// Rotation component.
-    pub w: cgmath::Vector3<f32>,
-}
-
 macro_rules! create_velocity_implementation {
     ($the_type:ty) => {
         impl $the_type {
@@ -44,6 +36,10 @@ macro_rules! create_velocity_implementation {
                 )) * cgmath::Matrix4::<f32>::from_angle_x(cgmath::Rad(self.w[0]) * dt)
                     * cgmath::Matrix4::<f32>::from_angle_y(cgmath::Rad(self.w[1]) * dt)
                     * cgmath::Matrix4::<f32>::from_angle_z(cgmath::Rad(self.w[2]) * dt))
+            }
+
+            pub fn to_twist(&self) -> cgmath::Matrix4<f32> {
+                <Self as Into<cgmath::Matrix4<f32>>>::into(*self)
             }
 
             pub fn integrate_pose(&self, pose: &super::pose::Pose, dt: f32) -> super::pose::Pose {
@@ -92,6 +88,20 @@ macro_rules! create_velocity_implementation {
             }
         }
         impl Component for $the_type {}
+
+
+        impl Into<cgmath::Matrix4<f32>> for $the_type {
+            fn into(self) -> cgmath::Matrix4<f32> {
+                use crate::util::cgmath::ToCross;
+                let s = self.w.to_cross();
+                cgmath::Matrix4::<f32>::from_cols(
+                    s.x.extend(0.0),
+                    s.y.extend(0.0),
+                    s.z.extend(0.0),
+                    self.v.extend(0.0),
+                )
+            }
+        }
     };
 }
 create_velocity_implementation!(Velocity);

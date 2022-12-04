@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut construct = Construct::new();
     let max_time = 200.0;
-    while construct.elapsed_as_f64() < max_time {
+    while construct.elapsed_as_f32() < max_time {
         construct.update();
     }
     // let mut interface = DummyInterface{};

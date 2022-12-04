@@ -6,6 +6,7 @@ pub mod prelude {
     pub use super::ToQuaternion;
     pub use super::ToRotationH;
     pub use super::ToTranslation;
+    pub use super::ToCross;
 }
 
 // https://github.com/rustgd/cgmath/issues/461
@@ -87,3 +88,19 @@ impl<S: BaseFloat> ToTranslation<S> for Matrix4<S> {
         self.w.truncate()
     }
 }
+
+
+pub trait ToCross<S: BaseFloat> {
+    fn to_cross(&self) -> cgmath::Matrix3<S>;
+}
+
+impl<S: BaseFloat> ToCross<S> for cgmath::Vector3<S> {
+    fn to_cross(&self) -> cgmath::Matrix3<S> {
+        cgmath::Matrix3::<S>::from_cols(
+            cgmath::Vector3::<S>::new(S::zero(), self.z, -self.y),
+            cgmath::Vector3::<S>::new(-self.z, S::zero(), self.x),
+            cgmath::Vector3::<S>::new(self.y, -self.x, S::zero()))
+        
+    }
+}
+
