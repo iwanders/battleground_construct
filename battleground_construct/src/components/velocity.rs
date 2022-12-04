@@ -112,7 +112,10 @@ macro_rules! create_velocity_implementation {
 }
 create_velocity_implementation!(Velocity);
 
-pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
+// pub use world_velocity_linear as world_velocity;
+pub use world_velocity_adjoint as world_velocity;
+
+pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
     // use crate::components::pose::world_pose;
     use crate::components::pose::Pose;
     use crate::components::pose::PreTransform;
@@ -142,14 +145,15 @@ pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
         };
 
         current_pose = (pose_t * *current_pose).into();
-        let combined_vel = current_velocity + vel_t;
 
+        current_velocity = current_velocity + vel_t;
         // println!("  current_velocity: {current_velocity:?}");
         // println!("  vel_t: {vel_t:?}");
         // println!("  combined_vel: {combined_vel:?}");
         // println!("  pose_t: {pose_t:?}");
         // println!("  pose_t adjoint: {:?}", pose_t.to_adjoint());
-        current_velocity = pose_t.to_adjoint() * (combined_vel);
+        current_velocity = pose_t.to_adjoint() * (current_velocity);
+
         // println!("  new current_velocity: {current_velocity:?}");
 
         let pre_pose_t = if let Some(pre_pose) = world.component::<PreTransform>(current_id) {
@@ -173,8 +177,73 @@ pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
     }
     // That give us the velocity in the origin, do we need to mutiply that with the final transform
     // to the pose again?
-    (current_pose.to_adjoint() * current_velocity).into()
-    // current_velocity.into()
+    // (current_pose.to_adjoint() * current_velocity).into()
+    current_velocity.into()
+}
+
+pub fn world_velocity_linear(world: &World, entity: EntityId) -> Velocity {
+    // use crate::components::pose::world_pose;
+    use crate::components::pose::Pose;
+    use crate::components::pose::PreTransform;
+    use crate::util::cgmath::prelude::*;
+
+    let mut current_id = entity.clone();
+    let mut current_velocity = cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0);
+    // let mut current_pose = Pose::new();
+    /*
+        Changing frame of a twist.
+        twist = Adjoint(Frame) * frame_twist.
+    */
+    loop {
+        // println!("Current id: {current_id:?}");
+
+        let pose_t = if let Some(pose) = world.component::<Pose>(current_id) {
+            // println!("Found pose for  {current_id:?}");
+            *pose.transform()
+        } else {
+            *Pose::new().transform()
+        };
+        let vel_t = if let Some(vel) = world.component::<Velocity>(current_id) {
+            // println!("Found vel for  {current_id:?}");
+            vel.to_twist()
+        } else {
+            Velocity::new().to_twist()
+        };
+
+        // current_pose = (pose_t * *current_pose).into();
+        let combined_vel = current_velocity + vel_t.v;
+
+        // println!("  current_velocity: {current_velocity:?}");
+        // println!("  vel_t: {vel_t:?}");
+        // println!("  combined_vel: {combined_vel:?}");
+        // println!("  pose_t: {pose_t:?}");
+        // println!("  pose_t adjoint: {:?}", pose_t.to_adjoint());
+        current_velocity = pose_t.to_rotation() * (combined_vel);
+        // println!("  new current_velocity: {current_velocity:?}");
+
+        let pre_pose_t = if let Some(pre_pose) = world.component::<PreTransform>(current_id) {
+            // println!("Found PreTransform for  {current_id:?}");
+            *pre_pose.transform()
+        } else {
+            *Pose::new().transform()
+        };
+        // current_pose = (pre_pose_t * current_pose.transform()).into();
+        // println!("  pre_pose_t: {pre_pose_t:?}");
+        // println!("  pre_pose_t adjoint: {:?}", pre_pose_t.to_adjoint());
+        current_velocity = pre_pose_t.to_rotation() * current_velocity;
+        // println!("  new current_velocity: {current_velocity:?}");
+
+        if let Some(parent) = world.component::<super::parent::Parent>(current_id) {
+            current_id = parent.parent().clone();
+        } else {
+            break;
+        }
+        // println!("  parent: {current_id:?}");
+    }
+    // That give us the velocity in the origin, do we need to mutiply that with the final transform
+    // to the pose again?
+    // (current_pose.to_adjoint() * current_velocity).into()
+    Velocity::from_velocities(current_velocity, cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0))
 }
 
 #[cfg(test)]
