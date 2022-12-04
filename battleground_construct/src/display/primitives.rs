@@ -1,5 +1,6 @@
 pub type Mat4 = cgmath::Matrix4<f32>;
 pub type Vec3 = cgmath::Vector3<f32>;
+pub type Twist = crate::util::cgmath::Twist<f32>;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Cuboid {
@@ -117,7 +118,7 @@ pub enum EffectType {
         emitting: bool,
     },
     Deconstructor {
-        elements: Vec<Element>,
+        elements: Vec<(Element, Twist)>,
         impacts: Vec<(Mat4, f32)>,
     },
 }

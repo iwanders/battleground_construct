@@ -265,7 +265,7 @@ impl Deconstructor {
         context: &Context,
         entity_position: Matrix4<f32>,
         time: f32,
-        elements: &[display::primitives::Element],
+        elements: &[(display::primitives::Element, Twist<f32>)],
         impacts: &[(Mat4, f32)],
     ) -> Self {
         let edge_x = 0.05;
@@ -297,7 +297,7 @@ impl Deconstructor {
 
         let mut rand_f32 = move || rng.sample::<f32, StandardNormal>(StandardNormal);
 
-        for el in elements.iter() {
+        for (el, twist) in elements.iter() {
             match el.primitive {
                 battleground_construct::display::primitives::Primitive::Cuboid(c) => {
                     let half_length = c.length / 2.0;
@@ -343,11 +343,17 @@ impl Deconstructor {
                                 let fragment_world_pos =
                                     entity_position * el.transform * fragment_pos;
 
-                                // First velocity; outward from the body center.
+                                // Start velocity calculation, initialise with zero.
+                                let mut vel = vec3(0.0, 0.0, 0.0);
+
+                                // Add base body velocity.
+                                vel = (twist.v * 0.0) + vel;
+
+                                // Add outward from the body center.
                                 let cube_world = fragment_world_pos;
                                 let dir = cube_world.w.truncate() - center_world.w.truncate();
                                 let pos = (fragment_world_pos).to_rotation_h();
-                                let mut vel = (dir.to_h() * pos).w.truncate() * 0.1;
+                                vel = vel + (dir.to_h() * pos).w.truncate() * 0.1;
 
                                 // Add some random jitter, such that it looks prettier.
                                 vel = vel + vec3(rand_f32(), rand_f32(), rand_f32()) * 0.1;

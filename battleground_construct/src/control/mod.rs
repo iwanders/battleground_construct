@@ -89,6 +89,8 @@ pub struct DiffDriveForwardsBackwardsControl {
 
 impl VehicleControl for DiffDriveForwardsBackwardsControl {
     fn update(&mut self, interface: &mut dyn Interface) {
+        let turret = 0x1100;
+        let revolve_cmd_vel = 4;
         let clock = interface.get_f32(0x0100, 0).unwrap();
         if (self.last_flip + self.duration) < clock {
             self.last_flip = clock;
@@ -97,5 +99,6 @@ impl VehicleControl for DiffDriveForwardsBackwardsControl {
         // base
         interface.set_f32(0x1000, 2, self.velocities.0).unwrap();
         interface.set_f32(0x1000, 3, self.velocities.1).unwrap();
+        interface.set_f32(turret, revolve_cmd_vel, 3.0).unwrap();
     }
 }

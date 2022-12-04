@@ -171,7 +171,8 @@ pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
         }
         // println!("  parent: {current_id:?}");
     }
-    // Now we have the velocity of the origin frame, but we wanted the velocity of the entity;
+    // That give us the velocity in the origin, do we need to mutiply that with the final transform
+    // to the pose again?
     (current_pose.to_adjoint() * current_velocity).into()
     // current_velocity.into()
 }

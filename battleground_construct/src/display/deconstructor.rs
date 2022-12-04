@@ -4,7 +4,7 @@ use engine::prelude::*;
 #[derive(Debug, Clone)]
 pub struct Deconstructor {
     pub entity: EntityId,
-    pub elements: Vec<Element>,
+    pub elements: Vec<(Element, Twist)>,
     pub impacts: Vec<(Mat4, f32)>,
 }
 
@@ -26,10 +26,11 @@ impl Deconstructor {
             // Get the world pose for this entity, to add draw transform local to this component.
             // let world_pose = construct.entity_pose(entity);
             let world_pose = crate::components::pose::world_pose(world, entity);
+            let world_vel = crate::components::velocity::world_velocity(world, entity).to_twist();
             for el in component.drawables() {
                 let mut el = el;
                 el.transform = world_pose.transform() * el.transform;
-                self.elements.push(el)
+                self.elements.push((el, world_vel))
             }
         }
     }
