@@ -342,19 +342,17 @@ impl Deconstructor {
 
                                 let fragment_world_pos =
                                     entity_position * el.transform * fragment_pos;
-                                /**/
-                                let cube_world = fragment_world_pos;
-                                let dir = center_world.w.truncate() - cube_world.w.truncate();
-                                let pos = (fragment_world_pos).to_rotation_h();
-                                let vel = (dir.to_h() * pos).w.truncate() * 1.0;
-                                let mut vel = vec3(0.0, 0.0, 0.0);
 
-                                // Add some random jitter.
+                                // First velocity; outward from the body center.
+                                let cube_world = fragment_world_pos;
+                                let dir = cube_world.w.truncate() - center_world.w.truncate();
+                                let pos = (fragment_world_pos).to_rotation_h();
+                                let mut vel = (dir.to_h() * pos).w.truncate() * 0.1;
+
+                                // Add some random jitter, such that it looks prettier.
                                 vel = vel + vec3(rand_f32(), rand_f32(), rand_f32()) * 0.1;
-                                // vel = vec3(10.0, 10.0, 0.0);
-                                // vel = vec3(0.0, 0.0, 0.0);
-                                // println!();
-                                // println!("Vel before: {vel:?}");
+
+                                // Then, add velocities away from the impacts.
                                 for (impact_location, magnitude) in impacts.iter() {
                                     let p1 = impact_location.to_translation();
                                     let p0 = fragment_world_pos.to_translation();
@@ -423,9 +421,9 @@ impl RenderableEffect for Deconstructor {
             particle.color.a =
                 std::cmp::min(particle.color.a, (255 as f32 * ratio_of_lifetime) as u8);
 
-            // println!("Post pose: {:?}", particle.pos);
-            let g = vec3(0.0f32, 0.0, -9.81).to_h();
-            particle.vel += (g * rot).w.truncate() * (dt * dt);
+            let accel = -9.81 * 0.25;
+            let gravity = vec3(0.0f32, 0.0, accel).to_h();
+            particle.vel += (gravity * rot).w.truncate() * dt;
             if particle.pos.w[2] <= 0.0 {
                 particle.vel[0] = particle.vel[0] * 0.5;
                 particle.vel[1] = particle.vel[1] * 0.5;
