@@ -270,7 +270,8 @@ impl Deconstructor {
     ) -> Self {
         let edge_x = 0.05;
         let edge_y = edge_x;
-        let edge_z = edge_x;
+        // let edge_z = edge_x;
+        let edge_z = 1.0;
         let mut renderable =
             InstancedEntity::<three_d::renderer::material::PhysicalMaterial>::new_physical(
                 &context,
@@ -297,7 +298,7 @@ impl Deconstructor {
 
         let mut rand_f32 = move || rng.sample::<f32, StandardNormal>(StandardNormal);
 
-        let do_full_explosion = true;
+        let do_full_explosion = false;
 
         for (el, twist) in elements.iter() {
             match el.primitive {
@@ -349,7 +350,8 @@ impl Deconstructor {
                                 let mut vel = vec3(0.0, 0.0, 0.0);
 
                                 // Add base body velocity.
-                                vel = (twist.v * 1.0) + vel;
+                                vel = vel + (twist.v * 1.0);
+                                // vel = vel + twist.w.cross(p);
 
                                 // Add outward from the body center.
                                 let cube_world = fragment_world_pos;

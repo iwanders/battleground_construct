@@ -112,10 +112,12 @@ macro_rules! create_velocity_implementation {
 }
 create_velocity_implementation!(Velocity);
 
-pub use world_velocity_linear as world_velocity;
-// pub use world_velocity_adjoint as world_velocity;
+// pub use world_velocity_linear as world_velocity;
+pub use world_velocity_adjoint as world_velocity;
 
 pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
+
+    let linear = world_velocity_linear(world, entity);
     // use crate::components::pose::world_pose;
     use crate::components::pose::Pose;
     use crate::components::pose::PreTransform;
@@ -123,7 +125,8 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
 
     let mut current_id = entity.clone();
     let mut current_velocity = Velocity::new().to_twist();
-    // let mut current_pose = Pose::new();
+    let mut current_pose = Pose::new();
+    let mut last_pose = *Pose::new().transform();
     /*
         Changing frame of a twist.
         twist = Adjoint(Frame) * frame_twist.
@@ -150,6 +153,7 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
         } else {
             *Pose::new().transform()
         };
+        last_pose = pose_t;
         // The previous velocity needs to be lifted to the current frame, using the pose.
         current_velocity = pose_t.to_adjoint() * (current_velocity);
 
@@ -163,9 +167,10 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
         } else {
             Velocity::new().to_twist()
         };
+        let vel_t = Twist::new(-vel_t.v, -vel_t.w); // negate the velocity, because we are walking upwards in the tree.
         // Ah, that's the problem, if the Velocity is provided, the Pose will be calculated from
         // it. If the Velocity is not provided, Pose may be used to perform a static transform.
-        // current_pose = (pose_t * *current_pose).into();
+        current_pose = (pose_t * *current_pose).into();
 
         // Now, we can add the current velocity to this local velocity, getting us the total
         // velocity.
@@ -185,7 +190,7 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
         } else {
             *Pose::new().transform()
         };
-        // current_pose = (pre_pose_t * current_pose.transform()).into();
+        current_pose = (pre_pose_t * current_pose.transform()).into();
         current_velocity = pre_pose_t.to_adjoint() * current_velocity;
 
         // T^i,b_a, motion of body a with respect to body b, expressed in psi_i.
@@ -199,14 +204,18 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
         if let Some(parent) = world.component::<super::parent::Parent>(current_id) {
             current_id = parent.parent().clone();
         } else {
+            // No parent... which means the parent is the origin!
+            current_velocity = last_pose.to_inv_h().to_adjoint() * current_velocity;
             break;
         }
         // println!("  parent: {current_id:?}");
     }
     // That give us the velocity in the origin, do we need to mutiply that with the final transform
     // to the pose again?
-    // (current_pose.to_adjoint() * current_velocity).into()
-    current_velocity.into()
+    // return (current_pose.to_adjoint() * current_velocity).into();
+    println!("linear: {linear:?}");
+    println!("current_velocity: {current_velocity:?}");
+    return current_velocity.into();
 }
 
 pub fn world_velocity_linear(world: &World, entity: EntityId) -> Velocity {
