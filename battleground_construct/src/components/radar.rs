@@ -73,16 +73,15 @@ impl Radar {
             // reflector is world -> reflector
             // we want radar -> reflector
             let reflector_local = radar_pose.to_inv_h() * pos;
-            println!("reflector_local: {reflector_local:?}");
 
             // Now the reflector is in local radar frame.
             // Calculating yaw and pitch is now easy.
             let local = reflector_local.to_translation();
             let distance = local.euclid_norm();
 
-            let yaw = local.y.atan2(local.x);
-            let pitch = local.z.atan2(local.y);
-            // atan2 returns in -pi/2, pi/2
+            let yaw = local.y.atan2(local.x); // about z
+            let pitch = local.z.atan2(local.y); // about x
+                                                // atan2 returns in -pi/2, pi/2
 
             let inside_yaw = yaw.abs() <= self.detection_angle_yaw;
             let inside_pitch = pitch.abs() <= self.detection_angle_pitch;
@@ -125,6 +124,19 @@ impl VehicleModule for RadarControl {
                 0,
                 Register::new_i32("reflections", reflections.len() as i32),
             );
+            for (i, reflection) in reflections.iter().enumerate() {
+                let offset = i as u32 * 4 + 1;
+                registers.insert(offset + 0, Register::new_f32("yaw", reflection.yaw));
+                registers.insert(offset + 1, Register::new_f32("pitch", reflection.pitch));
+                registers.insert(
+                    offset + 2,
+                    Register::new_f32("distance", reflection.distance),
+                );
+                registers.insert(
+                    offset + 3,
+                    Register::new_f32("strength", reflection.strength),
+                );
+            }
         }
     }
 }
@@ -135,7 +147,7 @@ mod test {
     use crate::util::test_util::approx_equal;
     use cgmath::vec3;
     #[test]
-    fn test_radar_update() {
+    fn test_radar_normal_update() {
         let mut radar = Radar::new_with_config(RadarConfig {
             range_max: 30.0,
             detection_angle_yaw: 1.0f32.to_radians(),
@@ -168,7 +180,7 @@ mod test {
         }
     }
     #[test]
-    fn test_spherical_radar_update() {
+    fn test_radar_spherical_update() {
         let mut radar = Radar::new_with_config(RadarConfig {
             range_max: 100000.0,
             detection_angle_yaw: 180f32.to_radians(),
@@ -187,6 +199,7 @@ mod test {
         println!("Obtained: {obtained:?}");
         let expected = vec![(3.1415926f32, 0.0f32), (1.5707964, 0.0), (0.0, 1.5707964)];
         for (obtain, expect) in obtained.iter().zip(expected.iter()) {
+            println!("sdfdsf");
             approx_equal!(obtain.yaw, expect.0, 0.001);
             approx_equal!(obtain.pitch, expect.1, 0.001);
         }
