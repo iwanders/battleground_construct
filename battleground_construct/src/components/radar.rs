@@ -162,9 +162,9 @@ mod test {
         println!("Obtained: {obtained:?}");
         assert_eq!(obtained.len(), expected.len());
         for (obtain, expect) in obtained.iter().zip(expected.iter()) {
-            approx_equal(obtain.yaw, expect.0, 0.001);
-            approx_equal(obtain.pitch, expect.1, 0.001);
-            approx_equal(obtain.distance, expect.2, 0.001);
+            approx_equal!(obtain.yaw, expect.0, 0.001);
+            approx_equal!(obtain.pitch, expect.1, 0.001);
+            approx_equal!(obtain.distance, expect.2, 0.001);
         }
     }
     #[test]
@@ -187,8 +187,8 @@ mod test {
         println!("Obtained: {obtained:?}");
         let expected = vec![(3.1415926f32, 0.0f32), (1.5707964, 0.0), (0.0, 1.5707964)];
         for (obtain, expect) in obtained.iter().zip(expected.iter()) {
-            approx_equal(obtain.yaw, expect.0, 0.001);
-            approx_equal(obtain.pitch, expect.1, 0.001);
+            approx_equal!(obtain.yaw, expect.0, 0.001);
+            approx_equal!(obtain.pitch, expect.1, 0.001);
         }
     }
 }
