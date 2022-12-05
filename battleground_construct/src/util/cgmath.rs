@@ -2,6 +2,7 @@ use cgmath::{BaseFloat, Matrix3, Matrix4};
 
 pub mod prelude {
     pub use super::Adjoint;
+    pub use super::EuclideanNorm;
     pub use super::HomogenousTruncate;
     pub use super::InvertHomogeneous;
     pub use super::ToAdjoint;
@@ -12,6 +13,7 @@ pub mod prelude {
     pub use super::ToRotationH;
     pub use super::ToTranslation;
     pub use super::Twist;
+    pub use cgmath::MetricSpace;
 }
 
 // https://github.com/rustgd/cgmath/issues/461
@@ -110,6 +112,18 @@ pub trait ToTranslation<S: BaseFloat> {
 impl<S: BaseFloat> ToTranslation<S> for Matrix4<S> {
     fn to_translation(&self) -> cgmath::Vector3<S> {
         self.w.truncate()
+    }
+}
+
+pub trait EuclideanNorm<S: BaseFloat> {
+    fn euclid_norm(&self) -> S;
+}
+
+impl<S: BaseFloat> EuclideanNorm<S> for cgmath::Vector3<S> {
+    fn euclid_norm(&self) -> S {
+        use cgmath::MetricSpace;
+        self.distance2(cgmath::Vector3::<S>::new(S::zero(), S::zero(), S::zero()))
+            .sqrt()
     }
 }
 
