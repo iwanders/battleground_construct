@@ -26,11 +26,20 @@ pub struct Cylinder {
 }
 impl Eq for Cylinder {}
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Line {
+    pub p0: (f32, f32, f32),
+    pub p1: (f32, f32, f32),
+    pub width: f32,
+}
+impl Eq for Line {}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Primitive {
     Cuboid(Cuboid),
     Sphere(Sphere),
     Cylinder(Cylinder),
+    Line(Line),
 }
 
 impl std::hash::Hash for Primitive {
@@ -53,6 +62,16 @@ impl std::hash::Hash for Primitive {
                 2usize.hash(state);
                 cylinder.radius.to_bits().hash(state);
                 cylinder.height.to_bits().hash(state);
+            }
+            Primitive::Line(line) => {
+                3usize.hash(state);
+                line.p0.0.to_bits().hash(state);
+                line.p0.1.to_bits().hash(state);
+                line.p0.2.to_bits().hash(state);
+                line.p1.0.to_bits().hash(state);
+                line.p1.1.to_bits().hash(state);
+                line.p1.2.to_bits().hash(state);
+                line.width.to_bits().hash(state);
             }
         }
     }

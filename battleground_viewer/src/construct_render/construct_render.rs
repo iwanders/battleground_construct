@@ -319,6 +319,9 @@ impl ConstructRender {
                     .unwrap();
                     m
                 }
+                display::primitives::Primitive::Line(_line) => {
+                    CpuMesh::cylinder(4)
+                }
             };
             self.instanced_meshes.insert(
                 el.primitive,

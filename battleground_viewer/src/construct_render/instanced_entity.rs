@@ -105,24 +105,20 @@ impl<M: Material> InstancedEntity<M> {
         self.update_instances();
     }
 
+    pub fn add_line(&mut self, p0: Vec3, p1: Vec3, width: f32, color: Color) {
+        let rotation = Quat::from_arc(vec3(1.0, 0.0, 0.0), (p1 - p0).normalize(), None);
+        let scale =
+            Mat4::from_nonuniform_scale((p0 - p1).magnitude(), width / 2.0, width / 2.0);
+
+        self.transforms
+            .push(Mat4::from_translation(p0) * <_ as Into<Mat4>>::into(rotation) * scale);
+        self.colors.push(color);
+    }
+
     pub fn set_lines(&mut self, lines: &[(Vec3, Vec3, f32, Color)]) {
-        let mut transformations = Vec::with_capacity(lines.len());
-        let mut colors = Vec::with_capacity(lines.len());
-
         for (p0, p1, width, c) in lines.iter() {
-            let rotation = Quat::from_arc(vec3(1.0, 0.0, 0.0), (p1 - p0).normalize(), None);
-            let scale =
-                Mat4::from_nonuniform_scale((*p0 - *p1).magnitude(), width / 2.0, width / 2.0);
-
-            transformations
-                .push(Mat4::from_translation(*p0) * <_ as Into<Mat4>>::into(rotation) * scale);
-            colors.push(*c);
+            self.add_line(*p0, *p1, *width, *c);
         }
-        let instances = three_d::renderer::geometry::Instances {
-            transformations,
-            colors: Some(colors),
-            ..Default::default()
-        };
-        self.gm.geometry.set_instances(&instances);
+        self.update_instances();
     }
 }

@@ -393,6 +393,7 @@ impl Deconstructor {
                 }
                 battleground_construct::display::primitives::Primitive::Sphere(_) => todo!(),
                 battleground_construct::display::primitives::Primitive::Cylinder(_) => todo!(),
+                battleground_construct::display::primitives::Primitive::Line(_) => todo!(),
             }
         }
         // let particles = vec![particles.pop().unwrap()];
