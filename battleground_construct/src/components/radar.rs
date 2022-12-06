@@ -79,9 +79,8 @@ impl Radar {
             let local = reflector_local.to_translation();
             let distance = local.euclid_norm();
 
-            let yaw = local.y.atan2(local.x); // about z
-            let pitch = local.z.atan2(local.y); // about x
-                                                // atan2 returns in -pi/2, pi/2
+            let yaw = local.y.atan2(local.x); // atan2 returns in -pi/2, pi/2
+            let pitch = (local.z / distance).asin();
 
             let inside_yaw = yaw.abs() <= self.detection_angle_yaw;
             let inside_pitch = pitch.abs() <= self.detection_angle_pitch;
@@ -199,7 +198,6 @@ mod test {
         println!("Obtained: {obtained:?}");
         let expected = vec![(3.1415926f32, 0.0f32), (1.5707964, 0.0), (0.0, 1.5707964)];
         for (obtain, expect) in obtained.iter().zip(expected.iter()) {
-            println!("sdfdsf");
             approx_equal!(obtain.yaw, expect.0, 0.001);
             approx_equal!(obtain.pitch, expect.1, 0.001);
         }

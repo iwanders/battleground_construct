@@ -223,7 +223,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         radar_joint,
         components::radar::Radar::new_with_config(components::radar::RadarConfig {
             range_max: 30.0,
-            detection_angle_yaw: 1.0f32.to_radians(),
+            detection_angle_yaw: 10.0f32.to_radians(),
             detection_angle_pitch: 180f32.to_radians(),
             signal_strength: 1.0,
         }),

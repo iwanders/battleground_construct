@@ -97,7 +97,7 @@ impl VehicleControl for DummyVehicleControl {
                 (reading_yaw + radar_yaw + turret_yaw).rem_euclid(std::f32::consts::PI * 2.0);
             let x = combined_yaw.cos() * distance;
             let y = combined_yaw.sin() * distance;
-            println!("Radar {i} at {combined_yaw:.2}, {pitch:.2}, x: {x:.3}, y: {y:.3}, dist: {distance:.3}");
+            println!("Radar {i} at {combined_yaw:.2}, {pitch:.2}, x: {x:.3}, y: {y:.3}, dist: {distance:.3}, read yaw: {reading_yaw:?}");
         }
     }
 }
