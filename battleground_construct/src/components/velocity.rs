@@ -116,7 +116,6 @@ create_velocity_implementation!(Velocity);
 pub use world_velocity_adjoint as world_velocity;
 
 pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
-
     let linear = world_velocity_linear(world, entity);
     // use crate::components::pose::world_pose;
     use crate::components::pose::Pose;
@@ -168,8 +167,8 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
             Velocity::new().to_twist()
         };
         let vel_t = Twist::new(-vel_t.v, -vel_t.w); // negate the velocity, because we are walking upwards in the tree.
-        // Ah, that's the problem, if the Velocity is provided, the Pose will be calculated from
-        // it. If the Velocity is not provided, Pose may be used to perform a static transform.
+                                                    // Ah, that's the problem, if the Velocity is provided, the Pose will be calculated from
+                                                    // it. If the Velocity is not provided, Pose may be used to perform a static transform.
         current_pose = (pose_t * *current_pose).into();
 
         // Now, we can add the current velocity to this local velocity, getting us the total
@@ -300,5 +299,47 @@ mod test {
         }
 
         assert!((p.h.w[0] - 100.0 * dt * 1.0).abs() <= 0.00001);
+    }
+    #[test]
+    fn test_adjoint_from_lynch_mr_v2_fig_3_dot_18_p_100() {
+        use crate::util::cgmath::prelude::*;
+        use crate::util::test_util::*;
+        use cgmath::vec3;
+        #[allow(non_snake_case)]
+        let Tsb = cgmath::Matrix4::<f32>::from_cols(
+            cgmath::Vector4::<f32>::new(-1.0, 0.0, 0.0, 0.0),
+            cgmath::Vector4::<f32>::new(0.0, 1.0, 0.0, 0.0),
+            cgmath::Vector4::<f32>::new(0.0, 0.0, -1.0, 0.0),
+            cgmath::Vector4::<f32>::new(4.0, 0.4, 0.0, 1.0),
+        );
+
+        // let rs = vec3(2.0, -1.0, 0.0);
+        // let rb = vec3(2.0, -1.4, 0.0);
+
+        // let ws = vec3(0.0, 0.0, 2.0);
+        // let wb = vec3(0.0, 0.0, -2.0);
+
+        // Different order convention!
+        let given_vs = Twist::new(vec3(-2.0, -4.0, 0.0), vec3(0.0, 0.0, 2.0));
+        let given_vb = Twist::new(vec3(2.8, 4.0, 0.0), vec3(0.0, 0.0, -2.0));
+
+        let calculated_vs = Tsb.to_adjoint() * given_vb;
+        println!("calculated_vs: {calculated_vs:?}");
+
+        approx_equal!(given_vs.v.x, calculated_vs.v.x, 0.0001);
+        approx_equal!(given_vs.v.y, calculated_vs.v.y, 0.0001);
+        approx_equal!(given_vs.v.z, calculated_vs.v.z, 0.0001);
+        approx_equal!(given_vs.w.x, calculated_vs.w.x, 0.0001);
+        approx_equal!(given_vs.w.y, calculated_vs.w.y, 0.0001);
+        approx_equal!(given_vs.w.z, calculated_vs.w.z, 0.0001);
+
+        // Check the inverse.
+        let calculated_vb = Tsb.to_inv_h().to_adjoint() * given_vs;
+        approx_equal!(given_vb.v.x, calculated_vb.v.x, 0.0001);
+        approx_equal!(given_vb.v.y, calculated_vb.v.y, 0.0001);
+        approx_equal!(given_vb.v.z, calculated_vb.v.z, 0.0001);
+        approx_equal!(given_vb.w.x, calculated_vb.w.x, 0.0001);
+        approx_equal!(given_vb.w.y, calculated_vb.w.y, 0.0001);
+        approx_equal!(given_vb.w.z, calculated_vb.w.z, 0.0001);
     }
 }
