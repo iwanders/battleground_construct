@@ -286,6 +286,7 @@ pub fn world_velocity_linear(world: &World, entity: EntityId) -> Velocity {
 mod test {
     use super::super::pose::Pose;
     use super::*;
+
     #[test]
     fn test_velocity_integration() {
         let start = Pose::new();
@@ -341,5 +342,63 @@ mod test {
         approx_equal!(given_vb.w.x, calculated_vb.w.x, 0.0001);
         approx_equal!(given_vb.w.y, calculated_vb.w.y, 0.0001);
         approx_equal!(given_vb.w.z, calculated_vb.w.z, 0.0001);
+    }
+
+    #[test]
+    fn test_adjoint_murray_one_dof_manipulator_p_74_example_2_dot_5() {
+        use crate::util::cgmath::prelude::*;
+        use crate::util::test_util::*;
+        use cgmath::vec3;
+        /*
+                         D
+                         Theta revolve
+                         ||-------------------B
+                         ||                    ^ l0
+            //A----------C <----- l2 -------> |
+            //<--- l1 -->                     |
+            //                                v
+
+            Frame A is fixed.
+            l1 is arm between A and Revolute joint.
+            Revolute axis is facing up (scroll up... not out of the screen)
+            l2 is arm between revolute joint and B.
+            Let C be the frame before the revolute joint.
+            Let D be the frame after the revolute joint.
+        */
+
+        // Lets ignore l0, it doesn't add any complexity here.
+        let vel_spatial = |l1: f32, _l2: f32, dtheta: f32| Velocity::from_velocities(vec3(l1 * dtheta, 0.0, 0.0), vec3(0.0, 0.0, dtheta)).to_twist();
+        let vel_body = |_l1: f32, l2: f32, dtheta: f32| Velocity::from_velocities(vec3(-l2 * dtheta, 0.0, 0.0), vec3(0.0, 0.0, dtheta)).to_twist();
+
+        let l1 = 1.1;
+        let l2 = 3.2;
+        let theta = 0.0;
+        let dtheta = 1.0;
+
+        let p_a_c = Pose::from_se2(l1, 0.0, 0.0);
+        let p_c_d = Pose::from_se2(0.0, 0.0, theta);
+
+        let v_c_d = Velocity::from_velocities(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, dtheta)).to_twist();
+        let p_d_b = Pose::from_se2(l2, 0.0, 0.0);
+
+        let vnull = Velocity::from_velocities(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 0.0)).to_twist();
+
+        // Lets try to express B in A using these, and only these components.
+        // First, lift velocity of B (null, to D).
+        let v_b_in_d = p_d_b.to_inv_h().to_adjoint() * vnull;
+        let v_b_in_c = p_c_d.to_inv_h().to_adjoint() * (v_b_in_d + v_c_d); // add the velocity of the joint here
+        let v_b_in_a = p_a_c.to_inv_h().to_adjoint() * (v_b_in_c);
+
+        let vel_spatial = vel_spatial(l1, l2, dtheta);
+
+        // Shouldn't these be the same then??
+        println!("vel_spatial: {vel_spatial:?}");
+        println!("   v_b_in_a: {v_b_in_a:?}");
+
+        // Velocity of the body, should be v_c_d carried to B?
+        let vel_body = vel_body(l1, l2, dtheta);
+        let v_in_B = p_d_b.to_inv_h().to_adjoint() * v_c_d;
+        println!(" vel_body: {vel_body:?}");
+        println!("   v_in_B: {v_in_B:?}");
     }
 }
