@@ -158,6 +158,7 @@ impl ConstructRender {
 
         self.component_to_meshes::<display::debug_box::DebugBox>(context, construct);
         self.component_to_meshes::<display::debug_sphere::DebugSphere>(context, construct);
+        self.component_to_meshes::<display::debug_lines::DebugLines>(context, construct);
 
         self.component_to_meshes::<display::flag::Flag>(context, construct);
 
@@ -319,9 +320,7 @@ impl ConstructRender {
                     .unwrap();
                     m
                 }
-                display::primitives::Primitive::Line(_line) => {
-                    CpuMesh::cylinder(4)
-                }
+                display::primitives::Primitive::Line(_line) => CpuMesh::cylinder(4),
             };
             self.instanced_meshes.insert(
                 el.primitive,
@@ -340,6 +339,17 @@ impl ConstructRender {
             b: el.color.b,
             a: el.color.a,
         };
-        instanced.add(transform, color);
+        match &el.primitive {
+            display::primitives::Primitive::Line(l) => {
+                use battleground_construct::util::cgmath::ToHomogenous;
+                use battleground_construct::util::cgmath::ToTranslation;
+                let p0_original = vec3(l.p0.0, l.p0.1, l.p0.2);
+                let p1_original = vec3(l.p1.0, l.p1.1, l.p1.2);
+                let p0_transformed = (transform * p0_original.to_h()).to_translation();
+                let p1_transformed = (transform * p1_original.to_h()).to_translation();
+                instanced.add_line(p0_transformed, p1_transformed, l.width, color);
+            }
+            _ => instanced.add(transform, color),
+        }
     }
 }

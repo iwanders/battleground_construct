@@ -210,10 +210,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
 
     world.add_component(radar_joint, radar_revolute);
+    // world.add_component(radar_joint, display::debug_lines::DebugLines::straight(10.0, 0.01, display::primitives::Color::RED));
     world.add_component(
         radar_joint,
         PreTransform::from_translation(Vec3::new(0.0, 0.0, 0.07)),
     );
+
     world.add_component(radar_joint, components::pose::Pose::new());
     world.add_component(radar_joint, components::velocity::Velocity::new());
     world.add_component(radar_joint, Parent::new(turret_id.clone()));

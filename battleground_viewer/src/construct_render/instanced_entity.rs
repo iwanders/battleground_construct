@@ -107,8 +107,7 @@ impl<M: Material> InstancedEntity<M> {
 
     pub fn add_line(&mut self, p0: Vec3, p1: Vec3, width: f32, color: Color) {
         let rotation = Quat::from_arc(vec3(1.0, 0.0, 0.0), (p1 - p0).normalize(), None);
-        let scale =
-            Mat4::from_nonuniform_scale((p0 - p1).magnitude(), width / 2.0, width / 2.0);
+        let scale = Mat4::from_nonuniform_scale((p0 - p1).magnitude(), width / 2.0, width / 2.0);
 
         self.transforms
             .push(Mat4::from_translation(p0) * <_ as Into<Mat4>>::into(rotation) * scale);
