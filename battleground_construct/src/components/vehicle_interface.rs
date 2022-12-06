@@ -21,7 +21,11 @@ world.add_component(tank_entity, vehicle_control);
 pub enum Value {
     I32(i32),
     F32(f32),
-    String(String),
+    Bytes {
+        values: Vec<u8>,
+        min_len: usize,
+        max_len: usize,
+    },
 }
 
 /// A register, with a name and a value.
@@ -46,6 +50,14 @@ impl Register {
             _ => None,
         }
     }
+
+    /// Retrieve the bytes from this register.
+    pub fn value_bytes(&self) -> Option<&[u8]> {
+        match &self.value {
+            Value::Bytes { values, .. } => Some(&values[..]),
+            _ => None,
+        }
+    }
 }
 
 impl Register {
@@ -62,6 +74,18 @@ impl Register {
         Register {
             name: name.to_owned(),
             value: Value::I32(value),
+        }
+    }
+
+    /// Create a new bytes register.
+    pub fn new_bytes(name: &str) -> Self {
+        Register {
+            name: name.to_owned(),
+            value: Value::Bytes {
+                values: vec![],
+                min_len: 0,
+                max_len: std::usize::MAX,
+            },
         }
     }
 }
@@ -91,6 +115,7 @@ pub struct RegisterInterface {
     modules: std::collections::HashMap<ModuleId, Module>,
 }
 
+use battleground_vehicle_control::ErrorType;
 impl RegisterInterface {
     pub fn new() -> Self {
         RegisterInterface::default()
@@ -143,7 +168,7 @@ impl RegisterInterface {
         if let Some(m) = self.modules.get(&module) {
             Ok(m)
         } else {
-            Err(Self::no_such_module(module))
+            Err(Self::interface_error(module, 0, ErrorType::NoSuchModule))
         }
     }
 
@@ -154,7 +179,7 @@ impl RegisterInterface {
         if let Some(m) = self.modules.get_mut(&module) {
             Ok(m)
         } else {
-            Err(Self::no_such_module(module))
+            Err(Self::interface_error(module, 0, ErrorType::NoSuchModule))
         }
     }
 
@@ -167,7 +192,11 @@ impl RegisterInterface {
         if let Some(reg) = m.registers.get(&register_index) {
             Ok(reg)
         } else {
-            Err(Self::no_such_register(module, register_index))
+            Err(Self::interface_error(
+                module,
+                register_index,
+                ErrorType::NoSuchRegister,
+            ))
         }
     }
 
@@ -180,29 +209,23 @@ impl RegisterInterface {
         if let Some(reg) = m.registers.get_mut(&register_index) {
             Ok(reg)
         } else {
-            Err(Self::no_such_register(module, register_index))
+            Err(Self::interface_error(
+                module,
+                register_index,
+                ErrorType::NoSuchRegister,
+            ))
         }
     }
 
-    fn no_such_module(module: u32) -> Box<InterfaceError> {
-        Box::new(InterfaceError {
-            module: module,
-            register: 0,
-            error_type: battleground_vehicle_control::ErrorType::NoSuchModule,
-        })
-    }
-    fn no_such_register(module: u32, register: u32) -> Box<InterfaceError> {
+    fn interface_error(
+        module: u32,
+        register: u32,
+        error_type: battleground_vehicle_control::ErrorType,
+    ) -> Box<InterfaceError> {
         Box::new(InterfaceError {
             module: module,
             register: register,
-            error_type: battleground_vehicle_control::ErrorType::NoSuchRegister,
-        })
-    }
-    fn wrong_type(module: u32, register: u32) -> Box<InterfaceError> {
-        Box::new(InterfaceError {
-            module: module,
-            register: register,
-            error_type: battleground_vehicle_control::ErrorType::WrongType,
+            error_type: error_type,
         })
     }
 }
@@ -251,7 +274,11 @@ impl battleground_vehicle_control::Interface for RegisterInterface {
         let r = self.get_register(module, register)?;
         match r.value {
             Value::F32(v) => Ok(v),
-            _ => Err(RegisterInterface::wrong_type(module, register)),
+            _ => Err(RegisterInterface::interface_error(
+                module,
+                register,
+                ErrorType::WrongType,
+            )),
         }
     }
     /// Get an u32 register.
@@ -263,7 +290,11 @@ impl battleground_vehicle_control::Interface for RegisterInterface {
         let r = self.get_register(module, register)?;
         match r.value {
             Value::I32(v) => Ok(v),
-            _ => Err(RegisterInterface::wrong_type(module, register)),
+            _ => Err(RegisterInterface::interface_error(
+                module,
+                register,
+                ErrorType::WrongType,
+            )),
         }
     }
 
@@ -281,7 +312,11 @@ impl battleground_vehicle_control::Interface for RegisterInterface {
                 *v = value;
                 Ok(old)
             }
-            _ => Err(RegisterInterface::wrong_type(module, register)),
+            _ => Err(RegisterInterface::interface_error(
+                module,
+                register,
+                ErrorType::WrongType,
+            )),
         }
     }
 
@@ -299,7 +334,99 @@ impl battleground_vehicle_control::Interface for RegisterInterface {
                 *v = value;
                 Ok(old)
             }
-            _ => Err(RegisterInterface::wrong_type(module, register)),
+            _ => Err(RegisterInterface::interface_error(
+                module,
+                register,
+                ErrorType::WrongType,
+            )),
+        }
+    }
+
+    /// Get the length required to read a byte register.
+    fn get_bytes_len(
+        &self,
+        module: u32,
+        register: u32,
+    ) -> Result<usize, battleground_vehicle_control::Error> {
+        let r = self.get_register(module, register)?;
+        match &r.value {
+            Value::Bytes { values, .. } => Ok(values.len()),
+            _ => Err(RegisterInterface::interface_error(
+                module,
+                register,
+                ErrorType::WrongType,
+            )),
+        }
+    }
+
+    /// Get the actual bytes of a byte register, returns the number of bytes written.
+    fn get_bytes(
+        &self,
+        module: u32,
+        register: u32,
+        destination: &mut [u8],
+    ) -> Result<usize, battleground_vehicle_control::Error> {
+        let r = self.get_register(module, register)?;
+        match &r.value {
+            Value::Bytes { ref values, .. } => {
+                if destination.len() < values.len() {
+                    Err(RegisterInterface::interface_error(
+                        module,
+                        register,
+                        ErrorType::ReadOverflow,
+                    ))
+                } else {
+                    // Must be the correct size.
+                    destination[0..values.len()].copy_from_slice(&values);
+                    Ok(values.len())
+                }
+            }
+            _ => Err(RegisterInterface::interface_error(
+                module,
+                register,
+                ErrorType::WrongType,
+            )),
+        }
+    }
+
+    /// Set a byte register.
+    fn set_bytes(
+        &mut self,
+        module: u32,
+        register: u32,
+        input_values: &[u8],
+    ) -> Result<(), battleground_vehicle_control::Error> {
+        let r = self.get_register_mut(module, register)?;
+        match &mut r.value {
+            Value::Bytes {
+                ref mut values,
+                min_len,
+                max_len,
+            } => {
+                if values.len() < *min_len {
+                    Err(RegisterInterface::interface_error(
+                        module,
+                        register,
+                        ErrorType::WriteUnderflow,
+                    ))
+                } else if values.len() > *max_len {
+                    Err(RegisterInterface::interface_error(
+                        module,
+                        register,
+                        ErrorType::WriteOverflow,
+                    ))
+                } else {
+                    // Must be the correct size.
+                    values.clear();
+                    values.extend_from_slice(input_values); // do the copy.
+                    Ok(())
+                }
+            }
+            _ => Err(RegisterInterface::interface_error(
+                module,
+                register,
+                ErrorType::WrongType,
+            )),
         }
     }
 }

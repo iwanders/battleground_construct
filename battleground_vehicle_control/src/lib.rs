@@ -18,17 +18,27 @@ pub trait Interface {
     /// Retrieve a register name.
     fn register_name(&self, module: u32, register: u32) -> Result<String, Error>;
 
-    /// Get an f32 register.
-    fn get_f32(&self, module: u32, register: u32) -> Result<f32, Error>;
-
     /// Get an i32 register.
     fn get_i32(&self, module: u32, register: u32) -> Result<i32, Error>;
+
+    /// Set an i32 register.
+    fn set_i32(&mut self, module: u32, register: u32, value: i32) -> Result<i32, Error>;
+
+    /// Get an f32 register.
+    fn get_f32(&self, module: u32, register: u32) -> Result<f32, Error>;
 
     /// Set an f32 register.
     fn set_f32(&mut self, module: u32, register: u32, value: f32) -> Result<f32, Error>;
 
-    /// Set an i32 register.
-    fn set_i32(&mut self, module: u32, register: u32, value: i32) -> Result<i32, Error>;
+    /// Get the length required to read a byte register.
+    fn get_bytes_len(&self, module: u32, register: u32) -> Result<usize, Error>;
+
+    /// Get the actual bytes of a byte register, returns the number of bytes written.
+    fn get_bytes(&self, module: u32, register: u32, destination: &mut [u8])
+        -> Result<usize, Error>;
+
+    /// Set a byte register.
+    fn set_bytes(&mut self, module: u32, register: u32, values: &[u8]) -> Result<(), Error>;
 }
 
 /// The vehicle ai should implement this trait. Update gets called periodically.
@@ -50,6 +60,9 @@ pub enum ErrorType {
     NoSuchModule,
     NoSuchRegister,
     WrongType,
+    ReadOverflow,
+    WriteOverflow,
+    WriteUnderflow,
 }
 
 /// Finally, it implements display.
@@ -68,6 +81,27 @@ impl std::fmt::Display for InterfaceError {
             }
             ErrorType::WrongType => {
                 write!(f, "{}:{} has a different type", self.register, self.module)
+            }
+            ErrorType::ReadOverflow => {
+                write!(
+                    f,
+                    "{}:{} destination buffer not large enough",
+                    self.register, self.module
+                )
+            }
+            ErrorType::WriteOverflow => {
+                write!(
+                    f,
+                    "{}:{} input data exceeds register size",
+                    self.register, self.module
+                )
+            }
+            ErrorType::WriteUnderflow => {
+                write!(
+                    f,
+                    "{}:{} register size exceeds input data",
+                    self.register, self.module
+                )
             }
         }
     }
