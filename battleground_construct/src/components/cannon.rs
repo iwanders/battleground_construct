@@ -57,17 +57,17 @@ impl Cannon {
 impl Component for Cannon {}
 
 use crate::components::vehicle_interface::{Register, RegisterMap, VehicleModule};
-pub struct CannonControl {
+pub struct CannonModule {
     entity: EntityId,
 }
 
-impl CannonControl {
+impl CannonModule {
     pub fn new(entity: EntityId) -> Self {
-        CannonControl { entity }
+        CannonModule { entity }
     }
 }
 
-impl VehicleModule for CannonControl {
+impl VehicleModule for CannonModule {
     fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
         registers.clear();
         if let Some(cannon) = world.component::<Cannon>(self.entity) {

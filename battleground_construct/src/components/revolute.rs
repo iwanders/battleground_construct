@@ -64,17 +64,17 @@ impl Revolute {
 impl Component for Revolute {}
 
 use crate::components::vehicle_interface::{Register, RegisterMap, VehicleModule};
-pub struct RevoluteControl {
+pub struct RevoluteModule {
     entity: EntityId,
 }
 
-impl RevoluteControl {
+impl RevoluteModule {
     pub fn new(entity: EntityId) -> Self {
-        RevoluteControl { entity }
+        RevoluteModule { entity }
     }
 }
 
-impl VehicleModule for RevoluteControl {
+impl VehicleModule for RevoluteModule {
     fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
         registers.clear();
         if let Some(revolute) = world.component::<Revolute>(self.entity) {

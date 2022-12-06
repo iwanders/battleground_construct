@@ -38,17 +38,17 @@ impl DifferentialDriveBase {
 impl Component for DifferentialDriveBase {}
 
 use crate::components::vehicle_interface::{Register, RegisterMap, VehicleModule};
-pub struct DifferentialDriveBaseControl {
+pub struct DifferentialDriveBaseModule {
     entity: EntityId,
 }
 
-impl DifferentialDriveBaseControl {
+impl DifferentialDriveBaseModule {
     pub fn new(entity: EntityId) -> Self {
-        DifferentialDriveBaseControl { entity }
+        DifferentialDriveBaseModule { entity }
     }
 }
 
-impl VehicleModule for DifferentialDriveBaseControl {
+impl VehicleModule for DifferentialDriveBaseModule {
     fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
         registers.clear();
         if let Some(base) = world.component::<DifferentialDriveBase>(self.entity) {

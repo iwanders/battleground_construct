@@ -98,7 +98,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     register_interface.get_mut().add_module(
         "base",
         BASE_MODULE,
-        components::differential_drive_base::DifferentialDriveBaseControl::new(vehicle_id),
+        components::differential_drive_base::DifferentialDriveBaseModule::new(vehicle_id),
     );
 
     world.add_component(vehicle_id, base);
@@ -133,7 +133,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     register_interface.get_mut().add_module(
         "turret",
         TURRET_MODULE,
-        components::revolute::RevoluteControl::new(turret_id),
+        components::revolute::RevoluteModule::new(turret_id),
     );
 
     tank_group_ids.push(turret_id.clone());
@@ -156,7 +156,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     register_interface.get_mut().add_module(
         "barrel",
         BARREL_MODULE,
-        components::revolute::RevoluteControl::new(barrel_id),
+        components::revolute::RevoluteModule::new(barrel_id),
     );
 
     world.add_component(barrel_id, barrel_revolute);
@@ -189,7 +189,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     register_interface.get_mut().add_module(
         "cannon",
         CANNON_MODULE,
-        components::cannon::CannonControl::new(nozzle_id),
+        components::cannon::CannonModule::new(nozzle_id),
     );
 
     let radar_joint = world.add_entity();
@@ -201,12 +201,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     register_interface.get_mut().add_module(
         "radar_rotation",
         RADAR_ROTATION,
-        components::revolute::RevoluteControl::new(radar_joint),
+        components::revolute::RevoluteModule::new(radar_joint),
     );
     register_interface.get_mut().add_module(
         "radar",
         RADAR_MODULE,
-        components::radar::RadarControl::new(radar_joint),
+        components::radar::RadarModule::new(radar_joint),
     );
 
     world.add_component(radar_joint, radar_revolute);
