@@ -144,8 +144,8 @@ impl<S: BaseFloat> ToCross<S> for cgmath::Vector3<S> {
 
 #[derive(Debug, Copy, Clone)]
 pub struct Twist<S: BaseFloat> {
-    pub w: cgmath::Vector3<S>,
     pub v: cgmath::Vector3<S>,
+    pub w: cgmath::Vector3<S>,
 }
 
 impl<S: BaseFloat> Twist<S> {

@@ -137,7 +137,7 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
         Velocity is local frame. Pose is the offset to the next frame.
     */
     loop {
-        // println!("Current id: {current_id:?}");
+        println!("Current id: {current_id:?}");
         // T^ib_a, motion of body a with respect to body b, expressed in psi_i.
         // H^a_b, H_to_a_from_b, is H from B to A.
 
@@ -166,45 +166,45 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
         } else {
             Velocity::new().to_twist()
         };
-        let vel_t = Twist::new(-vel_t.v, -vel_t.w); // negate the velocity, because we are walking upwards in the tree.
+        // let vel_t = Twist::new(-vel_t.v, -vel_t.w); // negate the velocity, because we are walking upwards in the tree.
                                                     // Ah, that's the problem, if the Velocity is provided, the Pose will be calculated from
                                                     // it. If the Velocity is not provided, Pose may be used to perform a static transform.
         current_pose = (pose_t * *current_pose).into();
 
         // Now, we can add the current velocity to this local velocity, getting us the total
         // velocity.
+        println!("  current_velocity: {current_velocity:?}");
+        println!("  pose_t: {pose_t:?}");
+        println!("  vel_t here : {vel_t:?}");
         current_velocity = current_velocity + vel_t;
-        // println!("  current_velocity: {current_velocity:?}");
-        // println!("  vel_t: {vel_t:?}");
-        // println!("  combined_vel: {combined_vel:?}");
-        // println!("  pose_t: {pose_t:?}");
+        println!("  combined_vel: {current_velocity:?}");
         // println!("  pose_t adjoint: {:?}", pose_t.to_adjoint());
 
         // println!("  new current_velocity: {current_velocity:?}");
         // Pre transform is 'current' (pose) frame expressed in parent (denoted sr).
         // So H^c_r
         let pre_pose_t = if let Some(pre_pose) = world.component::<PreTransform>(current_id) {
-            // println!("Found PreTransform for  {current_id:?}");
+            println!("Found PreTransform for  {current_id:?}");
             *pre_pose.transform()
         } else {
             *Pose::new().transform()
         };
-        current_pose = (pre_pose_t * current_pose.transform()).into();
+        // current_pose = (pre_pose_t * current_pose.transform()).into();
         current_velocity = pre_pose_t.to_adjoint() * current_velocity;
 
         // T^i,b_a, motion of body a with respect to body b, expressed in psi_i.
         // T^j,l_k = Ad(H^j_i) * T^i,l_k
         // T^c,l_k = Ad(H^c_r) * T^r,l_k
 
-        // println!("  pre_pose_t: {pre_pose_t:?}");
+        println!("  pre_pose_t: {pre_pose_t:?}");
         // println!("  pre_pose_t adjoint: {:?}", pre_pose_t.to_adjoint());
-        // println!("  new current_velocity: {current_velocity:?}");
+        println!("  new current_velocity: {current_velocity:?}");
 
         if let Some(parent) = world.component::<super::parent::Parent>(current_id) {
             current_id = parent.parent().clone();
         } else {
             // No parent... which means the parent is the origin!
-            current_velocity = last_pose.to_inv_h().to_adjoint() * current_velocity;
+            // current_velocity = last_pose.to_inv_h().to_adjoint() * current_velocity;
             break;
         }
         // println!("  parent: {current_id:?}");
