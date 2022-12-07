@@ -351,12 +351,15 @@ mod test {
         use cgmath::vec3;
         /*
                          D
-                         Theta revolve
-                         ||-------------------B
+            ^y           Theta revolve
+            |            ||-------------------B
                          ||                    ^ l0
             //A----------C <----- l2 -------> |
             //<--- l1 -->                     |
             //                                v
+            -> x
+            into screen; y
+            
 
             Frame A is fixed.
             l1 is arm between A and Revolute joint.
@@ -387,6 +390,7 @@ mod test {
         // First, lift velocity of B (null, to D).
         let v_b_in_d = p_d_b.to_inv_h().to_adjoint() * vnull;
         let v_b_in_c = p_c_d.to_inv_h().to_adjoint() * (v_b_in_d + v_c_d); // add the velocity of the joint here
+        println!("   v_b_in_c: {v_b_in_c:?}");
         let v_b_in_a = p_a_c.to_inv_h().to_adjoint() * (v_b_in_c);
 
         let vel_spatial = vel_spatial(l1, l2, dtheta);
@@ -400,5 +404,8 @@ mod test {
         let v_in_B = p_d_b.to_inv_h().to_adjoint() * v_c_d;
         println!(" vel_body: {vel_body:?}");
         println!("   v_in_B: {v_in_B:?}");
+
+        // Oh, their convention has 'x' positive out of the paper. So yeah, then their -x is our y
+        // and the results match.
     }
 }
