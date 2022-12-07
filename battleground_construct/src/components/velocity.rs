@@ -235,8 +235,8 @@ use crate::display::primitives::Mat4;
     let mut current_pose = Pose::new();
     for f in frames.iter().rev() {
         current_velocity = f.pre_transform.to_adjoint() * current_velocity;
-        current_velocity = f.relative_pose.to_adjoint() * current_velocity;
         current_velocity = (current_velocity + f.relative_vel);
+        current_velocity = f.relative_pose.to_adjoint() * current_velocity;
 
         current_pose = (f.relative_pose * current_pose.transform()).into();
         current_pose = (f.pre_transform * current_pose.transform()).into();
@@ -244,7 +244,7 @@ use crate::display::primitives::Mat4;
 
     // Now that we have all velocities accumulated into the 'deepest' frame, we need to rotate
     // the velocity by that frame to be aligned with the world frame.
-    current_velocity = current_pose.to_rotation_h().to_inv_h().to_adjoint() * current_velocity;
+    // current_velocity = current_pose.to_rotation_h().to_inv_h().to_adjoint() * current_velocity;
     
     // now, to express the world velocity, we take the frames, reverse them.
     current_velocity.into()
