@@ -121,11 +121,20 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
     use crate::components::pose::Pose;
     use crate::components::pose::PreTransform;
     use crate::util::cgmath::prelude::*;
-
+use crate::display::primitives::Mat4;
     let mut current_id = entity.clone();
     let mut current_velocity = Velocity::new().to_twist();
     let mut current_pose = Pose::new();
     let mut last_pose = *Pose::new().transform();
+
+    struct Frame {
+        relative_pose: Mat4,
+        pre_transform: Mat4,
+        relative_vel: Twist<f32>,
+        entity: EntityId,
+    }
+    let mut frames: Vec<Frame> = vec![];
+    
     /*
         Changing frame of a twist.
         twist = Adjoint(Frame) * frame_twist.
@@ -200,6 +209,13 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
         // println!("  pre_pose_t adjoint: {:?}", pre_pose_t.to_adjoint());
         println!("  new current_velocity: {current_velocity:?}");
 
+        frames.push(Frame{
+            relative_pose: pose_t,
+            pre_transform: pre_pose_t,
+            relative_vel: vel_t,
+            entity: current_id,
+        });
+
         if let Some(parent) = world.component::<super::parent::Parent>(current_id) {
             current_id = parent.parent().clone();
         } else {
@@ -214,7 +230,25 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
     // return (current_pose.to_adjoint() * current_velocity).into();
     println!("linear: {linear:?}");
     println!("current_velocity: {current_velocity:?}");
-    return current_velocity.into();
+    // return current_velocity.into();
+    let mut current_velocity = Velocity::new().to_twist();
+    let mut current_pose = Pose::new();
+    for f in frames.iter().rev() {
+        current_velocity = f.pre_transform.to_adjoint() * current_velocity;
+        current_velocity = f.relative_pose.to_adjoint() * current_velocity;
+        current_velocity = (current_velocity + f.relative_vel);
+
+        current_pose = (f.relative_pose * current_pose.transform()).into();
+        current_pose = (f.pre_transform * current_pose.transform()).into();
+    }
+
+    // Now that we have all velocities accumulated into the 'deepest' frame, we need to rotate
+    // the velocity by that frame to be aligned with the world frame.
+    current_velocity = current_pose.to_rotation_h().to_inv_h().to_adjoint() * current_velocity;
+    
+    // now, to express the world velocity, we take the frames, reverse them.
+    current_velocity.into()
+
 }
 
 pub fn world_velocity_linear(world: &World, entity: EntityId) -> Velocity {
