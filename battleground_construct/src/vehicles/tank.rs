@@ -168,6 +168,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(barrel_id, components::velocity::Velocity::new());
     world.add_component(barrel_id, Parent::new(turret_id.clone()));
     world.add_component(barrel_id, display::tank_barrel::TankBarrel::new());
+    // world.add_component(barrel_id, display::debug_lines::DebugLines::straight(10.0, 0.1, display::primitives::Color::BLUE));
 
     // If the tank is shooting, add the nozzle and associated components
     let nozzle_id = world.add_entity();

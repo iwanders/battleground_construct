@@ -63,15 +63,9 @@ impl std::hash::Hash for Primitive {
                 cylinder.radius.to_bits().hash(state);
                 cylinder.height.to_bits().hash(state);
             }
-            Primitive::Line(line) => {
+            Primitive::Line(_line) => {
+                // All lines hash the same.
                 3usize.hash(state);
-                line.p0.0.to_bits().hash(state);
-                line.p0.1.to_bits().hash(state);
-                line.p0.2.to_bits().hash(state);
-                line.p1.0.to_bits().hash(state);
-                line.p1.1.to_bits().hash(state);
-                line.p1.2.to_bits().hash(state);
-                line.width.to_bits().hash(state);
             }
         }
     }

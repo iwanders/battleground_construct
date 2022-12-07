@@ -15,13 +15,15 @@ use instanced_entity::InstancedEntity;
 
 use three_d::renderer::material::PhysicalMaterial;
 
+struct Properties {
+    object: InstancedEntity<PhysicalMaterial>,
+    cast_shadow: bool,
+}
+
 /// The object used to render a construct.
 pub struct ConstructRender {
     static_gms: Vec<Gm<Mesh, PhysicalMaterial>>,
-    instanced_meshes: std::collections::HashMap<
-        display::primitives::Primitive,
-        InstancedEntity<PhysicalMaterial>,
-    >,
+    instanced_meshes: std::collections::HashMap<display::primitives::Primitive, Properties>,
     grid_lines: InstancedEntity<ColorMaterial>,
 
     effects: std::collections::HashMap<EffectId, Box<dyn RenderableEffect>>,
@@ -97,7 +99,8 @@ impl ConstructRender {
     pub fn shadow_meshes(&self) -> Vec<&impl Geometry> {
         self.instanced_meshes
             .values()
-            .map(|x| &x.gm().geometry)
+            .filter(|p| p.cast_shadow)
+            .map(|x| &x.object.gm().geometry)
             .collect::<_>()
     }
 
@@ -110,7 +113,7 @@ impl ConstructRender {
             &mut self
                 .instanced_meshes
                 .values()
-                .map(|x| x.gm() as &dyn Object)
+                .map(|x| x.object.gm() as &dyn Object)
                 .collect::<Vec<&dyn Object>>(),
         );
         renderables.append(
@@ -135,7 +138,7 @@ impl ConstructRender {
 
     fn update_instances(&mut self) {
         for instance_entity in self.instanced_meshes.values_mut() {
-            instance_entity.update_instances()
+            instance_entity.object.update_instances()
         }
     }
 
@@ -292,6 +295,7 @@ impl ConstructRender {
         entity_transform: &Matrix4<f32>,
     ) {
         if !self.instanced_meshes.contains_key(&el.primitive) {
+            let mut cast_shadow = true;
             let primitive_mesh = match el.primitive {
                 display::primitives::Primitive::Cuboid(cuboid) => {
                     let mut m = CpuMesh::cube();
@@ -320,18 +324,25 @@ impl ConstructRender {
                     .unwrap();
                     m
                 }
-                display::primitives::Primitive::Line(_line) => CpuMesh::cylinder(4),
+                display::primitives::Primitive::Line(_line) => {
+                    cast_shadow = false;
+                    CpuMesh::cylinder(4)
+                }
             };
             self.instanced_meshes.insert(
                 el.primitive,
-                InstancedEntity::new_physical(context, &primitive_mesh),
+                Properties {
+                    object: InstancedEntity::new_physical(context, &primitive_mesh),
+                    cast_shadow,
+                },
             );
         }
 
-        let instanced = self
+        let instanced = &mut self
             .instanced_meshes
             .get_mut(&el.primitive)
-            .expect("just checked it, will be there");
+            .expect("just checked it, will be there")
+            .object;
         let transform = entity_transform * el.transform;
         let color = Color {
             r: el.color.r,
