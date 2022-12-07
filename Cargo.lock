@@ -1287,6 +1287,7 @@ dependencies = [
 [[package]]
 name = "three-d"
 version = "0.15.0"
+source = "git+https://github.com/iwanders/asny-three-d?rev=f69504e3da5254e1087a0af7a8a8e2f055b16afb#f69504e3da5254e1087a0af7a8a8e2f055b16afb"
 dependencies = [
  "cgmath",
  "egui",

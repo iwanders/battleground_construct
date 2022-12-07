@@ -8,8 +8,8 @@ edition = "2021"
 engine = { path = "../engine" }
 battleground_construct = { path = "../battleground_construct" }
 #three-d = {version = "0.14.0", features=["egui-gui"]}
-three-d = {version = "0.15.0", features=["egui-gui"], path = "../../../asny-three-d" }
+#three-d = {version = "0.15.0", features=["egui-gui"], path = "../../../asny-three-d" }
 #three-d = {version = "0.15.0", features=["egui-gui"], git = "https://github.com/iwanders/asny-three-d", branch = "orbit-control-improvements"  }
-##three-d = {version = "0.15.0", features=["egui-gui"], git = "https://github.com/iwanders/asny-three-d", rev = "7ae04b673f8cc4c116ac5c1975cb4851bb2df2ac"  }
+three-d = {version = "0.15.0", features=["egui-gui"], git = "https://github.com/iwanders/asny-three-d", rev = "f69504e3da5254e1087a0af7a8a8e2f055b16afb"  }
 rand = "0.8.5"
 rand_distr = "0.4.3"
