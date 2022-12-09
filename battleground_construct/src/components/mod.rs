@@ -10,6 +10,7 @@ pub mod health;
 pub mod hit_box;
 pub mod hit_by;
 pub mod hit_sphere;
+pub mod localization;
 pub mod parent;
 pub mod point_projectile;
 pub mod pose;

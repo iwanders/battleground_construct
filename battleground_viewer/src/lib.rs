@@ -42,8 +42,8 @@ struct ConstructViewer {
     context: three_d::core::Context,
     ambient_light: three_d::renderer::light::AmbientLight,
     directional_light: DirectionalLight,
-    // control: FlyControl,
-    control: OrbitControl,
+    control: FlyControl,
+    // control: OrbitControl,
     window: Window,
 
     construct: Construct,
@@ -76,6 +76,7 @@ impl ConstructViewer {
             1000.0,
         );
 
+        /*
         let config = three_d::renderer::control::OrbitControlConfig {
             speed_orbit_horizontal: 0.1,
             speed_orbit_vertical: 0.1,
@@ -86,7 +87,8 @@ impl ConstructViewer {
         };
 
         let control = OrbitControl::new_with_config(config);
-        // let mut control = FlyControl::new(0.1);
+        */
+        let mut control = FlyControl::new(0.1);
 
         let ambient_light =
             three_d::renderer::light::AmbientLight::new(&context, 0.1, Color::WHITE);

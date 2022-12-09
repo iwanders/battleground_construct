@@ -9,6 +9,7 @@ pub mod prelude {
     pub use super::ToCross; // ToSkew?
     pub use super::ToHomogenous;
     pub use super::ToQuaternion;
+    pub use super::ToRollPitchYaw;
     pub use super::ToRotation;
     pub use super::ToRotationH;
     pub use super::ToTranslation;
@@ -190,5 +191,59 @@ impl<S: BaseFloat> ToAdjoint<S> for cgmath::Matrix4<S> {
             r: self.to_rotation(),
             p_r: self.w.truncate().to_cross() * self.to_rotation(),
         }
+    }
+}
+
+pub trait ToRollPitchYaw<S: BaseFloat> {
+    fn to_rpy(&self) -> cgmath::Vector3<S>;
+}
+
+impl<S: BaseFloat> ToRollPitchYaw<S> for cgmath::Matrix4<S> {
+    fn to_rpy(&self) -> cgmath::Vector3<S> {
+        self.to_rotation().to_rpy()
+    }
+}
+impl<S: BaseFloat> ToRollPitchYaw<S> for cgmath::Matrix3<S> {
+    fn to_rpy(&self) -> cgmath::Vector3<S> {
+        let roll = self.y.z.atan2(self.z.z);
+        let pitch = (-self.x.z).atan2((self.y.z.powi(2) + self.z.z.powi(2)).sqrt());
+        let yaw = self.x.y.atan2(self.x.x);
+        cgmath::Vector3::<S>::new(roll, pitch, yaw)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use cgmath::vec3;
+    #[test]
+    fn test_rpy() {
+        use ToRollPitchYaw;
+
+        // Test only single component
+        let transform = Matrix4::from_angle_z(cgmath::Rad(0.3));
+        let rpy = transform.to_rpy();
+        assert_eq!(rpy, vec3(0.0, 0.0, 0.3));
+
+        let transform = Matrix4::from_angle_x(cgmath::Rad(0.3));
+        let rpy = transform.to_rpy();
+        assert_eq!(rpy, vec3(0.3, 0.0, 0.0));
+
+        let transform = Matrix4::from_angle_y(cgmath::Rad(0.3));
+        let rpy = transform.to_rpy();
+        assert_eq!(rpy, vec3(0.0, 0.3, 0.0));
+
+        // https://math.stackexchange.com/a/3242503
+        // Make rpy rotation matrix with Rz * Ry * Rx
+
+        let transform =
+            Matrix4::from_angle_z(cgmath::Rad(0.3)) * Matrix4::from_angle_y(cgmath::Rad(0.3));
+        let rpy = transform.to_rpy();
+        assert_eq!(rpy, vec3(0.0, 0.3, 0.3));
+
+        let transform =
+            Matrix4::from_angle_z(cgmath::Rad(0.3)) * Matrix4::from_angle_x(cgmath::Rad(0.3));
+        let rpy = transform.to_rpy();
+        assert_eq!(rpy, vec3(0.3, 0.0, 0.3));
     }
 }
