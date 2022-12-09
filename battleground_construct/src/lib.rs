@@ -67,7 +67,7 @@ impl Construct {
                 x: 0.0,
                 y: 0.0,
                 yaw: 0.0,
-                controller: Box::new(control::DummyVehicleControl {}),
+                controller: Box::new(control::tank_swivel_shoot::TankSwivelShoot {}),
             },
         );
         /**/
@@ -108,7 +108,7 @@ impl Construct {
                         x: x as f32 * 2.0 + 2.0,
                         y: y as f32 * 3.0 - 2.5,
                         yaw: std::f32::consts::PI / 2.0,
-                        controller: Box::new(control::DiffDriveForwardsBackwardsControl {
+                        controller: Box::new(control::diff_drive_forwards_backwards::DiffDriveForwardsBackwardsControl {
                             velocities: (1.0, 1.0),
                             last_flip: 0.0,
                             duration: 5.0,
