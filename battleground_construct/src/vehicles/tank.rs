@@ -130,7 +130,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     register_interface.get_mut().add_module(
         "localization",
         LOCALIZATION_MODULE,
-        components::localization::LocalizationModule::new(body_id),
+        components::gps::GpsModule::new(body_id),
     );
 
     // Add the turrent entity.

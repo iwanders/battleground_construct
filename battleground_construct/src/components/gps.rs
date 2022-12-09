@@ -2,17 +2,17 @@ use super::pose::world_pose;
 use engine::prelude::*;
 
 use crate::components::vehicle_interface::{Register, RegisterMap, VehicleModule};
-pub struct LocalizationModule {
+pub struct GpsModule {
     entity: EntityId,
 }
 
-impl LocalizationModule {
+impl GpsModule {
     pub fn new(entity: EntityId) -> Self {
-        LocalizationModule { entity }
+        GpsModule { entity }
     }
 }
 
-impl VehicleModule for LocalizationModule {
+impl VehicleModule for GpsModule {
     fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
         use crate::util::cgmath::ToRollPitchYaw;
         use crate::util::cgmath::ToTranslation;
