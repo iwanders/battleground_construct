@@ -11,7 +11,8 @@ pub const BARREL_MODULE: u32 = 0x1200;
 pub const CANNON_MODULE: u32 = 0x1300;
 pub const RADAR_ROTATION: u32 = 0x1500;
 pub const RADAR_MODULE: u32 = 0x1600;
-pub const LOCALIZATION_MODULE: u32 = 0x1700;
+pub const GPS_MODULE: u32 = 0x1700;
+pub const DRAW_MODULE: u32 = 0x1800;
 
 pub struct TankSpawnConfig {
     pub x: f32,
@@ -129,8 +130,14 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
 
     register_interface.get_mut().add_module(
         "localization",
-        LOCALIZATION_MODULE,
+        GPS_MODULE,
         components::gps::GpsModule::new(body_id),
+    );
+
+    register_interface.get_mut().add_module(
+        "draw_module",
+        DRAW_MODULE,
+        display::draw_module::DrawModule::new(vehicle_id),
     );
 
     // Add the turrent entity.
