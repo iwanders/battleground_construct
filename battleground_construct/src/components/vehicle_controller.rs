@@ -11,7 +11,7 @@ pub struct VehicleController {
 impl VehicleController {
     pub fn new(vehicle_control: VehicleControlStorage) -> Self {
         VehicleController {
-            update_interval: 0.1,
+            update_interval: 0.01,
             last_update: -0.1,
             vehicle_control,
         }

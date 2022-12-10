@@ -28,10 +28,10 @@ impl From<[u8; std::mem::size_of::<LineSegment>()]> for LineSegment {
             p1: [read_f32(3), read_f32(4), read_f32(5)],
             width: read_f32(6),
             color: Color {
-                r: b[6 * 4 + 0],
-                g: b[6 * 4 + 1],
-                b: b[6 * 4 + 2],
-                a: b[6 * 4 + 3],
+                r: b[7 * 4 + 0],
+                g: b[7 * 4 + 1],
+                b: b[7 * 4 + 2],
+                a: b[7 * 4 + 3],
             },
         }
     }
@@ -69,7 +69,6 @@ impl Component for DrawComponent {}
 impl Drawable for DrawComponent {
     fn drawables(&self) -> Vec<Element> {
         let m = Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0));
-        println!("Drawing {} lines", self.lines.len());
         self.lines
             .iter()
             .map(|l| Element {
@@ -112,7 +111,6 @@ impl VehicleModule for DrawModule {
                 .expect("register doesnt exist")
                 .value_bytes()
                 .expect("wrong value type");
-            // println!("Instructions: {}", instructions.len());
 
             const INSTRUCTION_LEN: usize = std::mem::size_of::<LineSegment>();
             if instructions.len() % INSTRUCTION_LEN == 0 {

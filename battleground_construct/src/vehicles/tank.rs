@@ -105,12 +105,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
 
     world.add_component(vehicle_id, base);
     world.add_component(vehicle_id, display::tank_tracks::TankTracks::new());
-    world.add_component(vehicle_id, display::draw_module::DrawComponent::new());
-    register_interface.get_mut().add_module(
-        "draw_module",
-        DRAW_MODULE,
-        display::draw_module::DrawModule::new(vehicle_id),
-    );
 
     let body_id = world.add_entity();
     world.add_component(
@@ -138,6 +132,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         "localization",
         GPS_MODULE,
         components::gps::GpsModule::new(body_id),
+    );
+    world.add_component(body_id, display::draw_module::DrawComponent::new());
+    register_interface.get_mut().add_module(
+        "draw_module",
+        DRAW_MODULE,
+        display::draw_module::DrawModule::new(body_id),
     );
 
     // Add the turrent entity.
@@ -213,6 +213,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
     radar_revolute.set_velocity_bounds(-std::f32::consts::PI * 2.0, std::f32::consts::PI * 2.0);
     radar_revolute.set_velocity(-6.28);
+    // radar_revolute.set_velocity(-3.14);
     register_interface.get_mut().add_module(
         "radar_rotation",
         RADAR_ROTATION,
@@ -240,8 +241,11 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         radar_joint,
         components::radar::Radar::new_with_config(components::radar::RadarConfig {
             range_max: 30.0,
-            detection_angle_yaw: 1.0f32.to_radians(),
+            detection_angle_yaw: 10.0f32.to_radians(),
             detection_angle_pitch: 180f32.to_radians(),
+            // range_max: 70.0,
+            // detection_angle_yaw: 360.0f32.to_radians(),
+            // detection_angle_pitch: 180f32.to_radians(),
             signal_strength: 1.0,
         }),
     );

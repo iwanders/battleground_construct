@@ -20,14 +20,14 @@ impl System for VehicleControl {
         // Otherwise we risk modifying components that should only be modified by the controller.
         let should_update = world
             .component_iter::<VehicleController>()
-            .filter(|(e, c)| c.should_update(time))
-            .map(|(e, c)| e)
+            .filter(|(_e, c)| c.should_update(time))
+            .map(|(e, _c)| e)
             .collect::<std::collections::HashSet<EntityId>>();
 
         // Create a map of entity -> interface
         let mut interfaces: Vec<(EntityId, RegisterInterfaceContainer)> = world
             .component_iter::<RegisterInterfaceContainer>()
-            .filter(|(e, p)| should_update.contains(&e))
+            .filter(|(e, _p)| should_update.contains(&e))
             .map(|(e, p)| (e, p.clone()))
             .collect::<_>();
         let mut interface_map: HashMap<EntityId, RegisterInterfaceContainer> =
