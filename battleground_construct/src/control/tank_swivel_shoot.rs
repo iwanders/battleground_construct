@@ -3,7 +3,6 @@ use std::f32::consts::PI;
 
 use crate::vehicles::tank;
 
-
 pub struct TankSwivelShoot {}
 impl VehicleControl for TankSwivelShoot {
     fn update(&mut self, interface: &mut dyn Interface) {
@@ -85,20 +84,22 @@ impl VehicleControl for TankSwivelShoot {
         // interface.set_f32(turret, 4, 1.0).unwrap();
         // interface.set_f32(0x1200, 4, -1.0).unwrap();
 
-        let turret_yaw = interface.get_f32(tank::TURRET_MODULE, 0).unwrap();
-        let radar_yaw = interface.get_f32(tank::RADAR_ROTATION, 0).unwrap();
-        let radar_hits = interface.get_i32(tank::RADAR_MODULE, 0).unwrap();
-        for i in 0..radar_hits {
-            let offset = i as u32 * 4 + 1;
-            let reading_yaw = interface.get_f32(tank::RADAR_MODULE, offset + 0).unwrap();
-            let pitch = interface.get_f32(tank::RADAR_MODULE, offset + 1).unwrap();
-            let distance = interface.get_f32(tank::RADAR_MODULE, offset + 2).unwrap();
-            // let strength = interface.get_f32(tank::RADAR_MODULE, offset + 3).unwrap();
-            let combined_yaw =
-                (reading_yaw + radar_yaw + turret_yaw).rem_euclid(std::f32::consts::PI * 2.0);
-            let x = combined_yaw.cos() * distance;
-            let y = combined_yaw.sin() * distance;
-            println!("Radar {i} at {combined_yaw:.2}, {pitch:.2}, x: {x:.3}, y: {y:.3}, dist: {distance:.3}, read yaw: {reading_yaw:?}");
+        if false {
+            let turret_yaw = interface.get_f32(tank::TURRET_MODULE, 0).unwrap();
+            let radar_yaw = interface.get_f32(tank::RADAR_ROTATION, 0).unwrap();
+            let radar_hits = interface.get_i32(tank::RADAR_MODULE, 0).unwrap();
+            for i in 0..radar_hits {
+                let offset = i as u32 * 4 + 1;
+                let reading_yaw = interface.get_f32(tank::RADAR_MODULE, offset + 0).unwrap();
+                let pitch = interface.get_f32(tank::RADAR_MODULE, offset + 1).unwrap();
+                let distance = interface.get_f32(tank::RADAR_MODULE, offset + 2).unwrap();
+                // let strength = interface.get_f32(tank::RADAR_MODULE, offset + 3).unwrap();
+                let combined_yaw =
+                    (reading_yaw + radar_yaw + turret_yaw).rem_euclid(std::f32::consts::PI * 2.0);
+                let x = combined_yaw.cos() * distance;
+                let y = combined_yaw.sin() * distance;
+                println!("Radar {i} at {combined_yaw:.2}, {pitch:.2}, x: {x:.3}, y: {y:.3}, dist: {distance:.3}, read yaw: {reading_yaw:?}");
+            }
         }
     }
 }

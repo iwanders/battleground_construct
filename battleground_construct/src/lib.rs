@@ -72,6 +72,17 @@ impl Construct {
         );
         /**/
 
+        let _radar_tank = spawn_tank(
+            &mut world,
+            TankSpawnConfig {
+                x: -2.0,
+                y: -3.0,
+                yaw: 0.0,
+                // controller: Box::new(control::tank_swivel_shoot::TankSwivelShoot {}),
+                controller: Box::new(control::radar_draw::RadarDrawControl {}),
+            },
+        );
+
         let mut tank_entities = vec![];
         {
             let g = world

@@ -16,9 +16,18 @@ impl System for VehicleControl {
         use crate::components::vehicle_interface::RegisterInterfaceContainer;
         use std::collections::HashMap;
 
+        // We only want to update the interfaces when the controller actually needs an update.
+        // Otherwise we risk modifying components that should only be modified by the controller.
+        let should_update = world
+            .component_iter::<VehicleController>()
+            .filter(|(e, c)| c.should_update(time))
+            .map(|(e, c)| e)
+            .collect::<std::collections::HashSet<EntityId>>();
+
         // Create a map of entity -> interface
         let mut interfaces: Vec<(EntityId, RegisterInterfaceContainer)> = world
             .component_iter::<RegisterInterfaceContainer>()
+            .filter(|(e, p)| should_update.contains(&e))
             .map(|(e, p)| (e, p.clone()))
             .collect::<_>();
         let mut interface_map: HashMap<EntityId, RegisterInterfaceContainer> =
@@ -31,10 +40,10 @@ impl System for VehicleControl {
 
         // Run all vehicle controls, these ONLY work on interfaces.
         for (entity, mut controller) in world.component_iter_mut::<VehicleController>() {
-            if let Some(controller) = controller.should_update(time) {
-                if let Some(interface) = interface_map.get_mut(&entity) {
-                    controller.update(&mut *interface.get_mut());
-                }
+            if let Some(interface) = interface_map.get_mut(&entity) {
+                let control = controller.vehicle_control();
+                control.update(&mut *interface.get_mut());
+                controller.set_updated(time);
             }
         }
 

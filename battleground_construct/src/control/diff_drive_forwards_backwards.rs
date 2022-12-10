@@ -1,6 +1,5 @@
 use battleground_vehicle_control::{Interface, VehicleControl};
 
-
 use crate::vehicles::tank;
 
 pub struct DiffDriveForwardsBackwardsControl {

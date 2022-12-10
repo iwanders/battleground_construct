@@ -17,18 +17,15 @@ impl VehicleController {
         }
     }
 
-    pub fn should_update(
-        &mut self,
-        time: f32,
-    ) -> Option<&mut dyn battleground_vehicle_control::VehicleControl> {
-        if (self.last_update + self.update_interval) < time {
-            self.last_update = time;
-            return Some(self.vehicle_control());
-        }
-        None
+    pub fn should_update(&self, time: f32) -> bool {
+        (self.last_update + self.update_interval) < time
     }
 
-    fn vehicle_control(&mut self) -> &mut dyn battleground_vehicle_control::VehicleControl {
+    pub fn set_updated(&mut self, time: f32) {
+        self.last_update = time;
+    }
+
+    pub fn vehicle_control(&mut self) -> &mut dyn battleground_vehicle_control::VehicleControl {
         use std::ops::DerefMut;
         std::rc::Rc::get_mut(&mut self.vehicle_control)
             .expect("Should be exclusive")

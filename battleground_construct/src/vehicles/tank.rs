@@ -105,6 +105,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
 
     world.add_component(vehicle_id, base);
     world.add_component(vehicle_id, display::tank_tracks::TankTracks::new());
+    world.add_component(vehicle_id, display::draw_module::DrawComponent::new());
+    register_interface.get_mut().add_module(
+        "draw_module",
+        DRAW_MODULE,
+        display::draw_module::DrawModule::new(vehicle_id),
+    );
 
     let body_id = world.add_entity();
     world.add_component(
@@ -132,12 +138,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         "localization",
         GPS_MODULE,
         components::gps::GpsModule::new(body_id),
-    );
-
-    register_interface.get_mut().add_module(
-        "draw_module",
-        DRAW_MODULE,
-        display::draw_module::DrawModule::new(vehicle_id),
     );
 
     // Add the turrent entity.
