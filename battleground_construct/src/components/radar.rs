@@ -202,4 +202,37 @@ mod test {
             approx_equal!(obtain.pitch, expect.1, 0.001);
         }
     }
+    #[test]
+    fn test_radar_north_update() {
+        let mut radar = Radar::new_with_config(RadarConfig {
+            range_max: 30.0,
+            detection_angle_yaw: 60.0f32.to_radians(),
+            detection_angle_pitch: 180f32.to_radians(),
+            signal_strength: 1.0,
+        });
+        let reflections = vec![
+            (Mat4::from_translation(vec3(-5.0f32, 10.0, 0.0)), 1.0), // seen! 7m
+            (Mat4::from_translation(vec3(-7.5f32, 5.5, 0.0)), 1.0),  // seen! yaw 45 deg,
+        ];
+        let radar_pose =
+            Mat4::from_translation(vec3(-5.0f32, 3.0, 0.0)) * Mat4::from_angle_z(cgmath::Deg(90.0));
+        radar.update_reflections(&radar_pose, &reflections);
+        use crate::util::cgmath::EuclideanNorm;
+        let expected = vec![
+            (0.0f32, 0.0f32, 7.0f32),
+            (
+                std::f32::consts::PI / 4.0,
+                0.0f32,
+                vec3(2.5, 2.5, 0.0).euclid_norm(),
+            ),
+        ];
+        let obtained = radar.reflections();
+        println!("Obtained: {obtained:?}");
+        assert_eq!(obtained.len(), expected.len());
+        for (obtain, expect) in obtained.iter().zip(expected.iter()) {
+            approx_equal!(obtain.yaw, expect.0, 0.001);
+            approx_equal!(obtain.pitch, expect.1, 0.001);
+            approx_equal!(obtain.distance, expect.2, 0.001);
+        }
+    }
 }
