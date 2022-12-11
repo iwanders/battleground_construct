@@ -1,4 +1,4 @@
-use battleground_vehicle_control::{log, Interface, VehicleControl, RegisterType};
+use battleground_vehicle_control::{log, Interface, RegisterType, VehicleControl};
 
 pub struct SimpleAi {}
 
@@ -29,14 +29,30 @@ impl VehicleControl for SimpleAi {
                         RegisterType::I32 => {
                             let v = interface.get_i32(m_index, r_index).unwrap();
                             log::info!("   -> {v}");
+                            interface.set_i32(m_index, r_index, v + 1).unwrap();
+                            let v = interface.get_i32(m_index, r_index).unwrap();
+                            log::info!("   -> {v}");
                         }
                         RegisterType::F32 => {
+                            let v = interface.get_f32(m_index, r_index).unwrap();
+                            log::info!("   -> {v}");
+                            interface.set_f32(m_index, r_index, v + 1.5).unwrap();
                             let v = interface.get_f32(m_index, r_index).unwrap();
                             log::info!("   -> {v}");
                             // let v = interface.get_f32(m_index, r_index).unwrap();
                             // log::info!("   -> {v}");
                         }
                         RegisterType::Bytes => {
+                            let len = interface.get_bytes_len(m_index, r_index).unwrap();
+                            log::info!("Bytes len: {len:?}");
+                            let v = [0, 1, 2, 3u8];
+                            interface.set_bytes(m_index, r_index, &v).unwrap();
+                            let len = interface.get_bytes_len(m_index, r_index).unwrap();
+                            log::info!("Bytes len: {len:?}");
+                            let mut read_v = [0, 0, 0, 3u8];
+                            interface.get_bytes(m_index, r_index, &mut read_v).unwrap();
+                            log::info!("read_v len: {read_v:?}");
+
                             // let v = interface.get_f32(m_index, r_index).unwrap();
                             // log::info!("   -> {v}");
                         }

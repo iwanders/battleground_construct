@@ -64,11 +64,16 @@ mod interface {
         fn wasm_interface_module_name(module: u32) -> u32;
         fn wasm_interface_register_name(module: u32, register: u32) -> u32;
         fn wasm_interface_register_type(module: u32, register: u32) -> u32;
+
         fn wasm_interface_get_i32(module: u32, register: u32) -> i32;
         fn wasm_interface_get_f32(module: u32, register: u32) -> f32;
         fn wasm_interface_set_i32(module: u32, register: u32, value: i32) -> i32;
         fn wasm_interface_set_f32(module: u32, register: u32, value: f32) -> f32;
-        // fn wasm_interface_get_f32(module: u32, register: u32) -> f32;
+
+        fn wasm_interface_get_bytes_len(module: u32, register: u32) -> u32;
+        fn wasm_interface_get_bytes(module: u32, register: u32, dest: u32, len: u32) -> u32;
+        // return type of set bytes is just for uniform handling on the wasm wrapper side.
+        fn wasm_interface_set_bytes(module: u32, register: u32, src: u32, len: u32) -> u32;
     }
 
     static BUFFER: Mutex<Vec<u8>> = Mutex::new(Vec::new());
@@ -182,36 +187,37 @@ mod interface {
 
         /// Get an i32 register.
         fn get_i32(&self, module: u32, register: u32) -> Result<i32, Error> {
-            let result = unsafe { wasm_interface_get_i32(module, register)};
+            let result = unsafe { wasm_interface_get_i32(module, register) };
             get_error(module, register)?;
             Ok(result)
         }
 
         /// Set an i32 register.
         fn set_i32(&mut self, module: u32, register: u32, value: i32) -> Result<i32, Error> {
-            let result = unsafe { wasm_interface_set_i32(module, register, value)};
+            let result = unsafe { wasm_interface_set_i32(module, register, value) };
             get_error(module, register)?;
             Ok(result)
         }
 
         /// Get an f32 register.
         fn get_f32(&self, module: u32, register: u32) -> Result<f32, Error> {
-            let result = unsafe { wasm_interface_get_f32(module, register)};
+            let result = unsafe { wasm_interface_get_f32(module, register) };
             get_error(module, register)?;
             Ok(result)
         }
 
         /// Set an f32 register.
         fn set_f32(&mut self, module: u32, register: u32, value: f32) -> Result<f32, Error> {
-            let result = unsafe { wasm_interface_set_f32(module, register, value)};
+            let result = unsafe { wasm_interface_set_f32(module, register, value) };
             get_error(module, register)?;
             Ok(result)
         }
 
         /// Get the length required to read a byte register.
         fn get_bytes_len(&self, module: u32, register: u32) -> Result<usize, Error> {
-            log::error!("Function: {}", function!());
-            unimplemented!();
+            let result = unsafe { wasm_interface_get_bytes_len(module, register) };
+            get_error(module, register)?;
+            Ok(result as usize)
         }
 
         /// Get the actual bytes of a byte register, returns the number of bytes written.
@@ -221,14 +227,30 @@ mod interface {
             register: u32,
             destination: &mut [u8],
         ) -> Result<usize, Error> {
-            log::error!("Function: {}", function!());
-            unimplemented!();
+            let result = unsafe {
+                wasm_interface_get_bytes(
+                    module,
+                    register,
+                    destination.as_ptr() as u32,
+                    destination.len() as u32,
+                )
+            };
+            get_error(module, register)?;
+            Ok(result as usize)
         }
 
         /// Set a byte register.
         fn set_bytes(&mut self, module: u32, register: u32, values: &[u8]) -> Result<(), Error> {
-            log::error!("Function: {}", function!());
-            unimplemented!();
+            unsafe {
+                wasm_interface_set_bytes(
+                    module,
+                    register,
+                    values.as_ptr() as u32,
+                    values.len() as u32,
+                )
+            };
+            get_error(module, register)?;
+            Ok(())
         }
     }
 }

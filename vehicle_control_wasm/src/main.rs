@@ -1,5 +1,5 @@
 use battleground_construct::components;
-use battleground_construct::components::vehicle_interface::RegisterInterface;
+// use battleground_construct::components::vehicle_interface::RegisterInterface;
 use battleground_construct::systems;
 use battleground_construct::vehicles::tank::{spawn_tank, TankSpawnConfig};
 use engine::prelude::*;
@@ -12,7 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let clock_id = world.add_entity();
     world.add_component(clock_id, components::clock::Clock::new());
 
-    let main_tank = spawn_tank(
+    let _main_tank = spawn_tank(
         &mut world,
         TankSpawnConfig {
             x: 0.0,
