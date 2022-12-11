@@ -118,7 +118,11 @@ pub struct Module {
 }
 
 impl Module {
-    pub fn read_interface(&mut self, module: ModuleId, interface: &dyn battleground_vehicle_control::Interface) -> Result<(), battleground_vehicle_control::Error> {
+    pub fn read_interface(
+        &mut self,
+        module: ModuleId,
+        interface: &dyn battleground_vehicle_control::Interface,
+    ) -> Result<(), battleground_vehicle_control::Error> {
         for reg_id in interface.registers(module)? {
             let name = interface.register_name(module, reg_id)?;
             let reg = match interface.register_type(module, reg_id)? {
@@ -130,7 +134,7 @@ impl Module {
                 }
                 battleground_vehicle_control::RegisterType::Bytes => {
                     let mut reg = Register::new_bytes(&name);
-                    let mut b = reg.value_bytes_mut().unwrap();
+                    let b = reg.value_bytes_mut().unwrap();
                     b.clear();
                     b.resize(interface.get_bytes_len(module, reg_id)?, 0u8);
                     interface.get_bytes(module, reg_id, &mut b[..])?;
@@ -139,6 +143,27 @@ impl Module {
             };
 
             self.registers.insert(reg_id, reg);
+        }
+        Ok(())
+    }
+    pub fn write_interface(
+        &self,
+        module: ModuleId,
+        interface: &mut dyn battleground_vehicle_control::Interface,
+    ) -> Result<(), battleground_vehicle_control::Error> {
+        for (k, v) in self.registers.iter() {
+            let register = *k;
+            match v.value {
+                Value::I32(v) => {
+                    interface.set_i32(module, register, v)?;
+                }
+                Value::F32(v) => {
+                    interface.set_f32(module, register, v)?;
+                }
+                Value::Bytes { ref values, .. } => {
+                    interface.set_bytes(module, register, &values[..])?;
+                }
+            }
         }
         Ok(())
     }
@@ -156,21 +181,41 @@ impl RegisterInterface {
     }
 
     /// Copy all registers from the interface to self.
-    pub fn read_interface(&mut self, interface: &dyn battleground_vehicle_control::Interface) -> Result<(), battleground_vehicle_control::Error> {
+    pub fn read_interface(
+        &mut self,
+        interface: &dyn battleground_vehicle_control::Interface,
+    ) -> Result<(), battleground_vehicle_control::Error> {
+        self.modules.clear();
         for module in interface.modules()? {
             let name = interface.module_name(module)?;
-            self.modules.insert(module, Module {
-                name,
-                handler: None,
-                registers: Default::default(),
-            });
-            self.modules.get_mut(&module).unwrap().read_interface(module, interface)?;
+            self.modules.insert(
+                module,
+                Module {
+                    name,
+                    handler: None,
+                    registers: Default::default(),
+                },
+            );
+            self.modules
+                .get_mut(&module)
+                .unwrap()
+                .read_interface(module, interface)?;
         }
         Ok(())
     }
 
     /// Copy all registers from self to the interface.
-    pub fn write_interface(&self, interface: &mut dyn battleground_vehicle_control::Interface) {
+    pub fn write_interface(
+        &self,
+        interface: &mut dyn battleground_vehicle_control::Interface,
+    ) -> Result<(), battleground_vehicle_control::Error> {
+        for module in interface.modules()? {
+            self.modules
+                .get(&module)
+                .unwrap()
+                .write_interface(module, interface)?;
+        }
+        Ok(())
     }
 
     pub fn add_module_boxed(
@@ -321,14 +366,18 @@ impl battleground_vehicle_control::Interface for RegisterInterface {
         Ok(r.name.clone())
     }
 
-
     /// Retrieve a register type.
-    fn register_type(&self, module: u32, register: u32) -> Result<battleground_vehicle_control::RegisterType, battleground_vehicle_control::Error> {
+    fn register_type(
+        &self,
+        module: u32,
+        register: u32,
+    ) -> Result<battleground_vehicle_control::RegisterType, battleground_vehicle_control::Error>
+    {
         let r = self.get_register(module, register)?;
         Ok(match &r.value {
             Value::I32(..) => battleground_vehicle_control::RegisterType::I32,
             Value::F32(..) => battleground_vehicle_control::RegisterType::F32,
-            Value::Bytes{..} => battleground_vehicle_control::RegisterType::Bytes,
+            Value::Bytes { .. } => battleground_vehicle_control::RegisterType::Bytes,
         })
     }
 

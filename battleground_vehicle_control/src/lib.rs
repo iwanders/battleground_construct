@@ -1,9 +1,15 @@
+// Only for wasm32, load the wasm_interface, it has a bunch of extern "C" methods to create an
+// interface.
+#[cfg(target_arch = "wasm32")]
+pub mod wasm_interface;
+
+pub use log;
+
 /// Plugins will provide a function of this signature.
 pub type ControllerSpawn = fn() -> Box<dyn VehicleControl>;
 
 /// Error type used.
 pub type Error = Box<InterfaceError>;
-
 
 /// Enum to denote register type.
 pub enum RegisterType {
@@ -66,7 +72,7 @@ pub struct InterfaceError {
 }
 
 /// The error_type is further specified in the following possible failure modes.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ErrorType {
     NoSuchModule,
     NoSuchRegister,
@@ -74,6 +80,21 @@ pub enum ErrorType {
     ReadOverflow,
     WriteOverflow,
     WriteUnderflow,
+}
+
+impl TryFrom<u32> for ErrorType {
+    type Error = ();
+    fn try_from(v: u32) -> Result<Self, Self::Error> {
+        match v {
+            x if x == ErrorType::NoSuchModule as u32 => Ok(ErrorType::NoSuchModule),
+            x if x == ErrorType::NoSuchRegister as u32 => Ok(ErrorType::NoSuchRegister),
+            x if x == ErrorType::WrongType as u32 => Ok(ErrorType::WrongType),
+            x if x == ErrorType::ReadOverflow as u32 => Ok(ErrorType::ReadOverflow),
+            x if x == ErrorType::WriteOverflow as u32 => Ok(ErrorType::WriteOverflow),
+            x if x == ErrorType::WriteUnderflow as u32 => Ok(ErrorType::WriteUnderflow),
+            _ => Err(()),
+        }
+    }
 }
 
 /// Finally, it implements display.
@@ -120,3 +141,35 @@ impl std::fmt::Display for InterfaceError {
 
 /// And error, such that it is convertible to Box<dyn std::error:Error>
 impl std::error::Error for InterfaceError {}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn test_error_conversion() {
+        assert_eq!(
+            ErrorType::NoSuchModule,
+            (ErrorType::NoSuchModule as u32).try_into().unwrap()
+        );
+        assert_eq!(
+            ErrorType::NoSuchRegister,
+            (ErrorType::NoSuchRegister as u32).try_into().unwrap()
+        );
+        assert_eq!(
+            ErrorType::WrongType,
+            (ErrorType::WrongType as u32).try_into().unwrap()
+        );
+        assert_eq!(
+            ErrorType::ReadOverflow,
+            (ErrorType::ReadOverflow as u32).try_into().unwrap()
+        );
+        assert_eq!(
+            ErrorType::WriteOverflow,
+            (ErrorType::WriteOverflow as u32).try_into().unwrap()
+        );
+        assert_eq!(
+            ErrorType::WriteUnderflow,
+            (ErrorType::WriteUnderflow as u32).try_into().unwrap()
+        );
+    }
+}

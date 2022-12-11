@@ -1,11 +1,12 @@
 [package]
-name = "example_driving_ai"
+name = "vehicle_control_wasm"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type = ["cdylib", "lib"]
+crate-type = ["dylib", "rlib"]
 
 [dependencies]
 battleground_vehicle_control = { path = "../battleground_vehicle_control" }
-#battleground_construct = { path = "../battleground_construct" }
+battleground_construct = { path = "../battleground_construct" }
+wasmtime = "3.0.1"

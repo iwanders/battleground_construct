@@ -6,6 +6,7 @@ members = [
     "battleground_viewer",
     "example_driving_ai",
     "battleground_vehicle_control",
+    "vehicle_control_wasm",
 ]
 
 [profile.release]
