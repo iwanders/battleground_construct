@@ -1,5 +1,17 @@
 use log;
 
+// https://stackoverflow.com/a/40234666
+macro_rules! function {
+    () => {{
+        fn f() {}
+        fn type_name_of<T>(_: T) -> &'static str {
+            std::any::type_name::<T>()
+        }
+        let name = type_name_of(f);
+        &name[..name.len() - 3]
+    }};
+}
+
 #[no_mangle]
 pub extern "C" fn wasm_setup() {
     logging::setup();
@@ -48,6 +60,8 @@ mod interface {
     use std::sync::Mutex;
     extern "C" {
         fn wasm_interface_modules() -> u32;
+        fn wasm_interface_registers(module: u32) -> u32;
+        // fn wasm_interface_get_f32(module: u32, register: u32) -> f32;
     }
 
     static BUFFER: Mutex<Vec<u8>> = Mutex::new(Vec::new());
@@ -92,12 +106,13 @@ mod interface {
     fn read_from_buffer_u32(count: u32) -> Vec<u32> {
         let mut res = vec![];
         let mut buffer = BUFFER.lock().expect("cannot be poisoned");
+        log::info!("Reading count: {count:?}");
         for i in 0..count {
             let mut b = [0u8; 4];
             b[..].copy_from_slice(&buffer[4 * i as usize..(i as usize + 1) * 4]);
             res.push(u32::from_le_bytes(b));
         }
-        log::info!("{:?}", res);
+        log::info!("read data: {:?}", res);
         res
     }
 
@@ -115,13 +130,17 @@ mod interface {
 
         /// Retrieve the name of a particular module.
         fn module_name(&self, module: u32) -> Result<String, Error> {
+            log::error!("Function: {}", function!());
             Ok("foo".to_owned())
         }
 
         /// Return the available register ids in a particular module.
         fn registers(&self, module: u32) -> Result<Vec<u32>, Error> {
-            // unimplemented!();
-            Ok(vec![1])
+            clear_error();
+            let count = unsafe { wasm_interface_registers(module) };
+            get_error(module, 0)?;
+            log::info!("register count: {:?}", count);
+            Ok(read_from_buffer_u32(count))
         }
 
         /// Retrieve a register name.
@@ -132,31 +151,37 @@ mod interface {
 
         /// Retrieve a register type.
         fn register_type(&self, module: u32, register: u32) -> Result<RegisterType, Error> {
+            log::error!("Function: {}", function!());
             unimplemented!();
         }
 
         /// Get an i32 register.
         fn get_i32(&self, module: u32, register: u32) -> Result<i32, Error> {
+            log::error!("Function: {}", function!());
             unimplemented!();
         }
 
         /// Set an i32 register.
         fn set_i32(&mut self, module: u32, register: u32, value: i32) -> Result<i32, Error> {
+            log::error!("Function: {}", function!());
             unimplemented!();
         }
 
         /// Get an f32 register.
         fn get_f32(&self, module: u32, register: u32) -> Result<f32, Error> {
+            log::error!("Function: {}", function!());
             unimplemented!();
         }
 
         /// Set an f32 register.
         fn set_f32(&mut self, module: u32, register: u32, value: f32) -> Result<f32, Error> {
+            log::error!("Function: {}", function!());
             unimplemented!();
         }
 
         /// Get the length required to read a byte register.
         fn get_bytes_len(&self, module: u32, register: u32) -> Result<usize, Error> {
+            log::error!("Function: {}", function!());
             unimplemented!();
         }
 
@@ -167,11 +192,13 @@ mod interface {
             register: u32,
             destination: &mut [u8],
         ) -> Result<usize, Error> {
+            log::error!("Function: {}", function!());
             unimplemented!();
         }
 
         /// Set a byte register.
         fn set_bytes(&mut self, module: u32, register: u32, values: &[u8]) -> Result<(), Error> {
+            log::error!("Function: {}", function!());
             unimplemented!();
         }
     }

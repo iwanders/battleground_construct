@@ -18,7 +18,10 @@ impl VehicleControl for SimpleAi {
                     "update, module name: {}",
                     interface.module_name(m_index).unwrap()
                 );
-                for r_index in interface.registers(m_index).unwrap() {
+                log::info!("obtaining registers list for {m_index}.");
+                let v = interface.registers(m_index);
+                log::info!("{:?}", v);
+                for r_index in v.unwrap() {
                     log::info!("  {}", interface.register_name(m_index, r_index).unwrap());
                 }
             }

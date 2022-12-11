@@ -1,5 +1,5 @@
 use battleground_construct::components::vehicle_interface::RegisterInterface;
-use battleground_vehicle_control::{Interface, VehicleControl};
+use battleground_vehicle_control::{Interface, InterfaceError, VehicleControl};
 
 use wasmtime::{Caller, Engine, Extern, Instance, Linker, Module, Store, TypedFunc};
 
@@ -47,45 +47,57 @@ impl VehicleControlWasm {
                 .expect("signature should match")
         }
 
+        fn process_vec_u32(
+            mut caller: Caller<'_, State>,
+            res: Result<Vec<u32>, Box<InterfaceError>>,
+        ) -> usize {
+            let wasm_transmission_buffer = get_wasm_transmission_buffer(&mut caller);
+            let wasm_set_error = get_wasm_set_error(&mut caller);
+            match res {
+                Ok(v) => {
+                    let count = v.len();
+                    let data_width = count * std::mem::size_of::<u32>();
+                    let p = wasm_transmission_buffer
+                        .call(&mut caller, data_width as u32)
+                        .expect("allocating memory failed");
+
+                    let mem = caller
+                        .get_export("memory")
+                        .expect("memory should exist")
+                        .into_memory()
+                        .expect("was not memory");
+                    let (bytes, storage) = mem.data_and_store_mut(&mut caller);
+
+                    // Now, we can write...
+                    for (i, module) in v.iter().enumerate() {
+                        let mut dest = &mut bytes[(p as usize + (i * std::mem::size_of::<u32>()))
+                            ..(p as usize + (i + 1) * std::mem::size_of::<u32>())];
+                        let content = module.to_le_bytes();
+                        dest.copy_from_slice(&content);
+                    }
+                    count
+                }
+                Err(e) => {
+                    wasm_set_error.call(caller, e.error_type as u32);
+                    0
+                }
+            }
+        }
+
         linker.func_wrap(
             "env",
             "wasm_interface_modules",
             |mut caller: Caller<'_, State>| -> u32 {
-                let wasm_transmission_buffer = get_wasm_transmission_buffer(&mut caller);
-                let wasm_set_error = get_wasm_set_error(&mut caller);
-
-                let interfaces = caller.data().register_interface.modules();
-                match interfaces {
-                    Ok(v) => {
-                        let count = v.len();
-                        let data_width = count * std::mem::size_of::<u32>();
-                        let p = wasm_transmission_buffer
-                            .call(&mut caller, data_width as u32)
-                            .expect("allocating memory failed");
-                        println!("p: {p:x}");
-
-                        let mem = caller
-                            .get_export("memory")
-                            .expect("memory should exist")
-                            .into_memory()
-                            .expect("was not memory");
-                        let (bytes, storage) = mem.data_and_store_mut(&mut caller);
-                        println!("Bytes length: {}", bytes.len());
-                        // Now, we can write...
-                        for (i, module) in v.iter().enumerate() {
-                            let mut dest = &mut bytes[(i * std::mem::size_of::<u32>())
-                                ..(i + 1) * std::mem::size_of::<u32>()];
-                            let content = module.to_le_bytes();
-                            dest.copy_from_slice(&content);
-                        }
-                        count as u32
-                    }
-                    Err(e) => {
-                        wasm_set_error.call(caller, e.error_type as u32);
-                        0
-                    }
-                }
-                /**/
+                let res = caller.data().register_interface.modules();
+                process_vec_u32(caller, res) as u32
+            },
+        )?;
+        linker.func_wrap(
+            "env",
+            "wasm_interface_registers",
+            |mut caller: Caller<'_, State>, module: u32| -> u32 {
+                let res = caller.data().register_interface.registers(module);
+                process_vec_u32(caller, res) as u32
             },
         )?;
 
@@ -93,9 +105,6 @@ impl VehicleControlWasm {
             "env",
             "wasm_log_record",
             |mut caller: Caller<'_, State>, ptr: i32, len: i32| {
-                // println!("Pointer: caller: {caller:?}");
-                println!("Pointer: {ptr:?}, len: {len}");
-
                 let mem = match caller.get_export("memory") {
                     Some(Extern::Memory(mem)) => mem,
                     _ => {
@@ -107,15 +116,15 @@ impl VehicleControlWasm {
                     .data(&caller)
                     .get(ptr as u32 as usize..)
                     .and_then(|arr| arr.get(..len as u32 as usize));
-                println!("data: {data:?}");
+                // println!("data: {data:?}");
                 let string = match data {
                     Some(data) => match std::str::from_utf8(data) {
                         Ok(s) => s,
-                        Err(_) => "buhu",
+                        Err(_) => "<non utf8 string>",
                     },
                     None => "out of bounds",
                 };
-                println!("string: {string:?}");
+                println!("{string:?}");
             },
         );
 
