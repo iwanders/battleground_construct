@@ -61,6 +61,9 @@ mod interface {
     extern "C" {
         fn wasm_interface_modules() -> u32;
         fn wasm_interface_registers(module: u32) -> u32;
+        fn wasm_interface_module_name(module: u32) -> u32;
+        fn wasm_interface_register_name(module: u32, register: u32) -> u32;
+        fn wasm_interface_register_type(module: u32, register: u32) -> u32;
         // fn wasm_interface_get_f32(module: u32, register: u32) -> f32;
     }
 
@@ -71,7 +74,6 @@ mod interface {
         let mut buffer = BUFFER.lock().expect("cannot be poisoned");
         buffer.clear();
         buffer.resize(len as usize, 0);
-        log::info!("Pointer is: {:?}", buffer.as_ptr());
         buffer.as_mut_ptr()
     }
 
@@ -106,14 +108,23 @@ mod interface {
     fn read_from_buffer_u32(count: u32) -> Vec<u32> {
         let mut res = vec![];
         let mut buffer = BUFFER.lock().expect("cannot be poisoned");
-        log::info!("Reading count: {count:?}");
         for i in 0..count {
             let mut b = [0u8; 4];
             b[..].copy_from_slice(&buffer[4 * i as usize..(i as usize + 1) * 4]);
             res.push(u32::from_le_bytes(b));
         }
-        log::info!("read data: {:?}", res);
         res
+    }
+
+    fn read_from_buffer_string(length: u32) -> String {
+        let mut buffer = BUFFER.lock().expect("cannot be poisoned");
+        match String::from_utf8(buffer[0..length as usize].to_vec()) {
+            Ok(v) => v,
+            Err(_) => {
+                wasm_set_error(crate::ErrorType::WrongType as u32);
+                "<non utf8 string>".to_owned()
+            }
+        }
     }
 
     pub struct StaticInterface;
@@ -124,14 +135,17 @@ mod interface {
             clear_error();
             let count = unsafe { wasm_interface_modules() };
             get_error(0, 0)?;
-            log::info!("count: {:?}", count);
             Ok(read_from_buffer_u32(count))
         }
 
         /// Retrieve the name of a particular module.
         fn module_name(&self, module: u32) -> Result<String, Error> {
-            log::error!("Function: {}", function!());
-            Ok("foo".to_owned())
+            clear_error();
+            let string_length = unsafe { wasm_interface_module_name(module) };
+            get_error(module, 0)?;
+            let res = read_from_buffer_string(string_length);
+            get_error(module, 0)?;
+            Ok(res)
         }
 
         /// Return the available register ids in a particular module.
@@ -139,20 +153,27 @@ mod interface {
             clear_error();
             let count = unsafe { wasm_interface_registers(module) };
             get_error(module, 0)?;
-            log::info!("register count: {:?}", count);
             Ok(read_from_buffer_u32(count))
         }
 
         /// Retrieve a register name.
         fn register_name(&self, module: u32, register: u32) -> Result<String, Error> {
-            // unimplemented!();
-            Ok("foo".to_owned())
+            clear_error();
+            let string_length = unsafe { wasm_interface_register_name(module, register) };
+            get_error(module, register)?;
+            let res = read_from_buffer_string(string_length);
+            get_error(module, register)?;
+            Ok(res)
         }
 
         /// Retrieve a register type.
         fn register_type(&self, module: u32, register: u32) -> Result<RegisterType, Error> {
-            log::error!("Function: {}", function!());
-            unimplemented!();
+            let register_type = unsafe { wasm_interface_register_type(module, register) };
+            get_error(module, register)?;
+            match register_type.try_into() {
+                Ok(v) => Ok(v),
+                Err(_) => panic!("Could not convert register type"),
+            }
         }
 
         /// Get an i32 register.

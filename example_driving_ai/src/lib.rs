@@ -23,6 +23,10 @@ impl VehicleControl for SimpleAi {
                 log::info!("{:?}", v);
                 for r_index in v.unwrap() {
                     log::info!("  {}", interface.register_name(m_index, r_index).unwrap());
+                    log::info!(
+                        "    {:?}",
+                        interface.register_type(m_index, r_index).unwrap()
+                    );
                 }
             }
         }

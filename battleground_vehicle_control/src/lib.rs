@@ -12,10 +12,23 @@ pub type ControllerSpawn = fn() -> Box<dyn VehicleControl>;
 pub type Error = Box<InterfaceError>;
 
 /// Enum to denote register type.
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum RegisterType {
     I32,
     F32,
     Bytes,
+}
+
+impl TryFrom<u32> for RegisterType {
+    type Error = ();
+    fn try_from(v: u32) -> Result<Self, Self::Error> {
+        match v {
+            x if x == RegisterType::I32 as u32 => Ok(RegisterType::I32),
+            x if x == RegisterType::F32 as u32 => Ok(RegisterType::F32),
+            x if x == RegisterType::Bytes as u32 => Ok(RegisterType::Bytes),
+            _ => Err(()),
+        }
+    }
 }
 
 /// Interface to control the vehicle, the ai uses this to interact with the vehicle.
@@ -170,6 +183,21 @@ mod test {
         assert_eq!(
             ErrorType::WriteUnderflow,
             (ErrorType::WriteUnderflow as u32).try_into().unwrap()
+        );
+    }
+    #[test]
+    fn test_register_type_conversion() {
+        assert_eq!(
+            RegisterType::I32,
+            (RegisterType::I32 as u32).try_into().unwrap()
+        );
+        assert_eq!(
+            RegisterType::F32,
+            (RegisterType::F32 as u32).try_into().unwrap()
+        );
+        assert_eq!(
+            RegisterType::Bytes,
+            (RegisterType::Bytes as u32).try_into().unwrap()
         );
     }
 }

@@ -47,7 +47,7 @@ impl VehicleControlWasm {
                 .expect("signature should match")
         }
 
-        fn process_vec_u32(
+        fn send_vec_u32_result(
             mut caller: Caller<'_, State>,
             res: Result<Vec<u32>, Box<InterfaceError>>,
         ) -> usize {
@@ -84,12 +84,43 @@ impl VehicleControlWasm {
             }
         }
 
+        fn send_string_result(
+            mut caller: Caller<'_, State>,
+            res: Result<String, Box<InterfaceError>>,
+        ) -> usize {
+            let wasm_transmission_buffer = get_wasm_transmission_buffer(&mut caller);
+            let wasm_set_error = get_wasm_set_error(&mut caller);
+            match res {
+                Ok(v) => {
+                    let data = v.into_bytes();
+                    let data_width = data.len();
+                    let p = wasm_transmission_buffer
+                        .call(&mut caller, data_width as u32)
+                        .expect("allocating memory failed");
+
+                    let mem = caller
+                        .get_export("memory")
+                        .expect("memory should exist")
+                        .into_memory()
+                        .expect("was not memory");
+                    let (bytes, storage) = mem.data_and_store_mut(&mut caller);
+
+                    bytes[p as usize..(p as usize + data_width)].copy_from_slice(&data);
+                    data_width
+                }
+                Err(e) => {
+                    wasm_set_error.call(caller, e.error_type as u32);
+                    0
+                }
+            }
+        }
+
         linker.func_wrap(
             "env",
             "wasm_interface_modules",
             |mut caller: Caller<'_, State>| -> u32 {
                 let res = caller.data().register_interface.modules();
-                process_vec_u32(caller, res) as u32
+                send_vec_u32_result(caller, res) as u32
             },
         )?;
         linker.func_wrap(
@@ -97,7 +128,46 @@ impl VehicleControlWasm {
             "wasm_interface_registers",
             |mut caller: Caller<'_, State>, module: u32| -> u32 {
                 let res = caller.data().register_interface.registers(module);
-                process_vec_u32(caller, res) as u32
+                send_vec_u32_result(caller, res) as u32
+            },
+        )?;
+        linker.func_wrap(
+            "env",
+            "wasm_interface_module_name",
+            |mut caller: Caller<'_, State>, module: u32| -> u32 {
+                let res = caller.data().register_interface.module_name(module);
+                send_string_result(caller, res) as u32
+            },
+        )?;
+
+        linker.func_wrap(
+            "env",
+            "wasm_interface_register_name",
+            |mut caller: Caller<'_, State>, module: u32, register: u32| -> u32 {
+                let res = caller
+                    .data()
+                    .register_interface
+                    .register_name(module, register);
+                send_string_result(caller, res) as u32
+            },
+        )?;
+
+        linker.func_wrap(
+            "env",
+            "wasm_interface_register_type",
+            |mut caller: Caller<'_, State>, module: u32, register: u32| -> u32 {
+                let wasm_set_error = get_wasm_set_error(&mut caller);
+                let res = caller
+                    .data()
+                    .register_interface
+                    .register_type(module, register);
+                match res {
+                    Ok(v) => v as u32,
+                    Err(e) => {
+                        wasm_set_error.call(caller, e.error_type as u32);
+                        0
+                    }
+                }
             },
         )?;
 

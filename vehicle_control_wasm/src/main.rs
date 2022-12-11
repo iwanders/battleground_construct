@@ -1,16 +1,29 @@
+use battleground_construct::components;
 use battleground_construct::components::vehicle_interface::RegisterInterface;
+use battleground_construct::systems;
+use battleground_construct::vehicles::tank::{spawn_tank, TankSpawnConfig};
+use engine::prelude::*;
+// use engine::*;
+
 use vehicle_control_wasm;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut control = vehicle_control_wasm::create_ai();
-    let mut interface = RegisterInterface::new();
+    let mut world = World::new();
+    let clock_id = world.add_entity();
+    world.add_component(clock_id, components::clock::Clock::new());
 
-    interface.add_module(
-        "clock",
-        3,
-        battleground_construct::components::clock::ClockReader::new(),
+    let main_tank = spawn_tank(
+        &mut world,
+        TankSpawnConfig {
+            x: 0.0,
+            y: 0.0,
+            yaw: 0.0,
+            controller: vehicle_control_wasm::create_ai(),
+        },
     );
 
-    control.update(&mut interface);
+    let mut s = systems::vehicle_control::VehicleControl {};
+    s.update(&mut world);
+
     Ok(())
 }
