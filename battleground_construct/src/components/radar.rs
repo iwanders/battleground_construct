@@ -119,12 +119,26 @@ impl VehicleModule for RadarModule {
         registers.clear();
         if let Some(radar) = world.component::<Radar>(self.entity) {
             let reflections = radar.reflections();
+            let mut index = 0;
+            registers.insert(index, Register::new_f32("range_max", radar.range_max));
+            index += 1;
             registers.insert(
-                0,
+                index,
+                Register::new_f32("detection_angle_yaw", radar.detection_angle_yaw),
+            );
+            index += 1;
+            registers.insert(
+                index,
+                Register::new_f32("detection_angle_pitch", radar.detection_angle_pitch),
+            );
+            index += 1;
+            registers.insert(
+                index,
                 Register::new_i32("reflections", reflections.len() as i32),
             );
+            index += 1;
             for (i, reflection) in reflections.iter().enumerate() {
-                let offset = i as u32 * 4 + 1;
+                let offset = i as u32 * 4 + index;
                 registers.insert(offset + 0, Register::new_f32("yaw", reflection.yaw));
                 registers.insert(offset + 1, Register::new_f32("pitch", reflection.pitch));
                 registers.insert(
@@ -213,6 +227,7 @@ mod test {
         let reflections = vec![
             (Mat4::from_translation(vec3(-5.0f32, 10.0, 0.0)), 1.0), // seen! 7m
             (Mat4::from_translation(vec3(-7.5f32, 5.5, 0.0)), 1.0),  // seen! yaw 45 deg,
+            (Mat4::from_translation(vec3(-7.5f32, 5.5, -2.5)), 1.0), // seen! yaw 45 deg, pitch negative
         ];
         let radar_pose =
             Mat4::from_translation(vec3(-5.0f32, 3.0, 0.0)) * Mat4::from_angle_z(cgmath::Deg(90.0));
@@ -224,6 +239,11 @@ mod test {
                 std::f32::consts::PI / 4.0,
                 0.0f32,
                 vec3(2.5, 2.5, 0.0).euclid_norm(),
+            ),
+            (
+                std::f32::consts::PI / 4.0,
+                -0.6154797,
+                vec3(2.5, 2.5, 2.5).euclid_norm(),
             ),
         ];
         let obtained = radar.reflections();

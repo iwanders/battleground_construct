@@ -212,8 +212,8 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let mut radar_revolute =
         components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
     radar_revolute.set_velocity_bounds(-std::f32::consts::PI * 2.0, std::f32::consts::PI * 2.0);
-    radar_revolute.set_velocity(-6.28);
-    // radar_revolute.set_velocity(-3.14);
+    // radar_revolute.set_velocity(-6.28);
+    radar_revolute.set_velocity(-3.14);
     register_interface.get_mut().add_module(
         "radar_rotation",
         RADAR_ROTATION,
@@ -244,7 +244,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
             detection_angle_yaw: 10.0f32.to_radians(),
             detection_angle_pitch: 180f32.to_radians(),
             // range_max: 70.0,
-            // detection_angle_yaw: 360.0f32.to_radians(),
+            // detection_angle_yaw: 45.0f32.to_radians(),
             // detection_angle_pitch: 180f32.to_radians(),
             signal_strength: 1.0,
         }),

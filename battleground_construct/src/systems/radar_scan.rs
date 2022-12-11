@@ -1,5 +1,5 @@
 use super::components::group::Group;
-use super::components::pose::{world_pose, Pose};
+use super::components::pose::world_pose;
 use super::components::radar::Radar;
 use super::components::radar_reflector::RadarReflector;
 use crate::display::primitives::Mat4;
@@ -19,15 +19,13 @@ impl System for RadarScan {
         }
 
         for (entity, mut radar) in world.component_iter_mut::<Radar>() {
-            if let Some(pose) = world.component::<Pose>(entity) {
-                let radar_pose = pose.transform();
-                let reflectors = reflectors
-                    .iter()
-                    .filter(|v| !v.2.entities().contains(&entity))
-                    .map(|v| (v.0, v.1))
-                    .collect::<Vec<_>>();
-                radar.update_reflections(radar_pose, &reflectors);
-            }
+            let radar_pose = world_pose(world, entity);
+            let reflectors = reflectors
+                .iter()
+                .filter(|v| !v.2.entities().contains(&entity))
+                .map(|v| (v.0, v.1))
+                .collect::<Vec<_>>();
+            radar.update_reflections(&radar_pose, &reflectors);
         }
     }
 }

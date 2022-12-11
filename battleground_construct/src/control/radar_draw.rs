@@ -24,7 +24,7 @@ impl VehicleControl for RadarDrawControl {
 
         // Calculate the position of the base;
         let global_offset =
-            Mat4::from_translation(vec3(x, y, z - body_z)) * Mat4::from_angle_z(cgmath::Rad(yaw));
+            Mat4::from_translation(vec3(x, y, z)) * Mat4::from_angle_z(cgmath::Rad(yaw));
         // We draw in the base frame, so to go from global to draw, we need that inverse.
         let draw_to_global = global_offset.to_inv_h();
         // Then, we can calculate everything in global frame, and finally draw in local.
@@ -48,8 +48,16 @@ impl VehicleControl for RadarDrawControl {
             width: 0.01,
             color: Color::GREEN,
         });
+        use cgmath::Rad;
 
-        let p1 = global_offset * local_radar * vec3(10.0, 0.0, 0.0).to_h();
+        let radar_range_max = interface.get_f32(tank::RADAR_MODULE, 0).unwrap();
+        let radar_detection_yaw = interface.get_f32(tank::RADAR_MODULE, 1).unwrap();
+        let _radar_detection_pitch = interface.get_f32(tank::RADAR_MODULE, 2).unwrap();
+
+        let p1 = global_offset
+            * local_radar
+            * Mat4::from_angle_z(Rad(-radar_detection_yaw))
+            * vec3(radar_range_max, 0.0, 0.0).to_h();
         let p1 = draw_to_global * p1;
 
         lines.push(LineSegment {
@@ -59,9 +67,22 @@ impl VehicleControl for RadarDrawControl {
             color: Color::BLUE,
         });
 
-        let radar_hits = interface.get_i32(tank::RADAR_MODULE, 0).unwrap();
+        let p1 = global_offset
+            * local_radar
+            * Mat4::from_angle_z(Rad(radar_detection_yaw))
+            * vec3(radar_range_max, 0.0, 0.0).to_h();
+        let p1 = draw_to_global * p1;
+
+        lines.push(LineSegment {
+            p0: [global_radar.w.x, global_radar.w.y, global_radar.w.z],
+            p1: [p1.w.x, p1.w.y, p1.w.z],
+            width: 0.01,
+            color: Color::BLUE,
+        });
+
+        let radar_hits = interface.get_i32(tank::RADAR_MODULE, 3).unwrap();
         for i in 0..radar_hits {
-            let offset = i as u32 * 4 + 1;
+            let offset = i as u32 * 4 + 3 + 1;
             let reading_yaw = interface.get_f32(tank::RADAR_MODULE, offset + 0).unwrap();
             let pitch = interface.get_f32(tank::RADAR_MODULE, offset + 1).unwrap();
             let distance = interface.get_f32(tank::RADAR_MODULE, offset + 2).unwrap();
@@ -71,11 +92,11 @@ impl VehicleControl for RadarDrawControl {
                 * Mat4::from_angle_y(cgmath::Rad(pitch));
             let radar_hit = radar_hit_frame * vec3(distance, 0.0, 0.0).to_h();
             let target = local_radar * radar_hit;
-            let draw_target = draw_to_global * target;
+            let draw_target = target;
 
             lines.push(LineSegment {
                 p0: [global_radar.w.x, global_radar.w.y, global_radar.w.z],
-                p1: [draw_target.w.x, draw_target.w.y, draw_target.w.z],
+                p1: [draw_target.w.x, draw_target.w.y, draw_target.w.z - body_z],
                 width: 0.05,
                 color: Color::RED,
             });
