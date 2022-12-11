@@ -64,6 +64,10 @@ mod interface {
         fn wasm_interface_module_name(module: u32) -> u32;
         fn wasm_interface_register_name(module: u32, register: u32) -> u32;
         fn wasm_interface_register_type(module: u32, register: u32) -> u32;
+        fn wasm_interface_get_i32(module: u32, register: u32) -> i32;
+        fn wasm_interface_get_f32(module: u32, register: u32) -> f32;
+        fn wasm_interface_set_i32(module: u32, register: u32, value: i32) -> i32;
+        fn wasm_interface_set_f32(module: u32, register: u32, value: f32) -> f32;
         // fn wasm_interface_get_f32(module: u32, register: u32) -> f32;
     }
 
@@ -178,26 +182,30 @@ mod interface {
 
         /// Get an i32 register.
         fn get_i32(&self, module: u32, register: u32) -> Result<i32, Error> {
-            log::error!("Function: {}", function!());
-            unimplemented!();
+            let result = unsafe { wasm_interface_get_i32(module, register)};
+            get_error(module, register)?;
+            Ok(result)
         }
 
         /// Set an i32 register.
         fn set_i32(&mut self, module: u32, register: u32, value: i32) -> Result<i32, Error> {
-            log::error!("Function: {}", function!());
-            unimplemented!();
+            let result = unsafe { wasm_interface_set_i32(module, register, value)};
+            get_error(module, register)?;
+            Ok(result)
         }
 
         /// Get an f32 register.
         fn get_f32(&self, module: u32, register: u32) -> Result<f32, Error> {
-            log::error!("Function: {}", function!());
-            unimplemented!();
+            let result = unsafe { wasm_interface_get_f32(module, register)};
+            get_error(module, register)?;
+            Ok(result)
         }
 
         /// Set an f32 register.
         fn set_f32(&mut self, module: u32, register: u32, value: f32) -> Result<f32, Error> {
-            log::error!("Function: {}", function!());
-            unimplemented!();
+            let result = unsafe { wasm_interface_set_f32(module, register, value)};
+            get_error(module, register)?;
+            Ok(result)
         }
 
         /// Get the length required to read a byte register.

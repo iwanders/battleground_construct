@@ -115,6 +115,19 @@ impl VehicleControlWasm {
             }
         }
 
+        fn send_pod_result<C>(mut caller: Caller<'_, State>, res: Result<C, Box<InterfaceError>>, failed: C) -> C {
+            let wasm_set_error = get_wasm_set_error(&mut caller);
+            match res {
+                Ok(v) => {
+                    v
+                }
+                Err(e) => {
+                    wasm_set_error.call(caller, e.error_type as u32);
+                    failed
+                }
+            }
+        }
+
         linker.func_wrap(
             "env",
             "wasm_interface_modules",
@@ -168,6 +181,52 @@ impl VehicleControlWasm {
                         0
                     }
                 }
+            },
+        )?;
+
+        linker.func_wrap(
+            "env",
+            "wasm_interface_get_i32",
+            |mut caller: Caller<'_, State>, module: u32, register: u32| -> i32 {
+                let res = caller
+                    .data()
+                    .register_interface
+                    .get_i32(module, register);
+                send_pod_result(caller, res, 0)
+            },
+        )?;
+
+        linker.func_wrap(
+            "env",
+            "wasm_interface_get_f32",
+            |mut caller: Caller<'_, State>, module: u32, register: u32| -> f32 {
+                let res = caller
+                    .data()
+                    .register_interface
+                    .get_f32(module, register);
+                send_pod_result(caller, res, 0.0)
+            },
+        )?;
+        linker.func_wrap(
+            "env",
+            "wasm_interface_set_i32",
+            |mut caller: Caller<'_, State>, module: u32, register: u32, value: i32| -> i32 {
+                let res = caller
+                    .data_mut()
+                    .register_interface
+                    .set_i32(module, register, value);
+                send_pod_result(caller, res, 0)
+            },
+        )?;
+        linker.func_wrap(
+            "env",
+            "wasm_interface_set_f32",
+            |mut caller: Caller<'_, State>, module: u32, register: u32, value: f32| -> f32 {
+                let res = caller
+                    .data_mut()
+                    .register_interface
+                    .set_f32(module, register, value);
+                send_pod_result(caller, res, 0.0)
             },
         )?;
 
