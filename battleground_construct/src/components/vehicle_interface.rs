@@ -58,6 +58,13 @@ impl Register {
             _ => None,
         }
     }
+    /// Retrieve writable bytes.
+    pub fn value_bytes_mut(&mut self) -> Option<&mut Vec<u8>> {
+        match &mut self.value {
+            Value::Bytes { ref mut values, .. } => Some(values),
+            _ => None,
+        }
+    }
 }
 
 impl Register {
@@ -106,8 +113,35 @@ pub type RegisterId = u32;
 
 pub struct Module {
     name: String,
-    handler: Box<dyn VehicleModule>,
+    handler: Option<Box<dyn VehicleModule>>,
     registers: std::collections::HashMap<RegisterId, Register>,
+}
+
+impl Module {
+    pub fn read_interface(&mut self, module: ModuleId, interface: &dyn battleground_vehicle_control::Interface) -> Result<(), battleground_vehicle_control::Error> {
+        for reg_id in interface.registers(module)? {
+            let name = interface.register_name(module, reg_id)?;
+            let reg = match interface.register_type(module, reg_id)? {
+                battleground_vehicle_control::RegisterType::I32 => {
+                    Register::new_i32(&name, interface.get_i32(module, reg_id)?)
+                }
+                battleground_vehicle_control::RegisterType::F32 => {
+                    Register::new_f32(&name, interface.get_f32(module, reg_id)?)
+                }
+                battleground_vehicle_control::RegisterType::Bytes => {
+                    let mut reg = Register::new_bytes(&name);
+                    let mut b = reg.value_bytes_mut().unwrap();
+                    b.clear();
+                    b.resize(interface.get_bytes_len(module, reg_id)?, 0u8);
+                    interface.get_bytes(module, reg_id, &mut b[..])?;
+                    reg
+                }
+            };
+
+            self.registers.insert(reg_id, reg);
+        }
+        Ok(())
+    }
 }
 
 #[derive(Default)]
@@ -121,6 +155,24 @@ impl RegisterInterface {
         RegisterInterface::default()
     }
 
+    /// Copy all registers from the interface to self.
+    pub fn read_interface(&mut self, interface: &dyn battleground_vehicle_control::Interface) -> Result<(), battleground_vehicle_control::Error> {
+        for module in interface.modules()? {
+            let name = interface.module_name(module)?;
+            self.modules.insert(module, Module {
+                name,
+                handler: None,
+                registers: Default::default(),
+            });
+            self.modules.get_mut(&module).unwrap().read_interface(module, interface)?;
+        }
+        Ok(())
+    }
+
+    /// Copy all registers from self to the interface.
+    pub fn write_interface(&self, interface: &mut dyn battleground_vehicle_control::Interface) {
+    }
+
     pub fn add_module_boxed(
         &mut self,
         name: &str,
@@ -132,7 +184,7 @@ impl RegisterInterface {
             Module {
                 name: name.to_owned(),
                 // index,
-                handler,
+                handler: Some(handler),
                 registers: Default::default(),
             },
         );
@@ -147,7 +199,7 @@ impl RegisterInterface {
             Module {
                 name: name.to_owned(),
                 // index,
-                handler: Box::new(handler),
+                handler: Some(Box::new(handler)),
                 registers: Default::default(),
             },
         );
@@ -155,12 +207,16 @@ impl RegisterInterface {
 
     pub fn get_registers(&mut self, world: &mut World) {
         for (_id, m) in self.modules.iter_mut() {
-            m.handler.get_registers(world, &mut m.registers);
+            if let Some(ref handler) = m.handler {
+                handler.get_registers(world, &mut m.registers);
+            }
         }
     }
     pub fn set_components(&mut self, world: &mut World) {
         for (_id, m) in self.modules.iter_mut() {
-            m.handler.set_component(world, &m.registers);
+            if let Some(ref handler) = m.handler {
+                handler.set_component(world, &m.registers);
+            }
         }
     }
 
@@ -263,6 +319,17 @@ impl battleground_vehicle_control::Interface for RegisterInterface {
     ) -> Result<String, battleground_vehicle_control::Error> {
         let r = self.get_register(module, register)?;
         Ok(r.name.clone())
+    }
+
+
+    /// Retrieve a register type.
+    fn register_type(&self, module: u32, register: u32) -> Result<battleground_vehicle_control::RegisterType, battleground_vehicle_control::Error> {
+        let r = self.get_register(module, register)?;
+        Ok(match &r.value {
+            Value::I32(..) => battleground_vehicle_control::RegisterType::I32,
+            Value::F32(..) => battleground_vehicle_control::RegisterType::F32,
+            Value::Bytes{..} => battleground_vehicle_control::RegisterType::Bytes,
+        })
     }
 
     /// Get an f32 register.

@@ -4,6 +4,14 @@ pub type ControllerSpawn = fn() -> Box<dyn VehicleControl>;
 /// Error type used.
 pub type Error = Box<InterfaceError>;
 
+
+/// Enum to denote register type.
+pub enum RegisterType {
+    I32,
+    F32,
+    Bytes,
+}
+
 /// Interface to control the vehicle, the ai uses this to interact with the vehicle.
 pub trait Interface {
     /// Retrieve the list of module ids that are available.
@@ -17,6 +25,9 @@ pub trait Interface {
 
     /// Retrieve a register name.
     fn register_name(&self, module: u32, register: u32) -> Result<String, Error>;
+
+    /// Retrieve a register type.
+    fn register_type(&self, module: u32, register: u32) -> Result<RegisterType, Error>;
 
     /// Get an i32 register.
     fn get_i32(&self, module: u32, register: u32) -> Result<i32, Error>;
