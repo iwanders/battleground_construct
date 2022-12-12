@@ -8,4 +8,5 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 battleground_vehicle_control = { path = "../battleground_vehicle_control" }
-#battleground_construct = { path = "../battleground_construct" }
+battleground_construct = { path = "../battleground_construct" }
+

@@ -26,6 +26,7 @@ pub struct Construct {
 }
 
 impl Construct {
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn new() -> Self {
         let mut world = World::new();
         let clock_id = world.add_entity();

@@ -10,10 +10,6 @@ impl VehicleControl for TankSwivelShoot {
         let revolve_vel = 1;
         let revolve_cmd_vel = 4;
 
-        interface
-            .set_i32(tank::CANNON_MODULE, 0, true as i32)
-            .unwrap();
-
         if false {
             for m_index in interface.modules().unwrap() {
                 println!(
@@ -26,6 +22,9 @@ impl VehicleControl for TankSwivelShoot {
             }
         }
 
+        let write_res = interface.set_i32(tank::CANNON_MODULE, 0, true as i32);
+        write_res.unwrap();
+
         let clock = interface.get_f32(tank::CLOCK_MODULE, 0).unwrap();
         if clock < 0.1 {
             interface
@@ -36,6 +35,7 @@ impl VehicleControl for TankSwivelShoot {
                 .unwrap();
             return;
         }
+
         // println!("Clock: {clock}");
         // base
         // interface.set_f32(0x1000, 2, 1.0).unwrap();

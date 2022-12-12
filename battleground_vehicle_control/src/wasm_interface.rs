@@ -87,7 +87,7 @@ mod interface {
     }
 
     const NO_ERROR: u32 = 0xFFFF;
-    static ERROR: Mutex<u32> = Mutex::new(0);
+    static ERROR: Mutex<u32> = Mutex::new(NO_ERROR);
     #[no_mangle]
     pub extern "C" fn wasm_set_error(v: u32) {
         let mut error = ERROR.lock().expect("cannot be poisoned");
@@ -177,6 +177,7 @@ mod interface {
 
         /// Retrieve a register type.
         fn register_type(&self, module: u32, register: u32) -> Result<RegisterType, Error> {
+            clear_error();
             let register_type = unsafe { wasm_interface_register_type(module, register) };
             get_error(module, register)?;
             match register_type.try_into() {
@@ -187,6 +188,7 @@ mod interface {
 
         /// Get an i32 register.
         fn get_i32(&self, module: u32, register: u32) -> Result<i32, Error> {
+            clear_error();
             let result = unsafe { wasm_interface_get_i32(module, register) };
             get_error(module, register)?;
             Ok(result)
@@ -194,6 +196,7 @@ mod interface {
 
         /// Set an i32 register.
         fn set_i32(&mut self, module: u32, register: u32, value: i32) -> Result<i32, Error> {
+            clear_error();
             let result = unsafe { wasm_interface_set_i32(module, register, value) };
             get_error(module, register)?;
             Ok(result)
@@ -201,6 +204,7 @@ mod interface {
 
         /// Get an f32 register.
         fn get_f32(&self, module: u32, register: u32) -> Result<f32, Error> {
+            clear_error();
             let result = unsafe { wasm_interface_get_f32(module, register) };
             get_error(module, register)?;
             Ok(result)
@@ -208,6 +212,7 @@ mod interface {
 
         /// Set an f32 register.
         fn set_f32(&mut self, module: u32, register: u32, value: f32) -> Result<f32, Error> {
+            clear_error();
             let result = unsafe { wasm_interface_set_f32(module, register, value) };
             get_error(module, register)?;
             Ok(result)
@@ -215,6 +220,7 @@ mod interface {
 
         /// Get the length required to read a byte register.
         fn get_bytes_len(&self, module: u32, register: u32) -> Result<usize, Error> {
+            clear_error();
             let result = unsafe { wasm_interface_get_bytes_len(module, register) };
             get_error(module, register)?;
             Ok(result as usize)
@@ -227,6 +233,7 @@ mod interface {
             register: u32,
             destination: &mut [u8],
         ) -> Result<usize, Error> {
+            clear_error();
             let result = unsafe {
                 wasm_interface_get_bytes(
                     module,
@@ -241,6 +248,7 @@ mod interface {
 
         /// Set a byte register.
         fn set_bytes(&mut self, module: u32, register: u32, values: &[u8]) -> Result<(), Error> {
+            clear_error();
             unsafe {
                 wasm_interface_set_bytes(
                     module,

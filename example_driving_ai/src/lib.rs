@@ -67,5 +67,6 @@ impl VehicleControl for SimpleVehicleControl {
 #[cfg(target_arch = "wasm32")]
 pub fn create_vehicle_control() -> Box<dyn VehicleControl> {
     // Box::new(battleground_construct::control::radar_draw::RadarDrawControl{})
-    Box::new(SimpleVehicleControl::new())
+    Box::new(battleground_construct::control::tank_swivel_shoot::TankSwivelShoot {})
+    // Box::new(SimpleVehicleControl::new())
 }

@@ -21,6 +21,7 @@ impl VehicleControlWasm {
             "../target/wasm32-unknown-unknown/release/example_driving_ai.wasm";
         let mut config = wasmtime::Config::default();
         config.consume_fuel(true);
+        config.debug_info(true);
 
         let engine = Engine::new(&config)?;
         let mut linker = Linker::<State>::new(&engine);
@@ -375,7 +376,7 @@ impl VehicleControl for VehicleControlWasm {
         // Clunky, but ah well... interface can't outlive this scope, so setting functions here that
         // use it doesn't work. Instead, copy the interface's state completely.
 
-        self.store.add_fuel(10000000).expect("");
+        self.store.add_fuel(100000000).expect("");
 
         // Copy all registers into the state.
         self.store
@@ -393,9 +394,14 @@ impl VehicleControl for VehicleControlWasm {
             .typed::<(), (), _>(&self.store)
             .expect("should be correct signature");
 
-        wasm_controller_update
-            .call(&mut self.store, ())
-            .expect("shouldnt fail");
+        let update_res = wasm_controller_update.call(&mut self.store, ());
+        match update_res {
+            Ok(_) => {}
+            Err(v) => {
+                println!("Something went wrong in update {v:?}");
+                panic!();
+            }
+        }
 
         // Write back the register interface.
         self.store
