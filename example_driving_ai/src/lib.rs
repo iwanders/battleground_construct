@@ -1,14 +1,14 @@
 use battleground_vehicle_control::{log, Interface, RegisterType, VehicleControl};
 
-pub struct SimpleAi {}
+pub struct SimpleVehicleControl {}
 
-impl SimpleAi {
+impl SimpleVehicleControl {
     pub fn new() -> Self {
-        SimpleAi {}
+        SimpleVehicleControl {}
     }
 }
 
-impl VehicleControl for SimpleAi {
+impl VehicleControl for SimpleVehicleControl {
     fn update(&mut self, interface: &mut dyn Interface) {
         log::info!("We got called");
 
@@ -67,5 +67,5 @@ impl VehicleControl for SimpleAi {
 #[cfg(target_arch = "wasm32")]
 pub fn create_vehicle_control() -> Box<dyn VehicleControl> {
     // Box::new(battleground_construct::control::radar_draw::RadarDrawControl{})
-    Box::new(SimpleAi::new())
+    Box::new(SimpleVehicleControl::new())
 }

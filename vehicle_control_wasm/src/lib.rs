@@ -375,6 +375,8 @@ impl VehicleControl for VehicleControlWasm {
         // Clunky, but ah well... interface can't outlive this scope, so setting functions here that
         // use it doesn't work. Instead, copy the interface's state completely.
 
+        self.store.add_fuel(10000000).expect("");
+
         // Copy all registers into the state.
         self.store
             .data_mut()
