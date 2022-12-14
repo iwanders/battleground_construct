@@ -10,7 +10,7 @@ use battleground_construct::display::primitives::Vec3;
 use battleground_construct::util::cgmath::prelude::*;
 use components::parent::Parent;
 use components::pose::{Pose, PreTransform, world_pose};
-use components::velocity::Velocity;
+use components::velocity::{Velocity, world_velocity};
 
 use cgmath::SquareMatrix;
 
@@ -25,21 +25,25 @@ fn test_tank_body_velocities() {
 
     // Create the base.
     let base_id = world.add_entity();
+    println!("base_id: {base_id:?}");
 
     world.add_component(base_id, Pose::from_translation(Vec3::new(x, y, z)));
     let mut vel = components::velocity::Velocity::new();
+    let linear_velocity = 1.1;
+    let angular_velocity = 2.2;
+    vel = Velocity::from_se2(linear_velocity, 0.0, angular_velocity);
     world.add_component(base_id, vel);
-    vel.v.x = 1.1;
-    vel.w.z = 2.2;
-    // Velocity component needs update.
 
 
     // Add the turrent entity.
     let turret_id = world.add_entity();
+    println!("turret_id: {turret_id:?}");
 
     let mut turret_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
     // turret_revolute.set_velocity_bounds(-std::f32::consts::PI * 2.0, std::f32::consts::PI * 2.0);
+    turret_revolute.set_velocity_bounds(-100000.0, 100000.0);
     turret_revolute.set_velocity(3.3);
+    let turret_vel: components::velocity::Velocity = turret_revolute.to_twist().into();
 
     world.add_component(turret_id, turret_revolute);
     world.add_component(
@@ -47,16 +51,17 @@ fn test_tank_body_velocities() {
         PreTransform::from_translation(Vec3::new(0.0, 0.0, 1.0)),
     );
     world.add_component(turret_id, components::pose::Pose::new());
-    let turret_vel = components::velocity::Velocity::new();
     world.add_component(turret_id, turret_vel);
     world.add_component(turret_id, Parent::new(base_id.clone()));
-    // Velocity component needs update.
     
 
     // Add the barrel linear offset, and joint.
     let barrel_id = world.add_entity();
+    println!("barrel_id: {barrel_id:?}");
     let mut barrel_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 1.0, 0.0));
+    barrel_revolute.set_velocity_bounds(-100000.0, 100000.0);
     barrel_revolute.set_velocity(4.4);
+    let barrel_vel: components::velocity::Velocity = turret_revolute.to_twist().into();
 
     world.add_component(barrel_id, barrel_revolute);
     world.add_component(
@@ -64,9 +69,9 @@ fn test_tank_body_velocities() {
         PreTransform::from_translation(Vec3::new(0.5, 0.0, 0.0)),
     );
     world.add_component(barrel_id, components::pose::Pose::new());
-    world.add_component(barrel_id, components::velocity::Velocity::new());
+    world.add_component(barrel_id, barrel_vel);
     world.add_component(barrel_id, Parent::new(turret_id.clone()));
-    // Velocity component needs update.
+
 
     // Then, the arm from the joint to the center of the barrel.
     let barrel_cog_id = world.add_entity();
@@ -75,11 +80,19 @@ fn test_tank_body_velocities() {
 
     // Finally, a meter further from the center of the barrel, add the nozzle.
     let nozzle_id = world.add_entity();
+    println!("nozzle_id: {nozzle_id:?}");
     world.add_component(nozzle_id, Parent::new(barrel_cog_id.clone()));
     world.add_component(
         nozzle_id,
         PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
     );
+    let shell_id = world.add_entity();
+    println!("shell_id: {shell_id:?}");
+    world.add_component(shell_id, Parent::new(nozzle_id.clone()));
+    let mut shell_v = components::velocity::Velocity::new();
+    shell_v.v.x = 5.5;
+    world.add_component(shell_id, shell_v);
+
 
     // Print all H matrices, and check them again known good values.
     let h_body_to_global = world_pose(&world, base_id);
@@ -101,4 +114,20 @@ fn test_tank_body_velocities() {
     println!("h_nozzle_to_global: {h_nozzle_to_global:?}");
     assert!(h_nozzle_to_global.to_rotation().is_identity());
     assert_eq!(h_nozzle_to_global.to_translation(), vec3(7.4, -5.7, 2.0));
+
+    let vel_body_in_global = world_velocity(&world, base_id);
+    println!("vel_body_in_global: {vel_body_in_global:?}");
+    assert_eq!(vel_body_in_global.w, vec3(0.0, 0.0, 2.2));
+    assert_eq!(vel_body_in_global.v, vec3(1.1, 0.0, 0.0));
+
+    let vel_turret_in_global = world_velocity(&world, turret_id);
+    println!("vel_turret_in_global: {vel_turret_in_global:?}");
+    assert_eq!(vel_turret_in_global.w, vec3(0.0, 0.0, 5.5));
+    assert_eq!(vel_turret_in_global.v, vec3(1.1, 0.0, 0.0));
+
+    let vel_barrel_cog_in_global = world_velocity(&world, barrel_cog_id);
+    println!("vel_barrel_cog_in_global: {vel_barrel_cog_in_global:?}");
+    assert_eq!(vel_barrel_cog_in_global.w, vec3(0.0, 4.4, 5.5));
+    // assert_eq!(vel_barrel_cog_in_global.v, vec3(1.1, 8.25, -4.4));
+    
 }

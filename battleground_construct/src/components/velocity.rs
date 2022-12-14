@@ -121,7 +121,7 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
     use crate::components::pose::Pose;
     use crate::components::pose::PreTransform;
     use crate::util::cgmath::prelude::*;
-use crate::display::primitives::Mat4;
+    use crate::display::primitives::Mat4;
     let mut current_id = entity.clone();
     let mut current_velocity = Velocity::new().to_twist();
     let mut current_pose = Pose::new();
@@ -236,7 +236,7 @@ use crate::display::primitives::Mat4;
     for f in frames.iter().rev() {
         current_velocity = f.pre_transform.to_adjoint() * current_velocity;
         current_velocity = current_velocity + f.relative_vel;
-        current_velocity = f.relative_pose.to_adjoint() * current_velocity;
+        // current_velocity = f.relative_pose.to_adjoint() * current_velocity;
 
         current_pose = (f.relative_pose * current_pose.transform()).into();
         current_pose = (f.pre_transform * current_pose.transform()).into();
