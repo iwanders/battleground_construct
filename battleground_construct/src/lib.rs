@@ -68,11 +68,11 @@ impl Construct {
                 x: 0.0,
                 y: 0.0,
                 yaw: 0.0,
-                // controller: Box::new(control::tank_swivel_shoot::TankSwivelShoot {}),
-                controller: control::dynamic_load_control::DynamicLoadControl::new(
-                    "../target/release/libvehicle_control_wasm.so",
-                )
-                .expect("should succeed"),
+                controller: Box::new(control::tank_swivel_shoot::TankSwivelShoot {}),
+                // controller: control::dynamic_load_control::DynamicLoadControl::new(
+                    // "../target/release/libvehicle_control_wasm.so",
+                // )
+                // .expect("should succeed"),
             },
         );
         /**/

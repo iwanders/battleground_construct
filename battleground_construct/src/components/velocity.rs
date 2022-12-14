@@ -235,7 +235,7 @@ use crate::display::primitives::Mat4;
     let mut current_pose = Pose::new();
     for f in frames.iter().rev() {
         current_velocity = f.pre_transform.to_adjoint() * current_velocity;
-        current_velocity = (current_velocity + f.relative_vel);
+        current_velocity = current_velocity + f.relative_vel;
         current_velocity = f.relative_pose.to_adjoint() * current_velocity;
 
         current_pose = (f.relative_pose * current_pose.transform()).into();
