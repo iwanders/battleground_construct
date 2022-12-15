@@ -352,7 +352,8 @@ impl Deconstructor {
                                 // Add base body velocity.
                                 let body_to_particle = p.to_h();
                                 let vel_of_particle = body_to_particle.to_adjoint() * *twist;
-                                let vel_of_particle_in_world = fragment_world_pos.to_inv_h().to_adjoint() * vel_of_particle;
+                                let vel_of_particle_in_world =
+                                    fragment_world_pos.to_inv_h().to_adjoint() * vel_of_particle;
                                 // let vel_of_particle_in_particleframe = fragment_world_pos.to_inv_h().to_rotation() * vel_of_particle_in_world.v;
                                 vel = vel + vel_of_particle_in_world.v;
                                 // vel = vel + (twist.v * 1.0);

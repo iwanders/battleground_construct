@@ -115,17 +115,25 @@ create_velocity_implementation!(Velocity);
 // pub use world_velocity_linear as world_velocity;
 pub use world_velocity_adjoint as world_velocity;
 
+/*
+    Let all links be:
+    parent| ---- preTransform ----> |Velocity/Joint/Pose|
+
+    A joint creates a velocity.
+    Velocity is integrated at that position.
+    To create the updated pose.
+*/
+
 pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
     let linear = world_velocity_linear(world, entity);
     // use crate::components::pose::world_pose;
     use crate::components::pose::Pose;
     use crate::components::pose::PreTransform;
-    use crate::util::cgmath::prelude::*;
     use crate::display::primitives::Mat4;
+    use crate::util::cgmath::prelude::*;
     let mut current_id = entity.clone();
-    let mut current_velocity = Velocity::new().to_twist();
     let mut current_pose = Pose::new();
-    let mut last_pose = *Pose::new().transform();
+    println!("Calculating new vel for {entity:?}");
 
     struct Frame {
         relative_pose: Mat4,
@@ -134,84 +142,35 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
         entity: EntityId,
     }
     let mut frames: Vec<Frame> = vec![];
-    
-    /*
-        Changing frame of a twist.
-        twist = Adjoint(Frame) * frame_twist.
 
-        Order of coordinate frames per entity is
-        parent -> pre_transform -> pose -> child
-
-        Pose on the entity is calculated by integrating the velocity.
-        Velocity is local frame. Pose is the offset to the next frame.
-    */
     loop {
         println!("Current id: {current_id:?}");
-        // T^ib_a, motion of body a with respect to body b, expressed in psi_i.
-        // H^a_b, H_to_a_from_b, is H from B to A.
 
-        // Let Pose be frame c.
-        // Let PreTransform be frame p.
-
-        // Pose is current frame in pre-transform frame.
-        // So this is H^c_p
-        let pose_t = if let Some(pose) = world.component::<Pose>(current_id) {
-            // println!("Found pose for  {current_id:?}");
-            *pose.transform()
+        let pose = world.component::<Pose>(current_id);
+        let local_pose = if let Some(pose) = pose {
+            current_pose = *pose * current_pose;
+            *pose
         } else {
-            *Pose::new().transform()
+            Pose::new()
         };
-        last_pose = pose_t;
-        // The previous velocity needs to be lifted to the current frame, using the pose.
-        current_velocity = pose_t.to_adjoint() * (current_velocity);
 
-        // Not velocity of current frame, expressed in current frame. That doesn't make any sense.
-        // That's always zero.
-        // It must be current frame, relative to pre-transform, expressed in pre-transform.
-        // T^pp_c
         let vel_t = if let Some(vel) = world.component::<Velocity>(current_id) {
-            // println!("Found vel for  {current_id:?}");
             vel.to_twist()
         } else {
             Velocity::new().to_twist()
         };
-        // let vel_t = Twist::new(-vel_t.v, -vel_t.w); // negate the velocity, because we are walking upwards in the tree.
-                                                    // Ah, that's the problem, if the Velocity is provided, the Pose will be calculated from
-                                                    // it. If the Velocity is not provided, Pose may be used to perform a static transform.
-        current_pose = (pose_t * *current_pose).into();
 
-        // Now, we can add the current velocity to this local velocity, getting us the total
-        // velocity.
-        println!("  current_velocity: {current_velocity:?}");
-        println!("  pose_t: {pose_t:?}");
-        println!("  vel_t here : {vel_t:?}");
-        current_velocity = current_velocity + vel_t;
-        println!("  combined_vel: {current_velocity:?}");
-        // println!("  pose_t adjoint: {:?}", pose_t.to_adjoint());
-
-        // println!("  new current_velocity: {current_velocity:?}");
-        // Pre transform is 'current' (pose) frame expressed in parent (denoted sr).
-        // So H^c_r
-        let pre_pose_t = if let Some(pre_pose) = world.component::<PreTransform>(current_id) {
-            println!("Found PreTransform for  {current_id:?}");
-            *pre_pose.transform()
+        let pre_pose = world.component::<PreTransform>(current_id);
+        let pre_pose = if let Some(pre_pose) = pre_pose {
+            current_pose = (pre_pose.transform() * current_pose.transform()).into();
+            *pre_pose
         } else {
-            *Pose::new().transform()
+            PreTransform::new()
         };
-        // current_pose = (pre_pose_t * current_pose.transform()).into();
-        current_velocity = pre_pose_t.to_adjoint() * current_velocity;
 
-        // T^i,b_a, motion of body a with respect to body b, expressed in psi_i.
-        // T^j,l_k = Ad(H^j_i) * T^i,l_k
-        // T^c,l_k = Ad(H^c_r) * T^r,l_k
-
-        println!("  pre_pose_t: {pre_pose_t:?}");
-        // println!("  pre_pose_t adjoint: {:?}", pre_pose_t.to_adjoint());
-        println!("  new current_velocity: {current_velocity:?}");
-
-        frames.push(Frame{
-            relative_pose: pose_t,
-            pre_transform: pre_pose_t,
+        frames.push(Frame {
+            relative_pose: *local_pose,
+            pre_transform: *pre_pose,
             relative_vel: vel_t,
             entity: current_id,
         });
@@ -219,36 +178,40 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
         if let Some(parent) = world.component::<super::parent::Parent>(current_id) {
             current_id = parent.parent().clone();
         } else {
-            // No parent... which means the parent is the origin!
-            // current_velocity = last_pose.to_inv_h().to_adjoint() * current_velocity;
             break;
         }
-        // println!("  parent: {current_id:?}");
     }
-    // That give us the velocity in the origin, do we need to mutiply that with the final transform
-    // to the pose again?
-    // return (current_pose.to_adjoint() * current_velocity).into();
-    println!("linear: {linear:?}");
-    println!("current_velocity: {current_velocity:?}");
-    // return current_velocity.into();
+
     let mut current_velocity = Velocity::new().to_twist();
-    let mut current_pose = Pose::new();
     for f in frames.iter().rev() {
-        current_velocity = f.pre_transform.to_adjoint() * current_velocity;
-        current_velocity = current_velocity + f.relative_vel;
-        // current_velocity = f.relative_pose.to_adjoint() * current_velocity;
+        let pose = f.relative_pose;
+        let pre = f.pre_transform;
+        let twist = f.relative_vel;
+        let entity = f.entity;
+        // First, determine the spatial transform.
+        let r_vector = pose.to_rotation() * pre.to_translation(); // + d
+        let spatial_transform = Adjoint {
+            r: pose.to_rotation(),
+            p_r: -r_vector.to_cross() * pose.to_rotation(),
+        };
+        println!("\n");
+        println!("current_velocity: {current_velocity:?}");
+        println!("entity: {entity:?}");
+        println!("pose: {pose:?}");
+        println!("pre: {pre:?}");
+        println!("twist: {twist:?}");
+        println!("spatial_transform: {spatial_transform:?}");
 
-        current_pose = (f.relative_pose * current_pose.transform()).into();
-        current_pose = (f.pre_transform * current_pose.transform()).into();
+        current_velocity = spatial_transform * current_velocity + twist;
+        println!("new vel: {current_velocity:?}");
+        println!("\n");
     }
 
-    // Now that we have all velocities accumulated into the 'deepest' frame, we need to rotate
-    // the velocity by that frame to be aligned with the world frame.
-    // current_velocity = current_pose.to_rotation_h().to_inv_h().to_adjoint() * current_velocity;
-    
-    // now, to express the world velocity, we take the frames, reverse them.
-    current_velocity.into()
+    // Finally; transform the spatial velocity to the global frame.
+    let rotation_only = current_pose.to_rotation_h();
+    current_velocity = rotation_only.to_adjoint() * current_velocity;
 
+    current_velocity.into()
 }
 
 pub fn world_velocity_linear(world: &World, entity: EntityId) -> Velocity {
@@ -393,7 +356,7 @@ mod test {
             //                                v
             -> x
             into screen; y
-            
+
 
             Frame A is fixed.
             l1 is arm between A and Revolute joint.
@@ -404,8 +367,14 @@ mod test {
         */
 
         // Lets ignore l0, it doesn't add any complexity here.
-        let vel_spatial = |l1: f32, _l2: f32, dtheta: f32| Velocity::from_velocities(vec3(l1 * dtheta, 0.0, 0.0), vec3(0.0, 0.0, dtheta)).to_twist();
-        let vel_body = |_l1: f32, l2: f32, dtheta: f32| Velocity::from_velocities(vec3(-l2 * dtheta, 0.0, 0.0), vec3(0.0, 0.0, dtheta)).to_twist();
+        let vel_spatial = |l1: f32, _l2: f32, dtheta: f32| {
+            Velocity::from_velocities(vec3(l1 * dtheta, 0.0, 0.0), vec3(0.0, 0.0, dtheta))
+                .to_twist()
+        };
+        let vel_body = |_l1: f32, l2: f32, dtheta: f32| {
+            Velocity::from_velocities(vec3(-l2 * dtheta, 0.0, 0.0), vec3(0.0, 0.0, dtheta))
+                .to_twist()
+        };
 
         let l1 = 1.1;
         let l2 = 3.2;
@@ -415,7 +384,8 @@ mod test {
         let p_a_c = Pose::from_se2(l1, 0.0, 0.0);
         let p_c_d = Pose::from_se2(0.0, 0.0, theta);
 
-        let v_c_d = Velocity::from_velocities(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, dtheta)).to_twist();
+        let v_c_d =
+            Velocity::from_velocities(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, dtheta)).to_twist();
         let p_d_b = Pose::from_se2(l2, 0.0, 0.0);
 
         let vnull = Velocity::from_velocities(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 0.0)).to_twist();
