@@ -12,7 +12,6 @@ pub mod prelude {
     pub use super::ToRollPitchYaw;
     pub use super::ToRotation;
     pub use super::ToRotationH;
-    pub use super::ToSpatialTransform;
     pub use super::ToTranslation;
     pub use super::Twist;
     pub use cgmath::MetricSpace;
@@ -155,7 +154,7 @@ impl<S: BaseFloat> Twist<S> {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Adjoint<S: BaseFloat> {
     pub r: cgmath::Matrix3<S>,
     pub p_r: cgmath::Matrix3<S>,
@@ -191,19 +190,6 @@ impl<S: BaseFloat> ToAdjoint<S> for cgmath::Matrix4<S> {
         Adjoint {
             r: self.to_rotation(),
             p_r: self.w.truncate().to_cross() * self.to_rotation(),
-        }
-    }
-}
-
-pub trait ToSpatialTransform<S: BaseFloat> {
-    fn to_spatial_transform(&self) -> Adjoint<S>;
-}
-
-impl<S: BaseFloat> ToSpatialTransform<S> for cgmath::Matrix4<S> {
-    fn to_spatial_transform(&self) -> Adjoint<S> {
-        Adjoint {
-            r: self.to_rotation(),
-            p_r: -self.to_rotation() * self.w.truncate().to_cross(),
         }
     }
 }
