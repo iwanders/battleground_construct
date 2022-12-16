@@ -351,11 +351,14 @@ impl Deconstructor {
 
                                 // Add base body velocity.
                                 let body_to_particle = p.to_h();
-                                let vel_of_particle = body_to_particle.to_adjoint() * *twist;
-                                let vel_of_particle_in_world =
-                                    fragment_world_pos.to_inv_h().to_adjoint() * vel_of_particle;
-                                // let vel_of_particle_in_particleframe = fragment_world_pos.to_inv_h().to_rotation() * vel_of_particle_in_world.v;
-                                vel = vel + vel_of_particle_in_world.v;
+
+                                // linear component;
+                                vel = vel + twist.v;
+                                // angular component;
+                                // vel = vel + fragment_pos.to_translation().to_cross() * twist.w;
+                                // let vel_of_particle = body_to_particle.to_inv_h().to_adjoint() * *twist;
+
+                                // vel = vel + vel_of_particle.v;
                                 // vel = vel + (twist.v * 1.0);
                                 // vel = vel + twist.w.cross(p);
 
@@ -373,18 +376,20 @@ impl Deconstructor {
                                 }
 
                                 // Then, add velocities away from the impacts.
-                                for (impact_location, magnitude) in impacts.iter() {
-                                    let p1 = impact_location.to_translation();
-                                    let p0 = fragment_world_pos.to_translation();
-                                    let rotation = Quat::from_arc(
-                                        vec3(1.0, 0.0, 0.0),
-                                        (p0 - p1).normalize(),
-                                        None,
-                                    );
-                                    let d = (p1.distance2(p0)).sqrt();
-                                    let mag = magnitude * (1.0 / (d * d));
-                                    if do_full_explosion {
-                                        vel += (rotation * vec3(1.0, 0.0, 0.0)) * mag;
+                                if do_full_explosion {
+                                    for (impact_location, magnitude) in impacts.iter() {
+                                        let p1 = impact_location.to_translation();
+                                        let p0 = fragment_world_pos.to_translation();
+                                        let rotation = Quat::from_arc(
+                                            vec3(1.0, 0.0, 0.0),
+                                            (p0 - p1).normalize(),
+                                            None,
+                                        );
+                                        let d = (p1.distance2(p0)).sqrt();
+                                        let mag = magnitude * (1.0 / (d * d));
+                                        if do_full_explosion {
+                                            vel += (rotation * vec3(1.0, 0.0, 0.0)) * mag;
+                                        }
                                     }
                                 }
 
@@ -433,7 +438,6 @@ impl RenderableEffect for Deconstructor {
             // println!();
             // println!("Pre pose: {:?}", particle.pos);
             // Always update position.
-            let rot = particle.pos.to_rotation_h();
             let before = particle.pos.to_translation();
             particle.pos.w = particle.pos.w + particle.vel.extend(0.0) * dt;
             let after = particle.pos.to_translation();
@@ -443,8 +447,9 @@ impl RenderableEffect for Deconstructor {
             particle.color.a =
                 std::cmp::min(particle.color.a, (255 as f32 * ratio_of_lifetime) as u8);
 
-            let accel = -9.81 * 0.25;
+            let accel = -9.81 * 0.0;
             let gravity = vec3(0.0f32, 0.0, accel).to_h();
+            let rot = particle.pos.to_rotation_h();
             particle.vel += (gravity * rot).w.truncate() * dt;
             if particle.pos.w[2] <= 0.0 {
                 particle.vel[0] = particle.vel[0] * 0.5;

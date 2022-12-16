@@ -112,9 +112,6 @@ macro_rules! create_velocity_implementation {
 }
 create_velocity_implementation!(Velocity);
 
-// pub use world_velocity_linear as world_velocity;
-pub use world_velocity_adjoint as world_velocity;
-
 /*
     Let all links be:
     parent| ---- preTransform ----> |Velocity/Joint/Pose|
@@ -124,7 +121,7 @@ pub use world_velocity_adjoint as world_velocity;
     To create the updated pose.
 */
 
-pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
+pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
     const VERBOSE_PRINTS: bool = false;
 
     use crate::components::pose::Pose;

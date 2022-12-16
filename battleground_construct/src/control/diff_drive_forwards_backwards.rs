@@ -24,6 +24,6 @@ impl VehicleControl for DiffDriveForwardsBackwardsControl {
         interface
             .set_f32(tank::BASE_MODULE, 3, self.velocities.1)
             .unwrap();
-        interface.set_f32(turret, revolve_cmd_vel, 3.0).unwrap();
+        interface.set_f32(turret, revolve_cmd_vel, 0.0).unwrap();
     }
 }
