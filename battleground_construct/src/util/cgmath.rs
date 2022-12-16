@@ -34,6 +34,13 @@ impl<S: BaseFloat> ToQuaternion<S> for Matrix4<S> {
     }
 }
 
+impl<S: BaseFloat> ToQuaternion<S> for Matrix3<S> {
+    fn to_quaternion(&self) -> cgmath::Quaternion<S> {
+        let m = *self;
+        m.into()
+    }
+}
+
 pub trait HomogenousTruncate<S: BaseFloat> {
     fn to_truncate_h(&self) -> Matrix3<S>;
 }

@@ -2,9 +2,7 @@ use battleground_construct::components;
 
 use cgmath::vec3;
 
-
 use engine::prelude::*;
-
 
 use battleground_construct::display::primitives::Vec3;
 use battleground_construct::util::cgmath::prelude::*;

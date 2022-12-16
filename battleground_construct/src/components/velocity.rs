@@ -199,19 +199,13 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
             r: pose.to_rotation(),
             p_r: -r_vector.to_cross() * pose.to_rotation(),
         };
+
+        // I feel the spatial transform should be identical to:
         // Expess the adjoint of the parent to this link.
         // Invert the pose (lift over the joint), invert the pre-transform.
-        let adjoint_of_child_to_parent = (pre.to_inv_h() * pose.to_inv_h()).to_adjoint();
+        // let adjoint_of_child_to_parent = (pre.to_inv_h() * pose.to_inv_h()).to_adjoint();
+        // But maybe that doesn't work if the pose has a translation...?
 
-        // The spatial transform only considers rotation, so lets use that to run this assert here
-        // while we develop confidence in the system.
-        let adjoint_rot_of_child_to_parent = (pre.to_inv_h() * pose.to_rotation_h().to_inv_h()).to_adjoint();
-        assert_eq!(spatial_transform, adjoint_rot_of_child_to_parent);
-        
-
-        // println!("Spatial 1: {spatial_transform1:?}");
-        // println!("Spatial 2: {spatial_transform:?}");
-        println!("");
         if VERBOSE_PRINTS {
             println!("\n");
             println!("current_velocity: {current_velocity:?}");
@@ -222,8 +216,7 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
             println!("spatial_transform: {spatial_transform:?}");
         }
 
-        // current_velocity = spatial_transform * current_velocity + twist;
-        current_velocity = adjoint_of_child_to_parent * current_velocity + twist;
+        current_velocity = spatial_transform * current_velocity + twist;
 
         if VERBOSE_PRINTS {
             println!("new vel: {current_velocity:?}");
@@ -237,7 +230,6 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
 
     current_velocity.into()
 }
-
 
 #[cfg(test)]
 mod test {
