@@ -1,10 +1,10 @@
 use battleground_construct::components;
-use battleground_construct::systems;
+
 use cgmath::vec3;
 
-use components::clock::{Clock, ClockSystem};
+
 use engine::prelude::*;
-use engine::Systems;
+
 
 use battleground_construct::display::primitives::Vec3;
 use battleground_construct::util::cgmath::prelude::*;
@@ -27,10 +27,9 @@ fn test_tank_body_velocities() {
     println!("base_id: {base_id:?}");
 
     world.add_component(base_id, Pose::from_translation(Vec3::new(x, y, z)));
-    let mut vel = components::velocity::Velocity::new();
     let linear_velocity = 1.1;
     let angular_velocity = 2.2;
-    vel = Velocity::from_se2(linear_velocity, 0.0, angular_velocity);
+    let vel = Velocity::from_se2(linear_velocity, 0.0, angular_velocity);
     world.add_component(base_id, vel);
 
     // Add the turrent entity.

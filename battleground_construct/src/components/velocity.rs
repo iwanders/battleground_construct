@@ -125,15 +125,18 @@ pub use world_velocity_adjoint as world_velocity;
 */
 
 pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
-    let linear = world_velocity_linear(world, entity);
-    // use crate::components::pose::world_pose;
+    const VERBOSE_PRINTS: bool = false;
+
     use crate::components::pose::Pose;
     use crate::components::pose::PreTransform;
     use crate::display::primitives::Mat4;
     use crate::util::cgmath::prelude::*;
     let mut current_id = entity.clone();
     let mut current_pose = Pose::new();
-    println!("Calculating new vel for {entity:?}");
+
+    if VERBOSE_PRINTS {
+        println!("Calculating new vel for {entity:?}");
+    }
 
     struct Frame {
         relative_pose: Mat4,
@@ -144,7 +147,9 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
     let mut frames: Vec<Frame> = vec![];
 
     loop {
-        println!("Current id: {current_id:?}");
+        if VERBOSE_PRINTS {
+            println!("Current id: {current_id:?}");
+        }
 
         let pose = world.component::<Pose>(current_id);
         let local_pose = if let Some(pose) = pose {
@@ -194,17 +199,22 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
             r: pose.to_rotation(),
             p_r: -r_vector.to_cross() * pose.to_rotation(),
         };
-        println!("\n");
-        println!("current_velocity: {current_velocity:?}");
-        println!("entity: {entity:?}");
-        println!("pose: {pose:?}");
-        println!("pre: {pre:?}");
-        println!("twist: {twist:?}");
-        println!("spatial_transform: {spatial_transform:?}");
+        if VERBOSE_PRINTS {
+            println!("\n");
+            println!("current_velocity: {current_velocity:?}");
+            println!("entity: {entity:?}");
+            println!("pose: {pose:?}");
+            println!("pre: {pre:?}");
+            println!("twist: {twist:?}");
+            println!("spatial_transform: {spatial_transform:?}");
+        }
 
         current_velocity = spatial_transform * current_velocity + twist;
-        println!("new vel: {current_velocity:?}");
-        println!("\n");
+
+        if VERBOSE_PRINTS {
+            println!("new vel: {current_velocity:?}");
+            println!("\n");
+        }
     }
 
     // Finally; transform the spatial velocity to the global frame.
@@ -214,70 +224,6 @@ pub fn world_velocity_adjoint(world: &World, entity: EntityId) -> Velocity {
     current_velocity.into()
 }
 
-pub fn world_velocity_linear(world: &World, entity: EntityId) -> Velocity {
-    // use crate::components::pose::world_pose;
-    use crate::components::pose::Pose;
-    use crate::components::pose::PreTransform;
-    use crate::util::cgmath::prelude::*;
-
-    let mut current_id = entity.clone();
-    let mut current_velocity = cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0);
-    // let mut current_pose = Pose::new();
-    /*
-        Changing frame of a twist.
-        twist = Adjoint(Frame) * frame_twist.
-    */
-    loop {
-        // println!("Current id: {current_id:?}");
-
-        let pose_t = if let Some(pose) = world.component::<Pose>(current_id) {
-            // println!("Found pose for  {current_id:?}");
-            *pose.transform()
-        } else {
-            *Pose::new().transform()
-        };
-        let vel_t = if let Some(vel) = world.component::<Velocity>(current_id) {
-            // println!("Found vel for  {current_id:?}");
-            vel.to_twist()
-        } else {
-            Velocity::new().to_twist()
-        };
-
-        // current_pose = (pose_t * *current_pose).into();
-        let combined_vel = current_velocity + vel_t.v;
-
-        // println!("  current_velocity: {current_velocity:?}");
-        // println!("  vel_t: {vel_t:?}");
-        // println!("  combined_vel: {combined_vel:?}");
-        // println!("  pose_t: {pose_t:?}");
-        // println!("  pose_t adjoint: {:?}", pose_t.to_adjoint());
-        current_velocity = pose_t.to_rotation() * (combined_vel);
-        // println!("  new current_velocity: {current_velocity:?}");
-
-        let pre_pose_t = if let Some(pre_pose) = world.component::<PreTransform>(current_id) {
-            // println!("Found PreTransform for  {current_id:?}");
-            *pre_pose.transform()
-        } else {
-            *Pose::new().transform()
-        };
-        // current_pose = (pre_pose_t * current_pose.transform()).into();
-        // println!("  pre_pose_t: {pre_pose_t:?}");
-        // println!("  pre_pose_t adjoint: {:?}", pre_pose_t.to_adjoint());
-        current_velocity = pre_pose_t.to_rotation() * current_velocity;
-        // println!("  new current_velocity: {current_velocity:?}");
-
-        if let Some(parent) = world.component::<super::parent::Parent>(current_id) {
-            current_id = parent.parent().clone();
-        } else {
-            break;
-        }
-        // println!("  parent: {current_id:?}");
-    }
-    // That give us the velocity in the origin, do we need to mutiply that with the final transform
-    // to the pose again?
-    // (current_pose.to_adjoint() * current_velocity).into()
-    Velocity::from_velocities(current_velocity, cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0))
-}
 
 #[cfg(test)]
 mod test {
@@ -344,7 +290,6 @@ mod test {
     #[test]
     fn test_adjoint_murray_one_dof_manipulator_p_74_example_2_dot_5() {
         use crate::util::cgmath::prelude::*;
-        use crate::util::test_util::*;
         use cgmath::vec3;
         /*
                          D
@@ -405,9 +350,9 @@ mod test {
 
         // Velocity of the body, should be v_c_d carried to B?
         let vel_body = vel_body(l1, l2, dtheta);
-        let v_in_B = p_d_b.to_inv_h().to_adjoint() * v_c_d;
+        let v_in_b = p_d_b.to_inv_h().to_adjoint() * v_c_d;
         println!(" vel_body: {vel_body:?}");
-        println!("   v_in_B: {v_in_B:?}");
+        println!("   v_in_b: {v_in_b:?}");
 
         // Oh, their convention has 'x' positive out of the paper. So yeah, then their -x is our y
         // and the results match.
