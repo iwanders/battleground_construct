@@ -88,7 +88,7 @@ impl ConstructViewer {
 
         let control = OrbitControl::new_with_config(config);
         */
-        let mut control = FlyControl::new(0.1);
+        let control = FlyControl::new(0.1);
 
         let ambient_light =
             three_d::renderer::light::AmbientLight::new(&context, 0.1, Color::WHITE);

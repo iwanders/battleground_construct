@@ -1,18 +1,18 @@
 use battleground_vehicle_control::{ControllerSpawn, Interface, VehicleControl};
 pub struct DynamicLoadControl {
-    lib: libloading::Library,
+    _lib: libloading::Library,
     controller: Option<Box<dyn VehicleControl>>,
 }
 
 impl DynamicLoadControl {
     pub fn new(lib: &str) -> Result<Box<DynamicLoadControl>, Box<dyn std::error::Error>> {
         let lib = unsafe { libloading::Library::new(lib)? };
-        let mut res = unsafe {
+        let res = unsafe {
             let foo: libloading::Symbol<ControllerSpawn> = lib.get(b"create_ai")?;
             foo()
         };
         Ok(Box::new(DynamicLoadControl {
-            lib,
+            _lib: lib,
             controller: Some(res),
         }))
     }

@@ -151,7 +151,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
 
     tank_group_ids.push(turret_id.clone());
-    let mut turret_revolute =
+    let turret_revolute =
         components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
     // turret_revolute.set_velocity_bounds(-std::f32::consts::PI * 2.0, std::f32::consts::PI * 2.0);
     // turret_revolute.set_velocity(-6.28);

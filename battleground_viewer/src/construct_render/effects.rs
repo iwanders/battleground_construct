@@ -349,9 +349,6 @@ impl Deconstructor {
                                 // Start velocity calculation, initialise with zero.
                                 let mut vel = vec3(0.0, 0.0, 0.0);
 
-                                // Add base body velocity.
-                                let body_to_particle = p.to_h();
-
                                 // linear component;
                                 vel = vel + twist.v;
                                 // angular component;

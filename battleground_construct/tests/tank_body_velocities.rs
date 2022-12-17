@@ -145,14 +145,14 @@ fn test_tank_body_velocities() {
     {
         let new_revolute_turret = {
             let mut v = world.component_mut::<Revolute>(turret_id);
-            let mut rev = v.as_mut().unwrap();
+            let rev = v.as_mut().unwrap();
 
             rev.set_position(std::f32::consts::PI / 4.0);
             rev.clone()
         };
         {
             let mut p = world.component_mut::<Pose>(turret_id);
-            let mut pose = p.as_mut().unwrap();
+            let pose = p.as_mut().unwrap();
             **pose = new_revolute_turret.to_pose();
         }
         {
@@ -161,7 +161,7 @@ fn test_tank_body_velocities() {
         }
         let new_revolute_barrel = {
             let mut v = world.component_mut::<Revolute>(barrel_id);
-            let mut rev = v.as_mut().unwrap();
+            let rev = v.as_mut().unwrap();
 
             rev.set_position(-std::f32::consts::PI / 4.0);
             rev.clone()

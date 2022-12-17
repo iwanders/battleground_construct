@@ -86,7 +86,7 @@ impl VehicleControl for RadarDrawControl {
             let reading_yaw = interface.get_f32(tank::RADAR_MODULE, offset + 0).unwrap();
             let pitch = interface.get_f32(tank::RADAR_MODULE, offset + 1).unwrap();
             let distance = interface.get_f32(tank::RADAR_MODULE, offset + 2).unwrap();
-            println!("Reading {i}: yaw: {reading_yaw}, pitch: {pitch}, distance: {distance}");
+            // println!("Reading {i}: yaw: {reading_yaw}, pitch: {pitch}, distance: {distance}");
 
             let radar_hit_frame = Mat4::from_angle_z(cgmath::Rad(reading_yaw))
                 * Mat4::from_angle_y(cgmath::Rad(pitch));
