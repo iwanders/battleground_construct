@@ -42,11 +42,12 @@ pub enum Primitive {
     Line(Line),
 }
 
-impl std::hash::Hash for Primitive {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: std::hash::Hasher,
-    {
+impl Primitive {
+    pub fn to_draw_key(&self) -> u64 {
+        use std::hash::Hash;
+        use std::hash::Hasher;
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        let state = &mut hasher;
         match *self {
             Primitive::Cuboid(cube) => {
                 0usize.hash(state);
@@ -68,6 +69,8 @@ impl std::hash::Hash for Primitive {
                 3usize.hash(state);
             }
         }
+        // val
+        hasher.finish()
     }
 }
 

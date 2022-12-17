@@ -23,7 +23,7 @@ struct Properties {
 /// The object used to render a construct.
 pub struct ConstructRender {
     static_gms: Vec<Gm<Mesh, PhysicalMaterial>>,
-    instanced_meshes: std::collections::HashMap<display::primitives::Primitive, Properties>,
+    instanced_meshes: std::collections::HashMap<u64, Properties>,
     grid_lines: InstancedEntity<ColorMaterial>,
 
     effects: std::collections::HashMap<EffectId, Box<dyn RenderableEffect>>,
@@ -296,7 +296,10 @@ impl ConstructRender {
         el: &display::primitives::Element,
         entity_transform: &Matrix4<f32>,
     ) {
-        if !self.instanced_meshes.contains_key(&el.primitive) {
+        if !self
+            .instanced_meshes
+            .contains_key(&el.primitive.to_draw_key())
+        {
             let mut cast_shadow = true;
             let primitive_mesh = match el.primitive {
                 display::primitives::Primitive::Cuboid(cuboid) => {
@@ -332,7 +335,7 @@ impl ConstructRender {
                 }
             };
             self.instanced_meshes.insert(
-                el.primitive,
+                el.primitive.to_draw_key(),
                 Properties {
                     object: InstancedEntity::new_physical(context, &primitive_mesh),
                     cast_shadow,
@@ -342,7 +345,7 @@ impl ConstructRender {
 
         let instanced = &mut self
             .instanced_meshes
-            .get_mut(&el.primitive)
+            .get_mut(&el.primitive.to_draw_key())
             .expect("just checked it, will be there")
             .object;
         let transform = entity_transform * el.transform;
