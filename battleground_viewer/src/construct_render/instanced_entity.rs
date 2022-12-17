@@ -10,7 +10,7 @@ impl InstancedEntity<three_d::renderer::material::PhysicalMaterial> {
     pub fn new_physical(context: &Context, cpu_mesh: &CpuMesh) -> Self {
         let instances: three_d::renderer::geometry::Instances = Default::default();
         let material = three_d::renderer::material::PhysicalMaterial::new_opaque(
-            &context,
+            context,
             &CpuMaterial {
                 albedo: Color {
                     r: 255,
@@ -34,7 +34,7 @@ impl InstancedEntity<three_d::renderer::material::ColorMaterial> {
     pub fn new_colored(context: &Context, cpu_mesh: &CpuMesh) -> Self {
         let instances: three_d::renderer::geometry::Instances = Default::default();
         let material = three_d::renderer::material::ColorMaterial::new_opaque(
-            &context,
+            context,
             &CpuMaterial {
                 albedo: Color {
                     r: 255,
@@ -81,12 +81,13 @@ impl<M: Material> InstancedEntity<M> {
     }
 
     pub fn update_instances(&mut self) {
-        let mut instances: three_d::renderer::geometry::Instances = Default::default();
-        instances.transformations = self.transforms.clone();
-
         // Scaling is not done, this is ALWAYS done in the mesh itself, since all transforms are
         // homogeneous transforms.
-        instances.colors = Some(self.colors.clone());
+        let instances = three_d::renderer::geometry::Instances {
+            transformations: self.transforms.clone(),
+            colors: Some(self.colors.clone()),
+            ..Default::default()
+        };
         self.gm.geometry.set_instances(&instances);
     }
 

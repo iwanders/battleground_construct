@@ -1,6 +1,5 @@
 use three_d::*;
 
-use battleground_construct;
 use battleground_construct::Construct;
 
 mod construct_render;
@@ -33,7 +32,7 @@ impl Limiter {
             self.last_time = now;
             return true;
         }
-        return false;
+        false
     }
 }
 
@@ -111,7 +110,7 @@ impl ConstructViewer {
     }
 
     // Consumes the viewer...
-    fn view_loop(mut self) -> () {
+    fn view_loop(mut self) {
         let jump = 0.0;
         // let stop_sim_at = 5.023; // second impact.
         let stop_sim_at = 2000.3;

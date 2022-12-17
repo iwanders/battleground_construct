@@ -5,8 +5,6 @@ use battleground_construct::vehicles::tank::{spawn_tank, TankSpawnConfig};
 use engine::prelude::*;
 // use engine::*;
 
-use vehicle_control_wasm;
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut world = World::new();
     let clock_id = world.add_entity();

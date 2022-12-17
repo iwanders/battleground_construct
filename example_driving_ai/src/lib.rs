@@ -1,5 +1,6 @@
 use battleground_vehicle_control::{log, Interface, RegisterType, VehicleControl};
 
+#[derive(Default)]
 pub struct SimpleVehicleControl {}
 
 impl SimpleVehicleControl {

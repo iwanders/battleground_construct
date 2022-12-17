@@ -108,7 +108,7 @@ impl ParticleEmitter {
 
         // let mut material = three_d::renderer::material::PhysicalMaterial::new(
         let material = three_d::renderer::material::ColorMaterial::new_transparent(
-            &context,
+            context,
             &CpuMaterial {
                 albedo: Color {
                     r: 255,
@@ -124,12 +124,12 @@ impl ParticleEmitter {
 
         Self {
             last_time: time,
-            renderable: renderable,
+            renderable,
 
             next_spawn_time: time,
-            spawn_interval: spawn_interval,
+            spawn_interval,
             spawn_jitter: 0.00,
-            lifetime: lifetime,
+            lifetime,
             lifetime_jitter: 0.0,
 
             velocity: vec3(0.0, 0.0, 0.0),
@@ -204,7 +204,7 @@ impl RenderableEffect for ParticleEmitter {
         // Update position and alphas
         for particle in self.particles.iter_mut() {
             // Always update position.
-            particle.pos.w = particle.pos.w + particle.vel.extend(0.0) * dt;
+            particle.pos.w += particle.vel.extend(0.0) * dt;
 
             if self.fade_alpha_to_lifetime {
                 let ratio_of_age =
@@ -274,12 +274,12 @@ impl Deconstructor {
         let edge_z = 1.0;
         let mut renderable =
             InstancedEntity::<three_d::renderer::material::PhysicalMaterial>::new_physical(
-                &context,
+                context,
                 &CpuMesh::cube(),
             );
 
         let material = three_d::renderer::material::PhysicalMaterial::new_transparent(
-            &context,
+            context,
             &CpuMaterial {
                 albedo: Color {
                     r: 255,
@@ -350,25 +350,24 @@ impl Deconstructor {
                                 let mut vel = vec3(0.0, 0.0, 0.0);
 
                                 // linear component;
-                                vel = vel + twist.v;
+                                vel += twist.v;
                                 // angular component;
                                 // v_p = v_0 + w x (p - p0)
-                                vel = vel
-                                    + twist.w.to_cross()
-                                        * (fragment_world_pos.to_translation()
-                                            - center_world.to_translation());
+                                vel += twist.w.to_cross()
+                                    * (fragment_world_pos.to_translation()
+                                        - center_world.to_translation());
 
                                 // Add outward from the body center.
                                 let cube_world = fragment_world_pos;
                                 let dir = cube_world.w.truncate() - center_world.w.truncate();
                                 let pos = (fragment_world_pos).to_rotation_h();
                                 if do_full_explosion {
-                                    vel = vel + (dir.to_h() * pos).w.truncate() * 0.1;
+                                    vel += (dir.to_h() * pos).w.truncate() * 0.1;
                                 }
 
                                 // Add some random jitter, such that it looks prettier.
                                 if do_full_explosion {
-                                    vel = vel + vec3(rand_f32(), rand_f32(), rand_f32()) * 0.1;
+                                    vel += vec3(rand_f32(), rand_f32(), rand_f32()) * 0.1;
                                 }
 
                                 // Then, add velocities away from the impacts.
@@ -435,13 +434,12 @@ impl RenderableEffect for Deconstructor {
             // println!("Pre pose: {:?}", particle.pos);
             // Always update position.
             let before = particle.pos.to_translation();
-            particle.pos.w = particle.pos.w + particle.vel.extend(0.0) * dt;
+            particle.pos.w += particle.vel.extend(0.0) * dt;
             let after = particle.pos.to_translation();
             let d = after.distance2(before).sqrt();
             particle.traveled += d;
             let ratio_of_lifetime = 1.0 - (particle.traveled / self.max_traveled).min(1.0);
-            particle.color.a =
-                std::cmp::min(particle.color.a, (255 as f32 * ratio_of_lifetime) as u8);
+            particle.color.a = std::cmp::min(particle.color.a, (255f32 * ratio_of_lifetime) as u8);
 
             let accel = -9.81 * 0.25;
             // let accel = -9.81 * 0.0;
@@ -449,8 +447,8 @@ impl RenderableEffect for Deconstructor {
             let rot = particle.pos.to_rotation_h();
             particle.vel += (gravity * rot).w.truncate() * dt;
             if particle.pos.w[2] <= 0.0 {
-                particle.vel[0] = particle.vel[0] * 0.5;
-                particle.vel[1] = particle.vel[1] * 0.5;
+                particle.vel[0] *= 0.5;
+                particle.vel[1] *= 0.5;
                 particle.vel[2] = -particle.vel[2] * 0.5;
                 particle.color.a = particle.color.a.saturating_sub(20);
             }

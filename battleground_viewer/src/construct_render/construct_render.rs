@@ -32,9 +32,9 @@ pub struct ConstructRender {
 impl ConstructRender {
     pub fn new(context: &Context) -> Self {
         let mut ground_plane = Gm::new(
-            Mesh::new(&context, &CpuMesh::square()),
+            Mesh::new(context, &CpuMesh::square()),
             PhysicalMaterial::new_opaque(
-                &context,
+                context,
                 &CpuMaterial {
                     albedo: Color::new_opaque(128, 128, 128),
                     ..Default::default()
@@ -47,7 +47,7 @@ impl ConstructRender {
         let static_gms = vec![ground_plane];
 
         // At some point we should try to render the grid only underneath robots, or something.
-        let mut grid_lines = InstancedEntity::new_colored(&context, &CpuMesh::cylinder(4));
+        let mut grid_lines = InstancedEntity::new_colored(context, &CpuMesh::cylinder(4));
         let mut lines = vec![];
         let lower = -10isize;
         let upper = 10;
@@ -128,9 +128,7 @@ impl ConstructRender {
             &mut self
                 .effects
                 .iter()
-                .map(|v| v.1.object())
-                .filter(|v| v.is_some())
-                .map(|v| v.unwrap())
+                .filter_map(|v| v.1.object())
                 .collect::<Vec<_>>(),
         );
         renderables
@@ -250,38 +248,30 @@ impl ConstructRender {
         entity_transform: &Matrix4<f32>,
         timestamp: f32,
     ) {
-        if !self.effects.contains_key(&effect.id) {
+        self.effects.entry(effect.id).or_insert_with(|| {
             // add this effect.
             match effect.effect {
                 display::primitives::EffectType::ParticleEmitter { particle_type, .. } => {
-                    self.effects.insert(
-                        effect.id,
-                        Box::new(effects::ParticleEmitter::new(
-                            context,
-                            *entity_transform,
-                            timestamp,
-                            &particle_type,
-                        )),
-                    );
+                    Box::new(effects::ParticleEmitter::new(
+                        context,
+                        *entity_transform,
+                        timestamp,
+                        &particle_type,
+                    ))
                 }
                 display::primitives::EffectType::Deconstructor {
                     ref elements,
                     ref impacts,
                     ..
-                } => {
-                    self.effects.insert(
-                        effect.id,
-                        Box::new(effects::Deconstructor::new(
-                            context,
-                            *entity_transform,
-                            timestamp,
-                            &elements,
-                            &impacts,
-                        )),
-                    );
-                }
+                } => Box::new(effects::Deconstructor::new(
+                    context,
+                    *entity_transform,
+                    timestamp,
+                    elements,
+                    impacts,
+                )),
             }
-        }
+        });
         let effect_renderable = self
             .effects
             .get_mut(&effect.id)
@@ -296,52 +286,49 @@ impl ConstructRender {
         el: &display::primitives::Element,
         entity_transform: &Matrix4<f32>,
     ) {
-        if !self
-            .instanced_meshes
-            .contains_key(&el.primitive.to_draw_key())
-        {
-            let mut cast_shadow = true;
-            let primitive_mesh = match el.primitive {
-                display::primitives::Primitive::Cuboid(cuboid) => {
-                    let mut m = CpuMesh::cube();
-                    // Returns an axis aligned unconnected cube mesh with positions in the range [-1..1] in all axes.
-                    // So default box is not identity.
-                    m.transform(&Mat4::from_nonuniform_scale(
-                        cuboid.length / 2.0,
-                        cuboid.width / 2.0,
-                        cuboid.height / 2.0,
-                    ))
-                    .unwrap();
-                    m
-                }
-                display::primitives::Primitive::Sphere(sphere) => {
-                    let mut m = CpuMesh::sphere(16);
-                    m.transform(&Mat4::from_scale(sphere.radius)).unwrap();
-                    m
-                }
-                display::primitives::Primitive::Cylinder(cylinder) => {
-                    let mut m = CpuMesh::cylinder(16);
-                    m.transform(&Mat4::from_nonuniform_scale(
-                        cylinder.height,
-                        cylinder.radius,
-                        cylinder.radius,
-                    ))
-                    .unwrap();
-                    m
-                }
-                display::primitives::Primitive::Line(_line) => {
-                    cast_shadow = false;
-                    CpuMesh::cylinder(4)
-                }
-            };
-            self.instanced_meshes.insert(
-                el.primitive.to_draw_key(),
+        self.instanced_meshes
+            .entry(el.primitive.to_draw_key())
+            .or_insert_with(|| {
+                let mut cast_shadow = true;
+                let primitive_mesh = match el.primitive {
+                    display::primitives::Primitive::Cuboid(cuboid) => {
+                        let mut m = CpuMesh::cube();
+                        // Returns an axis aligned unconnected cube mesh with positions in the range [-1..1] in all axes.
+                        // So default box is not identity.
+                        m.transform(&Mat4::from_nonuniform_scale(
+                            cuboid.length / 2.0,
+                            cuboid.width / 2.0,
+                            cuboid.height / 2.0,
+                        ))
+                        .unwrap();
+                        m
+                    }
+                    display::primitives::Primitive::Sphere(sphere) => {
+                        let mut m = CpuMesh::sphere(16);
+                        m.transform(&Mat4::from_scale(sphere.radius)).unwrap();
+                        m
+                    }
+                    display::primitives::Primitive::Cylinder(cylinder) => {
+                        let mut m = CpuMesh::cylinder(16);
+                        m.transform(&Mat4::from_nonuniform_scale(
+                            cylinder.height,
+                            cylinder.radius,
+                            cylinder.radius,
+                        ))
+                        .unwrap();
+                        m
+                    }
+                    display::primitives::Primitive::Line(_line) => {
+                        cast_shadow = false;
+                        CpuMesh::cylinder(4)
+                    }
+                };
+
                 Properties {
                     object: InstancedEntity::new_physical(context, &primitive_mesh),
                     cast_shadow,
-                },
-            );
-        }
+                }
+            });
 
         let instanced = &mut self
             .instanced_meshes

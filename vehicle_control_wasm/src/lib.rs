@@ -309,7 +309,7 @@ impl VehicleControlWasm {
                     .set_bytes(module, register, &tmp);
 
                 let res = match res {
-                    Ok(_) => Ok(0 as u32),
+                    Ok(_) => Ok(0),
                     Err(e) => Err(e),
                 };
                 send_pod_result(caller, res, 0)
@@ -333,10 +333,7 @@ impl VehicleControlWasm {
                     .and_then(|arr| arr.get(..len as u32 as usize));
                 // println!("data: {data:?}");
                 let string = match data {
-                    Some(data) => match std::str::from_utf8(data) {
-                        Ok(s) => s,
-                        Err(_) => "<non utf8 string>",
-                    },
+                    Some(data) => std::str::from_utf8(data).unwrap_or("<non utf8 string>"),
                     None => "out of bounds",
                 };
                 println!("{string:?}");
