@@ -4,13 +4,13 @@ use cgmath::vec3;
 
 use engine::prelude::*;
 
+use battleground_construct::components::revolute::Revolute;
 use battleground_construct::display::primitives::Vec3;
 use battleground_construct::util::cgmath::prelude::*;
+use cgmath::SquareMatrix;
 use components::parent::Parent;
 use components::pose::{world_pose, Pose, PreTransform};
 use components::velocity::{world_velocity, Velocity};
-
-use cgmath::SquareMatrix;
 
 #[test]
 fn test_tank_body_velocities() {
@@ -140,4 +140,82 @@ fn test_tank_body_velocities() {
     println!("vel_shell_in_global: {vel_shell_in_global:?}");
     assert_eq!(vel_shell_in_global.w, vec3(5.5, 4.4, 5.5));
     assert_eq!(vel_shell_in_global.v, vec3(1.1, 13.75, -8.8));
+
+
+    // Now, lets change the turret and barrel orientations.
+    {
+        let new_revolute_turret = {
+            let mut v = world.component_mut::<Revolute>(turret_id);
+            let mut rev = v.as_mut().unwrap();
+
+            rev.set_position(std::f32::consts::PI / 4.0);
+            rev.clone()
+        };
+        {
+            let mut p = world.component_mut::<Pose>(turret_id);
+            let mut pose = p.as_mut().unwrap();
+            **pose = new_revolute_turret.to_pose();
+        }
+        {
+            println!("Pose: {:?}", world.component_mut::<Pose>(turret_id));
+            // panic!();
+        }
+        let new_revolute_barrel = {
+            let mut v = world.component_mut::<Revolute>(barrel_id);
+            let mut rev = v.as_mut().unwrap();
+
+            rev.set_position(-std::f32::consts::PI / 4.0);
+            rev.clone()
+        };
+        {
+            let mut p = world.component_mut::<Pose>(barrel_id);
+            if let Some(ref mut pose) = p {
+                **pose = new_revolute_barrel.to_pose();
+            }
+        }
+    }
+
+    // Check again.
+
+    let h_body_to_global = world_pose(&world, base_id);
+    println!("h_body_to_global: {h_body_to_global:?}");
+    // assert!(h_body_to_global.to_rotation().is_identity());
+    // assert_eq!(h_body_to_global.to_translation(), vec3(4.9, -5.7, 1.0));
+
+    let h_turret_to_global = world_pose(&world, turret_id);
+    println!("h_turret_to_global: {h_turret_to_global:?}");
+    // assert!(h_turret_to_global.to_rotation().is_identity());
+    // assert_eq!(h_turret_to_global.to_translation(), vec3(4.9, -5.7, 2.0));
+
+    let h_barrel_to_global = world_pose(&world, barrel_cog_id);
+    println!("h_barrel_to_global: {h_barrel_to_global:?}");
+    // assert!(h_barrel_to_global.to_rotation().is_identity());
+    // assert_eq!(h_barrel_to_global.to_translation(), vec3(6.4, -5.7, 2.0));
+
+    let h_nozzle_to_global = world_pose(&world, nozzle_id);
+    println!("h_nozzle_to_global: {h_nozzle_to_global:?}");
+    // assert!(h_nozzle_to_global.to_rotation().is_identity());
+    // assert_eq!(h_nozzle_to_global.to_translation(), vec3(7.4, -5.7, 2.0));
+
+    let vel_body_in_global = world_velocity(&world, base_id);
+    println!("vel_body_in_global: {vel_body_in_global:?}");
+    // assert_eq!(vel_body_in_global.w, vec3(0.0, 0.0, 2.2));
+    // assert_eq!(vel_body_in_global.v, vec3(1.1, 0.0, 0.0));
+
+    let vel_turret_in_global = world_velocity(&world, turret_id);
+    println!("vel_turret_in_global: {vel_turret_in_global:?}");
+    // assert_eq!(vel_turret_in_global.w, vec3(0.0, 0.0, 5.5));
+    // assert_eq!(vel_turret_in_global.v, vec3(1.1, 0.0, 0.0));
+
+    let vel_barrel_cog_in_global = world_velocity(&world, barrel_cog_id);
+    println!("vel_barrel_cog_in_global: {vel_barrel_cog_in_global:?}");
+    // assert_eq!(vel_barrel_cog_in_global.w, vec3(0.0, 4.4, 5.5));
+    // assert_eq!(vel_barrel_cog_in_global.v, vec3(1.1, 8.25, -4.4));
+
+    let vel_shell_in_global = world_velocity(&world, shell_id);
+    println!("vel_shell_in_global: {vel_shell_in_global:?}");
+    // assert_eq!(vel_shell_in_global.w, vec3(5.5, 4.4, 5.5));
+    // assert_eq!(vel_shell_in_global.v, vec3(1.1, 13.75, -8.8));
+
 }
+

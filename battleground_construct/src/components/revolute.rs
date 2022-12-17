@@ -38,6 +38,10 @@ impl Revolute {
         self.position
     }
 
+    pub fn set_position(&mut self, value: f32) {
+        self.position = value
+    }
+
     pub fn velocity_bounds(&self) -> (f32, f32) {
         self.velocity_bounds
     }

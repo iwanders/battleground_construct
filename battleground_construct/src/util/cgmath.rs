@@ -14,6 +14,7 @@ pub mod prelude {
     pub use super::ToRotationH;
     pub use super::ToTranslation;
     pub use super::Twist;
+    pub use cgmath::Matrix;
     pub use cgmath::MetricSpace;
 }
 

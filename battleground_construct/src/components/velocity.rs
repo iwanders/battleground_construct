@@ -122,7 +122,7 @@ create_velocity_implementation!(Velocity);
 */
 
 pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
-    const VERBOSE_PRINTS: bool = false;
+    const VERBOSE_PRINTS: bool = true;
 
     use crate::components::pose::Pose;
     use crate::components::pose::PreTransform;
@@ -191,10 +191,11 @@ pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
         let twist = f.relative_vel;
         let entity = f.entity;
         // First, determine the spatial transform.
-        let r_vector = pose.to_rotation() * pre.to_translation(); // + d
+        let rot = pose.to_rotation().transpose();
+        let r_vector = rot * pre.to_translation(); // + d
         let spatial_transform = Adjoint {
-            r: pose.to_rotation(),
-            p_r: -r_vector.to_cross() * pose.to_rotation(),
+            r: rot,
+            p_r: -(r_vector.to_cross() * pose.to_rotation()),
         };
 
         // I feel the spatial transform should be identical to:
@@ -209,6 +210,7 @@ pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
             println!("entity: {entity:?}");
             println!("pose: {pose:?}");
             println!("pre: {pre:?}");
+            println!("r_vector: {r_vector:?}");
             println!("twist: {twist:?}");
             println!("spatial_transform: {spatial_transform:?}");
         }

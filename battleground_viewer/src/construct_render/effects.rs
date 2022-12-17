@@ -298,7 +298,7 @@ impl Deconstructor {
 
         let mut rand_f32 = move || rng.sample::<f32, StandardNormal>(StandardNormal);
 
-        let do_full_explosion = false;
+        let do_full_explosion = true;
 
         for (el, twist) in elements.iter() {
             match el.primitive {
@@ -355,12 +355,11 @@ impl Deconstructor {
                                 // linear component;
                                 vel = vel + twist.v;
                                 // angular component;
-                                // vel = vel + fragment_pos.to_translation().to_cross() * twist.w;
-                                // let vel_of_particle = body_to_particle.to_inv_h().to_adjoint() * *twist;
-
-                                // vel = vel + vel_of_particle.v;
-                                // vel = vel + (twist.v * 1.0);
-                                // vel = vel + twist.w.cross(p);
+                                // v_p = v_0 + w x (p - p0)
+                                vel = vel
+                                    + twist.w.to_cross()
+                                        * (fragment_world_pos.to_translation()
+                                            - center_world.to_translation());
 
                                 // Add outward from the body center.
                                 let cube_world = fragment_world_pos;
@@ -447,7 +446,8 @@ impl RenderableEffect for Deconstructor {
             particle.color.a =
                 std::cmp::min(particle.color.a, (255 as f32 * ratio_of_lifetime) as u8);
 
-            let accel = -9.81 * 0.0;
+            let accel = -9.81 * 0.25;
+            // let accel = -9.81 * 0.0;
             let gravity = vec3(0.0f32, 0.0, accel).to_h();
             let rot = particle.pos.to_rotation_h();
             particle.vel += (gravity * rot).w.truncate() * dt;
