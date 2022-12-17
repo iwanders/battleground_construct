@@ -12,6 +12,12 @@ pub struct PreTransform {
 
 macro_rules! create_transform_component {
     ($the_type:ty) => {
+        impl Default for $the_type {
+            fn default() -> Self {
+                Self::new()
+            }
+        }
+
         impl $the_type {
             pub fn new() -> Self {
                 Self {
@@ -67,11 +73,11 @@ macro_rules! create_transform_component {
             }
         }
 
-        impl Into<cgmath::Matrix4<f32>> for $the_type {
-            fn into(self) -> cgmath::Matrix4<f32> {
-                self.h
-            }
-        }
+        // impl Into<cgmath::Matrix4<f32>> for $the_type {
+        // fn into(self) -> cgmath::Matrix4<f32> {
+        // self.h
+        // }
+        // }
 
         impl std::ops::Mul<$the_type> for $the_type {
             type Output = $the_type;
@@ -85,7 +91,7 @@ create_transform_component!(Pose);
 create_transform_component!(PreTransform);
 
 pub fn world_pose(world: &World, entity: EntityId) -> Pose {
-    let mut current_id = entity.clone();
+    let mut current_id = entity;
     let mut current_pose = Pose::new();
     loop {
         let pose = world.component::<Pose>(current_id);
@@ -97,7 +103,7 @@ pub fn world_pose(world: &World, entity: EntityId) -> Pose {
             current_pose = (pre_pose.transform() * current_pose.transform()).into();
         }
         if let Some(parent) = world.component::<super::parent::Parent>(current_id) {
-            current_id = parent.parent().clone();
+            current_id = *parent.parent();
         } else {
             break;
         }

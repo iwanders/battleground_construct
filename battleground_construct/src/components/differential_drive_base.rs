@@ -6,6 +6,11 @@ pub struct DifferentialDriveBase {
     pub wheel_velocity_bounds: (f32, f32),
     pub wheel_velocity: (f32, f32),
 }
+impl Default for DifferentialDriveBase {
+    fn default() -> Self {
+        DifferentialDriveBase::new()
+    }
+}
 
 impl DifferentialDriveBase {
     pub fn new() -> Self {

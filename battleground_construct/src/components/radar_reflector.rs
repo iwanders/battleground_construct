@@ -4,6 +4,11 @@ use engine::prelude::*;
 pub struct RadarReflector {
     pub reflectivity: f32,
 }
+impl Default for RadarReflector {
+    fn default() -> Self {
+        RadarReflector::new()
+    }
+}
 
 impl RadarReflector {
     pub fn new() -> Self {

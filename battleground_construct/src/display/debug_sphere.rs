@@ -5,13 +5,18 @@ use engine::prelude::*;
 pub struct DebugSphere {
     pub radius: f32,
 }
+impl Default for DebugSphere {
+    fn default() -> Self {
+        DebugSphere { radius: 1.0 }
+    }
+}
 
 impl DebugSphere {
     pub fn with_radius(radius: f32) -> Self {
         DebugSphere { radius }
     }
     pub fn new() -> Self {
-        Self::with_radius(1.0)
+        Default::default()
     }
 }
 impl Component for DebugSphere {}

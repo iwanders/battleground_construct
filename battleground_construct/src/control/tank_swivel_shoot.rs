@@ -43,15 +43,9 @@ impl VehicleControl for TankSwivelShoot {
 
         let turret_pos = interface.get_f32(tank::TURRET_MODULE, revolve_pos).unwrap();
         // println!("turret_pos: {turret_pos}");
-        if turret_pos > PI && turret_pos < (PI * 2.0 - PI / 8.0) {
-            interface
-                .set_f32(
-                    tank::TURRET_MODULE,
-                    revolve_cmd_vel,
-                    -interface.get_f32(tank::TURRET_MODULE, revolve_vel).unwrap(),
-                )
-                .unwrap();
-        } else if turret_pos > PI / 8.0 && turret_pos < PI {
+        if (turret_pos > PI && turret_pos < (PI * 2.0 - PI / 8.0))
+            || (turret_pos > PI / 8.0 && turret_pos < PI)
+        {
             interface
                 .set_f32(
                     tank::TURRET_MODULE,
@@ -63,15 +57,7 @@ impl VehicleControl for TankSwivelShoot {
 
         let barrel_pos = interface.get_f32(tank::BARREL_MODULE, revolve_pos).unwrap();
         // println!("barrel_pos: {barrel_pos}");
-        if barrel_pos < (PI * 2.0 - PI / 8.0) {
-            interface
-                .set_f32(
-                    tank::BARREL_MODULE,
-                    revolve_cmd_vel,
-                    -interface.get_f32(tank::BARREL_MODULE, revolve_vel).unwrap(),
-                )
-                .unwrap();
-        } else if barrel_pos < PI / 8.0 {
+        if barrel_pos < (PI * 2.0 - PI / 8.0) || (barrel_pos < PI / 8.0) {
             interface
                 .set_f32(
                     tank::BARREL_MODULE,
@@ -90,7 +76,7 @@ impl VehicleControl for TankSwivelShoot {
             let radar_hits = interface.get_i32(tank::RADAR_MODULE, 0).unwrap();
             for i in 0..radar_hits {
                 let offset = i as u32 * 4 + 1;
-                let reading_yaw = interface.get_f32(tank::RADAR_MODULE, offset + 0).unwrap();
+                let reading_yaw = interface.get_f32(tank::RADAR_MODULE, offset).unwrap();
                 let pitch = interface.get_f32(tank::RADAR_MODULE, offset + 1).unwrap();
                 let distance = interface.get_f32(tank::RADAR_MODULE, offset + 2).unwrap();
                 // let strength = interface.get_f32(tank::RADAR_MODULE, offset + 3).unwrap();

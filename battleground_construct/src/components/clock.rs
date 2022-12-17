@@ -6,6 +6,11 @@ pub struct Clock {
     current: std::time::Instant,
     step: std::time::Duration,
 }
+impl Default for Clock {
+    fn default() -> Self {
+        Clock::new()
+    }
+}
 
 impl Clock {
     pub fn new() -> Self {
@@ -47,6 +52,8 @@ impl System for ClockSystem {
 }
 
 use crate::components::vehicle_interface::{Register, RegisterMap, VehicleModule};
+
+#[derive(Default)]
 pub struct ClockReader {}
 
 impl ClockReader {

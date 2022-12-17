@@ -1,6 +1,6 @@
 use engine::prelude::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 /// First entity is always the 'master' entity in the group, this can be used to find the common
 /// components
 pub struct Group {
@@ -9,7 +9,7 @@ pub struct Group {
 
 impl Group {
     pub fn new() -> Self {
-        Group { entities: vec![] }
+        Group::default()
     }
     pub fn from(entities: &[EntityId]) -> Self {
         Group {

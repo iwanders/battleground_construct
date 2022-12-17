@@ -83,7 +83,7 @@ impl VehicleControl for RadarDrawControl {
         let radar_hits = interface.get_i32(tank::RADAR_MODULE, 3).unwrap();
         for i in 0..radar_hits {
             let offset = i as u32 * 4 + 3 + 1;
-            let reading_yaw = interface.get_f32(tank::RADAR_MODULE, offset + 0).unwrap();
+            let reading_yaw = interface.get_f32(tank::RADAR_MODULE, offset).unwrap();
             let pitch = interface.get_f32(tank::RADAR_MODULE, offset + 1).unwrap();
             let distance = interface.get_f32(tank::RADAR_MODULE, offset + 2).unwrap();
             // println!("Reading {i}: yaw: {reading_yaw}, pitch: {pitch}, distance: {distance}");

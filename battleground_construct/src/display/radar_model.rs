@@ -10,6 +10,12 @@ pub struct RadarModel {
     color: Color,
 }
 
+impl Default for RadarModel {
+    fn default() -> Self {
+        RadarModel::new()
+    }
+}
+
 impl RadarModel {
     pub fn new() -> Self {
         RadarModel {

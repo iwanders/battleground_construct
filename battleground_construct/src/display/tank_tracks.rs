@@ -15,6 +15,11 @@ pub struct TankTracks {
     left_distance: f32,
     right_distance: f32,
 }
+impl Default for TankTracks {
+    fn default() -> Self {
+        TankTracks::new()
+    }
+}
 
 impl TankTracks {
     pub fn new() -> Self {
@@ -58,7 +63,7 @@ impl Drawable for TankTracks {
                     self.track_height,
                 )),
                 primitive: track,
-                color: color,
+                color,
             },
             Element {
                 transform: Mat4::from_translation(Vec3::new(
@@ -67,7 +72,7 @@ impl Drawable for TankTracks {
                     self.track_height,
                 )),
                 primitive: track,
-                color: color,
+                color,
             },
         ];
 
@@ -146,7 +151,7 @@ impl Drawable for TankTracks {
                             self.track_height,
                         )),
                     primitive: bar,
-                    color: color,
+                    color,
                 });
                 z.push(Element {
                     transform: pos(
@@ -157,7 +162,7 @@ impl Drawable for TankTracks {
                         self.track_height,
                     )),
                     primitive: bar,
-                    color: color,
+                    color,
                 });
             }
         }

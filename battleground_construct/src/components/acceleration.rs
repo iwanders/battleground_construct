@@ -7,6 +7,11 @@ pub struct Acceleration {
     /// Rotation component.
     pub dw: cgmath::Vector3<f32>,
 }
+impl Default for Acceleration {
+    fn default() -> Self {
+        Acceleration::new()
+    }
+}
 
 impl Acceleration {
     pub fn new() -> Self {

@@ -8,8 +8,8 @@ impl DynamicLoadControl {
     pub fn new(lib: &str) -> Result<Box<DynamicLoadControl>, Box<dyn std::error::Error>> {
         let lib = unsafe { libloading::Library::new(lib)? };
         let res = unsafe {
-            let foo: libloading::Symbol<ControllerSpawn> = lib.get(b"create_ai")?;
-            foo()
+            let create_ai: libloading::Symbol<ControllerSpawn> = lib.get(b"create_ai")?;
+            create_ai()
         };
         Ok(Box::new(DynamicLoadControl {
             _lib: lib,

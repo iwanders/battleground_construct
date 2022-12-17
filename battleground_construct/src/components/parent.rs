@@ -15,8 +15,8 @@ impl Parent {
 }
 impl Component for Parent {}
 
-impl Into<EntityId> for Parent {
-    fn into(self) -> EntityId {
-        self.parent
+impl From<Parent> for EntityId {
+    fn from(v: Parent) -> EntityId {
+        v.parent
     }
 }

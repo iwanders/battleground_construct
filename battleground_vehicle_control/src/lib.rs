@@ -12,7 +12,7 @@ pub type ControllerSpawn = fn() -> Box<dyn VehicleControl>;
 pub type Error = Box<InterfaceError>;
 
 /// Enum to denote register type.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum RegisterType {
     I32,
     F32,
@@ -85,7 +85,7 @@ pub struct InterfaceError {
 }
 
 /// The error_type is further specified in the following possible failure modes.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ErrorType {
     NoSuchModule,
     NoSuchRegister,

@@ -30,19 +30,16 @@ fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: EntityI
     // Get the pose of the cannon in the world coordinates. Then create the pose with the
     // Orientation in the global frame.
     let projectile_id = world.add_entity();
-    world.add_component::<PointProjectile>(
-        projectile_id,
-        PointProjectile::new(cannon_entity.clone()),
-    );
+    world.add_component::<PointProjectile>(projectile_id, PointProjectile::new(cannon_entity));
     world.add_component::<Pose>(
         projectile_id,
         Pose::from_mat4(cgmath::Matrix4::<f32>::from_translation(
-            muzzle_pose.clone().w.truncate(),
+            muzzle_pose.w.truncate(),
         )),
     );
 
     // Calculate the velocity vector in the global frame.
-    let mut muzzle_pose = muzzle_pose.transform().clone();
+    let mut muzzle_pose = *muzzle_pose.transform();
     // zero out the translation components.
     muzzle_pose.w[0] = 0.0;
     muzzle_pose.w[1] = 0.0;
@@ -81,7 +78,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
 
     // Create the base tank, root element with the health.
     let vehicle_id = world.add_entity();
-    tank_group_ids.push(vehicle_id.clone());
+    tank_group_ids.push(vehicle_id);
 
     let register_interface = components::vehicle_interface::RegisterInterfaceContainer::new(
         components::vehicle_interface::RegisterInterface::new(),
@@ -117,8 +114,8 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(body_id, hitbox);
     world.add_component(body_id, components::radar_reflector::RadarReflector::new());
     // world.add_component(body_id, components::hit_sphere::HitSphere::with_radius(1.0));
-    world.add_component(body_id, Parent::new(vehicle_id.clone()));
-    tank_group_ids.push(body_id.clone());
+    world.add_component(body_id, Parent::new(vehicle_id));
+    tank_group_ids.push(body_id);
 
     let rc = components::vehicle_controller::VehicleControlStorage::new(config.controller);
     world.add_component(
@@ -150,9 +147,8 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         components::revolute::RevoluteModule::new(turret_id),
     );
 
-    tank_group_ids.push(turret_id.clone());
-    let turret_revolute =
-        components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
+    tank_group_ids.push(turret_id);
+    let turret_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
     // turret_revolute.set_velocity_bounds(-std::f32::consts::PI * 2.0, std::f32::consts::PI * 2.0);
     // turret_revolute.set_velocity(-6.28);
 
@@ -163,12 +159,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     world.add_component(turret_id, components::pose::Pose::new());
     world.add_component(turret_id, components::velocity::Velocity::new());
-    world.add_component(turret_id, Parent::new(vehicle_id.clone()));
+    world.add_component(turret_id, Parent::new(vehicle_id));
     world.add_component(turret_id, display::tank_turret::TankTurret::new());
 
     // Add the barrel entity
     let barrel_id = world.add_entity();
-    tank_group_ids.push(barrel_id.clone());
+    tank_group_ids.push(barrel_id);
     let barrel_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 1.0, 0.0));
     register_interface.get_mut().add_module(
         "barrel",
@@ -183,14 +179,14 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     world.add_component(barrel_id, components::pose::Pose::new());
     world.add_component(barrel_id, components::velocity::Velocity::new());
-    world.add_component(barrel_id, Parent::new(turret_id.clone()));
+    world.add_component(barrel_id, Parent::new(turret_id));
     world.add_component(barrel_id, display::tank_barrel::TankBarrel::new());
     // world.add_component(barrel_id, display::debug_lines::DebugLines::straight(10.0, 0.1, display::primitives::Color::BLUE));
 
     // If the tank is shooting, add the nozzle and associated components
     let nozzle_id = world.add_entity();
-    tank_group_ids.push(nozzle_id.clone());
-    world.add_component(nozzle_id, Parent::new(barrel_id.clone()));
+    tank_group_ids.push(nozzle_id);
+    world.add_component(nozzle_id, Parent::new(barrel_id));
     world.add_component(nozzle_id, components::damage_dealer::DamageDealer::new(0.3));
 
     let cannon_config = components::cannon::CannonConfig {
@@ -211,12 +207,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
 
     let radar_joint = world.add_entity();
-    tank_group_ids.push(radar_joint.clone());
+    tank_group_ids.push(radar_joint);
     let mut radar_revolute =
         components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
     radar_revolute.set_velocity_bounds(-std::f32::consts::PI * 2.0, std::f32::consts::PI * 2.0);
-    // radar_revolute.set_velocity(-6.28);
-    radar_revolute.set_velocity(-3.14);
+    // radar_revolute.set_velocity(-2.0 * std::f32::consts::PI);
+    radar_revolute.set_velocity(-std::f32::consts::PI);
     register_interface.get_mut().add_module(
         "radar_rotation",
         RADAR_ROTATION,
@@ -237,7 +233,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
 
     world.add_component(radar_joint, components::pose::Pose::new());
     world.add_component(radar_joint, components::velocity::Velocity::new());
-    world.add_component(radar_joint, Parent::new(turret_id.clone()));
+    world.add_component(radar_joint, Parent::new(turret_id));
     // world.add_component(radar_joint, display::debug_box::DebugBox::new(0.1, 0.1, 0.1));
     world.add_component(radar_joint, display::radar_model::RadarModel::new());
     world.add_component(
@@ -265,8 +261,8 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         flag_id,
         display::flag::Flag::from_scale_color(0.5, display::Color::GREEN),
     );
-    world.add_component(flag_id, Parent::new(vehicle_id.clone()));
-    tank_group_ids.push(flag_id.clone());
+    world.add_component(flag_id, Parent::new(vehicle_id));
+    tank_group_ids.push(flag_id);
 
     // Finally, add the group to each of the components.
     world.add_component(vehicle_id, Group::from(&tank_group_ids[..]));

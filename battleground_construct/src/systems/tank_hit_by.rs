@@ -45,14 +45,10 @@ impl System for TankHitBy {
 
         // Salvage the particle generators on the particles.
         for particle_entity in projectile_entities.iter() {
-            let particles_to_add = if let Some(p) =
-                world.component::<super::display::particle_emitter::ParticleEmitter>(
-                    *particle_entity,
-                ) {
-                Some(*p)
-            } else {
-                None
-            };
+            let particles_to_add = world
+                .component::<super::display::particle_emitter::ParticleEmitter>(*particle_entity)
+                .map(|p| *p);
+
             if let Some(mut copied_particle) = particles_to_add {
                 copied_particle.emitting = false;
                 let impact = world.add_entity();
@@ -73,7 +69,7 @@ impl System for TankHitBy {
             let mut elements_here = vec![];
             {
                 let g = world.component::<Group>(*root_entity).unwrap();
-                for part_entity in g.entities().iter().map(|x| *x) {
+                for part_entity in g.entities().iter().copied() {
                     elements_here.push(part_entity);
                 }
             }
@@ -83,11 +79,11 @@ impl System for TankHitBy {
             destructor.add_impact(*impact, 0.2);
 
             for e in elements_here.iter() {
-                destructor.add_element::<crate::display::tank_body::TankBody>(*e, &world);
-                destructor.add_element::<crate::display::tank_turret::TankTurret>(*e, &world);
-                destructor.add_element::<crate::display::tank_barrel::TankBarrel>(*e, &world);
-                destructor.add_element::<crate::display::tank_tracks::TankTracks>(*e, &world);
-                destructor.add_element::<crate::display::radar_model::RadarModel>(*e, &world);
+                destructor.add_element::<crate::display::tank_body::TankBody>(*e, world);
+                destructor.add_element::<crate::display::tank_turret::TankTurret>(*e, world);
+                destructor.add_element::<crate::display::tank_barrel::TankBarrel>(*e, world);
+                destructor.add_element::<crate::display::tank_tracks::TankTracks>(*e, world);
+                destructor.add_element::<crate::display::radar_model::RadarModel>(*e, world);
             }
             world.add_component(thingy, destructor);
             world.add_component(thingy, crate::components::expiry::Expiry::lifetime(50.0));

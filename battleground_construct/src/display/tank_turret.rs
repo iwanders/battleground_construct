@@ -8,6 +8,11 @@ pub struct TankTurret {
     pub height: f32,
     pub z_offset: f32,
 }
+impl Default for TankTurret {
+    fn default() -> Self {
+        TankTurret::new()
+    }
+}
 
 impl TankTurret {
     pub fn new() -> Self {

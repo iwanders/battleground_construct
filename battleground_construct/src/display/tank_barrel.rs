@@ -7,6 +7,11 @@ pub struct TankBarrel {
     pub length: f32,
     pub height: f32,
 }
+impl Default for TankBarrel {
+    fn default() -> Self {
+        TankBarrel::new()
+    }
+}
 
 impl TankBarrel {
     pub fn new() -> Self {

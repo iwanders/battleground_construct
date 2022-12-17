@@ -27,7 +27,7 @@ impl System for VehicleControl {
         // Create a map of entity -> interface
         let mut interfaces: Vec<(EntityId, RegisterInterfaceContainer)> = world
             .component_iter::<RegisterInterfaceContainer>()
-            .filter(|(e, _p)| should_update.contains(&e))
+            .filter(|(e, _p)| should_update.contains(e))
             .map(|(e, p)| (e, p.clone()))
             .collect::<_>();
         let mut interface_map: HashMap<EntityId, RegisterInterfaceContainer> =

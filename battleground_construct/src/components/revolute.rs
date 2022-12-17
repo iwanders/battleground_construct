@@ -8,6 +8,11 @@ pub struct Revolute {
     pub position: f32,
     pub axis: cgmath::Vector3<f32>,
 }
+impl Default for Revolute {
+    fn default() -> Self {
+        Revolute::new()
+    }
+}
 
 impl Revolute {
     pub fn new() -> Self {

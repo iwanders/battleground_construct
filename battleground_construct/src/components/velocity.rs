@@ -11,6 +11,12 @@ pub struct Velocity {
 
 macro_rules! create_velocity_implementation {
     ($the_type:ty) => {
+        impl Default for $the_type {
+            fn default() -> Self {
+                Self::new()
+            }
+        }
+
         impl $the_type {
             pub fn new() -> Self {
                 Self {
@@ -90,22 +96,9 @@ macro_rules! create_velocity_implementation {
         }
         impl Component for $the_type {}
 
-        /*
-        impl Into<cgmath::Matrix4<f32>> for $the_type {
-            fn into(self) -> cgmath::Matrix4<f32> {
-                use crate::util::cgmath::ToCross;
-                let s = self.w.to_cross();
-                cgmath::Matrix4::<f32>::from_cols(
-                    s.x.extend(0.0),
-                    s.y.extend(0.0),
-                    s.z.extend(0.0),
-                    self.v.extend(0.0),
-                )
-            }
-        }*/
-        impl Into<$the_type> for crate::util::cgmath::Twist<f32> {
-            fn into(self) -> $the_type {
-                <$the_type>::from_velocities(self.v, self.w)
+        impl From<crate::util::cgmath::Twist<f32>> for $the_type {
+            fn from(t: crate::util::cgmath::Twist<f32>) -> $the_type {
+                <$the_type>::from_velocities(t.v, t.w)
             }
         }
     };
@@ -128,7 +121,7 @@ pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
     use crate::components::pose::PreTransform;
     use crate::display::primitives::Mat4;
     use crate::util::cgmath::prelude::*;
-    let mut current_id = entity.clone();
+    let mut current_id = entity;
     let mut current_pose = Pose::new();
 
     if VERBOSE_PRINTS {
@@ -178,7 +171,7 @@ pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
         });
 
         if let Some(parent) = world.component::<super::parent::Parent>(current_id) {
-            current_id = parent.parent().clone();
+            current_id = *parent.parent();
         } else {
             break;
         }

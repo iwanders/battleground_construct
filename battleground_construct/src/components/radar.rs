@@ -139,7 +139,7 @@ impl VehicleModule for RadarModule {
             index += 1;
             for (i, reflection) in reflections.iter().enumerate() {
                 let offset = i as u32 * 4 + index;
-                registers.insert(offset + 0, Register::new_f32("yaw", reflection.yaw));
+                registers.insert(offset, Register::new_f32("yaw", reflection.yaw));
                 registers.insert(offset + 1, Register::new_f32("pitch", reflection.pitch));
                 registers.insert(
                     offset + 2,

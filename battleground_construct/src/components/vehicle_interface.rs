@@ -324,9 +324,9 @@ impl RegisterInterface {
         error_type: battleground_vehicle_control::ErrorType,
     ) -> Box<InterfaceError> {
         Box::new(InterfaceError {
-            module: module,
-            register: register,
-            error_type: error_type,
+            module,
+            register,
+            error_type,
         })
     }
 }
@@ -493,7 +493,7 @@ impl battleground_vehicle_control::Interface for RegisterInterface {
                     ))
                 } else {
                     // Must be the correct size.
-                    destination[0..values.len()].copy_from_slice(&values);
+                    destination[0..values.len()].copy_from_slice(values);
                     Ok(values.len())
                 }
             }

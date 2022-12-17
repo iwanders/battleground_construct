@@ -45,24 +45,20 @@ impl<'a, T: Component + 'static> Iterator for ComponentIterator<'a, T> {
     type Item = (EntityId, Ref<'a, T>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.entries.is_none() {
-            return None;
-        }
-        let next = self.entries.as_mut().unwrap().next();
+        let next = self.entries.as_mut()?.next();
         use std::ops::Deref;
 
-        match next {
-            Some(v) => Some((
-                v.0.clone(),
+        next.map(|v| {
+            (
+                *v.0,
                 std::cell::Ref::map(v.1.borrow(), |v| {
                     v.deref()
                         .as_any_ref()
                         .downcast_ref::<T>()
                         .expect("Unwrap should succeed")
                 }),
-            )),
-            None => None,
-        }
+            )
+        })
     }
 }
 
@@ -79,25 +75,20 @@ impl<'a, T: Component + 'static> Iterator for ComponentIteratorMut<'a, T> {
     type Item = (EntityId, RefMut<'a, T>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.entries.is_none() {
-            return None;
-        }
-
-        let next = self.entries.as_mut().unwrap().next();
+        let next = self.entries.as_mut()?.next();
         use std::ops::DerefMut;
 
-        match next {
-            Some(v) => Some((
-                v.0.clone(),
+        next.map(|v| {
+            (
+                *v.0,
                 std::cell::RefMut::map(v.1.borrow_mut(), |v| {
                     v.deref_mut()
                         .as_any_mut()
                         .downcast_mut::<T>()
                         .expect("Unwrap should succeed")
                 }),
-            )),
-            None => None,
-        }
+            )
+        })
     }
 }
 impl World {
@@ -107,7 +98,7 @@ impl World {
 
     pub fn add_entity(&mut self) -> EntityId {
         let new_id = self.make_id();
-        self.entities.insert(new_id.clone());
+        self.entities.insert(new_id);
         new_id
     }
 
@@ -119,7 +110,7 @@ impl World {
             v = self.components.get_mut(&TypeId::of::<C>());
         }
         let v = v.unwrap();
-        v.insert(entity.clone(), std::cell::RefCell::new(Box::new(component)));
+        v.insert(entity, std::cell::RefCell::new(Box::new(component)));
     }
 
     pub fn component_entities<C: Component + 'static>(&self) -> Vec<EntityId> {
@@ -128,7 +119,7 @@ impl World {
             return vec![];
         }
         let v = v.unwrap();
-        v.keys().map(|x| x.clone()).collect::<_>()
+        v.keys().copied().collect::<_>()
     }
 
     pub fn component_iter<'a, C: Component + 'static>(&'a self) -> ComponentIterator<'a, C> {
@@ -203,46 +194,36 @@ impl World {
         }
     }
 
-    pub fn component<'a, C: Component + 'static>(
-        &'a self,
-        entity: EntityId,
-    ) -> Option<std::cell::Ref<'a, C>> {
-        let v = self.components.get(&TypeId::of::<C>());
-        if v.is_none() {
-            return None;
-        }
+    pub fn component<C: Component + 'static>(&self, entity: EntityId) -> Option<std::cell::Ref<C>> {
+        let v = self.components.get(&TypeId::of::<C>())?;
+
         use std::ops::Deref;
-        let v = v.unwrap().get(&entity);
-        match v {
-            Some(rc_component) => Some(std::cell::Ref::map(rc_component.borrow(), |v| {
+        let v = v.get(&entity);
+        v.map(|rc_component| {
+            std::cell::Ref::map(rc_component.borrow(), |v| {
                 v.deref()
                     .as_any_ref()
                     .downcast_ref::<C>()
                     .expect("Unwrap should succeed")
-            })),
-            None => None,
-        }
+            })
+        })
     }
-    pub fn component_mut<'a, C: Component + 'static>(
-        &'a self,
+    pub fn component_mut<C: Component + 'static>(
+        &self,
         entity: EntityId,
-    ) -> Option<std::cell::RefMut<'a, C>> {
-        let v = self.components.get(&TypeId::of::<C>());
-        if v.is_none() {
-            return None;
-        }
+    ) -> Option<std::cell::RefMut<C>> {
+        let v = self.components.get(&TypeId::of::<C>())?;
 
         use std::ops::DerefMut;
-        let v = v.unwrap().get(&entity);
-        match v {
-            Some(rc_component) => Some(std::cell::RefMut::map(rc_component.borrow_mut(), |v| {
+        let v = v.get(&entity);
+        v.map(|rc_component| {
+            std::cell::RefMut::map(rc_component.borrow_mut(), |v| {
                 v.deref_mut()
                     .as_any_mut()
                     .downcast_mut::<C>()
                     .expect("Unwrap should succeed")
-            })),
-            None => None,
-        }
+            })
+        })
     }
 
     fn make_id(&mut self) -> EntityId {

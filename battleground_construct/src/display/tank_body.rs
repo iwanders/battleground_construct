@@ -9,6 +9,11 @@ pub struct TankBody {
     pub height: f32,
     color: Color,
 }
+impl Default for TankBody {
+    fn default() -> Self {
+        TankBody::new()
+    }
+}
 
 impl TankBody {
     pub fn new() -> Self {

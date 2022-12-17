@@ -1,14 +1,14 @@
 use super::primitives::*;
 use engine::prelude::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct DebugLines {
     lines: Vec<(Line, Color)>,
 }
 
 impl DebugLines {
     pub fn new() -> Self {
-        DebugLines { lines: vec![] }
+        DebugLines::default()
     }
     pub fn straight(length: f32, width: f32, color: Color) -> Self {
         DebugLines {

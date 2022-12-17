@@ -28,7 +28,7 @@ impl From<[u8; std::mem::size_of::<LineSegment>()]> for LineSegment {
             p1: [read_f32(3), read_f32(4), read_f32(5)],
             width: read_f32(6),
             color: Color {
-                r: b[7 * 4 + 0],
+                r: b[7 * 4],
                 g: b[7 * 4 + 1],
                 b: b[7 * 4 + 2],
                 a: b[7 * 4 + 3],
@@ -54,14 +54,14 @@ impl From<LineSegment> for [u8; std::mem::size_of::<LineSegment>()] {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct DrawComponent {
     lines: Vec<LineSegment>,
 }
 
 impl DrawComponent {
     pub fn new() -> Self {
-        DrawComponent { lines: vec![] }
+        DrawComponent::default()
     }
 }
 impl Component for DrawComponent {}

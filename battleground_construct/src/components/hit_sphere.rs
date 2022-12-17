@@ -5,6 +5,12 @@ pub struct HitSphere {
     pub radius: f32,
 }
 
+impl Default for HitSphere {
+    fn default() -> Self {
+        HitSphere::new()
+    }
+}
+
 impl HitSphere {
     pub fn new() -> Self {
         Self::with_radius(1.0)

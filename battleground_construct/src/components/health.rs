@@ -4,6 +4,11 @@ use engine::prelude::*;
 pub struct Health {
     pub health: f32,
 }
+impl Default for Health {
+    fn default() -> Self {
+        Health::new()
+    }
+}
 
 impl Health {
     pub fn new() -> Self {

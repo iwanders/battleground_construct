@@ -16,13 +16,10 @@ impl System for ProjectileFloor {
             };
             if below_floor {
                 {
-                    let particles_to_add = if let Some(p) =
-                        world.component::<super::display::particle_emitter::ParticleEmitter>(entity)
-                    {
-                        Some(*p)
-                    } else {
-                        None
-                    };
+                    let particles_to_add = world
+                        .component::<super::display::particle_emitter::ParticleEmitter>(entity)
+                        .map(|p| *p);
+
                     if let Some(mut copied_particle) = particles_to_add {
                         copied_particle.emitting = false;
                         let impact = world.add_entity();

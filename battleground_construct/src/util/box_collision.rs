@@ -3,7 +3,7 @@ use cgmath::{BaseNum, Vector3};
 /// Generic AxisAlignedBox of given dimensions. AxisAlignedBox is centered around the origin.
 /// Technicallly a RectangularAxisAlignedBox.
 #[repr(C)]
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct AxisAlignedBox<S: BaseNum> {
     pub x: S, // x
@@ -158,9 +158,7 @@ impl<S: BaseNum + std::fmt::Display> AxisAlignedBox<S> {
         // return tmax > max(tmin, zero);
 
         // Add the condition to check that the line segment (parametrized to [0.0, 1.0]) is met.
-        let inside = tmax > max(tmin, zero) && max(tmin, zero) < one;
-        // println!("inside: {inside:?}");
-        return inside;
+        tmax > max(tmin, zero) && max(tmin, zero) < one
     }
 }
 

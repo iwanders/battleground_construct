@@ -5,6 +5,11 @@ use engine::prelude::*;
 pub struct TankBullet {
     pub radius: f32,
 }
+impl Default for TankBullet {
+    fn default() -> Self {
+        TankBullet::new()
+    }
+}
 
 impl TankBullet {
     pub fn new() -> Self {

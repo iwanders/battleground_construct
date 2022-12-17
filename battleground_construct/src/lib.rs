@@ -25,6 +25,7 @@ pub struct Construct {
     systems: Systems,
 }
 
+#[allow(clippy::new_without_default)]
 impl Construct {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn new() -> Self {
@@ -93,7 +94,7 @@ impl Construct {
             let g = world
                 .component::<components::group::Group>(main_tank)
                 .unwrap();
-            for part_entity in g.entities().iter().map(|x| *x) {
+            for part_entity in g.entities().iter().copied() {
                 tank_entities.push(part_entity);
             }
         }
