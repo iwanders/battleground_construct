@@ -141,7 +141,6 @@ fn test_tank_body_velocities() {
     assert_eq!(vel_shell_in_global.w, vec3(5.5, 4.4, 5.5));
     assert_eq!(vel_shell_in_global.v, vec3(1.1, 13.75, -8.8));
 
-
     // Now, lets change the turret and barrel orientations.
     {
         let new_revolute_turret = {
@@ -176,46 +175,63 @@ fn test_tank_body_velocities() {
     }
 
     // Check again.
+    use battleground_construct::display::primitives::Mat4;
+    use cgmath::Rad;
 
     let h_body_to_global = world_pose(&world, base_id);
     println!("h_body_to_global: {h_body_to_global:?}");
-    // assert!(h_body_to_global.to_rotation().is_identity());
-    // assert_eq!(h_body_to_global.to_translation(), vec3(4.9, -5.7, 1.0));
+    assert!(h_body_to_global.to_rotation().is_identity());
+    assert_eq!(h_body_to_global.to_translation(), vec3(4.9, -5.7, 1.0));
 
     let h_turret_to_global = world_pose(&world, turret_id);
     println!("h_turret_to_global: {h_turret_to_global:?}");
-    // assert!(h_turret_to_global.to_rotation().is_identity());
-    // assert_eq!(h_turret_to_global.to_translation(), vec3(4.9, -5.7, 2.0));
+    assert_eq!(
+        h_turret_to_global.transform().to_rotation_h(),
+        Mat4::from_angle_z(Rad(std::f32::consts::PI / 4.0))
+    );
+    assert_eq!(h_turret_to_global.to_translation(), vec3(4.9, -5.7, 2.0));
 
     let h_barrel_to_global = world_pose(&world, barrel_cog_id);
     println!("h_barrel_to_global: {h_barrel_to_global:?}");
-    // assert!(h_barrel_to_global.to_rotation().is_identity());
-    // assert_eq!(h_barrel_to_global.to_translation(), vec3(6.4, -5.7, 2.0));
+    assert_eq!(
+        h_barrel_to_global.to_translation(),
+        vec3(5.7535534, -4.8464465, 2.7071068)
+    );
+    assert_eq!(
+        h_barrel_to_global.to_rotation_h(),
+        Mat4::from_angle_z(Rad(std::f32::consts::PI / 4.0))
+            * Mat4::from_angle_y(Rad(-std::f32::consts::PI / 4.0))
+    );
 
     let h_nozzle_to_global = world_pose(&world, nozzle_id);
     println!("h_nozzle_to_global: {h_nozzle_to_global:?}");
-    // assert!(h_nozzle_to_global.to_rotation().is_identity());
-    // assert_eq!(h_nozzle_to_global.to_translation(), vec3(7.4, -5.7, 2.0));
+    assert_eq!(
+        h_nozzle_to_global.to_rotation_h(),
+        Mat4::from_angle_z(Rad(std::f32::consts::PI / 4.0))
+            * Mat4::from_angle_y(Rad(-std::f32::consts::PI / 4.0))
+    );
+    assert_eq!(
+        h_nozzle_to_global.to_translation(),
+        vec3(6.2535534, -4.3464465, 3.4142137)
+    );
 
     let vel_body_in_global = world_velocity(&world, base_id);
     println!("vel_body_in_global: {vel_body_in_global:?}");
-    // assert_eq!(vel_body_in_global.w, vec3(0.0, 0.0, 2.2));
-    // assert_eq!(vel_body_in_global.v, vec3(1.1, 0.0, 0.0));
+    assert_eq!(vel_body_in_global.w, vec3(0.0, 0.0, 2.2));
+    assert_eq!(vel_body_in_global.v, vec3(1.1, 0.0, 0.0));
 
     let vel_turret_in_global = world_velocity(&world, turret_id);
     println!("vel_turret_in_global: {vel_turret_in_global:?}");
-    // assert_eq!(vel_turret_in_global.w, vec3(0.0, 0.0, 5.5));
-    // assert_eq!(vel_turret_in_global.v, vec3(1.1, 0.0, 0.0));
+    assert_eq!(vel_turret_in_global.w, vec3(0.0, 0.0, 5.5));
+    assert_eq!(vel_turret_in_global.v, vec3(1.1, 0.0, 0.0));
 
     let vel_barrel_cog_in_global = world_velocity(&world, barrel_cog_id);
     println!("vel_barrel_cog_in_global: {vel_barrel_cog_in_global:?}");
-    // assert_eq!(vel_barrel_cog_in_global.w, vec3(0.0, 4.4, 5.5));
+    // assert_eq!(vel_barrel_cog_in_global.w, vec3(-3.11127, 3.11127, 5.5));
     // assert_eq!(vel_barrel_cog_in_global.v, vec3(1.1, 8.25, -4.4));
 
     let vel_shell_in_global = world_velocity(&world, shell_id);
     println!("vel_shell_in_global: {vel_shell_in_global:?}");
     // assert_eq!(vel_shell_in_global.w, vec3(5.5, 4.4, 5.5));
     // assert_eq!(vel_shell_in_global.v, vec3(1.1, 13.75, -8.8));
-
 }
-

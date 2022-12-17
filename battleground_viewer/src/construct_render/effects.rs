@@ -296,7 +296,7 @@ impl Deconstructor {
         let mut rng = rand::thread_rng();
         use rand_distr::StandardNormal;
 
-        let mut rand_f32 = move || rng.sample::<f32, StandardNormal>(StandardNormal);
+        let mut rand_f32 = || rng.sample::<f32, StandardNormal>(StandardNormal);
 
         let do_full_explosion = true;
 
