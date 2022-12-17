@@ -122,7 +122,7 @@ create_velocity_implementation!(Velocity);
 */
 
 pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
-    const VERBOSE_PRINTS: bool = true;
+    const VERBOSE_PRINTS: bool = false;
 
     use crate::components::pose::Pose;
     use crate::components::pose::PreTransform;
