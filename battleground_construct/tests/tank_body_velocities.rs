@@ -225,13 +225,24 @@ fn test_tank_body_velocities() {
     assert_eq!(vel_turret_in_global.w, vec3(0.0, 0.0, 5.5));
     assert_eq!(vel_turret_in_global.v, vec3(1.1, 0.0, 0.0));
 
+    let vel_barrel_in_global = world_velocity(&world, barrel_id);
+    println!("vel_barrel_in_global: {vel_barrel_in_global:?}");
+    assert_eq!(vel_barrel_in_global.w, vec3(-3.11127, 3.11127, 5.5));
+    assert_eq!(vel_barrel_in_global.v, vec3(-0.84454346, 1.9445434, 0.0));
+
     let vel_barrel_cog_in_global = world_velocity(&world, barrel_cog_id);
     println!("vel_barrel_cog_in_global: {vel_barrel_cog_in_global:?}");
-    // assert_eq!(vel_barrel_cog_in_global.w, vec3(-3.11127, 3.11127, 5.5));
-    // assert_eq!(vel_barrel_cog_in_global.v, vec3(1.1, 8.25, -4.4));
+    assert_eq!(vel_barrel_cog_in_global.w, vec3(-3.11127, 3.11127, 5.5));
+    assert_eq!(
+        vel_barrel_cog_in_global.v,
+        vec3(-1.3945432, 6.894543, -3.111270)
+    );
 
     let vel_shell_in_global = world_velocity(&world, shell_id);
     println!("vel_shell_in_global: {vel_shell_in_global:?}");
-    // assert_eq!(vel_shell_in_global.w, vec3(5.5, 4.4, 5.5));
-    // assert_eq!(vel_shell_in_global.v, vec3(1.1, 13.75, -8.8));
+    assert_eq!(
+        vel_shell_in_global.v,
+        vec3(-1.9445434, 11.844543, -6.222540)
+    );
+    assert_eq!(vel_shell_in_global.w, vec3(-0.36127007, 5.861270, 9.389088));
 }

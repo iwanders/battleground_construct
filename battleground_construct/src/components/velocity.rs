@@ -195,7 +195,7 @@ pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
         let r_vector = rot * pre.to_translation(); // + d
         let spatial_transform = Adjoint {
             r: rot,
-            p_r: -(r_vector.to_cross() * pose.to_rotation()),
+            p_r: -(r_vector.to_cross() * rot),
         };
 
         // I feel the spatial transform should be identical to:
