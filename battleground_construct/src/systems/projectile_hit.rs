@@ -1,9 +1,13 @@
 use super::components::hit_box::HitBox;
-use super::components::hit_by::HitBy;
+// use super::components::hit_by::HitBy;
 use super::components::hit_sphere::HitSphere;
+use super::components::impact::Impact;
 use super::components::point_projectile::PointProjectile;
 use super::components::pose::world_pose;
 use super::components::pose::Pose;
+use crate::components::acceleration::Acceleration;
+use crate::components::velocity::Velocity;
+use crate::display;
 use crate::util::box_collision::AxisAlignedBox;
 use crate::util::cgmath::prelude::*;
 use engine::prelude::*;
@@ -11,16 +15,21 @@ use engine::prelude::*;
 pub struct ProjectileHit {}
 impl System for ProjectileHit {
     fn update(&mut self, world: &mut World) {
+        struct HitState {
+            projectile: EntityId,
+            impact: Impact,
+        }
+
         // This fails if at any point someone applies a HitSphere to a PointProjectile.
         // Complexity is O(HitSphere * PointProjectile)...
-        let mut hit_projectile_source: Vec<(EntityId, EntityId, EntityId, cgmath::Matrix4<f32>)> =
-            vec![];
+        let mut projectile_hits: Vec<HitState> = vec![];
 
         // Get all projectiles' world poses.
         let mut projectiles = world
             .component_iter::<PointProjectile>()
             .map(|(entity, projectile)| (entity, projectile.source()))
             .collect::<Vec<(EntityId, EntityId)>>();
+
         let projectile_poses = projectiles
             .drain(..)
             .map(|(projectile_id, source_id)| {
@@ -49,12 +58,15 @@ impl System for ProjectileHit {
                     let inside = dist < (sphere.radius() * sphere.radius());
                     if inside {
                         // println!("{projectile_entity:?} is inside of {sphere_entity:?}!");
-                        hit_projectile_source.push((
-                            *sphere_entity,
-                            *projectile_entity,
-                            *source_id,
-                            *projectile_pose.transform(),
-                        ));
+                        let v = HitState {
+                            projectile: *projectile_entity,
+                            impact: Impact::new(
+                                Some(*sphere_entity),
+                                *projectile_pose.transform(),
+                                *source_id,
+                            ),
+                        };
+                        projectile_hits.push(v);
                     }
                 }
             }
@@ -81,22 +93,52 @@ impl System for ProjectileHit {
                     let b = AxisAlignedBox::new(hitbox.length(), hitbox.width(), hitbox.height());
                     let inside = b.is_inside(point_in_hitbox_frame.to_translation());
                     if inside {
-                        hit_projectile_source.push((
-                            *hitbox_entity,
-                            *projectile_entity,
-                            *source_id,
-                            *projectile_pose.transform(),
-                        ));
+                        let v = HitState {
+                            projectile: *projectile_entity,
+                            impact: Impact::new(
+                                Some(*hitbox_entity),
+                                *projectile_pose.transform(),
+                                *source_id,
+                            ),
+                        };
+                        projectile_hits.push(v);
                     }
                 }
             }
         }
 
-        for (hit_entity, projectile_entity, source_entity, impact) in hit_projectile_source {
+        for v in projectile_hits {
+            // Remove the point projectile.
+            world.remove_component::<PointProjectile>(v.projectile);
+            // Remove any velocity of accelartion, fixing the entity in place.
+            world.remove_component::<Velocity>(v.projectile);
+            world.remove_component::<Acceleration>(v.projectile);
+
+            // Create a bullet destructor.
+            let projectile_destructor = world.add_entity();
+            let mut destructor =
+                crate::display::deconstructor::Deconstructor::new(projectile_destructor);
+            destructor.add_impact(v.impact.position(), 0.2);
+            destructor.add_element::<crate::display::tank_bullet::TankBullet>(v.projectile, world);
+            world.add_component(projectile_destructor, destructor);
             world.add_component(
-                hit_entity,
-                HitBy::new(projectile_entity, source_entity, impact),
+                projectile_destructor,
+                crate::components::expiry::Expiry::lifetime(10.0),
             );
+
+            // Now, we can remove the displayable mesh.
+            world.remove_component::<display::tank_bullet::TankBullet>(v.projectile);
+
+            // Add the impact to the entity.
+            world.add_component(v.projectile, v.impact);
+
+            // Copy the bullet trail.
+            let emitter_id = world.add_entity();
+            world.move_component::<super::display::particle_emitter::ParticleEmitter>(
+                v.projectile,
+                emitter_id,
+            );
+            world.add_component(emitter_id, super::components::expiry::Expiry::lifetime(5.0));
         }
     }
 }

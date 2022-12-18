@@ -24,7 +24,7 @@ impl Health {
         self.health
     }
 
-    pub fn is_dead(&self) -> bool {
+    pub fn is_destroyed(&self) -> bool {
         self.health <= 0.0
     }
 }

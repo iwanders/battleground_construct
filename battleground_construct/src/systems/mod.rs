@@ -1,16 +1,19 @@
 pub mod acceleration_velocity;
 pub mod cannon_trigger;
+pub mod destroy;
 pub mod display_tank_tracks;
 pub mod expiry_check;
 pub mod function_pose;
+pub mod health_check;
 pub mod health_tank_body;
 pub mod kinematics_differential_drive;
+pub mod process_hit_by;
+pub mod process_impact;
 pub mod projectile_floor;
 pub mod projectile_hit;
 pub mod radar_scan;
 pub mod revolute_pose;
 pub mod revolute_velocity;
-pub mod tank_hit_by;
 pub mod vehicle_control;
 pub mod velocity_pose;
 

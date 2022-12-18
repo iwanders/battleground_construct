@@ -103,6 +103,14 @@ impl World {
     }
 
     pub fn add_component<C: Component + 'static>(&mut self, entity: EntityId, component: C) {
+        self.add_boxed_component(entity, Box::new(component));
+    }
+
+    pub fn add_boxed_component<C: Component + 'static>(
+        &mut self,
+        entity: EntityId,
+        component: Box<C>,
+    ) {
         let mut v = self.components.get_mut(&TypeId::of::<C>());
         if v.is_none() {
             self.components
@@ -110,7 +118,7 @@ impl World {
             v = self.components.get_mut(&TypeId::of::<C>());
         }
         let v = v.unwrap();
-        v.insert(entity, std::cell::RefCell::new(Box::new(component)));
+        v.insert(entity, std::cell::RefCell::new(component));
     }
 
     pub fn component_entities<C: Component + 'static>(&self) -> Vec<EntityId> {
@@ -138,7 +146,7 @@ impl World {
     pub fn remove_components<C: Component + 'static>(
         &mut self,
         entities: &[EntityId],
-    ) -> Vec<Box<C>> {
+    ) -> Vec<Option<Box<C>>> {
         let v = self.components.get_mut(&TypeId::of::<C>());
         if v.is_none() {
             return vec![];
@@ -146,16 +154,35 @@ impl World {
         let v = v.unwrap();
         let mut res = vec![];
         for entity in entities.iter() {
-            if let Some(old_entry) = v.remove(entity) {
-                res.push(
+            res.push(if let Some(old_entry) = v.remove(entity) {
+                Some(
                     std::cell::RefCell::into_inner(old_entry)
                         .as_any_box()
                         .downcast::<C>()
                         .unwrap(),
-                );
-            }
+                )
+            } else {
+                None
+            });
         }
         res
+    }
+
+    pub fn remove_component<C: Component + 'static>(&mut self, entity: EntityId) -> Option<Box<C>> {
+        let v = self.components.get_mut(&TypeId::of::<C>())?;
+        v.remove(&entity).map(|v| {
+            std::cell::RefCell::into_inner(v)
+                .as_any_box()
+                .downcast::<C>()
+                .unwrap()
+        })
+    }
+
+    pub fn move_component<C: Component + 'static>(&mut self, src: EntityId, dst: EntityId) {
+        let v = self.remove_component::<C>(src);
+        if let Some(v) = v {
+            self.add_boxed_component(dst, v);
+        }
     }
 
     pub fn remove_entity(&mut self, entity: EntityId) {
@@ -208,6 +235,7 @@ impl World {
             })
         })
     }
+
     pub fn component_mut<C: Component + 'static>(
         &self,
         entity: EntityId,

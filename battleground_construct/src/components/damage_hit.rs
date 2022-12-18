@@ -1,16 +1,16 @@
 use engine::prelude::*;
 
 #[derive(Debug, Clone)]
-pub struct DamageDealer {
+pub struct DamageHit {
     damage: f32,
 }
 
-impl DamageDealer {
+impl DamageHit {
     pub fn new(damage: f32) -> Self {
-        DamageDealer { damage }
+        DamageHit { damage }
     }
     pub fn damage(&self) -> f32 {
         self.damage
     }
 }
-impl Component for DamageDealer {}
+impl Component for DamageHit {}

@@ -399,7 +399,9 @@ impl Deconstructor {
                         }
                     }
                 }
-                battleground_construct::display::primitives::Primitive::Sphere(_) => todo!(),
+                battleground_construct::display::primitives::Primitive::Sphere(_) => {
+                    println!("Deconstructor on sphere, not implemented");
+                }
                 battleground_construct::display::primitives::Primitive::Cylinder(_) => todo!(),
                 battleground_construct::display::primitives::Primitive::Line(_) => todo!(),
             }

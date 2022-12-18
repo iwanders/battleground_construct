@@ -23,6 +23,7 @@ pub struct TankSpawnConfig {
 
 fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: EntityId) {
     use crate::components::point_projectile::PointProjectile;
+    use crate::components::projectile_source::ProjectileSource;
     use crate::components::velocity::Velocity;
 
     let muzzle_velocity = 10.0;
@@ -31,6 +32,7 @@ fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: EntityI
     // Orientation in the global frame.
     let projectile_id = world.add_entity();
     world.add_component::<PointProjectile>(projectile_id, PointProjectile::new(cannon_entity));
+    world.add_component(projectile_id, ProjectileSource::new(cannon_entity));
     world.add_component::<Pose>(
         projectile_id,
         Pose::from_mat4(cgmath::Matrix4::<f32>::from_translation(
@@ -59,6 +61,10 @@ fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: EntityI
     world.add_component(
         projectile_id,
         crate::components::acceleration::Acceleration::gravity(),
+    );
+    world.add_component(
+        projectile_id,
+        components::damage_hit::DamageHit::new(3330.3),
     );
 
     world.add_component(
@@ -187,7 +193,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let nozzle_id = world.add_entity();
     tank_group_ids.push(nozzle_id);
     world.add_component(nozzle_id, Parent::new(barrel_id));
-    world.add_component(nozzle_id, components::damage_dealer::DamageDealer::new(0.3));
 
     let cannon_config = components::cannon::CannonConfig {
         reload_time: 1.0,

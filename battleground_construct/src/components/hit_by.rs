@@ -1,28 +1,70 @@
 use engine::prelude::*;
 
+use crate::components::damage_hit::DamageHit;
+use crate::components::impact::Impact;
+
 #[derive(Debug, Clone)]
-pub struct HitBy {
-    projectile: EntityId,
-    source: EntityId,
-    impact: cgmath::Matrix4<f32>,
+pub struct HitRecord {
+    pub damage_hit: DamageHit,
+    pub impact: Impact,
+    pub source: EntityId,
+    pub time: f32,
 }
 
-impl HitBy {
-    pub fn new(projectile: EntityId, source: EntityId, impact: cgmath::Matrix4<f32>) -> Self {
-        HitBy {
-            projectile,
-            source,
-            impact,
-        }
+impl HitRecord {
+    pub fn impact(&self) -> Impact {
+        self.impact.clone()
     }
     pub fn source(&self) -> EntityId {
         self.source
     }
-    pub fn projectile(&self) -> EntityId {
-        self.projectile
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct HitBy {
+    hits: Vec<HitRecord>,
+}
+
+impl HitBy {
+    pub fn new() -> Self {
+        HitBy { hits: vec![] }
     }
-    pub fn impact(&self) -> cgmath::Matrix4<f32> {
-        self.impact
+
+    pub fn add_hit(&mut self, damage_hit: DamageHit, impact: Impact, source: EntityId, time: f32) {
+        self.hits.push(HitRecord {
+            damage_hit,
+            impact,
+            source,
+            time,
+        });
+    }
+
+    pub fn hits(&self) -> Vec<(f32, &Impact)> {
+        self.hits
+            .iter()
+            .map(|v| (v.damage_hit.damage(), &v.impact))
+            .collect::<_>()
     }
 }
 impl Component for HitBy {}
+
+// ---------------------------------------------------
+
+#[derive(Debug, Clone, Default)]
+pub struct HitByHistory {
+    hits: Vec<HitRecord>,
+}
+
+impl HitByHistory {
+    pub fn new() -> Self {
+        HitByHistory { hits: vec![] }
+    }
+
+    pub fn hits(&self) -> &[HitRecord] {
+        &self.hits
+    }
+    pub fn add_hits(&mut self, hit_by: &HitBy) {
+        self.hits.append(&mut hit_by.hits.clone())
+    }
+}
+impl Component for HitByHistory {}

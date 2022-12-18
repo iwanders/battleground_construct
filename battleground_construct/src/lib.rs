@@ -148,12 +148,16 @@ impl Construct {
         systems.add_system(Box::new(systems::revolute_velocity::RevoluteVelocity {}));
         systems.add_system(Box::new(systems::radar_scan::RadarScan {}));
         systems.add_system(Box::new(systems::cannon_trigger::CannonTrigger {}));
-        systems.add_system(Box::new(systems::projectile_floor::ProjectileFloor {}));
+        // systems.add_system(Box::new(systems::projectile_floor::ProjectileFloor {}));
         systems.add_system(Box::new(systems::projectile_hit::ProjectileHit {}));
+        systems.add_system(Box::new(systems::process_impact::ProcessImpact {}));
         // Must go after the hit calculation.
-        systems.add_system(Box::new(systems::tank_hit_by::TankHitBy {}));
+        systems.add_system(Box::new(systems::process_hit_by::ProcessHitBy {}));
+
+        systems.add_system(Box::new(systems::health_check::HealthCheck {}));
+        systems.add_system(Box::new(systems::destroy::Destroy {}));
         // All handling of hits done with the projectiles still present.
-        systems.add_system(Box::new(systems::health_tank_body::HealthTankBody {}));
+        // systems.add_system(Box::new(systems::health_tank_body::HealthTankBody {}));
         systems.add_system(Box::new(systems::display_tank_tracks::DisplayTankTracks {}));
         systems.add_system(Box::new(systems::function_pose::FunctionPose {}));
         systems.add_system(Box::new(systems::expiry_check::ExpiryCheck {}));

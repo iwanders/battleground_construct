@@ -11,7 +11,7 @@ impl System for HealthTankBody {
             if let Some(mut tank) = world.component_mut::<TankBody>(entity) {
                 // Yes, so now integrate it.
 
-                if health.is_dead() {
+                if health.is_destroyed() {
                     tank.set_color(Color {
                         r: 25,
                         g: 25,
