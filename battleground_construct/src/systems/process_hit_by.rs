@@ -10,7 +10,7 @@ impl System for ProcessHitBy {
     fn update(&mut self, world: &mut World) {
         let hits = world.component_entities::<HitBy>();
 
-        // Find the root element of the HitBy elements.
+        // Find the root element of the HitBy elements, or take the entity itself.
         let mut hit_entity_and_root = vec![];
         for v in hits.iter() {
             let r = if let Some(g) = world.component::<Group>(*v) {
@@ -35,7 +35,6 @@ impl System for ProcessHitBy {
         }
 
         // Next, we can process the HitBy
-        assert_eq!(hit_entity_and_root.len(), hit_by.len());
         for (ids, hit_by) in hit_entity_and_root.iter().zip(hit_by.iter()) {
             // let hit_entity = ids.0;
             let root_entity = ids.1;

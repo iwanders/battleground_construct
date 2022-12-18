@@ -154,16 +154,12 @@ impl World {
         let v = v.unwrap();
         let mut res = vec![];
         for entity in entities.iter() {
-            res.push(if let Some(old_entry) = v.remove(entity) {
-                Some(
-                    std::cell::RefCell::into_inner(old_entry)
-                        .as_any_box()
-                        .downcast::<C>()
-                        .unwrap(),
-                )
-            } else {
-                None
-            });
+            res.push(v.remove(entity).map(|old_entry| {
+                std::cell::RefCell::into_inner(old_entry)
+                    .as_any_box()
+                    .downcast::<C>()
+                    .unwrap()
+            }));
         }
         res
     }

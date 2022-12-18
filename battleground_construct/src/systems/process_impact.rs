@@ -33,7 +33,7 @@ impl System for ProcessImpact {
                 .map(|v| v.clone());
             let projectile_source = world
                 .component::<components::projectile_source::ProjectileSource>(impact_entity)
-                .map(|v| v.clone())
+                .map(|v| *v)
                 .expect("projectiles should have source");
 
             if let Some(damage_hit) = damage_hit {

@@ -23,7 +23,7 @@ impl System for Destroy {
                 let g = world
                     .component::<components::group::Group>(*root_entity)
                     .unwrap();
-                elements_here.append(&mut g.entities().iter().copied().collect::<_>());
+                elements_here.append(&mut g.entities().to_vec());
             }
 
             // Create the destruction effect.
