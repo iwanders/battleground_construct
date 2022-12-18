@@ -11,6 +11,7 @@ pub mod group;
 pub mod health;
 pub mod hit_box;
 pub mod hit_by;
+pub mod hit_plane;
 pub mod hit_sphere;
 pub mod impact;
 pub mod parent;

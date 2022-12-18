@@ -11,11 +11,15 @@ impl System for ProcessHitBy {
         let hits = world.component_entities::<HitBy>();
 
         // Find the root element of the HitBy elements.
-        let hit_entity_and_root: Vec<(EntityId, EntityId)> = world
-            .component_iter::<Group>()
-            .filter(|(entity, _group)| hits.contains(entity))
-            .map(|(entity, group)| (entity, group.entities()[0]))
-            .collect::<_>();
+        let mut hit_entity_and_root = vec![];
+        for v in hits.iter() {
+            let r = if let Some(g) = world.component::<Group>(*v) {
+                (*v, g.entities()[0])
+            } else {
+                (*v, *v)
+            };
+            hit_entity_and_root.push(r);
+        }
 
         // Pop all HitBy objects from their components.
         let hit_by = world.remove_components::<HitBy>(&hits);

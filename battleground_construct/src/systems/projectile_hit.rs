@@ -1,5 +1,6 @@
 use super::components::hit_box::HitBox;
 // use super::components::hit_by::HitBy;
+use super::components::hit_plane::HitPlane;
 use super::components::hit_sphere::HitSphere;
 use super::components::impact::Impact;
 use super::components::point_projectile::PointProjectile;
@@ -39,6 +40,38 @@ impl System for ProjectileHit {
             .collect::<Vec<(EntityId, EntityId, Pose)>>();
 
         {
+            // Get all the hit planes
+            let hit_sphere_with_pose = {
+                let hitplanes = world.component_iter::<HitPlane>();
+                hitplanes
+                    .map(|(entity, sphere)| {
+                        let pose = world_pose(world, entity);
+                        (entity, pose, sphere)
+                    })
+                    .collect::<Vec<_>>()
+            };
+            for (projectile_entity, source_id, projectile_pose) in projectile_poses.iter() {
+                for (hitplane_entity, hitplane_pose, hitplane) in hit_sphere_with_pose.iter() {
+                    // convert the projectile pose into the hitbox's local frame.
+                    // currently, projectile_pose is world -> projectile.
+                    //            hitbox_pose is world -> hitbox.
+                    let point_in_hitplane_frame =
+                        hitplane_pose.transform().to_inv_h() * projectile_pose.transform();
+                    let inside = hitplane.above(point_in_hitplane_frame.to_translation());
+                    if inside {
+                        let v = HitState {
+                            projectile: *projectile_entity,
+                            impact: Impact::new(
+                                Some(*hitplane_entity),
+                                *projectile_pose.transform(),
+                                *source_id,
+                            ),
+                        };
+                        projectile_hits.push(v);
+                    }
+                }
+            }
+
             // Get all the hitspheres
             let hit_sphere_with_pose = {
                 let hitspheres = world.component_iter::<HitSphere>();
