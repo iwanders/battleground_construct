@@ -101,18 +101,23 @@ impl Construct {
 
         let thingy = world.add_entity();
         let mut destructor = display::deconstructor::Deconstructor::new(thingy);
-
         for e in tank_entities.iter() {
             destructor.add_element::<display::tank_body::TankBody>(*e, &world);
             destructor.add_element::<display::tank_turret::TankTurret>(*e, &world);
             destructor.add_element::<display::tank_barrel::TankBarrel>(*e, &world);
+            // destructor.add_element::<display::flag::Flag>(*e, &world);
         }
-        // world.add_component(thingy, Flag::from_scale_color(0.5, Color::WHITE));
+
+        // Add a sphere to the initial destructor.
+        let sphere = world.add_entity();
+        world.add_component(sphere, display::debug_sphere::DebugSphere::new());
+        world.add_component(sphere, Pose::from_xyz(0.0, 0.0, 1.0));
+        destructor.add_element::<display::debug_sphere::DebugSphere>(sphere, &world);
+        world.remove_entity(sphere); // but not visualise it.
+
         // world.add_component(thingy, Pose::from_xyz(0.0, 0.0, 0.0));
         world.add_component(thingy, destructor);
         world.add_component(thingy, components::expiry::Expiry::lifetime(50.0));
-        /*
-         */
 
         for x in 1..5 {
             for y in -2..2 {

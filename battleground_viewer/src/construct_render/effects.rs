@@ -270,8 +270,8 @@ impl Deconstructor {
     ) -> Self {
         let edge_x = 0.05;
         let edge_y = edge_x;
-        // let edge_z = edge_x;
-        let edge_z = 1.0;
+        let edge_z = edge_x;
+        // let edge_z = 1.0;
         let mut renderable =
             InstancedEntity::<three_d::renderer::material::PhysicalMaterial>::new_physical(
                 context,
@@ -301,8 +301,15 @@ impl Deconstructor {
         let do_full_explosion = true;
 
         for (el, twist) in elements.iter() {
-            match el.primitive {
+            struct Fragment {
+                pos: Vector3<f32>,
+                scale: Vector3<f32>,
+            }
+
+            let center_world = entity_position * el.transform;
+            let fragments = match el.primitive {
                 battleground_construct::display::primitives::Primitive::Cuboid(c) => {
+                    let mut fragments = vec![];
                     let half_length = c.length / 2.0;
                     let half_width = c.width / 2.0;
                     let half_height = c.height / 2.0;
@@ -311,7 +318,6 @@ impl Deconstructor {
                     let chunks_x = (((c.length / 2.0) / edge_x) as isize) + 1;
                     let chunks_y = (((c.width / 2.0) / edge_y) as isize) + 1;
                     let chunks_z = (((c.height / 2.0) / edge_z) as isize) + 1;
-                    let center_world = entity_position * el.transform;
                     for x in -chunks_x..chunks_x {
                         for y in -chunks_y..chunks_y {
                             for z in -chunks_z..chunks_z {
@@ -341,69 +347,110 @@ impl Deconstructor {
                                 let sx = (x_end - x_start) / 2.0;
                                 let sy = (y_end - y_start) / 2.0;
                                 let sz = (z_end - z_start) / 2.0;
-                                let fragment_pos = Mat4::from_translation(p);
-
-                                let fragment_world_pos =
-                                    entity_position * el.transform * fragment_pos;
-
-                                // Start velocity calculation, initialise with zero.
-                                let mut vel = vec3(0.0, 0.0, 0.0);
-
-                                // linear component;
-                                vel += twist.v;
-                                // angular component;
-                                // v_p = v_0 + w x (p - p0)
-                                vel += twist.w.to_cross()
-                                    * (fragment_world_pos.to_translation()
-                                        - center_world.to_translation());
-
-                                // Add outward from the body center.
-                                let cube_world = fragment_world_pos;
-                                let dir = cube_world.w.truncate() - center_world.w.truncate();
-                                let pos = (fragment_world_pos).to_rotation_h();
-                                if do_full_explosion {
-                                    vel += (dir.to_h() * pos).w.truncate() * 0.1;
-                                }
-
-                                // Add some random jitter, such that it looks prettier.
-                                if do_full_explosion {
-                                    vel += vec3(rand_f32(), rand_f32(), rand_f32()) * 0.1;
-                                }
-
-                                // Then, add velocities away from the impacts.
-                                if do_full_explosion {
-                                    for (impact_location, magnitude) in impacts.iter() {
-                                        let p1 = impact_location.to_translation();
-                                        let p0 = fragment_world_pos.to_translation();
-                                        let rotation = Quat::from_arc(
-                                            vec3(1.0, 0.0, 0.0),
-                                            (p0 - p1).normalize(),
-                                            None,
-                                        );
-                                        let d = (p1.distance2(p0)).sqrt();
-                                        let mag = magnitude * (1.0 / (d * d));
-                                        if do_full_explosion {
-                                            vel += (rotation * vec3(1.0, 0.0, 0.0)) * mag;
-                                        }
-                                    }
-                                }
-
-                                particles.push(DestructorParticle {
-                                    pos: fragment_world_pos,
-                                    color: Color::new(el.color.r, el.color.g, el.color.b, 128),
-                                    vel,
+                                // let fragment_pos = Mat4::from_translation(p);
+                                fragments.push(Fragment {
+                                    pos: p,
                                     scale: vec3(sx, sy, sz),
-                                    traveled: 0.0,
                                 });
                             }
                         }
                     }
+
+                    fragments
                 }
-                battleground_construct::display::primitives::Primitive::Sphere(_) => {
-                    println!("Deconstructor on sphere, not implemented");
+                battleground_construct::display::primitives::Primitive::Sphere(sphere) => {
+                    let mut fragments = vec![];
+                    let radius = sphere.radius;
+
+                    let chunks_x = ((radius / edge_x) as isize) + 1;
+                    let chunks_y = ((radius / edge_y) as isize) + 1;
+                    let chunks_z = ((radius / edge_z) as isize) + 1;
+                    for x in -chunks_x..chunks_x {
+                        for y in -chunks_y..chunks_y {
+                            for z in -chunks_z..chunks_z {
+                                let x_start = x as f32 * edge_x;
+                                let x_end = (x + 1) as f32 * edge_x;
+
+                                let y_start = y as f32 * edge_y;
+                                let y_end = (y + 1) as f32 * edge_y;
+
+                                let z_start = z as f32 * edge_z;
+                                let z_end = (z + 1) as f32 * edge_z;
+
+                                let p = vec3(
+                                    (x_end - x_start) / 2.0 + x_start,
+                                    (y_end - y_start) / 2.0 + y_start,
+                                    (z_end - z_start) / 2.0 + z_start,
+                                );
+                                if p.euclid_norm() >= radius {
+                                    continue;
+                                }
+
+                                let sx = edge_x / 2.0;
+                                let sy = edge_y / 2.0;
+                                let sz = edge_z / 2.0;
+                                fragments.push(Fragment {
+                                    pos: p,
+                                    scale: vec3(sx, sy, sz),
+                                });
+                            }
+                        }
+                    }
+                    fragments
                 }
                 battleground_construct::display::primitives::Primitive::Cylinder(_) => todo!(),
                 battleground_construct::display::primitives::Primitive::Line(_) => todo!(),
+            };
+
+            for fragment in fragments {
+                let fragment_world_pos =
+                    entity_position * el.transform * Mat4::from_translation(fragment.pos);
+
+                // Start velocity calculation, initialise with zero.
+                let mut vel = vec3(0.0, 0.0, 0.0);
+
+                // linear component;
+                vel += twist.v;
+                // angular component;
+                // v_p = v_0 + w x (p - p0)
+                vel += twist.w.to_cross()
+                    * (fragment_world_pos.to_translation() - center_world.to_translation());
+
+                // Add outward from the body center.
+                let cube_world = fragment_world_pos;
+                let dir = cube_world.w.truncate() - center_world.w.truncate();
+                let pos = (fragment_world_pos).to_rotation_h();
+                if do_full_explosion {
+                    vel += (dir.to_h() * pos).w.truncate() * 0.1;
+                }
+
+                // Add some random jitter, such that it looks prettier.
+                if do_full_explosion {
+                    vel += vec3(rand_f32(), rand_f32(), rand_f32()) * 0.1;
+                }
+
+                // Then, add velocities away from the impacts.
+                if do_full_explosion {
+                    for (impact_location, magnitude) in impacts.iter() {
+                        let p1 = impact_location.to_translation();
+                        let p0 = fragment_world_pos.to_translation();
+                        let rotation =
+                            Quat::from_arc(vec3(1.0, 0.0, 0.0), (p0 - p1).normalize(), None);
+                        let d = (p1.distance2(p0)).sqrt();
+                        let mag = magnitude * (1.0 / (d * d));
+                        if do_full_explosion {
+                            vel += (rotation * vec3(1.0, 0.0, 0.0)) * mag;
+                        }
+                    }
+                }
+
+                particles.push(DestructorParticle {
+                    pos: fragment_world_pos,
+                    color: Color::new(el.color.r, el.color.g, el.color.b, 128),
+                    vel,
+                    scale: fragment.scale,
+                    traveled: 0.0,
+                });
             }
         }
         // let particles = vec![particles.pop().unwrap()];
