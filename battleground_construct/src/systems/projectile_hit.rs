@@ -151,7 +151,7 @@ impl System for ProjectileHit {
             let projectile_destructor = world.add_entity();
             let mut destructor =
                 crate::display::deconstructor::Deconstructor::new(projectile_destructor);
-            destructor.add_impact(v.impact.position(), 0.2);
+            destructor.add_impact(v.impact.position(), 0.005);
             destructor.add_element::<crate::display::tank_bullet::TankBullet>(v.projectile, world);
             world.add_component(projectile_destructor, destructor);
             world.add_component(
