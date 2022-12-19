@@ -30,11 +30,9 @@ impl System for CannonTrigger {
                 continue;
             }
 
-            let muzzle_pose = super::components::pose::world_pose(world, cannon_entity);
-
             let cannon_effect = { world.component::<Cannon>(cannon_entity).unwrap().effect() };
 
-            cannon_effect(world, &muzzle_pose, cannon_entity);
+            cannon_effect(world, cannon_entity);
         }
     }
 }

@@ -1,9 +1,8 @@
-use crate::components::pose::Pose;
 use engine::prelude::*;
 
 // This must be an Rc, as wel need to be able to copy it to allow a mutable world, we cannot borrow
 // it out of the cannon.
-pub type CannonFireEffect = std::rc::Rc<dyn for<'a> Fn(&'a mut World, &Pose, EntityId)>;
+pub type CannonFireEffect = std::rc::Rc<dyn for<'a> Fn(&'a mut World, EntityId)>;
 
 pub struct CannonConfig {
     pub reload_time: f32,

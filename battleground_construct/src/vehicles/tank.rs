@@ -21,10 +21,13 @@ pub struct TankSpawnConfig {
     pub controller: Box<dyn battleground_vehicle_control::VehicleControl>,
 }
 
-fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: EntityId) {
+fn cannon_function(world: &mut World, cannon_entity: EntityId) {
     use crate::components::point_projectile::PointProjectile;
     use crate::components::projectile_source::ProjectileSource;
     use crate::components::velocity::Velocity;
+
+    let muzzle_pose = components::pose::world_pose(world, cannon_entity);
+    let muzzle_world_velocity = components::velocity::world_velocity(world, cannon_entity);
 
     let muzzle_velocity = 10.0;
 
@@ -46,6 +49,7 @@ fn cannon_function(world: &mut World, muzzle_pose: &Pose, cannon_entity: EntityI
     muzzle_pose.w[0] = 0.0;
     muzzle_pose.w[1] = 0.0;
     let v = muzzle_pose * cgmath::Vector4::<f32>::new(muzzle_velocity, 0.0, 0.0, 1.0);
+    let v = v + muzzle_world_velocity.v.extend(0.0);
     let projectile_velocity =
         Velocity::from_velocities(v.truncate(), cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0));
 

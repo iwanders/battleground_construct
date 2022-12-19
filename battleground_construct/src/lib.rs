@@ -1,19 +1,11 @@
 // https://rust-lang.github.io/api-guidelines/naming.html
 
-/*
-    Todo:
-        - Propagate velocities such that bullets get the correct initial velocity.
-        - Fix the way projectiles, hits, damage all works.
-*/
-
 pub mod components;
 pub mod control;
 pub mod display;
 pub mod systems;
 pub mod util;
 pub mod vehicles;
-
-// use battleground_vehicle_control;
 
 use components::clock::{Clock, ClockSystem};
 use engine::prelude::*;
