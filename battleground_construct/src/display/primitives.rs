@@ -134,7 +134,7 @@ pub enum EffectType {
         emitting: bool,
     },
     Deconstructor {
-        elements: Vec<(Element, Twist)>,
+        elements: Vec<(Element, /* entity */ Twist, /* entity */ Mat4)>,
         impacts: Vec<(Mat4, f32)>,
     },
 }

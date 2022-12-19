@@ -263,9 +263,9 @@ pub struct Deconstructor {
 impl Deconstructor {
     pub fn new(
         context: &Context,
-        entity_position: Matrix4<f32>,
+        _effect_position: Matrix4<f32>,
         time: f32,
-        elements: &[(display::primitives::Element, Twist<f32>)],
+        elements: &[(display::primitives::Element, Twist<f32>, Mat4)],
         impacts: &[(Mat4, f32)],
     ) -> Self {
         let edge_x = 0.05;
@@ -298,15 +298,15 @@ impl Deconstructor {
 
         let mut rand_f32 = || rng.sample::<f32, StandardNormal>(StandardNormal);
 
-        let do_full_explosion = true;
+        const DO_FULL_EXPLOSION: bool = true;
 
-        for (el, twist) in elements.iter() {
+        for (el, entity_twist, entity_pose) in elements.iter() {
             struct Fragment {
                 pos: Vector3<f32>,
                 scale: Vector3<f32>,
             }
 
-            let center_world = entity_position * el.transform;
+            let center_element = entity_pose * el.transform;
             let fragments = match el.primitive {
                 battleground_construct::display::primitives::Primitive::Cuboid(c) => {
                     let mut fragments = vec![];
@@ -404,33 +404,34 @@ impl Deconstructor {
 
             for fragment in fragments {
                 let fragment_world_pos =
-                    entity_position * el.transform * Mat4::from_translation(fragment.pos);
+                    entity_pose * el.transform * Mat4::from_translation(fragment.pos);
 
                 // Start velocity calculation, initialise with zero.
                 let mut vel = vec3(0.0, 0.0, 0.0);
 
                 // linear component;
-                vel += twist.v;
+                vel += entity_twist.v;
                 // angular component;
                 // v_p = v_0 + w x (p - p0)
-                vel += twist.w.to_cross()
-                    * (fragment_world_pos.to_translation() - center_world.to_translation());
+                // p0 is the entity position, p is the fragment position.
+                let distance_on_entity = (fragment_world_pos - (entity_pose)).to_translation();
+                vel += entity_twist.w.to_cross() * distance_on_entity;
 
                 // Add outward from the body center.
                 let cube_world = fragment_world_pos;
-                let dir = cube_world.w.truncate() - center_world.w.truncate();
+                let dir = cube_world.w.truncate() - center_element.w.truncate();
                 let pos = (fragment_world_pos).to_rotation_h();
-                if do_full_explosion {
+                if DO_FULL_EXPLOSION {
                     vel += (dir.to_h() * pos).w.truncate() * 0.1;
                 }
 
                 // Add some random jitter, such that it looks prettier.
-                if do_full_explosion {
+                if DO_FULL_EXPLOSION {
                     vel += vec3(rand_f32(), rand_f32(), rand_f32()) * 0.1;
                 }
 
                 // Then, add velocities away from the impacts.
-                if do_full_explosion {
+                if DO_FULL_EXPLOSION {
                     for (impact_location, magnitude) in impacts.iter() {
                         let p1 = impact_location.to_translation();
                         let p0 = fragment_world_pos.to_translation();
@@ -438,7 +439,7 @@ impl Deconstructor {
                             Quat::from_arc(vec3(1.0, 0.0, 0.0), (p0 - p1).normalize(), None);
                         let d = (p1.distance2(p0)).sqrt();
                         let mag = magnitude * (1.0 / (d * d));
-                        if do_full_explosion {
+                        if DO_FULL_EXPLOSION {
                             vel += (rotation * vec3(1.0, 0.0, 0.0)) * mag;
                         }
                     }
