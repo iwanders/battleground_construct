@@ -14,6 +14,7 @@ pub fn setup_match(config: super::specification::ConstructConfig) -> Construct {
     for team in config.spawn_config.teams {
         println!("Spawning team: {}", team.name);
     }
+
     for spawn in config.spawn_config.spawns {
         match spawn.vehicle {
             specification::Vehicle::Tank => {
