@@ -1,5 +1,6 @@
 pub mod acceleration_velocity;
 pub mod cannon_trigger;
+pub mod clock;
 pub mod destroy;
 pub mod display_tank_tracks;
 pub mod expiry_check;

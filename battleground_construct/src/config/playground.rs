@@ -1,20 +1,19 @@
 use crate::components;
 use crate::control;
 use crate::display;
-use crate::systems;
 use crate::vehicles;
 // use crate::ClockSystem;
 use engine::{Systems, World};
 
-use components::clock::{Clock, ClockSystem};
 use vehicles::tank::{spawn_tank, TankSpawnConfig};
 
 // This held the dev playground for the longest time.
 pub fn populate_dev_world(world_systems: (&mut World, &mut Systems)) {
     let world = world_systems.0;
     let systems = world_systems.1;
-    let clock_id = world.add_entity();
-    world.add_component(clock_id, Clock::new());
+
+    super::default::add_components(world);
+    super::default::add_systems(systems);
 
     use components::function_pose::FunctionPose;
     use components::pose::Pose;
@@ -40,11 +39,6 @@ pub fn populate_dev_world(world_systems: (&mut World, &mut Systems)) {
         particle_id,
         display::particle_emitter::ParticleEmitter::bullet_trail(particle_id, 0.05, Color::WHITE),
     );
-
-    // Add the floor.
-    let floor_id = world.add_entity();
-    world.add_component(floor_id, components::pose::Pose::new());
-    world.add_component(floor_id, components::hit_plane::HitPlane::new());
 
     let main_tank = spawn_tank(
         world,
@@ -85,17 +79,17 @@ pub fn populate_dev_world(world_systems: (&mut World, &mut Systems)) {
     let thingy = world.add_entity();
     let mut destructor = display::deconstructor::Deconstructor::new(thingy);
     for e in tank_entities.iter() {
-        destructor.add_element::<display::tank_body::TankBody>(*e, &world);
-        destructor.add_element::<display::tank_turret::TankTurret>(*e, &world);
-        destructor.add_element::<display::tank_barrel::TankBarrel>(*e, &world);
-        // destructor.add_element::<display::flag::Flag>(*e, &world);
+        destructor.add_element::<display::tank_body::TankBody>(*e, world);
+        destructor.add_element::<display::tank_turret::TankTurret>(*e, world);
+        destructor.add_element::<display::tank_barrel::TankBarrel>(*e, world);
+        // destructor.add_element::<display::flag::Flag>(*e, world);
     }
 
     // Add a sphere to the initial destructor.
     let sphere = world.add_entity();
     world.add_component(sphere, display::debug_sphere::DebugSphere::new());
     world.add_component(sphere, Pose::from_xyz(0.0, 0.0, 1.0));
-    destructor.add_element::<display::debug_sphere::DebugSphere>(sphere, &world);
+    destructor.add_element::<display::debug_sphere::DebugSphere>(sphere, world);
     world.remove_entity(sphere); // but not visualise it.
 
     // world.add_component(thingy, Pose::from_xyz(0.0, 0.0, 0.0));
@@ -125,30 +119,4 @@ pub fn populate_dev_world(world_systems: (&mut World, &mut Systems)) {
         }
     }
 
-    systems.add_system(Box::new(ClockSystem {}));
-    systems.add_system(Box::new(
-        systems::kinematics_differential_drive::KinematicsDifferentialDrive {},
-    ));
-    systems.add_system(Box::new(
-        systems::acceleration_velocity::AccelerationVelocity {},
-    ));
-    systems.add_system(Box::new(systems::velocity_pose::VelocityPose {}));
-    // systems.add_system(Box::new(systems::revolute_pose::RevolutePose {}));
-    systems.add_system(Box::new(systems::revolute_velocity::RevoluteVelocity {}));
-    systems.add_system(Box::new(systems::radar_scan::RadarScan {}));
-    systems.add_system(Box::new(systems::cannon_trigger::CannonTrigger {}));
-    // systems.add_system(Box::new(systems::projectile_floor::ProjectileFloor {}));
-    systems.add_system(Box::new(systems::projectile_hit::ProjectileHit {}));
-    systems.add_system(Box::new(systems::process_impact::ProcessImpact {}));
-    // Must go after the hit calculation.
-    systems.add_system(Box::new(systems::process_hit_by::ProcessHitBy {}));
-
-    systems.add_system(Box::new(systems::health_check::HealthCheck {}));
-    systems.add_system(Box::new(systems::destroy::Destroy {}));
-    // All handling of hits done with the projectiles still present.
-    // systems.add_system(Box::new(systems::health_tank_body::HealthTankBody {}));
-    systems.add_system(Box::new(systems::display_tank_tracks::DisplayTankTracks {}));
-    systems.add_system(Box::new(systems::function_pose::FunctionPose {}));
-    systems.add_system(Box::new(systems::expiry_check::ExpiryCheck {}));
-    systems.add_system(Box::new(systems::vehicle_control::VehicleControl {}));
 }
