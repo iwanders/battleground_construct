@@ -23,7 +23,7 @@ impl TankBody {
             height: 0.25,
             color: Color {
                 r: 0,
-                g: 255,
+                g: 20,
                 b: 0,
                 a: 255,
             },

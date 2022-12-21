@@ -1,9 +1,9 @@
 use crate::components;
 use crate::control;
 use crate::display;
-use crate::vehicles;
+use crate::units;
 
-use vehicles::tank::{spawn_tank, TankSpawnConfig};
+use units::tank::{spawn_tank, TankSpawnConfig};
 
 // This held the dev playground for the longest time.
 pub fn populate_dev_world(construct: &mut crate::Construct) {

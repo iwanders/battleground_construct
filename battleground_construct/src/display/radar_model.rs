@@ -26,7 +26,7 @@ impl RadarModel {
             color: Color {
                 r: 0,
                 g: 0,
-                b: 255,
+                b: 100,
                 a: 255,
             },
         }

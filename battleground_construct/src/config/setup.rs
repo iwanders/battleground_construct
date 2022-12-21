@@ -2,7 +2,7 @@ use crate::Construct;
 // use crate::components;
 use super::default;
 use super::specification;
-use crate::vehicles;
+use crate::units;
 
 pub fn setup_match(config: super::specification::ConstructConfig) -> Construct {
     let mut construct = Construct::new();
@@ -18,16 +18,28 @@ pub fn setup_match(config: super::specification::ConstructConfig) -> Construct {
     for spawn in config.spawn_config.spawns {
         match spawn.vehicle {
             specification::Vehicle::Tank => {
-                let tank_config = vehicles::tank::TankSpawnConfig {
+                let tank_config = units::tank::TankSpawnConfig {
                     x: spawn.x,
                     y: spawn.y,
                     yaw: spawn.yaw,
                     // controller: Box::new(control::tank_swivel_shoot::TankSwivelShoot {}),
                     controller: Box::new(crate::control::radar_draw::RadarDrawControl {}),
                 };
-                vehicles::tank::spawn_tank(world, tank_config);
+                units::tank::spawn_tank(world, tank_config);
             }
         }
+    }
+
+
+    match config.match_config.mode {
+        specification::MatchType::None => {},
+        specification::MatchType::DeathMatch => {},
+        specification::MatchType::KingOfTheHill{capture_points, point_limit} => {
+        },
+
+    }
+
+    if let Some(v) = config.match_config.time_limit {
     }
 
     construct

@@ -268,7 +268,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     world.add_component(
         flag_id,
-        display::flag::Flag::from_scale_color(0.5, display::Color::GREEN),
+        display::flag::Flag::from_scale_color(0.5, display::Color::RED),
     );
     world.add_component(flag_id, Parent::new(vehicle_id));
     tank_group_ids.push(flag_id);

@@ -34,8 +34,8 @@ impl Drawable for TankBarrel {
                 length: self.length,
             }),
             color: Color {
-                r: 255,
-                g: 191,
+                r: 200,
+                g: 100,
                 b: 0,
                 a: 255,
             },

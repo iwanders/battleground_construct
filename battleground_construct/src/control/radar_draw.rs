@@ -3,7 +3,7 @@ use battleground_vehicle_control::{Interface, VehicleControl};
 
 use crate::display::draw_module::LineSegment;
 use crate::util::cgmath::prelude::*;
-use crate::vehicles::tank;
+use crate::units::tank;
 use cgmath::vec3;
 
 pub struct RadarDrawControl {}

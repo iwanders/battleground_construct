@@ -6,7 +6,7 @@ pub mod control;
 pub mod display;
 pub mod systems;
 pub mod util;
-pub mod vehicles;
+pub mod units;
 
 mod construct;
 pub use construct::Construct;
