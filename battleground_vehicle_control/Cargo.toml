@@ -5,3 +5,9 @@ edition = "2021"
 
 [dependencies]
 log = "0.4.17"
+engine = {path="../engine/", optional=true}
+
+[features]
+default = []
+
+register_interface = ["engine"]

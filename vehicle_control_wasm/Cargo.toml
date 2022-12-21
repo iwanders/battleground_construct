@@ -8,6 +8,4 @@ crate-type = ["dylib", "rlib"]
 
 [dependencies]
 battleground_vehicle_control = { path = "../battleground_vehicle_control" }
-engine = { path = "../engine" }
-battleground_construct = { path = "../battleground_construct" }
 wasmtime = "3.0.1"

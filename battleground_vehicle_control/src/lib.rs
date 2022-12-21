@@ -3,6 +3,11 @@
 #[cfg(target_arch = "wasm32")]
 pub mod wasm_interface;
 
+// The register interface is used as the default implementation of the [`Interface`] trait, used by
+// both the wasm control and native control.
+#[cfg(feature = "register_interface")]
+pub mod register_interface;
+
 pub use log;
 
 /// Plugins will provide a function of this signature.
