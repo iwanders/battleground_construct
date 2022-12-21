@@ -10,10 +10,15 @@ spawn_config:
       x: 2.0
       y: 0.0
       yaw: 3.14
+      controller:
+        type: SwivelShoot
     -
       x: -2.0
       y: 0.0
       yaw: 0
+      controller: 
+        type: Wasm
+        module: "../target/wasm32-unknown-unknown/release/example_driving_ai.wasm"
 
     -
       x: 0.0

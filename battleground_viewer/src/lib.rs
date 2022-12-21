@@ -194,7 +194,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let construct = if args.len() > 1 {
         let path = args.nth(1).unwrap();
         let config = battleground_construct::config::reader::read_match_config(&path)?;
-        battleground_construct::config::setup::setup_match(config)
+        battleground_construct::config::setup::setup_match(config)?
     } else {
         let mut construct = Construct::new();
         battleground_construct::config::playground::populate_dev_world(&mut construct);

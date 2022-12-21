@@ -5,8 +5,8 @@ pub mod config;
 pub mod control;
 pub mod display;
 pub mod systems;
-pub mod util;
 pub mod units;
+pub mod util;
 
 mod construct;
 pub use construct::Construct;

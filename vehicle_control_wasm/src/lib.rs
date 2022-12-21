@@ -7,7 +7,7 @@ struct State {
     register_interface: RegisterInterface,
 }
 
-struct VehicleControlWasm {
+pub struct VehicleControlWasm {
     // engine: Engine,
     instance: Instance,
     store: Store<State>,
@@ -16,9 +16,8 @@ struct VehicleControlWasm {
 unsafe impl std::marker::Send for VehicleControlWasm {}
 
 impl VehicleControlWasm {
-    fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let serialized_module_file =
-            "../target/wasm32-unknown-unknown/release/example_driving_ai.wasm";
+    pub fn new(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        let serialized_module_file = path;
         let mut config = wasmtime::Config::default();
         config.consume_fuel(true);
         config.debug_info(true);
@@ -411,5 +410,8 @@ impl VehicleControl for VehicleControlWasm {
 
 #[no_mangle]
 pub fn create_ai() -> Box<dyn VehicleControl> {
-    Box::new(VehicleControlWasm::new().unwrap())
+    Box::new(
+        VehicleControlWasm::new("../target/wasm32-unknown-unknown/release/example_driving_ai.wasm")
+            .unwrap(),
+    )
 }

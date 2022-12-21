@@ -49,15 +49,21 @@ pub struct Team {
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[serde(tag = "type")]
 pub enum ControllerType {
     #[default]
     None,
+    SwivelShoot,
     LibraryLoad {
         name: String,
     },
     ForwardBackward {
         velocities: (f32, f32),
         duration: f32,
+    },
+    #[cfg(feature = "vehicle_control_wasm")]
+    Wasm {
+        module: String,
     },
     #[serde(skip)]
     Function(battleground_vehicle_control::ControllerSpawn),
