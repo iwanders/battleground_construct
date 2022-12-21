@@ -1,6 +1,6 @@
 use engine::prelude::*;
 
-/// Velocity expressed in body frame (in all cases).
+/// Velocity expressed in body frame in most cases.
 #[derive(Copy, Debug, Clone)]
 pub struct Velocity {
     /// Translation component.

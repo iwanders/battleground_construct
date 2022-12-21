@@ -1,8 +1,9 @@
-
 use std::fs::File;
 use std::io::Read;
 
-pub fn load_match_config(path: &str) -> Result<super::specification::ConstructConfig, Box<dyn std::error::Error>> {
+pub fn read_match_config(
+    path: &str,
+) -> Result<super::specification::ConstructConfig, Box<dyn std::error::Error>> {
     match File::open(path) {
         Ok(mut file) => {
             let mut content = String::new();
@@ -16,8 +17,6 @@ pub fn load_match_config(path: &str) -> Result<super::specification::ConstructCo
                 }
             }
         }
-        Err(error) => {
-            Err(Box::new(error))
-        }
+        Err(error) => Err(Box::new(error)),
     }
 }

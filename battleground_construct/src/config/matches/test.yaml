@@ -1,0 +1,16 @@
+  
+spawn_config:
+  teams:
+    -
+      name: Alpha
+    -
+      name: Bravo
+  spawns:
+    -
+      x: 0.0
+      y: 0.0
+      yaw: 3.14
+    -
+      x: -2.0
+      y: 0.0
+      yaw: 0

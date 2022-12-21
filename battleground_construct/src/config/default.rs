@@ -1,6 +1,6 @@
-use engine::*;
 use crate::components;
 use crate::systems;
+use engine::*;
 
 pub fn add_components(world: &mut World) {
     // The clock... is kinda important.
@@ -11,8 +11,6 @@ pub fn add_components(world: &mut World) {
     let floor_id = world.add_entity();
     world.add_component(floor_id, components::pose::Pose::new());
     world.add_component(floor_id, components::hit_plane::HitPlane::new());
-
-
 }
 
 pub fn add_systems(systems: &mut Systems) {

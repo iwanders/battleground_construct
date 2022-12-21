@@ -1,11 +1,10 @@
-
 use crate::components;
 use engine::prelude::*;
 use engine::Systems;
 
 pub struct Construct {
-    world: World,
-    systems: Systems,
+    pub world: World,
+    pub systems: Systems,
 }
 
 #[allow(clippy::new_without_default)]
@@ -14,10 +13,6 @@ impl Construct {
         let world = World::new();
         let systems = engine::Systems::new();
         Construct { world, systems }
-    }
-
-    pub fn world_systems(&mut self) -> (&mut World, &mut Systems) {
-        (&mut self.world, &mut self.systems)
     }
 
     pub fn update(&mut self) {
@@ -37,7 +32,7 @@ impl Construct {
             .world
             .component_iter_mut::<crate::components::clock::Clock>()
             .next()
-            .expect("Should have one clock");
+            .expect("should have a clock, are default components added?");
         clock.elapsed_as_f32()
     }
 }

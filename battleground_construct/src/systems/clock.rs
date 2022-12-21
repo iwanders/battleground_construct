@@ -1,5 +1,5 @@
-use engine::prelude::*;
 use crate::components::clock::Clock;
+use engine::prelude::*;
 pub struct ClockSystem {}
 impl System for ClockSystem {
     fn update(&mut self, world: &mut World) {

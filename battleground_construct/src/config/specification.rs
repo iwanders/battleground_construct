@@ -1,13 +1,26 @@
+/*
+struct ClockConfig {
+    pub step: f32,
+}
 
+#[derive(Default)]
+struct ComponentConfig {
+    clock: Option<ClockConfig>,
+    radar: Option<crate::components::radar::Radar>,
+    controller: Option<ControllerConfig>
+    // ...
+}
+// Lets not over-engineer this from the get-go.
+*/
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Copy, Default, Clone)]
 pub struct CapturePoint {
-    position: (f32, f32),
-    radius: f32,
-    capture_speed: f32,
-    capture_acrue: f32,
-    initial_team: Option<usize>,
+    pub position: (f32, f32),
+    pub radius: f32,
+    pub capture_speed: f32,
+    pub capture_acrue: f32,
+    pub initial_team: Option<usize>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -23,14 +36,15 @@ pub enum MatchType {
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct MatchConfig {
-    mode: MatchType,
-    time_limit: Option<f32>,
+    #[serde(default)]
+    pub mode: MatchType,
+    pub time_limit: Option<f32>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct Team {
     /// Team name
-    name: String,
+    pub name: String,
     // color: (f32, f32, f32),
 }
 
@@ -57,24 +71,28 @@ pub enum Vehicle {
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct Spawn {
-    team: usize,
-    vehicle: Vehicle,
-    position: (f32, f32),
-    orientation: f32,
-    controller: ControllerType,
+    pub team: Option<usize>,
+    #[serde(default)]
+    pub vehicle: Vehicle,
+    pub x: f32,
+    pub y: f32,
+    pub yaw: f32,
+    #[serde(default)]
+    pub controller: ControllerType,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct SpawnConfig {
-    teams: Vec<Team>,
-    spawn: Vec<Spawn>,
+    pub teams: Vec<Team>,
+    pub spawns: Vec<Spawn>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct ConstructConfig {
     /// Denotes the match specification.
-    match_config: MatchConfig,
+    #[serde(default)]
+    pub match_config: MatchConfig,
 
     /// Spawn of vehicles.
-    spawn_config: SpawnConfig,
+    pub spawn_config: SpawnConfig,
 }

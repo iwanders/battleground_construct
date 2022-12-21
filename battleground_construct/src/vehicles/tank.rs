@@ -101,7 +101,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     register_interface.get_mut().add_module(
         "clock",
         CLOCK_MODULE,
-        components::clock::ClockReader::new(),
+        components::clock::ClockModule::new(),
     );
 
     register_interface.get_mut().add_module(

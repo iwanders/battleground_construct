@@ -2,15 +2,13 @@ use crate::components;
 use crate::control;
 use crate::display;
 use crate::vehicles;
-// use crate::ClockSystem;
-use engine::{Systems, World};
 
 use vehicles::tank::{spawn_tank, TankSpawnConfig};
 
 // This held the dev playground for the longest time.
-pub fn populate_dev_world(world_systems: (&mut World, &mut Systems)) {
-    let world = world_systems.0;
-    let systems = world_systems.1;
+pub fn populate_dev_world(construct: &mut crate::Construct) {
+    let world = &mut construct.world;
+    let systems = &mut construct.systems;
 
     super::default::add_components(world);
     super::default::add_systems(systems);
@@ -118,5 +116,4 @@ pub fn populate_dev_world(world_systems: (&mut World, &mut Systems)) {
             );
         }
     }
-
 }

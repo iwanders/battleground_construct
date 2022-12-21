@@ -1,3 +1,3 @@
-fn main() {
-    battleground_viewer::main();
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    battleground_viewer::main()
 }

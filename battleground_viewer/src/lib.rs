@@ -188,11 +188,21 @@ impl ConstructViewer {
     }
 }
 
-pub fn main() {
-    let mut construct = Construct::new();
-    battleground_construct::config::playground::populate_dev_world(construct.world_systems());
+pub fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut args = std::env::args();
+
+    let construct = if args.len() > 1 {
+        let path = args.nth(1).unwrap();
+        let config = battleground_construct::config::reader::read_match_config(&path)?;
+        battleground_construct::config::setup::setup_match(config)
+    } else {
+        let mut construct = Construct::new();
+        battleground_construct::config::playground::populate_dev_world(&mut construct);
+        construct
+    };
     let viewer = ConstructViewer::new(construct);
 
     // view loop consumes the viewer... :|
     viewer.view_loop();
+    Ok(())
 }
