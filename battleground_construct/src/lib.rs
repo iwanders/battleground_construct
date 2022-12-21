@@ -19,8 +19,8 @@ pub struct Construct {
 #[allow(clippy::new_without_default)]
 impl Construct {
     pub fn new() -> Self {
-        let mut world = World::new();
-        let mut systems = engine::Systems::new();
+        let world = World::new();
+        let systems = engine::Systems::new();
         Construct { world, systems }
     }
 
@@ -50,21 +50,3 @@ impl Construct {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_things() {
-        let mut construct = Construct::new();
-        construct.update();
-        construct.update();
-        construct.update();
-        let (_entity, clock) = construct
-            .world()
-            .component_iter_mut::<Clock>()
-            .next()
-            .expect("Should have one clock");
-        assert_eq!(clock.elapsed_as_f32(), clock.step_as_f32() * 3.0);
-    }
-}
