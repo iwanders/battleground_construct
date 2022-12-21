@@ -1,22 +1,10 @@
 use engine::prelude::*;
 
-/*
-let vehicle_interface;
-vehicle_interface.add_module::<DiffDriveBase>("base", tank_entity);
-vehicle_interface.add_module::<Revolute>("turret", turret_entity);
-vehicle_interface.add_module::<Revolute>("barrel", barrel);
-vehicle_interface.add_module::<Cannon>("cannon", cannon_entity);
-world.add_component(tank_entity, vehicle_control);
+// Most modules look to this file for the VehicleModule and Register objects.
+pub use battleground_vehicle_control::register_interface::{
+    Register, RegisterInterface, RegisterMap, VehicleModule,
+};
 
-// then, in system:
-// update vehicle interface.
-// run vehicle control
-// write vehicle interface back to components.
-
-
-*/
-
-pub use battleground_vehicle_control::register_interface::{RegisterInterface, Register, RegisterMap, VehicleModule};
 // We need interior mutability here because the register things take the entire world as mutable.
 use std::cell::RefCell;
 use std::cell::RefMut;

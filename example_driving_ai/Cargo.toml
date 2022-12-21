@@ -8,5 +8,7 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 battleground_vehicle_control = { path = "../battleground_vehicle_control" }
+
+# This is really a bit of a hack to easily be able to reuse the controllers there for testing here.
 battleground_construct = { path = "../battleground_construct" }
 

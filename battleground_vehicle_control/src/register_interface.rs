@@ -165,10 +165,7 @@ impl RegisterInterface {
     }
 
     /// Copy all registers from the interface to self.
-    pub fn read_interface(
-        &mut self,
-        interface: &dyn crate::Interface,
-    ) -> Result<(), crate::Error> {
+    pub fn read_interface(&mut self, interface: &dyn crate::Interface) -> Result<(), crate::Error> {
         self.modules.clear();
         for module in interface.modules()? {
             let name = interface.module_name(module)?;
@@ -257,10 +254,7 @@ impl RegisterInterface {
         }
     }
 
-    fn get_module_mut(
-        &mut self,
-        module: ModuleId,
-    ) -> Result<&mut Module, crate::Error> {
+    fn get_module_mut(&mut self, module: ModuleId) -> Result<&mut Module, crate::Error> {
         if let Some(m) = self.modules.get_mut(&module) {
             Ok(m)
         } else {
@@ -341,11 +335,7 @@ impl crate::Interface for RegisterInterface {
     }
 
     /// Retrieve a register name
-    fn register_name(
-        &self,
-        module: u32,
-        register: u32,
-    ) -> Result<String, crate::Error> {
+    fn register_name(&self, module: u32, register: u32) -> Result<String, crate::Error> {
         let r = self.get_register(module, register)?;
         Ok(r.name.clone())
     }
@@ -355,8 +345,7 @@ impl crate::Interface for RegisterInterface {
         &self,
         module: u32,
         register: u32,
-    ) -> Result<crate::RegisterType, crate::Error>
-    {
+    ) -> Result<crate::RegisterType, crate::Error> {
         let r = self.get_register(module, register)?;
         Ok(match &r.value {
             Value::I32(..) => crate::RegisterType::I32,
@@ -366,11 +355,7 @@ impl crate::Interface for RegisterInterface {
     }
 
     /// Get an f32 register.
-    fn get_f32(
-        &self,
-        module: u32,
-        register: u32,
-    ) -> Result<f32, crate::Error> {
+    fn get_f32(&self, module: u32, register: u32) -> Result<f32, crate::Error> {
         let r = self.get_register(module, register)?;
         match r.value {
             Value::F32(v) => Ok(v),
@@ -382,11 +367,7 @@ impl crate::Interface for RegisterInterface {
         }
     }
     /// Get an u32 register.
-    fn get_i32(
-        &self,
-        module: u32,
-        register: u32,
-    ) -> Result<i32, crate::Error> {
+    fn get_i32(&self, module: u32, register: u32) -> Result<i32, crate::Error> {
         let r = self.get_register(module, register)?;
         match r.value {
             Value::I32(v) => Ok(v),
@@ -399,12 +380,7 @@ impl crate::Interface for RegisterInterface {
     }
 
     /// Set an f32 register.
-    fn set_f32(
-        &mut self,
-        module: u32,
-        register: u32,
-        value: f32,
-    ) -> Result<f32, crate::Error> {
+    fn set_f32(&mut self, module: u32, register: u32, value: f32) -> Result<f32, crate::Error> {
         let r = self.get_register_mut(module, register)?;
         match &mut r.value {
             Value::F32(v) => {
@@ -421,12 +397,7 @@ impl crate::Interface for RegisterInterface {
     }
 
     /// Set an i32 register.
-    fn set_i32(
-        &mut self,
-        module: u32,
-        register: u32,
-        value: i32,
-    ) -> Result<i32, crate::Error> {
+    fn set_i32(&mut self, module: u32, register: u32, value: i32) -> Result<i32, crate::Error> {
         let r = self.get_register_mut(module, register)?;
         match &mut r.value {
             Value::I32(v) => {
@@ -443,11 +414,7 @@ impl crate::Interface for RegisterInterface {
     }
 
     /// Get the length required to read a byte register.
-    fn get_bytes_len(
-        &self,
-        module: u32,
-        register: u32,
-    ) -> Result<usize, crate::Error> {
+    fn get_bytes_len(&self, module: u32, register: u32) -> Result<usize, crate::Error> {
         let r = self.get_register(module, register)?;
         match &r.value {
             Value::Bytes { values, .. } => Ok(values.len()),

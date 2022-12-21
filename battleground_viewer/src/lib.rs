@@ -189,7 +189,8 @@ impl ConstructViewer {
 }
 
 pub fn main() {
-    let construct = Construct::new();
+    let mut construct = Construct::new();
+    battleground_construct::config::playground::populate_dev_world(construct.world_systems());
     let viewer = ConstructViewer::new(construct);
 
     // view loop consumes the viewer... :|
