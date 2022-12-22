@@ -1,7 +1,5 @@
-use log;
-
 // https://stackoverflow.com/a/40234666
-macro_rules! function {
+macro_rules! _function {
     () => {{
         fn f() {}
         fn type_name_of<T>(_: T) -> &'static str {
@@ -116,7 +114,7 @@ mod interface {
 
     fn read_from_buffer_u32(count: u32) -> Vec<u32> {
         let mut res = vec![];
-        let mut buffer = BUFFER.lock().expect("cannot be poisoned");
+        let buffer = BUFFER.lock().expect("cannot be poisoned");
         for i in 0..count {
             let mut b = [0u8; 4];
             b[..].copy_from_slice(&buffer[4 * i as usize..(i as usize + 1) * 4]);
@@ -126,7 +124,7 @@ mod interface {
     }
 
     fn read_from_buffer_string(length: u32) -> String {
-        let mut buffer = BUFFER.lock().expect("cannot be poisoned");
+        let buffer = BUFFER.lock().expect("cannot be poisoned");
         match String::from_utf8(buffer[0..length as usize].to_vec()) {
             Ok(v) => v,
             Err(_) => {
@@ -278,7 +276,7 @@ mod logging {
 
         fn log(&self, record: &Record) {
             if self.enabled(record.metadata()) {
-                let z = format!("{} - {}", record.level(), record.args()).to_string();
+                let z = format!("{} - {}", record.level(), record.args());
                 unsafe {
                     wasm_log_record(&z.as_bytes()[0] as *const u8, z.len() as u32);
                 }

@@ -103,10 +103,10 @@ impl World {
     }
 
     pub fn add_component<C: Component + 'static>(&mut self, entity: EntityId, component: C) {
-        self.add_boxed_component(entity, Box::new(component));
+        self.add_component_boxed(entity, Box::new(component));
     }
 
-    pub fn add_boxed_component<C: Component + 'static>(
+    pub fn add_component_boxed<C: Component + 'static>(
         &mut self,
         entity: EntityId,
         component: Box<C>,
@@ -177,7 +177,7 @@ impl World {
     pub fn move_component<C: Component + 'static>(&mut self, src: EntityId, dst: EntityId) {
         let v = self.remove_component::<C>(src);
         if let Some(v) = v {
-            self.add_boxed_component(dst, v);
+            self.add_component_boxed(dst, v);
         }
     }
 

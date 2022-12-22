@@ -167,10 +167,16 @@ impl System for ProjectileHit {
 
             // Copy the bullet trail.
             let emitter_id = world.add_entity();
-            world.move_component::<super::display::particle_emitter::ParticleEmitter>(
-                v.projectile,
-                emitter_id,
-            );
+            let emitter = world
+                .remove_component::<super::display::particle_emitter::ParticleEmitter>(
+                    v.projectile,
+                );
+            // Disable the particle emitter.
+            if let Some(mut emitter) = emitter {
+                emitter.emitting = false;
+                world.add_component_boxed(emitter_id, emitter);
+            }
+
             world.add_component(emitter_id, super::components::expiry::Expiry::lifetime(5.0));
         }
     }
