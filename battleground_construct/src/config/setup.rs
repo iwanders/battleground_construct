@@ -43,7 +43,7 @@ pub fn setup_match(
                     x: spawn.x,
                     y: spawn.y,
                     yaw: spawn.yaw,
-                    controller: controller,
+                    controller,
                 };
                 units::tank::spawn_tank(world, tank_config);
             }
@@ -54,12 +54,12 @@ pub fn setup_match(
         specification::MatchType::None => {}
         specification::MatchType::DeathMatch => {}
         specification::MatchType::KingOfTheHill {
-            capture_points,
-            point_limit,
+            capture_points: _,
+            point_limit: _,
         } => {}
     }
 
-    if let Some(v) = config.match_config.time_limit {}
+    if let Some(_v) = config.match_config.time_limit {}
 
     Ok(construct)
 }
