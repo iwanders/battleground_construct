@@ -1,5 +1,5 @@
 use crate::display::primitives::*;
-use battleground_vehicle_control::{Interface, VehicleControl};
+use battleground_unit_control::{Interface, VehicleControl};
 
 use crate::display::draw_module::LineSegment;
 use crate::units::tank;

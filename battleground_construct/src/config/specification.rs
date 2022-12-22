@@ -61,12 +61,12 @@ pub enum ControllerType {
         velocities: (f32, f32),
         duration: f32,
     },
-    #[cfg(feature = "vehicle_control_wasm")]
+    #[cfg(feature = "unit_control_wasm")]
     Wasm {
         module: String,
     },
     #[serde(skip)]
-    Function(battleground_vehicle_control::ControllerSpawn),
+    Function(battleground_unit_control::ControllerSpawn),
 }
 
 #[derive(Serialize, Deserialize, Debug, Copy, Default, Clone)]

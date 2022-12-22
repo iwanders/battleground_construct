@@ -1,5 +1,5 @@
 use engine::prelude::*;
-pub type VehicleControlStorage = std::rc::Rc<Box<dyn battleground_vehicle_control::VehicleControl>>;
+pub type VehicleControlStorage = std::rc::Rc<Box<dyn battleground_unit_control::VehicleControl>>;
 
 #[derive(Clone)]
 pub struct VehicleController {
@@ -25,7 +25,7 @@ impl VehicleController {
         self.last_update = time;
     }
 
-    pub fn vehicle_control(&mut self) -> &mut dyn battleground_vehicle_control::VehicleControl {
+    pub fn vehicle_control(&mut self) -> &mut dyn battleground_unit_control::VehicleControl {
         use std::ops::DerefMut;
         std::rc::Rc::get_mut(&mut self.vehicle_control)
             .expect("Should be exclusive")

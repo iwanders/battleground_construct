@@ -15,4 +15,4 @@ rand = "0.8.5"
 rand_distr = "0.4.3"
 
 [features]
-vehicle_control_wasm = ["battleground_construct/vehicle_control_wasm"]
+unit_control_wasm = ["battleground_construct/unit_control_wasm"]

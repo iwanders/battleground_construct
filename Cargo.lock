@@ -142,7 +142,7 @@ checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 name = "battleground_construct"
 version = "0.1.0"
 dependencies = [
- "battleground_vehicle_control",
+ "battleground_unit_control",
  "cgmath",
  "engine",
  "libloading",
@@ -150,11 +150,11 @@ dependencies = [
  "rand_chacha",
  "serde",
  "serde_yaml",
- "vehicle_control_wasm",
+ "unit_control_wasm",
 ]
 
 [[package]]
-name = "battleground_vehicle_control"
+name = "battleground_unit_control"
 version = "0.1.0"
 dependencies = [
  "engine",
@@ -801,7 +801,7 @@ dependencies = [
 name = "example_driving_ai"
 version = "0.1.0"
 dependencies = [
- "battleground_vehicle_control",
+ "battleground_unit_control",
 ]
 
 [[package]]
@@ -2124,6 +2124,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0edd1e5b14653f783770bce4a4dabb4a5108a5370a5f5d8cfe8710c361f6c8b"
 
 [[package]]
+name = "unit_control_wasm"
+version = "0.1.0"
+dependencies = [
+ "battleground_unit_control",
+ "wasmtime",
+]
+
+[[package]]
 name = "unsafe-libyaml"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2134,14 +2142,6 @@ name = "vec_map"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
-
-[[package]]
-name = "vehicle_control_wasm"
-version = "0.1.0"
-dependencies = [
- "battleground_vehicle_control",
- "wasmtime",
-]
 
 [[package]]
 name = "version_check"

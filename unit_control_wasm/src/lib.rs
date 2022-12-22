@@ -1,5 +1,5 @@
-use battleground_vehicle_control::register_interface::RegisterInterface;
-use battleground_vehicle_control::{Interface, InterfaceError, VehicleControl};
+use battleground_unit_control::register_interface::RegisterInterface;
+use battleground_unit_control::{Interface, InterfaceError, VehicleControl};
 
 use wasmtime::{Caller, Engine, Extern, Instance, Linker, Module, Store, TypedFunc};
 

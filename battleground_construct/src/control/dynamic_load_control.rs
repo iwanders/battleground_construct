@@ -1,4 +1,4 @@
-use battleground_vehicle_control::{ControllerSpawn, Interface, VehicleControl};
+use battleground_unit_control::{ControllerSpawn, Interface, VehicleControl};
 pub struct DynamicLoadControl {
     _lib: libloading::Library,
     controller: Option<Box<dyn VehicleControl>>,

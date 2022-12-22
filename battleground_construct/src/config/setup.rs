@@ -4,7 +4,7 @@ use super::default;
 use super::specification;
 use crate::control;
 use crate::units;
-use battleground_vehicle_control::VehicleControl;
+use battleground_unit_control::VehicleControl;
 
 pub fn setup_match(
     config: super::specification::ConstructConfig,
@@ -28,9 +28,9 @@ pub fn setup_match(
             specification::ControllerType::LibraryLoad { name } => {
                 control::dynamic_load_control::DynamicLoadControl::new(&name)?
             }
-            #[cfg(feature = "vehicle_control_wasm")]
+            #[cfg(feature = "unit_control_wasm")]
             specification::ControllerType::Wasm { module } => {
-                Box::new(vehicle_control_wasm::VehicleControlWasm::new(&module)?)
+                Box::new(unit_control_wasm::VehicleControlWasm::new(&module)?)
             }
 
             _ => {

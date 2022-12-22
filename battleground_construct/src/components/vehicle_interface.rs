@@ -1,7 +1,7 @@
 use engine::prelude::*;
 
 // Most modules look to this file for the VehicleModule and Register objects.
-pub use battleground_vehicle_control::register_interface::{
+pub use battleground_unit_control::register_interface::{
     Register, RegisterInterface, RegisterMap, VehicleModule,
 };
 

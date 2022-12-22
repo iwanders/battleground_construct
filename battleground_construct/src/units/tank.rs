@@ -18,7 +18,7 @@ pub struct TankSpawnConfig {
     pub x: f32,
     pub y: f32,
     pub yaw: f32,
-    pub controller: Box<dyn battleground_vehicle_control::VehicleControl>,
+    pub controller: Box<dyn battleground_unit_control::VehicleControl>,
 }
 
 fn cannon_function(world: &mut World, cannon_entity: EntityId) {

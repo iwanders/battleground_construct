@@ -1,5 +1,5 @@
 [package]
-name = "vehicle_control_wasm"
+name = "unit_control_wasm"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,5 +7,5 @@ edition = "2021"
 crate-type = ["dylib", "rlib"]
 
 [dependencies]
-battleground_vehicle_control = { path = "../battleground_vehicle_control" }
+battleground_unit_control = { path = "../battleground_unit_control" }
 wasmtime = "3.0.1"

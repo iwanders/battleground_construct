@@ -1,5 +1,5 @@
 [package]
-name = "battleground_vehicle_control"
+name = "battleground_unit_control"
 version = "0.1.0"
 edition = "2021"
 
