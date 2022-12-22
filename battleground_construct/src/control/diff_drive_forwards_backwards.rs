@@ -1,4 +1,4 @@
-use battleground_unit_control::{Interface, VehicleControl};
+use battleground_unit_control::{Interface, UnitControl};
 
 use crate::units::tank;
 
@@ -8,7 +8,7 @@ pub struct DiffDriveForwardsBackwardsControl {
     pub duration: f32,
 }
 
-impl VehicleControl for DiffDriveForwardsBackwardsControl {
+impl UnitControl for DiffDriveForwardsBackwardsControl {
     fn update(&mut self, interface: &mut dyn Interface) {
         let revolve_cmd_vel = 4;
         let clock = interface.get_f32(tank::CLOCK_MODULE, 0).unwrap();

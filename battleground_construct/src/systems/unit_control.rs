@@ -1,9 +1,9 @@
-use super::components::vehicle_controller::VehicleController;
+use super::components::unit_controller::UnitController;
 use super::Clock;
 use engine::prelude::*;
 
-pub struct VehicleControl {}
-impl System for VehicleControl {
+pub struct UnitControl {}
+impl System for UnitControl {
     fn update(&mut self, world: &mut World) {
         let time = world
             .component_iter_mut::<Clock>()
@@ -13,13 +13,13 @@ impl System for VehicleControl {
             .elapsed_as_f32();
 
         // First, collect the interfaces.
-        use crate::components::vehicle_interface::RegisterInterfaceContainer;
+        use crate::components::unit_interface::RegisterInterfaceContainer;
         use std::collections::HashMap;
 
         // We only want to update the interfaces when the controller actually needs an update.
         // Otherwise we risk modifying components that should only be modified by the controller.
         let should_update = world
-            .component_iter::<VehicleController>()
+            .component_iter::<UnitController>()
             .filter(|(_e, c)| c.should_update(time))
             .map(|(e, _c)| e)
             .collect::<std::collections::HashSet<EntityId>>();
@@ -39,7 +39,7 @@ impl System for VehicleControl {
         }
 
         // Run all vehicle controls, these ONLY work on interfaces.
-        for (entity, mut controller) in world.component_iter_mut::<VehicleController>() {
+        for (entity, mut controller) in world.component_iter_mut::<UnitController>() {
             if let Some(interface) = interface_map.get_mut(&entity) {
                 let control = controller.vehicle_control();
                 control.update(&mut *interface.get_mut());

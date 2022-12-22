@@ -1,4 +1,4 @@
-use battleground_unit_control::{log, Interface, RegisterType, VehicleControl};
+use battleground_unit_control::{log, Interface, RegisterType, UnitControl};
 
 #[derive(Default)]
 pub struct SimpleVehicleControl {}
@@ -9,7 +9,7 @@ impl SimpleVehicleControl {
     }
 }
 
-impl VehicleControl for SimpleVehicleControl {
+impl UnitControl for SimpleVehicleControl {
     fn update(&mut self, interface: &mut dyn Interface) {
         log::info!("We got called");
 
@@ -66,7 +66,7 @@ impl VehicleControl for SimpleVehicleControl {
 
 #[no_mangle]
 #[cfg(target_arch = "wasm32")]
-pub fn create_vehicle_control() -> Box<dyn VehicleControl> {
+pub fn create_unit_control() -> Box<dyn UnitControl> {
     // Box::new(battleground_construct::control::radar_draw::RadarDrawControl{})
     // Box::new(battleground_construct::control::tank_swivel_shoot::TankSwivelShoot {})
     Box::new(SimpleVehicleControl::new())

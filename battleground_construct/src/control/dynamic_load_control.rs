@@ -1,7 +1,7 @@
-use battleground_unit_control::{ControllerSpawn, Interface, VehicleControl};
+use battleground_unit_control::{ControllerSpawn, Interface, UnitControl};
 pub struct DynamicLoadControl {
     _lib: libloading::Library,
-    controller: Option<Box<dyn VehicleControl>>,
+    controller: Option<Box<dyn UnitControl>>,
 }
 
 impl DynamicLoadControl {
@@ -18,7 +18,7 @@ impl DynamicLoadControl {
     }
 }
 
-impl VehicleControl for DynamicLoadControl {
+impl UnitControl for DynamicLoadControl {
     fn update(&mut self, interface: &mut dyn Interface) {
         self.controller.as_mut().unwrap().update(interface);
     }

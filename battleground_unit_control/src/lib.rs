@@ -11,7 +11,7 @@ pub mod register_interface;
 pub use log;
 
 /// Plugins will provide a function of this signature.
-pub type ControllerSpawn = fn() -> Box<dyn VehicleControl>;
+pub type ControllerSpawn = fn() -> Box<dyn UnitControl>;
 
 /// Error type used.
 pub type Error = Box<InterfaceError>;
@@ -36,7 +36,7 @@ impl TryFrom<u32> for RegisterType {
     }
 }
 
-/// Interface to control the vehicle, the ai uses this to interact with the vehicle.
+/// Interface to control the unit, the ai uses this to interact with the unit.
 pub trait Interface {
     /// Retrieve the list of module ids that are available.
     fn modules(&self) -> Result<Vec<u32>, Error>;
@@ -76,8 +76,8 @@ pub trait Interface {
     fn set_bytes(&mut self, module: u32, register: u32, values: &[u8]) -> Result<(), Error>;
 }
 
-/// The vehicle ai should implement this trait. Update gets called periodically.
-pub trait VehicleControl {
+/// The unit ai should implement this trait. Update gets called periodically.
+pub trait UnitControl {
     fn update(&mut self, interface: &mut dyn Interface);
 }
 

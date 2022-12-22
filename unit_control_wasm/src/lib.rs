@@ -1,5 +1,5 @@
 use battleground_unit_control::register_interface::RegisterInterface;
-use battleground_unit_control::{Interface, InterfaceError, VehicleControl};
+use battleground_unit_control::{Interface, InterfaceError, UnitControl};
 
 use wasmtime::{Caller, Engine, Extern, Instance, Linker, Module, Store, TypedFunc};
 
@@ -7,15 +7,15 @@ struct State {
     register_interface: RegisterInterface,
 }
 
-pub struct VehicleControlWasm {
+pub struct UnitControlWasm {
     // engine: Engine,
     instance: Instance,
     store: Store<State>,
 }
 // Is this ok..?
-unsafe impl std::marker::Send for VehicleControlWasm {}
+unsafe impl std::marker::Send for UnitControlWasm {}
 
-impl VehicleControlWasm {
+impl UnitControlWasm {
     pub fn new(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let serialized_module_file = path;
         let mut config = wasmtime::Config::default();
@@ -359,7 +359,7 @@ impl VehicleControlWasm {
         let wasm_setup_fun = wasm_setup.typed::<(), (), _>(&store)?;
         wasm_setup_fun.call(&mut store, ())?;
 
-        Ok(VehicleControlWasm {
+        Ok(UnitControlWasm {
             // engine,
             store,
             instance,
@@ -367,7 +367,7 @@ impl VehicleControlWasm {
     }
 }
 
-impl VehicleControl for VehicleControlWasm {
+impl UnitControl for UnitControlWasm {
     fn update(&mut self, interface: &mut dyn Interface) {
         // Clunky, but ah well... interface can't outlive this scope, so setting functions here that
         // use it doesn't work. Instead, copy the interface's state completely.
@@ -409,9 +409,9 @@ impl VehicleControl for VehicleControlWasm {
 }
 
 #[no_mangle]
-pub fn create_ai() -> Box<dyn VehicleControl> {
+pub fn create_ai() -> Box<dyn UnitControl> {
     Box::new(
-        VehicleControlWasm::new("../target/wasm32-unknown-unknown/release/example_driving_ai.wasm")
+        UnitControlWasm::new("../target/wasm32-unknown-unknown/release/example_driving_ai.wasm")
             .unwrap(),
     )
 }

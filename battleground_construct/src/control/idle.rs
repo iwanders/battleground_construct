@@ -1,6 +1,6 @@
-use battleground_unit_control::{Interface, VehicleControl};
+use battleground_unit_control::{Interface, UnitControl};
 
 pub struct Idle {}
-impl VehicleControl for Idle {
+impl UnitControl for Idle {
     fn update(&mut self, _interface: &mut dyn Interface) {}
 }

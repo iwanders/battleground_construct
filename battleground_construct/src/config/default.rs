@@ -38,5 +38,5 @@ pub fn add_systems(systems: &mut Systems) {
     systems.add_system(Box::new(systems::display_tank_tracks::DisplayTankTracks {}));
     systems.add_system(Box::new(systems::function_pose::FunctionPose {}));
     systems.add_system(Box::new(systems::expiry_check::ExpiryCheck {}));
-    systems.add_system(Box::new(systems::vehicle_control::VehicleControl {}));
+    systems.add_system(Box::new(systems::unit_control::UnitControl {}));
 }

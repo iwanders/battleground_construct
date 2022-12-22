@@ -25,7 +25,7 @@ pub extern "C" fn wasm_controller_update() {
 
 pub mod controller {
     extern "Rust" {
-        fn create_vehicle_control() -> Box<dyn VehicleControl>;
+        fn create_unit_control() -> Box<dyn UnitControl>;
     }
     use crate::*;
 
@@ -33,7 +33,7 @@ pub mod controller {
     // threaded.
     use std::ops::DerefMut;
     use std::sync::Mutex;
-    struct ControllerWrapper(Box<dyn VehicleControl>);
+    struct ControllerWrapper(Box<dyn UnitControl>);
     unsafe impl std::marker::Send for ControllerWrapper {}
 
     static CONTROLLER: Mutex<Option<ControllerWrapper>> = Mutex::new(None);
@@ -41,7 +41,7 @@ pub mod controller {
     pub fn setup() {
         log::info!("Allocating control");
         *((CONTROLLER.lock().expect("cant be poisoned")).deref_mut()) =
-            unsafe { Some(ControllerWrapper(create_vehicle_control())) };
+            unsafe { Some(ControllerWrapper(create_unit_control())) };
     }
 
     pub fn update() {

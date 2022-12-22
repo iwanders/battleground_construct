@@ -40,7 +40,7 @@ impl Clock {
 
 impl Component for Clock {}
 
-use crate::components::vehicle_interface::{Register, RegisterMap, VehicleModule};
+use crate::components::unit_interface::{Register, RegisterMap, UnitModule};
 
 #[derive(Default)]
 pub struct ClockModule {}
@@ -51,7 +51,7 @@ impl ClockModule {
     }
 }
 
-impl VehicleModule for ClockModule {
+impl UnitModule for ClockModule {
     fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
         if let Some((_entity, clock)) = world.component_iter_mut::<Clock>().next() {
             registers.insert(0, Register::new_f32("elapsed", clock.elapsed_as_f32()));

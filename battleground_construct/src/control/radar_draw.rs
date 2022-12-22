@@ -1,5 +1,5 @@
 use crate::display::primitives::*;
-use battleground_unit_control::{Interface, VehicleControl};
+use battleground_unit_control::{Interface, UnitControl};
 
 use crate::display::draw_module::LineSegment;
 use crate::units::tank;
@@ -8,7 +8,7 @@ use cgmath::vec3;
 
 pub struct RadarDrawControl {}
 
-impl VehicleControl for RadarDrawControl {
+impl UnitControl for RadarDrawControl {
     fn update(&mut self, interface: &mut dyn Interface) {
         let x = interface.get_f32(tank::GPS_MODULE, 0).unwrap();
         let y = interface.get_f32(tank::GPS_MODULE, 1).unwrap();

@@ -95,9 +95,9 @@ impl DrawModule {
     }
 }
 
-use crate::components::vehicle_interface::{Register, RegisterMap, VehicleModule};
+use crate::components::unit_interface::{Register, RegisterMap, UnitModule};
 
-impl VehicleModule for DrawModule {
+impl UnitModule for DrawModule {
     fn get_registers(&self, _world: &World, registers: &mut RegisterMap) {
         registers.clear();
         registers.insert(0, Register::new_bytes("instructions"));

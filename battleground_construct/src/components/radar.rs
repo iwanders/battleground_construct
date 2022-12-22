@@ -103,7 +103,7 @@ impl Radar {
 }
 impl Component for Radar {}
 
-use crate::components::vehicle_interface::{Register, RegisterMap, VehicleModule};
+use crate::components::unit_interface::{Register, RegisterMap, UnitModule};
 pub struct RadarModule {
     entity: EntityId,
 }
@@ -114,7 +114,7 @@ impl RadarModule {
     }
 }
 
-impl VehicleModule for RadarModule {
+impl UnitModule for RadarModule {
     fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
         registers.clear();
         if let Some(radar) = world.component::<Radar>(self.entity) {

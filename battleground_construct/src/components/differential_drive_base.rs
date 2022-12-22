@@ -42,7 +42,7 @@ impl DifferentialDriveBase {
 }
 impl Component for DifferentialDriveBase {}
 
-use crate::components::vehicle_interface::{Register, RegisterMap, VehicleModule};
+use crate::components::unit_interface::{Register, RegisterMap, UnitModule};
 pub struct DifferentialDriveBaseModule {
     entity: EntityId,
 }
@@ -53,7 +53,7 @@ impl DifferentialDriveBaseModule {
     }
 }
 
-impl VehicleModule for DifferentialDriveBaseModule {
+impl UnitModule for DifferentialDriveBaseModule {
     fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
         registers.clear();
         if let Some(base) = world.component::<DifferentialDriveBase>(self.entity) {

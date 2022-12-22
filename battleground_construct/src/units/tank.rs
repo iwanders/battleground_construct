@@ -18,7 +18,7 @@ pub struct TankSpawnConfig {
     pub x: f32,
     pub y: f32,
     pub yaw: f32,
-    pub controller: Box<dyn battleground_unit_control::VehicleControl>,
+    pub controller: Box<dyn battleground_unit_control::UnitControl>,
 }
 
 fn cannon_function(world: &mut World, cannon_entity: EntityId) {
@@ -90,8 +90,8 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let vehicle_id = world.add_entity();
     tank_group_ids.push(vehicle_id);
 
-    let register_interface = components::vehicle_interface::RegisterInterfaceContainer::new(
-        components::vehicle_interface::RegisterInterface::new(),
+    let register_interface = components::unit_interface::RegisterInterfaceContainer::new(
+        components::unit_interface::RegisterInterface::new(),
     );
 
     world.add_component(vehicle_id, Pose::from_se2(config.x, config.y, config.yaw));
@@ -127,10 +127,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(body_id, Parent::new(vehicle_id));
     tank_group_ids.push(body_id);
 
-    let rc = components::vehicle_controller::VehicleControlStorage::new(config.controller);
+    let rc = components::unit_controller::UnitControlStorage::new(config.controller);
     world.add_component(
         vehicle_id,
-        components::vehicle_controller::VehicleController::new(rc),
+        components::unit_controller::UnitController::new(rc),
     );
     // world.add_component(vehicle_id, display::debug_sphere::DebugSphere::with_radius(1.0));
     world.add_component(vehicle_id, components::health::Health::new());

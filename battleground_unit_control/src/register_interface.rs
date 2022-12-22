@@ -81,10 +81,10 @@ impl Register {
     }
 }
 
-/// Type that the vehicle modules will populate and read from.
+/// Type that the unit modules will populate and read from.
 pub type RegisterMap = std::collections::HashMap<RegisterId, Register>;
 
-pub trait VehicleModule {
+pub trait UnitModule {
     /// Read from the components into the registers.
     fn get_registers(&self, _world: &World, _registers: &mut RegisterMap) {}
 
@@ -97,7 +97,7 @@ pub type RegisterId = u32;
 
 pub struct Module {
     name: String,
-    handler: Option<Box<dyn VehicleModule>>,
+    handler: Option<Box<dyn UnitModule>>,
     registers: std::collections::HashMap<RegisterId, Register>,
 }
 
@@ -199,12 +199,7 @@ impl RegisterInterface {
         Ok(())
     }
 
-    pub fn add_module_boxed(
-        &mut self,
-        name: &str,
-        index: ModuleId,
-        handler: Box<dyn VehicleModule>,
-    ) {
+    pub fn add_module_boxed(&mut self, name: &str, index: ModuleId, handler: Box<dyn UnitModule>) {
         self.modules.insert(
             index,
             Module {
@@ -216,7 +211,7 @@ impl RegisterInterface {
         );
     }
 
-    pub fn add_module<M: VehicleModule>(&mut self, name: &str, index: ModuleId, handler: M)
+    pub fn add_module<M: UnitModule>(&mut self, name: &str, index: ModuleId, handler: M)
     where
         M: Sized + 'static,
     {

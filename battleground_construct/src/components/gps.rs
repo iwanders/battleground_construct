@@ -1,7 +1,7 @@
 use super::pose::world_pose;
 use engine::prelude::*;
 
-use crate::components::vehicle_interface::{Register, RegisterMap, VehicleModule};
+use crate::components::unit_interface::{Register, RegisterMap, UnitModule};
 pub struct GpsModule {
     entity: EntityId,
 }
@@ -12,7 +12,7 @@ impl GpsModule {
     }
 }
 
-impl VehicleModule for GpsModule {
+impl UnitModule for GpsModule {
     fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
         use crate::util::cgmath::ToRollPitchYaw;
         use crate::util::cgmath::ToTranslation;

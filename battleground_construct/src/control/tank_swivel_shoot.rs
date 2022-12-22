@@ -1,10 +1,10 @@
-use battleground_unit_control::{Interface, VehicleControl};
+use battleground_unit_control::{Interface, UnitControl};
 use std::f32::consts::PI;
 
 use crate::units::tank;
 
 pub struct TankSwivelShoot {}
-impl VehicleControl for TankSwivelShoot {
+impl UnitControl for TankSwivelShoot {
     fn update(&mut self, interface: &mut dyn Interface) {
         let revolve_pos = 0;
         let revolve_vel = 1;

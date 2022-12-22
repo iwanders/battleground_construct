@@ -4,7 +4,7 @@ use super::default;
 use super::specification;
 use crate::control;
 use crate::units;
-use battleground_unit_control::VehicleControl;
+use battleground_unit_control::UnitControl;
 
 pub fn setup_match(
     config: super::specification::ConstructConfig,
@@ -20,7 +20,7 @@ pub fn setup_match(
     }
 
     for spawn in config.spawn_config.spawns {
-        let controller: Box<dyn VehicleControl> = match spawn.controller {
+        let controller: Box<dyn UnitControl> = match spawn.controller {
             specification::ControllerType::SwivelShoot => {
                 Box::new(control::tank_swivel_shoot::TankSwivelShoot {})
             }
@@ -30,7 +30,7 @@ pub fn setup_match(
             }
             #[cfg(feature = "unit_control_wasm")]
             specification::ControllerType::Wasm { module } => {
-                Box::new(unit_control_wasm::VehicleControlWasm::new(&module)?)
+                Box::new(unit_control_wasm::UnitControlWasm::new(&module)?)
             }
 
             _ => {
@@ -38,7 +38,7 @@ pub fn setup_match(
             }
         };
         match spawn.vehicle {
-            specification::Vehicle::Tank => {
+            specification::Unit::Tank => {
                 let tank_config = units::tank::TankSpawnConfig {
                     x: spawn.x,
                     y: spawn.y,

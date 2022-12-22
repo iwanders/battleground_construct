@@ -21,6 +21,6 @@ pub mod projectile_source;
 pub mod radar;
 pub mod radar_reflector;
 pub mod revolute;
-pub mod vehicle_controller;
-pub mod vehicle_interface;
+pub mod unit_controller;
+pub mod unit_interface;
 pub mod velocity;

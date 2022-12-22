@@ -1,8 +1,8 @@
 use engine::prelude::*;
 
-// Most modules look to this file for the VehicleModule and Register objects.
+// Most modules look to this file for the UnitModule and Register objects.
 pub use battleground_unit_control::register_interface::{
-    Register, RegisterInterface, RegisterMap, VehicleModule,
+    Register, RegisterInterface, RegisterMap, UnitModule,
 };
 
 // We need interior mutability here because the register things take the entire world as mutable.
