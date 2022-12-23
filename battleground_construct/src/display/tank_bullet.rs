@@ -25,12 +25,13 @@ impl Drawable for TankBullet {
             primitive: Primitive::Sphere(Sphere {
                 radius: self.radius,
             }),
-            color: Color {
+            material: Color {
                 r: 20,
                 g: 20,
                 b: 20,
                 a: 255,
-            },
+            }
+            .into(),
         }]
     }
 }

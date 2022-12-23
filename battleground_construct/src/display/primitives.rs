@@ -112,6 +112,12 @@ impl Color {
         b: 0,
         a: 255,
     };
+    pub const BLACK: Color = Color {
+        r: 0,
+        g: 0,
+        b: 0,
+        a: 0,
+    };
 }
 
 impl From<(u8, u8, u8)> for Color {
@@ -125,11 +131,43 @@ impl From<(u8, u8, u8)> for Color {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct FlatMaterial {
+    pub color: Color,
+    pub emissive: Color,
+    pub is_transparent: bool,
+}
+
+impl Default for FlatMaterial {
+    fn default() -> Self {
+        FlatMaterial {
+            color: Color::MAGENTA,
+            emissive: Color::BLACK,
+            is_transparent: false,
+        }
+    }
+}
+
+impl From<Color> for Material {
+    fn from(color: Color) -> Material {
+        Material::FlatMaterial(FlatMaterial {
+            color,
+            ..Default::default()
+        })
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum Material {
+    FlatMaterial(FlatMaterial),
+    TeamMaterial,
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct Element {
     pub primitive: Primitive,
     pub transform: Mat4,
-    pub color: Color,
+    pub material: Material,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]

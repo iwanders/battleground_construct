@@ -44,12 +44,13 @@ impl Component for TankTracks {}
 
 impl Drawable for TankTracks {
     fn drawables(&self) -> Vec<Element> {
-        let color = Color {
+        let material: Material = Color {
             r: 20,
             g: 20,
             b: 20,
             a: 255,
-        };
+        }
+        .into();
         let track = Primitive::Cuboid(Cuboid {
             width: self.width,
             height: self.height,
@@ -63,7 +64,7 @@ impl Drawable for TankTracks {
                     self.track_height,
                 )),
                 primitive: track,
-                color,
+                material,
             },
             Element {
                 transform: Mat4::from_translation(Vec3::new(
@@ -72,7 +73,7 @@ impl Drawable for TankTracks {
                     self.track_height,
                 )),
                 primitive: track,
-                color,
+                material,
             },
         ];
 
@@ -130,12 +131,13 @@ impl Drawable for TankTracks {
                     _ => Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
                 }
             };
-            let color = Color {
+            let material: Material = Color {
                 r: 50,
                 g: 50,
                 b: 50,
                 a: 255,
-            };
+            }
+            .into();
 
             // Did the math in the wrong order... fix that here.
             let left_offset_normalized = total_length - self.left_distance;
@@ -151,7 +153,7 @@ impl Drawable for TankTracks {
                             self.track_height,
                         )),
                     primitive: bar,
-                    color,
+                    material,
                 });
                 z.push(Element {
                     transform: pos(
@@ -162,7 +164,7 @@ impl Drawable for TankTracks {
                         self.track_height,
                     )),
                     primitive: bar,
-                    color,
+                    material,
                 });
             }
         }

@@ -8,6 +8,7 @@ use battleground_construct::display::primitives::Drawable;
 use battleground_construct::Construct;
 use engine::prelude::*;
 
+use crate::construct_render::util::ColorConvert;
 use battleground_construct::display::EffectId;
 use effects::RenderableEffect;
 
@@ -336,12 +337,14 @@ impl ConstructRender {
             .expect("just checked it, will be there")
             .object;
         let transform = entity_transform * el.transform;
-        let color = Color {
-            r: el.color.r,
-            g: el.color.g,
-            b: el.color.b,
-            a: el.color.a,
+        // At some point, we have to handle different material types here.
+        let material = if let display::primitives::Material::FlatMaterial(material) = el.material {
+            material
+        } else {
+            panic!("unsupported material");
         };
+        let color = material.color.to_color();
+
         match &el.primitive {
             display::primitives::Primitive::Line(l) => {
                 use battleground_construct::util::cgmath::ToHomogenous;

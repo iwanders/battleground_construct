@@ -35,12 +35,13 @@ impl Drawable for TankTurret {
                 height: self.height,
                 length: self.length,
             }),
-            color: Color {
+            material: Color {
                 r: 200,
                 g: 100,
                 b: 0,
                 a: 255,
-            },
+            }
+            .into(),
         }]
     }
 }

@@ -28,12 +28,13 @@ impl Drawable for DebugSphere {
             primitive: Primitive::Sphere(Sphere {
                 radius: self.radius,
             }),
-            color: Color {
+            material: Color {
                 r: 255,
                 g: 0,
                 b: 255,
                 a: 128,
-            },
+            }
+            .into(),
         }]
     }
 }

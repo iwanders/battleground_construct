@@ -42,12 +42,13 @@ impl Drawable for DebugBox {
                 width: self.width,
                 height: self.height,
             }),
-            color: Color {
+            material: Color {
                 r: 255,
                 g: 0,
                 b: 255,
                 a: 128,
-            },
+            }
+            .into(),
         }]
     }
 }

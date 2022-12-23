@@ -48,7 +48,7 @@ impl Drawable for TankBody {
                 width: self.width,
                 height: self.height,
             }),
-            color: self.color,
+            material: self.color.into(),
         }]
     }
 }

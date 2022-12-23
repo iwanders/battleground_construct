@@ -78,7 +78,7 @@ impl Drawable for DrawComponent {
                     p1: (l.p1[0], l.p1[1], l.p1[2]),
                     width: l.width,
                 }),
-                color: l.color,
+                material: l.color.into(),
             })
             .collect()
     }

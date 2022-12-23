@@ -33,7 +33,7 @@ impl Drawable for DebugLines {
             .map(|(l, c)| Element {
                 transform: m,
                 primitive: Primitive::Line(*l),
-                color: *c,
+                material: (*c).into(),
             })
             .collect()
     }

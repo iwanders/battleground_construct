@@ -61,14 +61,14 @@ impl Drawable for Flag {
                     radius: self.radius,
                     height: self.height,
                 }),
-                color: self.pole_color,
+                material: self.pole_color.into(),
             },
             Element {
                 transform: Mat4::from_translation(Vec3::new(0.0, 0.0, self.height)),
                 primitive: Primitive::Sphere(Sphere {
                     radius: self.radius * 2.0,
                 }),
-                color: self.pole_color,
+                material: self.pole_color.into(),
             },
             Element {
                 transform: Mat4::from_translation(Vec3::new(
@@ -81,7 +81,7 @@ impl Drawable for Flag {
                     length: flag_width,
                     height: flag_height,
                 }),
-                color: self.flag_color,
+                material: self.flag_color.into(),
             },
         ]
     }

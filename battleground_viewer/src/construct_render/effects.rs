@@ -445,9 +445,15 @@ impl Deconstructor {
                     }
                 }
 
+                let material =
+                    if let display::primitives::Material::FlatMaterial(material) = el.material {
+                        material
+                    } else {
+                        panic!("unsupported material");
+                    };
                 particles.push(DestructorParticle {
                     pos: fragment_world_pos,
-                    color: Color::new(el.color.r, el.color.g, el.color.b, 128),
+                    color: Color::new(material.color.r, material.color.g, material.color.b, 128),
                     vel,
                     scale: fragment.scale,
                     traveled: 0.0,

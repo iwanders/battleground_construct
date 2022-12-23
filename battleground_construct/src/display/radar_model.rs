@@ -50,7 +50,7 @@ impl Drawable for RadarModel {
                     width: self.width,
                     height: self.height,
                 }),
-                color: self.color,
+                material: self.color.into(),
             },
             Element {
                 transform: Mat4::from_translation(Vec3::new(lc, -ls, 0.0))
@@ -60,7 +60,7 @@ impl Drawable for RadarModel {
                     width: self.width,
                     height: self.height,
                 }),
-                color: self.color,
+                material: self.color.into(),
             },
         ]
     }
