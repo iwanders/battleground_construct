@@ -45,7 +45,8 @@ pub struct MatchConfig {
 pub struct Team {
     /// Team name
     pub name: String,
-    // color: (f32, f32, f32),
+    /// Color used to represent this team. RGB; 0-255.
+    pub color: (u8, u8, u8),
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]

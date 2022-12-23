@@ -49,6 +49,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             // "../target/release/libvehicle_control_wasm.so",
             // )
             // .expect("should succeed"),
+            ..Default::default()
         },
     );
     /**/
@@ -61,6 +62,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             yaw: 0.0,
             // controller: Box::new(control::tank_swivel_shoot::TankSwivelShoot {}),
             controller: Box::new(control::radar_draw::RadarDrawControl {}),
+            ..Default::default()
         },
     );
 
@@ -112,6 +114,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
                             duration: 5.0,
                         },
                     ),
+                    ..Default::default()
                 },
             );
         }

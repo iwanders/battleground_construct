@@ -19,6 +19,19 @@ pub struct TankSpawnConfig {
     pub y: f32,
     pub yaw: f32,
     pub controller: Box<dyn battleground_unit_control::UnitControl>,
+    pub team_member: Option<components::team_member::TeamMember>,
+}
+
+impl Default for TankSpawnConfig {
+    fn default() -> Self {
+        TankSpawnConfig {
+            x: 0.0,
+            y: 0.0,
+            yaw: 0.0,
+            controller: Box::new(crate::control::idle::Idle {}),
+            team_member: None,
+        }
+    }
 }
 
 fn cannon_function(world: &mut World, cannon_entity: EntityId) {
@@ -134,6 +147,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     // world.add_component(vehicle_id, display::debug_sphere::DebugSphere::with_radius(1.0));
     world.add_component(vehicle_id, components::health::Health::new());
+
+    if let Some(team_member) = config.team_member {
+        world.add_component(body_id, team_member);
+    }
 
     register_interface.get_mut().add_module(
         "localization",

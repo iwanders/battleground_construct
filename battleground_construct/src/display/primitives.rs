@@ -114,6 +114,17 @@ impl Color {
     };
 }
 
+impl From<(u8, u8, u8)> for Color {
+    fn from(v: (u8, u8, u8)) -> Self {
+        Color {
+            r: v.0,
+            g: v.1,
+            b: v.2,
+            a: 255,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct Element {
     pub primitive: Primitive,

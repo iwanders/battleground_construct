@@ -14,6 +14,7 @@ pub mod projectile_hit;
 pub mod radar_scan;
 pub mod revolute_pose;
 pub mod revolute_velocity;
+pub mod team_color_tank_body;
 pub mod unit_control;
 pub mod velocity_pose;
 

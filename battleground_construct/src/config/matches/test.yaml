@@ -3,8 +3,10 @@ spawn_config:
   teams:
     -
       name: Alpha
+      color: [255, 0, 0]
     -
       name: Bravo
+      color: [0, 0, 255]
   spawns:
     -
       x: 2.0
@@ -12,20 +14,24 @@ spawn_config:
       yaw: 3.14
       controller:
         type: SwivelShoot
+      team: 0
     -
       x: -2.0
       y: 0.0
       yaw: 0
-      controller: 
-        type: Wasm
-        module: "../target/wasm32-unknown-unknown/release/example_driving_ai.wasm"
+      team: 0
+      #controller: 
+      #  type: Wasm
+      #  module: "../target/wasm32-unknown-unknown/release/example_driving_ai.wasm"
 
     -
       x: 0.0
       y: -2.0
       yaw: 1.5708
+      team: 1
 
     -
       x: 0.0
       y: 2.0
       yaw: -1.5708
+      team: 1

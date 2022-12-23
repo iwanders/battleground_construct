@@ -26,9 +26,9 @@ impl Drawable for TankBullet {
                 radius: self.radius,
             }),
             color: Color {
-                r: 0,
-                g: 200,
-                b: 200,
+                r: 20,
+                g: 20,
+                b: 20,
                 a: 255,
             },
         }]

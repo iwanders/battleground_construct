@@ -1,10 +1,26 @@
-use crate::Construct;
-// use crate::components;
 use super::default;
 use super::specification;
+use crate::components;
 use crate::control;
 use crate::units;
+use crate::Construct;
 use battleground_unit_control::UnitControl;
+
+#[derive(Debug, Clone)]
+pub struct SetupError(pub String);
+impl SetupError {
+    pub fn new(text: &str) -> Self {
+        SetupError(text.to_owned())
+    }
+}
+
+impl std::error::Error for SetupError {}
+
+impl std::fmt::Display for SetupError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 pub fn setup_match(
     config: super::specification::ConstructConfig,
@@ -15,11 +31,24 @@ pub fn setup_match(
     default::add_components(world);
     default::add_systems(systems);
 
+    let mut teams = vec![];
     for team in config.spawn_config.teams {
-        println!("Spawning team: {}", team.name);
+        let team_entity = world.add_entity();
+        teams.push(team_entity);
+        let team_component = components::team::Team::new(&team.name, team.color.into());
+        world.add_component(team_entity, team_component);
     }
 
     for spawn in config.spawn_config.spawns {
+        let optional_team_component = if let Some(team_index) = spawn.team {
+            let team_entity = teams
+                .get(team_index)
+                .ok_or_else(|| Box::new(SetupError::new("team index out of range")))?;
+            Some(components::team_member::TeamMember::new(*team_entity))
+        } else {
+            None
+        };
+
         let controller: Box<dyn UnitControl> = match spawn.controller {
             specification::ControllerType::SwivelShoot => {
                 Box::new(control::tank_swivel_shoot::TankSwivelShoot {})
@@ -44,6 +73,7 @@ pub fn setup_match(
                     y: spawn.y,
                     yaw: spawn.yaw,
                     controller,
+                    team_member: optional_team_component,
                 };
                 units::tank::spawn_tank(world, tank_config);
             }
