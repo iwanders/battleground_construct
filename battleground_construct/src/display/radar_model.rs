@@ -24,8 +24,8 @@ impl RadarModel {
             height: 0.05,
             angle: 80.0f32.to_radians(),
             color: Color {
-                r: 0,
-                g: 0,
+                r: 100,
+                g: 100,
                 b: 100,
                 a: 255,
             },

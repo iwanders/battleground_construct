@@ -35,9 +35,7 @@ pub fn add_systems(systems: &mut Systems) {
     systems.add_system(Box::new(systems::destroy::Destroy {}));
     // All handling of hits done with the projectiles still present.
     // systems.add_system(Box::new(systems::health_tank_body::HealthTankBody {}));
-    systems.add_system(Box::new(
-        systems::team_color_tank_body::TeamColorTankBody {},
-    ));
+    systems.add_system(Box::new(systems::team_color_tank::TeamColorTank {}));
     systems.add_system(Box::new(systems::display_tank_tracks::DisplayTankTracks {}));
     systems.add_system(Box::new(systems::function_pose::FunctionPose {}));
     systems.add_system(Box::new(systems::expiry_check::ExpiryCheck {}));

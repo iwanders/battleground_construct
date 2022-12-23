@@ -42,6 +42,10 @@ impl Flag {
         res.flag_color = color;
         res
     }
+
+    pub fn set_color(&mut self, color: Color) {
+        self.flag_color = color
+    }
 }
 impl Component for Flag {}
 
