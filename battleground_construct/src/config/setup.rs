@@ -33,9 +33,10 @@ pub fn setup_match(
 
     let mut teams = vec![];
     for team in config.spawn_config.teams {
+        let team_id = components::id_generator::generate_id(world);
         let team_entity = world.add_entity();
         teams.push(team_entity);
-        let team_component = components::team::Team::new(&team.name, team.color.into());
+        let team_component = components::team::Team::new(team_id, &team.name, team.color.into());
         world.add_component(team_entity, team_component);
     }
 
