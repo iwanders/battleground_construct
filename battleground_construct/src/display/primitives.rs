@@ -190,9 +190,8 @@ pub enum EffectType {
 
 #[derive(Debug, Clone)]
 pub struct Effect {
-    /// Id to track this entity under, the EntityId is always associated to the entity that first
-    /// created this effect. It does NOT tie this effect (nor its lifetime) to this particular
-    /// entity.
+    /// Id to track this effect under, the effect may be transfered between entities, the renderer
+    /// should consider the same id as the same effect and carry over any state.
     pub id: u64,
     /// Description of the effect itself.
     pub effect: EffectType,

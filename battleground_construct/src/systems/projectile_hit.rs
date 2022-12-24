@@ -143,7 +143,7 @@ impl System for ProjectileHit {
         for v in projectile_hits {
             let hit_effect = world
                 .component::<HitEffect>(v.projectile)
-                .map(|z| z.effect().clone());
+                .map(|z| z.effect());
             if let Some(effect_fn) = hit_effect {
                 effect_fn(world, v.projectile, &v.impact);
             }
