@@ -1,7 +1,7 @@
 use crate::display;
 use engine::prelude::*;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, Ord, PartialOrd, PartialEq)]
 pub struct TeamId(u64);
 
 #[derive(Debug, Clone)]
@@ -30,3 +30,12 @@ impl Team {
     }
 }
 impl Component for Team {}
+
+pub fn get_team_entity(world: &World, team_id: TeamId) -> Option<EntityId> {
+    for (entity, v) in world.component_iter::<Team>() {
+        if v.id() == team_id {
+            return Some(entity);
+        }
+    }
+    None
+}
