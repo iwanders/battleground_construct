@@ -27,8 +27,9 @@ impl System for Destroy {
             }
 
             // Create the destruction effect.
+            let effect_id = components::id_generator::generate_id(world);
             let thingy = world.add_entity();
-            let mut destructor = crate::display::deconstructor::Deconstructor::new(thingy);
+            let mut destructor = crate::display::deconstructor::Deconstructor::new(effect_id);
 
             // Now, we use the hit history to collect where the impacts were.
             if let Some(ref hit_history) =

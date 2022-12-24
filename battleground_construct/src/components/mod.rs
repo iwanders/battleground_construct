@@ -14,6 +14,7 @@ pub mod hit_by;
 pub mod hit_effect;
 pub mod hit_plane;
 pub mod hit_sphere;
+pub mod id_generator;
 pub mod impact;
 pub mod parent;
 pub mod point_projectile;

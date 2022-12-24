@@ -41,7 +41,8 @@ fn cannon_hit_effect(
 ) {
     // Create a bullet destructor.
     let projectile_destructor = world.add_entity();
-    let mut destructor = crate::display::deconstructor::Deconstructor::new(projectile_destructor);
+    let effect_id = components::id_generator::generate_id(world);
+    let mut destructor = crate::display::deconstructor::Deconstructor::new(effect_id);
     // destructor.add_impact(impact.position(), 0.005);
     destructor.add_element::<crate::display::tank_bullet::TankBullet>(projectile, world);
     world.add_component(projectile_destructor, destructor);
@@ -55,7 +56,7 @@ fn cannon_hit_effect(
     // Copy the bullet to a new entity.
     let emitter_id = world.add_entity();
     let emitter =
-        world.remove_component::<crate::display::particle_emitter::ParticleEmitter>(projectile);
+        world.remove_component::<crate::display::particle_emitter::ParticleEmitter>(emitter_id);
     // Disable the particle emitter.
     if let Some(mut emitter) = emitter {
         emitter.emitting = false;
@@ -120,10 +121,11 @@ fn cannon_function(world: &mut World, cannon_entity: EntityId) {
         components::hit_effect::HitEffect::new(std::rc::Rc::new(cannon_hit_effect)),
     );
 
+    let effect_id = components::id_generator::generate_id(world);
     world.add_component(
         projectile_id,
         crate::display::particle_emitter::ParticleEmitter::bullet_trail(
-            projectile_id,
+            effect_id,
             0.05,
             crate::display::Color::WHITE,
         ),

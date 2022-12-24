@@ -9,7 +9,6 @@ use battleground_construct::Construct;
 use engine::prelude::*;
 
 use crate::construct_render::util::ColorConvert;
-use battleground_construct::display::EffectId;
 use effects::RenderableEffect;
 
 use instanced_entity::InstancedEntity;
@@ -27,7 +26,7 @@ pub struct ConstructRender {
     instanced_meshes: std::collections::HashMap<u64, Properties>,
     grid_lines: InstancedEntity<ColorMaterial>,
 
-    effects: std::collections::HashMap<EffectId, Box<dyn RenderableEffect>>,
+    effects: std::collections::HashMap<u64, Box<dyn RenderableEffect>>,
 }
 
 impl ConstructRender {
@@ -219,7 +218,7 @@ impl ConstructRender {
         context: &Context,
         camera: &Camera,
         construct: &Construct,
-    ) -> Vec<EffectId> {
+    ) -> Vec<u64> {
         let current_time = construct.elapsed_as_f32();
         let mut res = vec![];
 

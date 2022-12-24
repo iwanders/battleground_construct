@@ -3,15 +3,15 @@ use engine::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct Deconstructor {
-    pub entity: EntityId,
+    pub id: u64,
     pub elements: Vec<(Element, Twist, Mat4)>,
     pub impacts: Vec<(Mat4, f32)>,
 }
 
 impl Deconstructor {
-    pub fn new(entity: EntityId) -> Self {
+    pub fn new(id: u64) -> Self {
         Deconstructor {
-            entity,
+            id,
             elements: vec![],
             impacts: vec![],
         }
@@ -42,7 +42,7 @@ impl Component for Deconstructor {}
 impl Drawable for Deconstructor {
     fn effects(&self) -> Vec<Effect> {
         vec![Effect {
-            id: (self.entity, 0),
+            id: self.id,
             effect: EffectType::Deconstructor {
                 elements: self.elements.clone(),
                 impacts: self.impacts.clone(),

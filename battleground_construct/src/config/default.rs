@@ -11,6 +11,10 @@ pub fn add_components(world: &mut World) {
     let floor_id = world.add_entity();
     world.add_component(floor_id, components::pose::Pose::new());
     world.add_component(floor_id, components::hit_plane::HitPlane::new());
+
+    // Add the generator
+    let generator_id = world.add_entity();
+    world.add_component(generator_id, components::id_generator::IdGenerator::new());
 }
 
 pub fn add_systems(systems: &mut Systems) {

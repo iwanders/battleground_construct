@@ -33,9 +33,15 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
         particle_id,
         FunctionPose::new(|t| Pose::from_xyz(t.sin() - 2.0, t.cos() + 2.0, t.sin() + 1.5)),
     );
+
+    let particle_effect_id = components::id_generator::generate_id(world);
     world.add_component(
         particle_id,
-        display::particle_emitter::ParticleEmitter::bullet_trail(particle_id, 0.05, Color::WHITE),
+        display::particle_emitter::ParticleEmitter::bullet_trail(
+            particle_effect_id,
+            0.05,
+            Color::WHITE,
+        ),
     );
 
     let main_tank = spawn_tank(
@@ -76,8 +82,9 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
         }
     }
 
+    let particle_effect_id = components::id_generator::generate_id(world);
     let thingy = world.add_entity();
-    let mut destructor = display::deconstructor::Deconstructor::new(thingy);
+    let mut destructor = display::deconstructor::Deconstructor::new(particle_effect_id);
     for e in tank_entities.iter() {
         destructor.add_element::<display::tank_body::TankBody>(*e, world);
         destructor.add_element::<display::tank_turret::TankTurret>(*e, world);

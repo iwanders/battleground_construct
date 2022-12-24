@@ -14,4 +14,3 @@ pub mod tank_tracks;
 pub mod tank_turret;
 
 pub use primitives::Color;
-pub use primitives::EffectId;
