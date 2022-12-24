@@ -27,6 +27,13 @@ pub struct Cylinder {
 impl Eq for Cylinder {}
 
 #[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Cone {
+    pub radius: f32,
+    pub height: f32,
+}
+impl Eq for Cone {}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Line {
     pub p0: (f32, f32, f32),
     pub p1: (f32, f32, f32),
@@ -40,6 +47,7 @@ pub enum Primitive {
     Sphere(Sphere),
     Cylinder(Cylinder),
     Line(Line),
+    Cone(Cone),
 }
 
 impl Primitive {
@@ -67,6 +75,11 @@ impl Primitive {
             Primitive::Line(_line) => {
                 // All lines hash the same.
                 3usize.hash(state);
+            }
+            Primitive::Cone(cone) => {
+                4usize.hash(state);
+                cone.radius.to_bits().hash(state);
+                cone.height.to_bits().hash(state);
             }
         }
         // val
@@ -118,6 +131,9 @@ impl Color {
         b: 0,
         a: 0,
     };
+    pub fn rgb(r: u8, g: u8, b: u8) -> Self {
+        Color { r, g, b, a: 255 }
+    }
 }
 
 impl From<(u8, u8, u8)> for Color {

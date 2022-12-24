@@ -114,6 +114,7 @@ impl ConstructViewer {
         let jump = 0.0;
         // let stop_sim_at = 5.023; // second impact.
         let stop_sim_at = 1000000.3;
+        // let stop_sim_at = 0.1;
         let timespeed = 1.0;
         while self.construct.elapsed_as_f32() < jump {
             self.construct.update();

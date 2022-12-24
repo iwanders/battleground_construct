@@ -126,4 +126,56 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             );
         }
     }
+
+    use crate::display::primitives::*;
+    use cgmath::Deg;
+    let tree = world.add_entity();
+    let mut elements = display::debug_elements::DebugElements::new();
+
+    elements.add_element(Element {
+        transform: Mat4::from_translation(Vec3::new(0.5 - 0.20, 0.0, 0.0)),
+        primitive: Primitive::Cone(Cone {
+            height: 1.0,
+            radius: 0.65,
+        }),
+        material: Color::rgb(0, 90, 0).into(),
+    });
+    elements.add_element(Element {
+        transform: Mat4::from_translation(Vec3::new(1.0 - 0.20, 0.0, 0.0)),
+        primitive: Primitive::Cone(Cone {
+            height: 0.75,
+            radius: 0.5,
+        }),
+        material: Color::rgb(0, 90, 0).into(),
+    });
+    elements.add_element(Element {
+        transform: Mat4::from_translation(Vec3::new(1.5 - 0.20, 0.0, 0.0)),
+        primitive: Primitive::Cone(Cone {
+            height: 0.5,
+            radius: 0.3,
+        }),
+        material: Color::rgb(0, 90, 0).into(),
+    });
+    elements.add_element(Element {
+        transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+        primitive: Primitive::Cylinder(Cylinder {
+            height: 1.0,
+            radius: 0.15,
+        }),
+        material: Color::rgb(50, 24, 0).into(),
+    });
+    world.add_component(
+        tree,
+        Pose::from_xyz(-5.0, -5.0, 0.0).rotated_angle_y(Deg(-90.0)),
+    );
+    world.add_component(tree, elements);
+
+    let particle_effect_id = components::id_generator::generate_id(world);
+    let thingy = world.add_entity();
+    let mut destructor = display::deconstructor::Deconstructor::new(particle_effect_id);
+    destructor.add_element::<display::debug_elements::DebugElements>(tree, world);
+    world.add_component(thingy, destructor);
+    world.add_component(thingy, components::expiry::Expiry::lifetime(50.0));
+
+    // world.remove_entity(tree);
 }

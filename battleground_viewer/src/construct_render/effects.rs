@@ -306,6 +306,48 @@ impl Deconstructor {
                 scale: Vector3<f32>,
             }
 
+            fn generate_fragments(
+                x_range: std::ops::Range<isize>,
+                y_range: std::ops::Range<isize>,
+                z_range: std::ops::Range<isize>,
+                edge_x: f32,
+                edge_y: f32,
+                edge_z: f32,
+                fun: &dyn Fn(Vec3) -> bool,
+            ) -> Vec<Fragment> {
+                let mut fragments = vec![];
+                for x in x_range.start..x_range.end {
+                    for y in y_range.start..y_range.end {
+                        for z in z_range.start..z_range.end {
+                            let x_start = x as f32 * edge_x;
+                            let x_end = (x + 1) as f32 * edge_x;
+
+                            let y_start = y as f32 * edge_y;
+                            let y_end = (y + 1) as f32 * edge_y;
+
+                            let z_start = z as f32 * edge_z;
+                            let z_end = (z + 1) as f32 * edge_z;
+
+                            let p = vec3(
+                                (x_end - x_start) / 2.0 + x_start,
+                                (y_end - y_start) / 2.0 + y_start,
+                                (z_end - z_start) / 2.0 + z_start,
+                            );
+                            if fun(p) {
+                                let sx = edge_x / 2.0;
+                                let sy = edge_y / 2.0;
+                                let sz = edge_z / 2.0;
+                                fragments.push(Fragment {
+                                    pos: p,
+                                    scale: vec3(sx, sy, sz),
+                                });
+                            }
+                        }
+                    }
+                }
+                fragments
+            }
+
             let center_element = entity_pose * el.transform;
             let fragments = match el.primitive {
                 battleground_construct::display::primitives::Primitive::Cuboid(c) => {
@@ -359,47 +401,57 @@ impl Deconstructor {
                     fragments
                 }
                 battleground_construct::display::primitives::Primitive::Sphere(sphere) => {
-                    let mut fragments = vec![];
                     let radius = sphere.radius;
 
                     let chunks_x = ((radius / edge_x) as isize) + 1;
                     let chunks_y = ((radius / edge_y) as isize) + 1;
                     let chunks_z = ((radius / edge_z) as isize) + 1;
-                    for x in -chunks_x..chunks_x {
-                        for y in -chunks_y..chunks_y {
-                            for z in -chunks_z..chunks_z {
-                                let x_start = x as f32 * edge_x;
-                                let x_end = (x + 1) as f32 * edge_x;
-
-                                let y_start = y as f32 * edge_y;
-                                let y_end = (y + 1) as f32 * edge_y;
-
-                                let z_start = z as f32 * edge_z;
-                                let z_end = (z + 1) as f32 * edge_z;
-
-                                let p = vec3(
-                                    (x_end - x_start) / 2.0 + x_start,
-                                    (y_end - y_start) / 2.0 + y_start,
-                                    (z_end - z_start) / 2.0 + z_start,
-                                );
-                                if p.euclid_norm() >= radius {
-                                    continue;
-                                }
-
-                                let sx = edge_x / 2.0;
-                                let sy = edge_y / 2.0;
-                                let sz = edge_z / 2.0;
-                                fragments.push(Fragment {
-                                    pos: p,
-                                    scale: vec3(sx, sy, sz),
-                                });
-                            }
-                        }
-                    }
-                    fragments
+                    generate_fragments(
+                        -chunks_x..chunks_x,
+                        -chunks_y..chunks_y,
+                        -chunks_z..chunks_z,
+                        edge_x,
+                        edge_y,
+                        edge_z,
+                        &|p: Vec3| p.euclid_norm() <= radius,
+                    )
                 }
-                battleground_construct::display::primitives::Primitive::Cylinder(_) => todo!(),
+                battleground_construct::display::primitives::Primitive::Cylinder(cylinder) => {
+                    let radius = cylinder.radius;
+                    let height = cylinder.height;
+
+                    let chunks_x = ((height / edge_x) as isize) + 1;
+                    let chunks_y = ((radius / edge_y) as isize) + 1;
+                    let chunks_z = ((radius / edge_z) as isize) + 1;
+                    generate_fragments(
+                        0..chunks_x,
+                        -chunks_y..chunks_y,
+                        -chunks_z..chunks_z,
+                        edge_x,
+                        edge_y,
+                        edge_z,
+                        &|p: Vec3| vec3(0.0, p.y, p.z).euclid_norm() <= radius,
+                    )
+                }
                 battleground_construct::display::primitives::Primitive::Line(_) => todo!(),
+                battleground_construct::display::primitives::Primitive::Cone(cone) => {
+                    let radius = cone.radius;
+                    let height = cone.height;
+                    let chunks_x = ((height / edge_x) as isize) + 1;
+                    let chunks_y = ((radius / edge_y) as isize) + 1;
+                    let chunks_z = ((radius / edge_z) as isize) + 1;
+                    generate_fragments(
+                        0..chunks_x,
+                        -chunks_y..chunks_y,
+                        -chunks_z..chunks_z,
+                        edge_x,
+                        edge_y,
+                        edge_z,
+                        &|p: Vec3| {
+                            vec3(0.0, p.y, p.z).euclid_norm() <= (radius * (1.0 - (p.x / height)))
+                        },
+                    )
+                }
             };
 
             for fragment in fragments {

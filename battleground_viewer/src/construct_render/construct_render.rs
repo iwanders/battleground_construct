@@ -162,6 +162,7 @@ impl ConstructRender {
         self.component_to_meshes::<display::debug_box::DebugBox>(context, construct);
         self.component_to_meshes::<display::debug_sphere::DebugSphere>(context, construct);
         self.component_to_meshes::<display::debug_lines::DebugLines>(context, construct);
+        self.component_to_meshes::<display::debug_elements::DebugElements>(context, construct);
 
         self.component_to_meshes::<display::flag::Flag>(context, construct);
 
@@ -314,6 +315,16 @@ impl ConstructRender {
                             cylinder.height,
                             cylinder.radius,
                             cylinder.radius,
+                        ))
+                        .unwrap();
+                        m
+                    }
+                    display::primitives::Primitive::Cone(cone) => {
+                        let mut m = CpuMesh::cone(16);
+                        m.transform(&Mat4::from_nonuniform_scale(
+                            cone.height,
+                            cone.radius,
+                            cone.radius,
                         ))
                         .unwrap();
                         m
