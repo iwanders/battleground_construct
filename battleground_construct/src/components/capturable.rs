@@ -79,7 +79,7 @@ impl Capturable {
                 .iter()
                 .enumerate()
                 .max_by(|(_i, (_, a)), (_j, (_, b))| {
-                    a.partial_cmp(b).expect("should be comparable numbers")
+                    a.total_cmp(b)
                 })
                 .unwrap();
             let (strongest_index, (strongest_team, strongest_strength)) = strongest;
