@@ -2,9 +2,10 @@ use battleground_construct::components;
 use battleground_construct::systems;
 use cgmath::vec3;
 
-use components::clock::{Clock, ClockSystem};
+use components::clock::Clock;
 use engine::prelude::*;
 use engine::Systems;
+use systems::clock::ClockSystem;
 
 use battleground_construct::display::primitives::Vec3;
 use battleground_construct::util::cgmath::prelude::*;

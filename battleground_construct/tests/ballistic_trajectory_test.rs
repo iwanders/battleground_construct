@@ -1,8 +1,9 @@
 use battleground_construct::components;
 use battleground_construct::systems;
-use components::clock::{Clock, ClockSystem};
+use components::clock::Clock;
 use engine::prelude::*;
 use engine::Systems;
+use systems::clock::ClockSystem;
 
 use components::acceleration::Acceleration;
 use components::pose::Pose;

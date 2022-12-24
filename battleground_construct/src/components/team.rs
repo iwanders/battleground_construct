@@ -1,8 +1,13 @@
 use crate::display;
 use engine::prelude::*;
 
-#[derive(Copy, Clone, Debug, Eq, Ord, PartialOrd, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct TeamId(u64);
+
+#[cfg(test)]
+pub fn make_team_id(v: u64) -> TeamId {
+    TeamId(v)
+}
 
 #[derive(Debug, Clone)]
 pub struct Team {
