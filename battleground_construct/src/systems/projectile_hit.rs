@@ -1,5 +1,6 @@
 use super::components::hit_box::HitBox;
 // use super::components::hit_by::HitBy;
+use super::components::hit_effect::HitEffect;
 use super::components::hit_plane::HitPlane;
 use super::components::hit_sphere::HitSphere;
 use super::components::impact::Impact;
@@ -8,7 +9,6 @@ use super::components::pose::world_pose;
 use super::components::pose::Pose;
 use crate::components::acceleration::Acceleration;
 use crate::components::velocity::Velocity;
-use crate::display;
 use crate::util::box_collision::AxisAlignedBox;
 use crate::util::cgmath::prelude::*;
 use engine::prelude::*;
@@ -141,43 +141,21 @@ impl System for ProjectileHit {
         }
 
         for v in projectile_hits {
+            let hit_effect = world
+                .component::<HitEffect>(v.projectile)
+                .map(|z| z.effect().clone());
+            if let Some(effect_fn) = hit_effect {
+                effect_fn(world, v.projectile, &v.impact);
+            }
+
             // Remove the point projectile.
             world.remove_component::<PointProjectile>(v.projectile);
-            // Remove any velocity of accelartion, fixing the entity in place.
+            // Remove any velocity of acceleration, fixing the entity in place.
             world.remove_component::<Velocity>(v.projectile);
             world.remove_component::<Acceleration>(v.projectile);
 
-            // Create a bullet destructor.
-            let projectile_destructor = world.add_entity();
-            let mut destructor =
-                crate::display::deconstructor::Deconstructor::new(projectile_destructor);
-            destructor.add_impact(v.impact.position(), 0.005);
-            destructor.add_element::<crate::display::tank_bullet::TankBullet>(v.projectile, world);
-            world.add_component(projectile_destructor, destructor);
-            world.add_component(
-                projectile_destructor,
-                crate::components::expiry::Expiry::lifetime(10.0),
-            );
-
-            // Now, we can remove the displayable mesh.
-            world.remove_component::<display::tank_bullet::TankBullet>(v.projectile);
-
             // Add the impact to the entity.
             world.add_component(v.projectile, v.impact);
-
-            // Copy the bullet trail.
-            let emitter_id = world.add_entity();
-            let emitter = world
-                .remove_component::<super::display::particle_emitter::ParticleEmitter>(
-                    v.projectile,
-                );
-            // Disable the particle emitter.
-            if let Some(mut emitter) = emitter {
-                emitter.emitting = false;
-                world.add_component_boxed(emitter_id, emitter);
-            }
-
-            world.add_component(emitter_id, super::components::expiry::Expiry::lifetime(5.0));
         }
     }
 }

@@ -34,6 +34,37 @@ impl Default for TankSpawnConfig {
     }
 }
 
+fn cannon_hit_effect(
+    world: &mut World,
+    projectile: EntityId,
+    _impact: &components::impact::Impact,
+) {
+    // Create a bullet destructor.
+    let projectile_destructor = world.add_entity();
+    let mut destructor = crate::display::deconstructor::Deconstructor::new(projectile_destructor);
+    // destructor.add_impact(impact.position(), 0.005);
+    destructor.add_element::<crate::display::tank_bullet::TankBullet>(projectile, world);
+    world.add_component(projectile_destructor, destructor);
+    world.add_component(
+        projectile_destructor,
+        crate::components::expiry::Expiry::lifetime(10.0),
+    );
+    // Now, we can remove the displayable mesh.
+    world.remove_component::<display::tank_bullet::TankBullet>(projectile);
+
+    // Copy the bullet to a new entity.
+    let emitter_id = world.add_entity();
+    let emitter =
+        world.remove_component::<crate::display::particle_emitter::ParticleEmitter>(projectile);
+    // Disable the particle emitter.
+    if let Some(mut emitter) = emitter {
+        emitter.emitting = false;
+        world.add_component_boxed(emitter_id, emitter);
+    }
+
+    world.add_component(emitter_id, crate::components::expiry::Expiry::lifetime(5.0));
+}
+
 fn cannon_function(world: &mut World, cannon_entity: EntityId) {
     use crate::components::point_projectile::PointProjectile;
     use crate::components::projectile_source::ProjectileSource;
@@ -82,6 +113,11 @@ fn cannon_function(world: &mut World, cannon_entity: EntityId) {
     world.add_component(
         projectile_id,
         components::damage_hit::DamageHit::new(3330.3),
+    );
+
+    world.add_component(
+        projectile_id,
+        components::hit_effect::HitEffect::new(std::rc::Rc::new(cannon_hit_effect)),
     );
 
     world.add_component(
