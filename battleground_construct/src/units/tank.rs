@@ -66,7 +66,7 @@ fn cannon_hit_effect(
     world.add_component(emitter_id, crate::components::expiry::Expiry::lifetime(5.0));
 }
 
-fn cannon_function(world: &mut World, cannon_entity: EntityId) {
+pub fn cannon_function(world: &mut World, cannon_entity: EntityId) {
     use crate::components::point_projectile::PointProjectile;
     use crate::components::projectile_source::ProjectileSource;
     use crate::components::velocity::Velocity;

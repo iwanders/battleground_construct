@@ -43,7 +43,7 @@ impl Drawable for DisplayControlPoint {
             ..Default::default()
         });
         vec![Element {
-            transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.001)),
+            transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.01)),
             primitive: Primitive::Circle(Circle {
                 radius: self.radius,
                 subdivisions: 30,

@@ -12,10 +12,10 @@ match_config:
 spawn_config:
   teams:
     -
-      name: Alpha
+      name: Red
       color: [255, 0, 0]
     -
-      name: Bravo
+      name: Blue
       color: [0, 0, 255]
   spawns:
     -
