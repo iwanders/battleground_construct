@@ -30,6 +30,7 @@ pub mod radar_reflector;
 pub mod revolute;
 pub mod team;
 pub mod team_member;
+pub mod timed_function_trigger;
 pub mod unit_controller;
 pub mod unit_interface;
 pub mod velocity;
