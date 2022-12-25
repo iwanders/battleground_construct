@@ -58,48 +58,6 @@ pub enum Primitive {
     Cone(Cone),
 }
 
-impl Primitive {
-    pub fn to_draw_key(&self) -> u64 {
-        use std::hash::Hash;
-        use std::hash::Hasher;
-        let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        let state = &mut hasher;
-        match *self {
-            Primitive::Cuboid(cube) => {
-                0usize.hash(state);
-                cube.width.to_bits().hash(state);
-                cube.length.to_bits().hash(state);
-                cube.height.to_bits().hash(state);
-            }
-            Primitive::Sphere(sphere) => {
-                1usize.hash(state);
-                sphere.radius.to_bits().hash(state);
-            }
-            Primitive::Cylinder(cylinder) => {
-                2usize.hash(state);
-                cylinder.radius.to_bits().hash(state);
-                cylinder.height.to_bits().hash(state);
-            }
-            Primitive::Line(_line) => {
-                // All lines hash the same.
-                3usize.hash(state);
-            }
-            Primitive::Cone(cone) => {
-                4usize.hash(state);
-                cone.radius.to_bits().hash(state);
-                cone.height.to_bits().hash(state);
-            }
-            Primitive::Circle(circle) => {
-                5usize.hash(state);
-                circle.radius.to_bits().hash(state);
-                circle.subdivisions.hash(state);
-            }
-        }
-        // val
-        hasher.finish()
-    }
-}
-
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Color {
     pub r: u8,
