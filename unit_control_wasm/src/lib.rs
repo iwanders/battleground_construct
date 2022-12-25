@@ -411,7 +411,7 @@ impl UnitControl for UnitControlWasm {
 #[no_mangle]
 pub fn create_ai() -> Box<dyn UnitControl> {
     Box::new(
-        UnitControlWasm::new("../target/wasm32-unknown-unknown/release/example_driving_ai.wasm")
+        UnitControlWasm::new("../target/wasm32-unknown-unknown/release/example_unit_control.wasm")
             .unwrap(),
     )
 }

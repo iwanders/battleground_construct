@@ -4,7 +4,7 @@ members = [
     "engine",
     "battleground_construct",
     "battleground_viewer",
-    "example_driving_ai",
+    "example_unit_control",
     "battleground_unit_control",
     "unit_control_wasm",
 ]

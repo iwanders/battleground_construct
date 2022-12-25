@@ -1,5 +1,5 @@
 [package]
-name = "example_driving_ai"
+name = "example_unit_control"
 version = "0.1.0"
 edition = "2021"
 license = "BSD-3-Clause"

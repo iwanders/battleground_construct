@@ -798,7 +798,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "example_driving_ai"
+name = "example_unit_control"
 version = "0.1.0"
 dependencies = [
  "battleground_unit_control",

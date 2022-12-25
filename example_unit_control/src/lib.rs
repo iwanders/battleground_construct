@@ -1,15 +1,15 @@
 use battleground_unit_control::{log, Interface, RegisterType, UnitControl};
 
 #[derive(Default)]
-pub struct SimpleVehicleControl {}
+pub struct SimpleUnitControl {}
 
-impl SimpleVehicleControl {
+impl SimpleUnitControl {
     pub fn new() -> Self {
-        SimpleVehicleControl {}
+        SimpleUnitControl {}
     }
 }
 
-impl UnitControl for SimpleVehicleControl {
+impl UnitControl for SimpleUnitControl {
     fn update(&mut self, interface: &mut dyn Interface) {
         log::info!("We got called");
 
@@ -69,5 +69,5 @@ impl UnitControl for SimpleVehicleControl {
 pub fn create_unit_control() -> Box<dyn UnitControl> {
     // Box::new(battleground_construct::control::radar_draw::RadarDrawControl{})
     // Box::new(battleground_construct::control::tank_swivel_shoot::TankSwivelShoot {})
-    Box::new(SimpleVehicleControl::new())
+    Box::new(SimpleUnitControl::new())
 }
