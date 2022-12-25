@@ -10,6 +10,8 @@ pub struct CapturableFlagConfig {
     pub radius: f32,
     pub capture_speed: f32,
     pub initial_owner: Option<components::team::TeamId>,
+    pub capture_strength: f32,
+    pub capture_type: components::capturable::CaptureType,
 }
 
 impl Default for CapturableFlagConfig {
@@ -20,7 +22,9 @@ impl Default for CapturableFlagConfig {
             yaw: 0.0,
             radius: 1.0,
             capture_speed: 1.0,
+            capture_strength: 0.5,
             initial_owner: None,
+            capture_type: components::capturable::CaptureType::Exclusive,
         }
     }
 }
@@ -32,8 +36,11 @@ pub fn spawn_capturable_flag(world: &mut World, config: CapturableFlagConfig) ->
         capturable_flag,
         Pose::from_se2(config.x, config.y, config.yaw),
     );
-    let mut capturable = components::capturable::Capturable::new();
-    capturable.set_owner(config.initial_owner);
+    let capturable = components::capturable::Capturable::new(
+        config.initial_owner,
+        config.capture_strength,
+        config.capture_type,
+    );
 
     world.add_component(capturable_flag, capturable);
     world.add_component(
