@@ -85,9 +85,30 @@ pub fn setup_match(
         specification::MatchType::None => {}
         specification::MatchType::DeathMatch => {}
         specification::MatchType::KingOfTheHill {
-            capture_points: _,
+            capture_points,
             point_limit: _,
-        } => {}
+        } => {
+            for point in capture_points {
+                let optional_team_component = if let Some(team_index) = point.team {
+                    let team_member = teams
+                        .get(team_index)
+                        .ok_or_else(|| Box::new(SetupError::new("team index out of range")))?;
+                    Some(team_member)
+                } else {
+                    None
+                };
+                let config = crate::units::capturable_flag::CapturableFlagConfig {
+                    x: point.x,
+                    y: point.y,
+                    yaw: point.yaw,
+                    radius: point.radius,
+                    capture_speed: point.capture_speed,
+                    initial_owner: optional_team_component.copied(),
+                    ..Default::default()
+                };
+                crate::units::capturable_flag::spawn_capturable_flag(world, config);
+            }
+        }
     }
 
     if let Some(_v) = config.match_config.time_limit {}

@@ -78,9 +78,7 @@ impl Capturable {
             let strongest = subtracted_strengths
                 .iter()
                 .enumerate()
-                .max_by(|(_i, (_, a)), (_j, (_, b))| {
-                    a.total_cmp(b)
-                })
+                .max_by(|(_i, (_, a)), (_j, (_, b))| a.total_cmp(b))
                 .unwrap();
             let (strongest_index, (strongest_team, strongest_strength)) = strongest;
             if *strongest_strength > 0.0 {

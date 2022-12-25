@@ -1,4 +1,14 @@
-  
+match_config:
+  mode:
+    type: KingOfTheHill
+    capture_points:
+      -
+        x: 0.0
+        y: 0.0
+        radius: 10.0
+        capture_speed: 0.1
+        team: 0
+
 spawn_config:
   teams:
     -

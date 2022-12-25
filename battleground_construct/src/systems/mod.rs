@@ -1,7 +1,9 @@
 pub mod acceleration_velocity;
 pub mod cannon_trigger;
+pub mod capture;
 pub mod clock;
 pub mod destroy;
+pub mod display_capture_flag;
 pub mod display_tank_tracks;
 pub mod expiry_check;
 pub mod function_pose;

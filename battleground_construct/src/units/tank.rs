@@ -189,6 +189,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     if let Some(team_member) = config.team_member {
         world.add_component(body_id, team_member);
     }
+    world.add_component(body_id, components::capture_marker::CaptureMarker::new());
 
     register_interface.get_mut().add_module(
         "localization",

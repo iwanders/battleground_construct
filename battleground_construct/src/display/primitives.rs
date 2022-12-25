@@ -131,6 +131,12 @@ impl Color {
         b: 0,
         a: 0,
     };
+    pub const GREY: Color = Color {
+        r: 128,
+        g: 128,
+        b: 128,
+        a: 255,
+    };
     pub fn rgb(r: u8, g: u8, b: u8) -> Self {
         Color { r, g, b, a: 255 }
     }

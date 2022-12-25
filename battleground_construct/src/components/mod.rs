@@ -1,6 +1,8 @@
 pub mod acceleration;
 pub mod cannon;
 pub mod capturable;
+pub mod capture_marker;
+pub mod capture_point;
 pub mod clock;
 pub mod damage_hit;
 pub mod destroyed;
