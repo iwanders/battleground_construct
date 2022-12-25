@@ -206,6 +206,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         let mut construct = Construct::new();
         battleground_construct::config::playground::populate_dev_world(&mut construct);
+        // battleground_construct::config::tree_trailer::populate_tree_trailer(&mut construct);
         construct
     };
     let viewer = ConstructViewer::new(construct);
