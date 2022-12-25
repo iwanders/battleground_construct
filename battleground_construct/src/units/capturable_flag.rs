@@ -51,5 +51,10 @@ pub fn spawn_capturable_flag(world: &mut World, config: CapturableFlagConfig) ->
     flag.set_pole_height(2.0);
     world.add_component(capturable_flag, flag);
 
+    world.add_component(
+        capturable_flag,
+        display::display_control_point::DisplayControlPoint::new(),
+    );
+
     capturable_flag
 }

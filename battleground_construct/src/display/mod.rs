@@ -3,6 +3,7 @@ pub mod debug_elements;
 pub mod debug_lines;
 pub mod debug_sphere;
 pub mod deconstructor;
+pub mod display_control_point;
 pub mod draw_module;
 pub mod flag;
 pub mod particle_emitter;

@@ -165,6 +165,9 @@ impl ConstructRender {
         self.component_to_meshes::<display::debug_elements::DebugElements>(context, construct);
 
         self.component_to_meshes::<display::flag::Flag>(context, construct);
+        self.component_to_meshes::<display::display_control_point::DisplayControlPoint>(
+            context, construct,
+        );
 
         // Get the current effect keys.
         let mut start_keys = self
@@ -332,6 +335,11 @@ impl ConstructRender {
                     display::primitives::Primitive::Line(_line) => {
                         cast_shadow = false;
                         CpuMesh::cylinder(4)
+                    }
+                    display::primitives::Primitive::Circle(circle) => {
+                        let mut m = CpuMesh::circle(circle.subdivisions);
+                        m.transform(&Mat4::from_scale(circle.radius)).unwrap();
+                        m
                     }
                 };
 
