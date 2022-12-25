@@ -254,6 +254,8 @@ impl ConstructViewer {
                 &[&self.ambient_light, &self.directional_light],
             ).write(|| gui.render());
 
+            // TODO: Copy the multisampled textures into non-multisampled buffers to apply post-processing without having to resolve everything? The problem with multisampled buffers is that they require `sampler2DMS` type samplers, which require custom shader handling
+
             // NOTE: We really should blit here to resolve the multisampled textures, but I don't really see a way to do that within the scope of three-d
             screen.copy_from(
                 ColorTexture::Multisample(&color_texture),
