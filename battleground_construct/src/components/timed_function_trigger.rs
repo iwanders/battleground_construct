@@ -1,4 +1,3 @@
-use crate::components::pose::Pose;
 use engine::prelude::*;
 
 pub type Callback = std::rc::Rc<Box<dyn Fn(EntityId, &mut World)>>;

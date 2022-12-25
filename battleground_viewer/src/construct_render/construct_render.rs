@@ -76,7 +76,15 @@ impl DrawableKey for battleground_construct::display::primitives::Material {
                 1usize.hash(state);
                 // Key based on whether this is transparent, and or emissive. but not on color.
                 material.is_transparent.hash(state);
-                material.is_emissive.hash(state);
+                // material.is_emissive.hash(state);
+                // InstancedShapes doesn't handle emissive, if the material is emissive, key it by
+                // the color...
+                if material.is_emissive {
+                    material.emissive.r.hash(state);
+                    material.emissive.g.hash(state);
+                    material.emissive.b.hash(state);
+                    material.emissive.a.hash(state);
+                }
             }
             battleground_construct::display::primitives::Material::TeamMaterial => {
                 2usize.hash(state);
@@ -455,7 +463,7 @@ impl ConstructRender {
                         flat_material,
                     ) => {
                         let emissive = if flat_material.is_emissive {
-                            Color::WHITE
+                            flat_material.emissive.to_color()
                         } else {
                             Color::BLACK
                         };

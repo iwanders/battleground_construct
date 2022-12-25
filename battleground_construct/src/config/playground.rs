@@ -9,13 +9,14 @@ use units::tank::{spawn_tank, TankSpawnConfig};
 pub fn populate_dev_world(construct: &mut crate::Construct) {
     let world = &mut construct.world;
     let systems = &mut construct.systems;
+    use engine::prelude::*;
 
     super::default::add_components(world);
     super::default::add_systems(systems);
 
     use components::function_pose::FunctionPose;
     use components::pose::Pose;
-    use display::flag::Flag;
+    // use display::flag::Flag;
     use display::Color;
 
     /*
@@ -133,6 +134,21 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
     use cgmath::Deg;
 
     fn add_tree(world: &mut engine::World, x: f32, y: f32) -> engine::EntityId {
+        let decoration = true;
+        let decoration_radius = 0.05;
+        let decoration_colors = [Color::RED, Color::GREEN, Color::BLUE];
+
+        let emissive_colors: Vec<Color> = decoration_colors
+            .iter()
+            .copied()
+            .map(|em| Color {
+                r: em.r.saturating_sub(128),
+                g: em.g.saturating_sub(128),
+                b: em.b.saturating_sub(128),
+                a: em.a.saturating_sub(128),
+            })
+            .collect();
+
         let tree = world.add_entity();
         let mut elements = display::debug_elements::DebugElements::new();
         elements.add_element(Element {
@@ -143,6 +159,39 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             }),
             material: Color::rgb(0, 90, 0).into(),
         });
+
+        let make_decoration =
+            |radius: f32,
+             height: f32,
+             count: usize,
+             seed_offset: f32,
+             elements: &mut display::debug_elements::DebugElements| {
+                if decoration {
+                    let o = (seed_offset + 100.0) as usize;
+                    for i in 0..count {
+                        let v =
+                            ((i as f32 / count as f32) * std::f32::consts::PI * 2.0) + seed_offset;
+                        let y = v.sin() * radius;
+                        let z = v.cos() * radius;
+                        let color_index = (i + o) % decoration_colors.len();
+                        let material = display::primitives::Material::FlatMaterial(FlatMaterial {
+                            color: decoration_colors[color_index],
+                            emissive: emissive_colors[color_index],
+                            is_emissive: true,
+                            ..Default::default()
+                        });
+                        elements.add_element(Element {
+                            transform: Mat4::from_translation(Vec3::new(height, y, z)),
+                            primitive: Primitive::Sphere(Sphere {
+                                radius: decoration_radius,
+                            }),
+                            material: material,
+                        });
+                    }
+                }
+            };
+        make_decoration(0.65, 0.5 - 0.20 - decoration_radius, 12, x, &mut elements);
+
         elements.add_element(Element {
             transform: Mat4::from_translation(Vec3::new(1.0 - 0.20, 0.0, 0.0)),
             primitive: Primitive::Cone(Cone {
@@ -151,6 +200,14 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             }),
             material: Color::rgb(0, 90, 0).into(),
         });
+        make_decoration(
+            0.5,
+            1.0 - 0.20 - decoration_radius,
+            7,
+            y + 1.0,
+            &mut elements,
+        );
+
         elements.add_element(Element {
             transform: Mat4::from_translation(Vec3::new(1.5 - 0.20, 0.0, 0.0)),
             primitive: Primitive::Cone(Cone {
@@ -159,6 +216,14 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             }),
             material: Color::rgb(0, 90, 0).into(),
         });
+        make_decoration(
+            0.3,
+            1.5 - 0.20 - decoration_radius,
+            5,
+            x + 2.0,
+            &mut elements,
+        );
+
         elements.add_element(Element {
             transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
             primitive: Primitive::Cylinder(Cylinder {
@@ -172,20 +237,22 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
         tree
     }
 
-    let tree1 = add_tree(world, -6.0, -3.75);
-    let tree1 = add_tree(world, -6.0, -4.5);
-    let tree1 = add_tree(world, -5.5, -4.75);
-    let tree1 = add_tree(world, -4.8, -5.0);
-    let tree2 = add_tree(world, -3.0, -5.5);
-    let tree2 = add_tree(world, -4.0, -5.25);
-    let tree2 = add_tree(world, -2.0, -5.75);
+    let _tree1 = add_tree(world, -6.0, -3.75);
+    let _tree2 = add_tree(world, -6.0, -4.5);
+    let _tree3 = add_tree(world, -5.5, -4.75);
+    let tree4 = add_tree(world, -4.8, -5.0);
+    let tree5 = add_tree(world, -4.0, -5.25);
+    let _tree6 = add_tree(world, -3.0, -5.5);
+    let _tree7 = add_tree(world, -2.0, -5.75);
 
+    /*
     let particle_effect_id = components::id_generator::generate_id(world);
     let thingy = world.add_entity();
     let mut destructor = display::deconstructor::Deconstructor::new(particle_effect_id);
     destructor.add_element::<display::debug_elements::DebugElements>(tree1, world);
     world.add_component(thingy, destructor);
     world.add_component(thingy, components::expiry::Expiry::lifetime(50.0));
+    */
 
     let thingy = world.add_entity();
     let particle_effect_id = components::id_generator::generate_id(world);
@@ -214,37 +281,158 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
         })
     }
 
-    use cgmath::vec3;
-    let camera_path = vec![
-        (0.0, vec3(-8.0, -7.0, 5.0)),
-        (5.0, vec3(-8.0, -7.0, 5.0)),
-        (15.0, vec3(-8.0, -7.0, 1.0)),
-        // (15.0, vec3(-2.0, -5.0, 0.0)),
-    ];
+    if true {
+        use cgmath::vec3;
+        let camera_path = vec![
+            (0.0, vec3(-8.0, -7.0, 5.0)),
+            (5.0, vec3(-8.0, -7.0, 5.0)),
+            (15.0, vec3(-8.0, -7.0, 1.0)),
+            // (15.0, vec3(-2.0, -5.0, 0.0)),
+        ];
 
-    let camera_direction = camera_path
-        .iter()
-        .map(|(t, p)| (*t, p + vec3(1.0, 0.5, 0.0)))
-        .collect();
+        let camera_direction = camera_path
+            .iter()
+            .map(|(t, p)| (*t, p + vec3(1.0, 0.5, 0.0)))
+            .collect();
 
-    let camera_target = world.add_entity();
-    world.add_component(camera_target, Pose::from_xyz(0.0, 0.0, 0.0));
+        let camera_target = world.add_entity();
+        world.add_component(camera_target, Pose::from_xyz(0.0, 0.0, 0.0));
+        world.add_component(
+            camera_target,
+            components::camera_target::CameraTarget::new(),
+        );
+        world.add_component(
+            camera_target,
+            FunctionPose::new(generate_pose_function(camera_direction)),
+        );
+
+        let camera = world.add_entity();
+        world.add_component(camera, Pose::from_xyz(-1.0, -1.0, 0.0));
+        world.add_component(camera, components::camera_position::CameraPosition::new());
+        world.add_component(
+            camera,
+            FunctionPose::new(generate_pose_function(camera_path)),
+        );
+    }
+
+    let t_blast = 20.0;
+    use components::timed_function_trigger::TimedFunctionTrigger;
+    let timed_destructor = world.add_entity();
     world.add_component(
-        camera_target,
-        components::camera_target::CameraTarget::new(),
-    );
-    world.add_component(
-        camera_target,
-        FunctionPose::new(generate_pose_function(camera_direction)),
+        timed_destructor,
+        TimedFunctionTrigger::new(t_blast, None, move |_: _, world: &mut World| {
+            let particle_effect_id = components::id_generator::generate_id(world);
+            let thingy = world.add_entity();
+            let mut destructor = display::deconstructor::Deconstructor::new(particle_effect_id);
+            destructor.add_element::<display::debug_elements::DebugElements>(tree4, world);
+            destructor.add_element::<display::debug_elements::DebugElements>(tree5, world);
+            use crate::util::cgmath::ToHomogenous;
+            // directed blast from left
+            destructor.add_impact(cgmath::vec3(-4.0, -4.0, 1.0).to_h(), 3.5);
+            destructor.add_impact(cgmath::vec3(-5.0, -3.5, 1.0).to_h(), 4.5);
+            // In the trees;
+            destructor.add_impact(cgmath::vec3(-4.8, -5.0, 1.0).to_h(), 0.1);
+            destructor.add_impact(cgmath::vec3(-4.0, -5.25, 1.0).to_h(), 0.1);
+            world.add_component(thingy, destructor);
+            world.add_component(thingy, components::expiry::Expiry::lifetime(50.0));
+            world.remove_entity(tree4);
+            world.remove_entity(tree5);
+        }),
     );
 
-    let camera = world.add_entity();
-    world.add_component(camera, Pose::from_xyz(-1.0, -1.0, 0.0));
-    world.add_component(camera, components::camera_position::CameraPosition::new());
-    world.add_component(
-        camera,
-        FunctionPose::new(generate_pose_function(camera_path)),
+    // Spawn the robot at the correct rotation, but incorrect position, such that it is invissible.
+    let main_tank = spawn_tank(
+        world,
+        TankSpawnConfig {
+            x: -8.0,
+            y: -8.0,
+            yaw: (-110.0) / 360.0 * 2.0 * std::f32::consts::PI,
+            controller: Box::new(control::idle::Idle {}),
+            ..Default::default()
+        },
     );
 
-    // world.remove_entity(tree);
+    let timed_spawn = world.add_entity();
+    world.add_component(
+        timed_spawn,
+        TimedFunctionTrigger::new(t_blast, None, move |_: _, world: &mut World| {
+            // Teleport the robot to the start position.
+            {
+                let mut g = world
+                    .component_mut::<components::pose::Pose>(main_tank)
+                    .unwrap();
+                g.transform_mut().w.x = -3.5;
+                g.transform_mut().w.y = -3.7;
+            }
+            // Set the drive to on.
+            let g = world
+                .component::<components::group::Group>(main_tank)
+                .unwrap();
+            let mut d = world
+                .component_mut::<components::differential_drive_base::DifferentialDriveBase>(
+                    g.entities()[0],
+                )
+                .expect("diff drive not on expected entity.");
+            d.set_velocities(0.5, 0.5);
+        }),
+    );
+
+    let modify_revolute_speed = |world: &mut World, time: f32, group_offset: usize, vel: f32| {
+        let modify_rev = world.add_entity();
+        world.add_component(
+            modify_rev,
+            TimedFunctionTrigger::new(time, None, move |_: _, world: &mut World| {
+                let g = world
+                    .component::<components::group::Group>(main_tank)
+                    .unwrap();
+                let mut d = world
+                    .component_mut::<components::revolute::Revolute>(g.entities()[group_offset])
+                    .expect("revolute should be here");
+                d.set_velocity(vel);
+            }),
+        );
+    };
+
+    let turret_index_in_group = 2;
+    let barrel_index_in_group = 3;
+
+    modify_revolute_speed(world, t_blast + 2.0, turret_index_in_group, -0.3);
+    modify_revolute_speed(world, t_blast + 5.0, turret_index_in_group, 0.0);
+
+    modify_revolute_speed(world, t_blast + 3.0, barrel_index_in_group, -0.10);
+    modify_revolute_speed(world, t_blast + 5.0, barrel_index_in_group, 0.0);
+
+    let stop_moving = world.add_entity();
+    world.add_component(
+        stop_moving,
+        TimedFunctionTrigger::new(t_blast + 4.0, None, move |_: _, world: &mut World| {
+            let g = world
+                .component::<components::group::Group>(main_tank)
+                .unwrap();
+            let mut d = world
+                .component_mut::<components::differential_drive_base::DifferentialDriveBase>(
+                    g.entities()[0],
+                )
+                .unwrap();
+            d.set_velocities(0.0, 0.0);
+        }),
+    );
+
+    let set_cannon_firing = |world: &mut World, time: f32, firing: bool| {
+        let modify_rev = world.add_entity();
+        world.add_component(
+            modify_rev,
+            TimedFunctionTrigger::new(time, None, move |_: _, world: &mut World| {
+                let g = world
+                    .component::<components::group::Group>(main_tank)
+                    .unwrap();
+                let mut d = world
+                    .component_mut::<components::cannon::Cannon>(g.entities()[4])
+                    .expect("cannon should be here");
+                d.set_firing(firing);
+            }),
+        );
+    };
+    set_cannon_firing(world, t_blast + 5.5, true);
+    set_cannon_firing(world, t_blast + 5.6, false);
 }
