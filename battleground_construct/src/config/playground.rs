@@ -18,6 +18,8 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
     use display::flag::Flag;
     use display::Color;
 
+    /*
+
     let flag_id = world.add_entity();
     world.add_component(flag_id, components::pose::Pose::from_xyz(-1.0, -1.0, 0.0));
     world.add_component(flag_id, display::flag::Flag::new());
@@ -126,7 +128,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             );
         }
     }
-
+    */
     use crate::display::primitives::*;
     use cgmath::Deg;
 
@@ -170,8 +172,10 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
         tree
     }
 
-    let tree1 = add_tree(world, -6.0, -4.75);
-    let tree1 = add_tree(world, -5.0, -5.0);
+    let tree1 = add_tree(world, -6.0, -3.75);
+    let tree1 = add_tree(world, -6.0, -4.5);
+    let tree1 = add_tree(world, -5.5, -4.75);
+    let tree1 = add_tree(world, -4.8, -5.0);
     let tree2 = add_tree(world, -3.0, -5.5);
     let tree2 = add_tree(world, -4.0, -5.25);
     let tree2 = add_tree(world, -2.0, -5.75);
@@ -191,11 +195,47 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
         display::particle_emitter::ParticleEmitter::snow(particle_effect_id, 0.03, Color::WHITE),
     );
 
+    fn generate_pose_function(
+        controls: Vec<(f32, cgmath::Vector3<f32>)>,
+    ) -> Box<dyn Fn(f32) -> Pose> {
+        Box::new(move |t| {
+            for w in controls[..].windows(2) {
+                let c = w[0];
+                let n = w[1];
+                if c.0 < t && t <= n.0 {
+                    // lerp in the vector.
+                    let ratio = (t - c.0) / (n.0 - c.0);
+                    let p = c.1 + (n.1 - c.1) * ratio;
+                    return Pose::from_xyz(p.x, p.y, p.z);
+                }
+            }
+            let f = controls.last().unwrap().1;
+            Pose::from_xyz(f.x, f.y, f.z)
+        })
+    }
+
+    use cgmath::vec3;
+    let camera_path = vec![
+        (0.0, vec3(-8.0, -7.0, 5.0)),
+        (5.0, vec3(-8.0, -7.0, 5.0)),
+        (15.0, vec3(-8.0, -7.0, 1.0)),
+        // (15.0, vec3(-2.0, -5.0, 0.0)),
+    ];
+
+    let camera_direction = camera_path
+        .iter()
+        .map(|(t, p)| (*t, p + vec3(1.0, 0.5, 0.0)))
+        .collect();
+
     let camera_target = world.add_entity();
     world.add_component(camera_target, Pose::from_xyz(0.0, 0.0, 0.0));
     world.add_component(
         camera_target,
         components::camera_target::CameraTarget::new(),
+    );
+    world.add_component(
+        camera_target,
+        FunctionPose::new(generate_pose_function(camera_direction)),
     );
 
     let camera = world.add_entity();
@@ -203,7 +243,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
     world.add_component(camera, components::camera_position::CameraPosition::new());
     world.add_component(
         camera,
-        FunctionPose::new(|t| Pose::from_xyz(t.sin() - 2.0, t.cos() + 2.0, t.sin() + 1.5)),
+        FunctionPose::new(generate_pose_function(camera_path)),
     );
 
     // world.remove_entity(tree);
