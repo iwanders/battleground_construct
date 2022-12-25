@@ -129,6 +129,7 @@ pub struct FlatMaterial {
     pub color: Color,
     pub emissive: Color,
     pub is_transparent: bool,
+    pub is_emissive: bool,
 }
 
 impl Default for FlatMaterial {
@@ -137,6 +138,7 @@ impl Default for FlatMaterial {
             color: Color::MAGENTA,
             emissive: Color::BLACK,
             is_transparent: false,
+            is_emissive: false,
         }
     }
 }

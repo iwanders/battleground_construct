@@ -41,7 +41,7 @@ impl System for Capture {
             let influence_vec: Vec<(TeamId, f32)> =
                 influence.iter().map(|(a, b)| (*a, *b)).collect::<_>();
             capturable.update(&influence_vec[..]);
-            println!("capturable: {capturable:?}");
+            // println!("capturable: {capturable:?}");
         }
     }
 }

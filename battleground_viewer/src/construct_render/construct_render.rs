@@ -4,7 +4,7 @@ use super::effects;
 use super::instanced_entity;
 
 use battleground_construct::display;
-use battleground_construct::display::primitives::{Primitive, Drawable};
+use battleground_construct::display::primitives::{Drawable, Primitive};
 use battleground_construct::Construct;
 use engine::prelude::*;
 
@@ -23,7 +23,6 @@ struct Properties {
 trait DrawableKey {
     fn to_draw_key(&self) -> u64;
 }
-
 
 impl DrawableKey for battleground_construct::display::primitives::Primitive {
     fn to_draw_key(&self) -> u64 {
@@ -66,7 +65,38 @@ impl DrawableKey for battleground_construct::display::primitives::Primitive {
         hasher.finish()
     }
 }
+impl DrawableKey for battleground_construct::display::primitives::Material {
+    fn to_draw_key(&self) -> u64 {
+        use std::hash::Hash;
+        use std::hash::Hasher;
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        let state = &mut hasher;
+        match *self {
+            battleground_construct::display::primitives::Material::FlatMaterial(material) => {
+                1usize.hash(state);
+                // Key based on whether this is transparent, and or emissive. but not on color.
+                material.is_transparent.hash(state);
+                material.is_emissive.hash(state);
+            }
+            battleground_construct::display::primitives::Material::TeamMaterial => {
+                2usize.hash(state);
+            }
+        }
+        hasher.finish()
+    }
+}
 
+impl DrawableKey for battleground_construct::display::primitives::Element {
+    fn to_draw_key(&self) -> u64 {
+        use std::hash::Hash;
+        use std::hash::Hasher;
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        let state = &mut hasher;
+        self.material.to_draw_key().hash(state);
+        self.primitive.to_draw_key().hash(state);
+        hasher.finish()
+    }
+}
 
 /// The object used to render a construct.
 pub struct ConstructRender {
@@ -339,7 +369,7 @@ impl ConstructRender {
         entity_transform: &Matrix4<f32>,
     ) {
         self.instanced_meshes
-            .entry(el.primitive.to_draw_key())
+            .entry(el.to_draw_key())
             .or_insert_with(|| {
                 let mut cast_shadow = true;
                 let primitive_mesh = match el.primitive {
@@ -391,15 +421,47 @@ impl ConstructRender {
                     }
                 };
 
+                // Need to make the appropriate material here based on the material passed in.
+                let material = match el.material {
+                    battleground_construct::display::primitives::Material::FlatMaterial(
+                        flat_material,
+                    ) => {
+                        let emissive = if flat_material.is_emissive {
+                            Color::WHITE
+                        } else {
+                            Color::BLACK
+                        };
+                        let fun = if flat_material.is_transparent {
+                            three_d::renderer::material::PhysicalMaterial::new_transparent
+                        } else {
+                            three_d::renderer::material::PhysicalMaterial::new_opaque
+                        };
+                        fun(
+                            context,
+                            &CpuMaterial {
+                                albedo: Color {
+                                    r: 255,
+                                    g: 255,
+                                    b: 255,
+                                    a: 255,
+                                },
+                                emissive,
+                                ..Default::default()
+                            },
+                        )
+                    }
+                    battleground_construct::display::primitives::Material::TeamMaterial => todo!(),
+                };
+
                 Properties {
-                    object: InstancedEntity::new_physical(context, &primitive_mesh),
+                    object: InstancedEntity::new(context, &primitive_mesh, material),
                     cast_shadow,
                 }
             });
 
         let instanced = &mut self
             .instanced_meshes
-            .get_mut(&el.primitive.to_draw_key())
+            .get_mut(&el.to_draw_key())
             .expect("just checked it, will be there")
             .object;
         let transform = entity_transform * el.transform;

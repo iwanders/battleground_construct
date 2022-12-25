@@ -16,7 +16,7 @@ impl System for DisplayCaptureFlag {
                 .owner()
                 .and_then(|owner| get_team_entity(world, owner))
                 .and_then(|owner_entity| world.component::<Team>(owner_entity))
-                .map_or(display::Color::GREY, |team| *team.color());
+                .map_or(display::Color::rgb(30, 30, 30), |team| *team.color());
 
             // If there is a flag here, modify it.
             if let Some(mut flag) = world.component_mut::<Flag>(capturable_entity) {
