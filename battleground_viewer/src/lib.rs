@@ -6,6 +6,7 @@ mod construct_render;
 use construct_render::ConstructRender;
 
 const PRINT_DURATIONS: bool = false;
+const MSAA_SAMPLES: u32 = 8;
 
 pub struct Limiter {
     pub period: std::time::Duration,
@@ -207,7 +208,6 @@ impl ConstructViewer {
             }
 
             let screen = frame_input.screen();
-            screen.clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0));
 
             let now = std::time::Instant::now();
 
@@ -230,13 +230,37 @@ impl ConstructViewer {
 
             let now = std::time::Instant::now();
 
-            screen
-                .render(
-                    &self.camera,
-                    &self.construct_render.objects(),
-                    &[&self.ambient_light, &self.directional_light],
-                )
-                .write(|| gui.render());
+            let mut color_texture = Texture2DMultisample::new::<[u8; 4]>(
+                &self.context,
+                frame_input.viewport.width,
+                frame_input.viewport.height,
+                MSAA_SAMPLES,
+            );
+            let mut depth_texture = DepthTexture2DMultisample::new::<f32>(
+                &self.context,
+                frame_input.viewport.width,
+                frame_input.viewport.height,
+                MSAA_SAMPLES,
+            );
+
+            RenderTarget::new(
+                color_texture.as_color_target(),
+                depth_texture.as_depth_target(),
+            )
+            .clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0))
+            .render(
+                &self.camera,
+                &self.construct_render.objects(),
+                &[&self.ambient_light, &self.directional_light],
+            ).write(|| gui.render());
+
+            // NOTE: We really should blit here to resolve the multisampled textures, but I don't really see a way to do that within the scope of three-d
+            screen.copy_from(
+                ColorTexture::Multisample(&color_texture),
+                DepthTexture::Multisample(&depth_texture),
+                frame_input.viewport,
+                WriteMask::default(),
+            );
 
             //----------------------------------------------------------------
 
