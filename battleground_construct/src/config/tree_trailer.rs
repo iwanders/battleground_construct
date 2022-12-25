@@ -5,6 +5,8 @@ use crate::units;
 
 use units::tank::{spawn_tank, TankSpawnConfig};
 
+// a535e66f594aa51758273bf0f98ec6f2e3f4381f is the last commit before 'snow' was removed.
+
 pub fn populate_tree_trailer(construct: &mut crate::Construct) {
     let world = &mut construct.world;
     let systems = &mut construct.systems;
@@ -141,13 +143,14 @@ pub fn populate_tree_trailer(construct: &mut crate::Construct) {
     world.add_component(thingy, components::expiry::Expiry::lifetime(50.0));
     */
 
+    /*
     let thingy = world.add_entity();
     let particle_effect_id = components::id_generator::generate_id(world);
     world.add_component(thingy, Pose::from_xyz(-5.0, -5.0, 5.0));
     world.add_component(
         thingy,
         display::particle_emitter::ParticleEmitter::snow(particle_effect_id, 0.03, Color::WHITE),
-    );
+    );*/
 
     fn generate_pose_function(
         controls: Vec<(f32, cgmath::Vector3<f32>)>,

@@ -16,13 +16,6 @@ impl ParticleEmitter {
             emitting: true,
         }
     }
-    pub fn snow(id: u64, size: f32, color: Color) -> Self {
-        ParticleEmitter {
-            id,
-            particle_type: ParticleType::Snow { size, color },
-            emitting: true,
-        }
-    }
 }
 impl Component for ParticleEmitter {}
 

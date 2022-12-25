@@ -87,22 +87,15 @@ impl ParticleEmitter {
     ) -> Self {
         let mut p_color: Color;
         let p_size: f32;
-        let mut lifetime = 0.4;
+        let lifetime = 0.4;
         let spawn_interval = 0.01;
-        let mut velocity = vec3(0.0, 0.0, 0.0);
+        let velocity = vec3(0.0, 0.0, 0.0);
 
         match display {
             display::primitives::ParticleType::BulletTrail { color, size } => {
                 p_color = color.to_color();
                 p_color.a = 128;
                 p_size = *size;
-            }
-            display::primitives::ParticleType::Snow { color, size } => {
-                p_color = color.to_color();
-                p_color.a = 128;
-                p_size = *size;
-                lifetime = 1000.0;
-                velocity = vec3(0.0, 0.0, 0.3)
             }
         }
         let color = p_color;
