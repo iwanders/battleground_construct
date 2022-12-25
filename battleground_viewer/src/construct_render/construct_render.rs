@@ -173,6 +173,34 @@ impl ConstructRender {
         }
     }
 
+    pub fn camera_view(&self, camera: &Camera, construct: &Construct) -> Option<(Vec3, Vec3)> {
+        let mut current_pos = *camera.position();
+        let mut current_target = *camera.target();
+        let mut modified: bool = false;
+        use battleground_construct::components::camera_position::CameraPosition;
+        use battleground_construct::components::camera_target::CameraTarget;
+        use battleground_construct::util::cgmath::ToTranslation;
+        let opt_camera_position = construct.world.component_iter::<CameraPosition>().next();
+        if let Some((entity, _)) = opt_camera_position {
+            let world_pose = construct.entity_pose(entity);
+            current_pos = world_pose.to_translation();
+            modified = true;
+        }
+
+        let opt_camera_target = construct.world.component_iter::<CameraTarget>().next();
+        if let Some((entity, _)) = opt_camera_target {
+            let world_pose = construct.entity_pose(entity);
+            current_target = world_pose.to_translation();
+            modified = true;
+        }
+
+        if modified {
+            Some((current_pos, current_target))
+        } else {
+            None
+        }
+    }
+
     /// Return a list of geometrise to be used for shadow calculations.
     pub fn shadow_meshes(&self) -> Vec<&impl Geometry> {
         self.instanced_meshes

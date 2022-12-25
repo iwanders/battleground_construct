@@ -1,4 +1,6 @@
 pub mod acceleration;
+pub mod camera_position;
+pub mod camera_target;
 pub mod cannon;
 pub mod capturable;
 pub mod capture_marker;

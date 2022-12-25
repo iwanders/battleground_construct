@@ -165,10 +165,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             }),
             material: Color::rgb(50, 24, 0).into(),
         });
-        world.add_component(
-            tree,
-            Pose::from_xyz(x, y, 0.0).rotated_angle_y(Deg(-90.0)),
-        );
+        world.add_component(tree, Pose::from_xyz(x, y, 0.0).rotated_angle_y(Deg(-90.0)));
         world.add_component(tree, elements);
         tree
     }
@@ -186,17 +183,27 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
     world.add_component(thingy, destructor);
     world.add_component(thingy, components::expiry::Expiry::lifetime(50.0));
 
-
     let thingy = world.add_entity();
     let particle_effect_id = components::id_generator::generate_id(world);
     world.add_component(thingy, Pose::from_xyz(-5.0, -5.0, 5.0));
     world.add_component(
         thingy,
-        display::particle_emitter::ParticleEmitter::snow(
-            particle_effect_id,
-            0.03,
-            Color::WHITE,
-        ),
+        display::particle_emitter::ParticleEmitter::snow(particle_effect_id, 0.03, Color::WHITE),
+    );
+
+    let camera_target = world.add_entity();
+    world.add_component(camera_target, Pose::from_xyz(0.0, 0.0, 0.0));
+    world.add_component(
+        camera_target,
+        components::camera_target::CameraTarget::new(),
+    );
+
+    let camera = world.add_entity();
+    world.add_component(camera, Pose::from_xyz(-1.0, -1.0, 0.0));
+    world.add_component(camera, components::camera_position::CameraPosition::new());
+    world.add_component(
+        camera,
+        FunctionPose::new(|t| Pose::from_xyz(t.sin() - 2.0, t.cos() + 2.0, t.sin() + 1.5)),
     );
 
     // world.remove_entity(tree);

@@ -157,6 +157,13 @@ impl ConstructViewer {
             screen.clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0));
 
             let now = std::time::Instant::now();
+
+            if let Some((pos, target)) = self
+                .construct_render
+                .camera_view(&self.camera, &self.construct)
+            {
+                self.camera.set_view(pos, target, vec3(0.0, 0.0, 1.0));
+            }
             self.construct_render
                 .render(&self.camera, &self.context, &self.construct);
 
