@@ -6,10 +6,10 @@ match_config:
       -
         x: 0.0
         y: 0.0
-        radius: 10.0
+        radius: 5.0
         capture_speed: 0.1
         team: 0
-    point_limit: 10.0
+    #  point_limit: 10.0
 
 spawn_config:
   teams:
@@ -21,14 +21,14 @@ spawn_config:
       color: [0, 0, 255]
   spawns:
     -
-      x: 2.0
+      x: 10.0
       y: 0.0
       yaw: 3.14
       controller:
         type: SwivelShoot
       team: 0
     -
-      x: -2.0
+      x: -10.0
       y: 0.0
       yaw: 0
       team: 0
@@ -38,12 +38,15 @@ spawn_config:
 
     -
       x: 0.0
-      y: -2.0
-      yaw: 1.5708
+      y: -10.0
+      #  yaw: 1.5708
+      yaw: 0.0
       team: 1
+      controller:
+        type: DiffDriveCapturable
 
     -
       x: 0.0
-      y: 2.0
+      y: 10.0
       yaw: -1.5708
       team: 1

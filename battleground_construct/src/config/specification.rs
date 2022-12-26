@@ -70,6 +70,7 @@ pub enum ControllerType {
         velocities: (f32, f32),
         duration: f32,
     },
+    DiffDriveCapturable,
     #[cfg(feature = "unit_control_wasm")]
     Wasm {
         module: String,
