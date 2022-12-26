@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 mod as_any;
 pub use as_any::AsAny;
 
+/// An entity is represented by this id.
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
 pub struct EntityId(usize);
 
@@ -12,17 +13,24 @@ pub trait Component: AsAny {}
 
 /// Systems operate on components.
 pub trait System {
-    // I think this should technically be a free function without state, but that's not object safe.
-    // So lets just allow mutability for now.
+    /// Update function for a system, technically, systems should probably be free functions and as
+    /// such take a non-mutable self, but sometimes changing self can be helpful
+    /// (for example toggling logging), so lets allow mutability on self.
     fn update(&mut self, world: &mut World);
 }
 
+/// Prelude for importing the necessities.
 pub mod prelude {
     pub use super::{Component, EntityId, System, World};
 }
 
 use std::cell::Ref;
 
+/// The world contains the entities and components. Components are ordered by type id, then keyed
+/// on entity. The world does allow interior mutability, but only on different component types.
+/// Performing two mutable iterations over the same component type is a logic error and will panic.
+/// Performing a non-mutable borrow and a mutable borrow on the same component type is also a logic
+/// error and will panic.
 #[derive(Default)]
 pub struct World {
     index: usize,
@@ -34,6 +42,7 @@ pub struct World {
 }
 
 // for vectors; https://stackoverflow.com/a/68737585
+/// Component iterator.
 pub struct ComponentIterator<'a, T: Component + 'static> {
     entries: Option<
         std::collections::hash_map::Iter<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>,
@@ -64,6 +73,7 @@ impl<'a, T: Component + 'static> Iterator for ComponentIterator<'a, T> {
 
 use std::cell::RefMut;
 
+/// Mutable component iterator.
 pub struct ComponentIteratorMut<'a, T: Component + 'static> {
     entries: Option<
         std::collections::hash_map::Iter<'a, EntityId, std::cell::RefCell<Box<dyn Component>>>,
@@ -91,21 +101,26 @@ impl<'a, T: Component + 'static> Iterator for ComponentIteratorMut<'a, T> {
         })
     }
 }
+
 impl World {
+    /// Create a new empty world.
     pub fn new() -> Self {
         Default::default()
     }
 
+    /// Add a new entity to the entity list, return its new id.
     pub fn add_entity(&mut self) -> EntityId {
-        let new_id = self.make_id();
+        let new_id = self.make_entity_id();
         self.entities.insert(new_id);
         new_id
     }
 
+    /// Add a component to an entity.
     pub fn add_component<C: Component + 'static>(&mut self, entity: EntityId, component: C) {
         self.add_component_boxed(entity, Box::new(component));
     }
 
+    /// Add a boxed component to an entity.
     pub fn add_component_boxed<C: Component + 'static>(
         &mut self,
         entity: EntityId,
@@ -121,6 +136,7 @@ impl World {
         v.insert(entity, std::cell::RefCell::new(component));
     }
 
+    /// Return a list of all entities that have a particular component.
     pub fn component_entities<C: Component + 'static>(&self) -> Vec<EntityId> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
@@ -130,6 +146,7 @@ impl World {
         v.keys().copied().collect::<_>()
     }
 
+    /// Iterate over all (entity, component) of a particular component type.
     pub fn component_iter<'a, C: Component + 'static>(&'a self) -> ComponentIterator<'a, C> {
         let v = self.components.get(&TypeId::of::<C>());
         if v.is_none() {
@@ -143,6 +160,9 @@ impl World {
             phantom: PhantomData,
         }
     }
+
+    /// Remove the specified component from the provided entities. Returns the vector of returned
+    /// components. Returned vector is guaranteed to be the same size as entities input.
     pub fn remove_components<C: Component + 'static>(
         &mut self,
         entities: &[EntityId],
@@ -164,6 +184,7 @@ impl World {
         res
     }
 
+    /// Remove a specific component from an entity, returning it if it was present.
     pub fn remove_component<C: Component + 'static>(&mut self, entity: EntityId) -> Option<Box<C>> {
         let v = self.components.get_mut(&TypeId::of::<C>())?;
         v.remove(&entity).map(|v| {
@@ -174,6 +195,7 @@ impl World {
         })
     }
 
+    /// Move a component from one entity to another.
     pub fn move_component<C: Component + 'static>(&mut self, src: EntityId, dst: EntityId) {
         let v = self.remove_component::<C>(src);
         if let Some(v) = v {
@@ -181,6 +203,7 @@ impl World {
         }
     }
 
+    /// Remove an entity.
     pub fn remove_entity(&mut self, entity: EntityId) {
         if self.entities.remove(&entity) {
             for (_t, comps) in self.components.iter_mut() {
@@ -189,16 +212,20 @@ impl World {
         }
     }
 
+    /// Remove multiple entities.
     pub fn remove_entities(&mut self, entities: &[EntityId]) {
         for entity in entities.iter() {
             self.remove_entity(*entity)
         }
     }
 
+    /// Return the current entity count. This includes any entities that ended up having no
+    /// components attached to them, but weren't removed.
     pub fn entity_count(&self) -> usize {
         self.entities.len()
     }
 
+    /// Iterate over a specific component type in mutable fashion.
     /// Method is not const, to allow different component types to be accessed in mutable fashion
     /// at the same time. But it will panic if we're doing a double borrow.
     pub fn component_iter_mut<'a, C: Component + 'static>(&'a self) -> ComponentIteratorMut<'a, C> {
@@ -217,6 +244,7 @@ impl World {
         }
     }
 
+    /// Obtain a specific component from an entity, None if the entity didn't have the component.
     pub fn component<C: Component + 'static>(&self, entity: EntityId) -> Option<std::cell::Ref<C>> {
         let v = self.components.get(&TypeId::of::<C>())?;
 
@@ -232,6 +260,8 @@ impl World {
         })
     }
 
+    /// Mutably obtain a specific component from an entity, None if the entity didn't have the
+    /// component.
     pub fn component_mut<C: Component + 'static>(
         &self,
         entity: EntityId,
@@ -250,25 +280,30 @@ impl World {
         })
     }
 
-    fn make_id(&mut self) -> EntityId {
+    /// Make a new entity id, private function to ensure the entity ids are unique.
+    fn make_entity_id(&mut self) -> EntityId {
         self.index += 1;
         EntityId(self.index)
     }
 }
 
+/// Systems, a container to hold and organise multiple systems.
 #[derive(Default)]
 pub struct Systems {
     systems: Vec<Box<dyn System>>,
 }
 impl Systems {
+    /// Create a new empty systems container.
     pub fn new() -> Self {
         Default::default()
     }
 
+    /// Add a system to the systems container.
     pub fn add_system(&mut self, system: Box<dyn System>) {
         self.systems.push(system);
     }
 
+    /// Run all systems in the order by which they were added on the world.
     pub fn update(&mut self, world: &mut World) {
         for s in self.systems.iter_mut() {
             s.update(world);
