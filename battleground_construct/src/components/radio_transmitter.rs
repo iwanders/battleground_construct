@@ -6,16 +6,18 @@ pub struct RadioTransmitter {
     config: RadioTransmitterConfig,
     next_send_time: f32,
     last_update_time: f32,
-    transmission_strength: f32,
+    transmit_strength: f32,
     payloads: VecDeque<Vec<u8>>,
 }
 
 #[derive(Copy, Debug, Clone)]
 pub struct RadioTransmitterConfig {
+    /// Maximum range for which transmissions are still delivered.
+    pub transmit_range_max: f32,
     /// Interval at which the radio sends out each message.
-    pub transmission_interval: f32,
+    pub transmit_interval: f32,
     /// The transmission strength, used to calculate the receipt strength.
-    pub transmission_strength_max: f32,
+    pub transmit_strength_max: f32,
     /// Maximum length of each transmission, in bytes, longer messages are truncated.
     pub payload_size_limit: usize,
     /// The maximum number of pending transmissions.
@@ -25,8 +27,9 @@ pub struct RadioTransmitterConfig {
 impl Default for RadioTransmitterConfig {
     fn default() -> Self {
         Self {
-            transmission_strength_max: 10.0,
-            transmission_interval: 0.01,
+            transmit_range_max: 30.0,
+            transmit_strength_max: 1.0,
+            transmit_interval: 0.01,
             payload_size_limit: 32,
             payload_count_limit: 16,
         }
@@ -37,9 +40,9 @@ impl RadioTransmitter {
     pub fn new_with_config(config: RadioTransmitterConfig) -> Self {
         Self {
             config,
-            next_send_time: -config.transmission_interval - 1.0,
+            next_send_time: -config.transmit_interval - 1.0,
             last_update_time: 0.0,
-            transmission_strength: config.transmission_strength_max,
+            transmit_strength: config.transmit_strength_max,
             payloads: VecDeque::new(),
         }
     }
@@ -50,7 +53,7 @@ impl RadioTransmitter {
         // Step through time in transmission interval steps.
         while !self.payloads.is_empty() && self.next_send_time < current_time {
             payloads.push(self.payloads.pop_front().unwrap());
-            self.next_send_time = self.last_update_time + self.config.transmission_interval;
+            self.next_send_time = self.last_update_time + self.config.transmit_interval;
         }
         self.last_update_time = current_time;
         payloads
@@ -69,8 +72,12 @@ impl RadioTransmitter {
         self.payloads.clone().into()
     }
 
-    pub fn transmission_strength(&self) -> f32 {
-        self.transmission_strength
+    pub fn transmit_strength(&self) -> f32 {
+        self.transmit_strength
+    }
+
+    pub fn set_transmit_strength(&mut self, strength: f32) {
+        self.transmit_strength = strength.clamp(0.0, self.config.transmit_strength_max);
     }
 
     pub fn config(&self) -> RadioTransmitterConfig {
@@ -80,6 +87,7 @@ impl RadioTransmitter {
 impl Component for RadioTransmitter {}
 
 use crate::components::unit_interface::{Register, RegisterMap, UnitModule};
+use battleground_unit_control::modules::radio_transmitter::registers;
 pub struct RadioTransmitterModule {
     entity: EntityId,
 }
@@ -92,8 +100,105 @@ impl RadioTransmitterModule {
 
 impl UnitModule for RadioTransmitterModule {
     fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
-        registers.clear();
-        if let Some(radio_transmitter) = world.component::<RadioTransmitter>(self.entity) {}
+        // No clear here, we always overwrite all registers.
+        if let Some(radio_transmitter) = world.component::<RadioTransmitter>(self.entity) {
+            // Read only
+            registers.insert(
+                registers::TRANSMIT_RANGE_MAX,
+                Register::new_f32(
+                    "transmit_range_max",
+                    radio_transmitter.config.transmit_range_max,
+                ),
+            );
+            registers.insert(
+                registers::TRANSMIT_INTERVAL,
+                Register::new_f32(
+                    "transmit_interval",
+                    radio_transmitter.config.transmit_interval,
+                ),
+            );
+            registers.insert(
+                registers::TRANSMIT_STRENGTH_MAX,
+                Register::new_f32(
+                    "transmit_strength_max",
+                    radio_transmitter.config.transmit_strength_max,
+                ),
+            );
+            registers.insert(
+                registers::PAYLOAD_SIZE_LIMIT,
+                Register::new_i32(
+                    "payload_size_limit",
+                    radio_transmitter.config.payload_size_limit as i32,
+                ),
+            );
+            registers.insert(
+                registers::PAYLOAD_COUNT_LIMIT,
+                Register::new_i32(
+                    "payload_count_limit",
+                    radio_transmitter.config.payload_count_limit as i32,
+                ),
+            );
+
+            // Writeable registers.
+            registers.insert(
+                registers::TRANSMIT_STRENGTH,
+                Register::new_f32("transmit_strength", radio_transmitter.transmit_strength),
+            );
+
+            let payloads = radio_transmitter.payloads();
+            registers.insert(
+                registers::PAYLOAD_COUNT,
+                Register::new_i32("payload_count", payloads.len() as i32),
+            );
+            for i in 0..radio_transmitter.config.payload_count_limit {
+                let v = registers
+                    .entry(registers::PAYLOAD_OFFSET + (i as u32))
+                    .or_insert(Register::new_bytes_max(
+                        "payload",
+                        radio_transmitter.config.payload_size_limit,
+                    ));
+                let value = if i < payloads.len() {
+                    payloads[i].clone()
+                } else {
+                    vec![]
+                };
+                *v.value_bytes_mut().unwrap() = value;
+            }
+        }
+    }
+
+    fn set_component(&self, world: &mut World, registers: &RegisterMap) {
+        if let Some(mut radio_transmitter) = world.component_mut::<RadioTransmitter>(self.entity) {
+            let transmit_strength = registers
+                .get(&registers::TRANSMIT_STRENGTH)
+                .expect("register doesnt exist")
+                .value_f32()
+                .expect("wrong value type");
+            radio_transmitter.set_transmit_strength(transmit_strength);
+
+            let payload_count = registers
+                .get(&registers::PAYLOAD_COUNT)
+                .expect("register doesnt exist")
+                .value_i32()
+                .expect("wrong value type")
+                .max(0) as usize;
+
+            // Finally, collect the payloads
+            let upper = radio_transmitter
+                .config
+                .payload_count_limit
+                .min(payload_count);
+            let payloads = (0..upper)
+                .map(|i| {
+                    registers
+                        .get(&(registers::PAYLOAD_OFFSET + (i as u32)))
+                        .unwrap()
+                        .value_bytes()
+                        .unwrap()
+                })
+                .collect::<Vec<&[u8]>>();
+            radio_transmitter.set_payloads(&payloads);
+        }
     }
 }
 
@@ -104,8 +209,8 @@ mod test {
     #[test]
     fn test_radio_transmitter() {
         let config = RadioTransmitterConfig {
-            transmission_strength_max: 10.0,
-            transmission_interval: 0.1,
+            transmit_strength_max: 10.0,
+            transmit_interval: 0.1,
             payload_size_limit: 4,
             payload_count_limit: 3,
         };

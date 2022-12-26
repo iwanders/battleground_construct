@@ -79,6 +79,18 @@ impl Register {
             },
         }
     }
+
+    /// Create a new bytes register with a limit.
+    pub fn new_bytes_max(name: &str, max_len: usize) -> Self {
+        Register {
+            name: name.to_owned(),
+            value: Value::Bytes {
+                values: vec![],
+                min_len: 0,
+                max_len,
+            },
+        }
+    }
 }
 
 /// Type that the unit modules will populate and read from.

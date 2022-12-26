@@ -31,6 +31,7 @@ pub mod pose;
 pub mod projectile_source;
 pub mod radar;
 pub mod radar_reflector;
+pub mod radio_receiver;
 pub mod radio_transmitter;
 pub mod revolute;
 pub mod team;
