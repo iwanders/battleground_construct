@@ -24,6 +24,7 @@ pub mod impact;
 pub mod match_finished;
 pub mod match_king_of_the_hill;
 pub mod match_time_limit;
+pub mod objectives;
 pub mod parent;
 pub mod point_projectile;
 pub mod pose;

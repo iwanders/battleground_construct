@@ -195,6 +195,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         display::draw_module::DrawModule::new(body_id),
     );
 
+    register_interface.get_mut().add_module(
+        "objectives",
+        OBJECTIVES_MODULE,
+        components::objectives::ObjectivesModule::new(),
+    );
+
     // Add the turrent entity.
     let turret_id = world.add_entity();
 

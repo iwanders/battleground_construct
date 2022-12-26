@@ -1,4 +1,6 @@
 pub const CLOCK_MODULE: u32 = 0x0100;
+pub const OBJECTIVES_MODULE: u32 = 0x0200;
+
 pub const BASE_MODULE: u32 = 0x1000;
 pub const TURRET_MODULE: u32 = 0x1100;
 pub const BARREL_MODULE: u32 = 0x1200;

@@ -4,6 +4,12 @@ use engine::prelude::*;
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct TeamId(u64);
 
+impl TeamId {
+    pub fn as_u64(&self) -> u64 {
+        self.0
+    }
+}
+
 #[cfg(test)]
 pub fn make_team_id(v: u64) -> TeamId {
     TeamId(v)
