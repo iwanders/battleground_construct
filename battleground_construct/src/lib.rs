@@ -2,7 +2,7 @@
 
 pub mod components;
 pub mod config;
-pub mod control;
+mod control;
 pub mod display;
 pub mod systems;
 pub mod units;

@@ -1,7 +1,6 @@
 use super::default;
 use super::specification;
 use crate::components;
-use crate::control;
 use crate::units;
 use crate::Construct;
 use battleground_unit_control::UnitControl;
@@ -52,11 +51,11 @@ pub fn setup_match(
 
         let controller: Box<dyn UnitControl> = match spawn.controller {
             specification::ControllerType::SwivelShoot => {
-                Box::new(control::tank_swivel_shoot::TankSwivelShoot {})
+                Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot {})
             }
-            specification::ControllerType::None => Box::new(control::idle::Idle {}),
+            specification::ControllerType::None => Box::new(unit_control_builtin::idle::Idle {}),
             specification::ControllerType::LibraryLoad { name } => {
-                control::dynamic_load_control::DynamicLoadControl::new(&name)?
+                unit_control_builtin::dynamic_load_control::DynamicLoadControl::new(&name)?
             }
             #[cfg(feature = "unit_control_wasm")]
             specification::ControllerType::Wasm { module } => {

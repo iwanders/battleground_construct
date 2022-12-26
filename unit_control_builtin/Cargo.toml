@@ -1,0 +1,13 @@
+[package]
+name = "unit_control_builtin"
+version = "0.1.0"
+edition = "2021"
+license = "BSD-3-Clause"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+battleground_unit_control = { path = "../battleground_unit_control" }
+libloading = "0.7.4"
+

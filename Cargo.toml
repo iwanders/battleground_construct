@@ -7,6 +7,7 @@ members = [
     "battleground_unit_control",
     "unit_control_example",
     "unit_control_wasm",
+    "unit_control_builtin",
 ]
 
 [profile.release]

@@ -1,7 +1,7 @@
 use battleground_unit_control::{Interface, UnitControl};
 use std::f32::consts::PI;
 
-use crate::units::tank;
+use battleground_unit_control::units::tank;
 
 pub struct TankSwivelShoot {}
 impl UnitControl for TankSwivelShoot {

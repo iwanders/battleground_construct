@@ -2,11 +2,19 @@ use crate::display::primitives::*;
 use battleground_unit_control::{Interface, UnitControl};
 
 use crate::display::draw_module::LineSegment;
-use crate::units::tank;
+// use crate::units::tank;
 use crate::util::cgmath::prelude::*;
 use cgmath::vec3;
 
+// this is a private test controller.
+
+use battleground_unit_control::units::tank;
+
 pub struct RadarDrawControl {}
+
+const GREEN: [u8; 4] = [0, 255, 0, 255];
+const BLUE: [u8; 4] = [0, 0, 255, 255];
+const RED: [u8; 4] = [255, 0, 0, 255];
 
 impl UnitControl for RadarDrawControl {
     fn update(&mut self, interface: &mut dyn Interface) {
@@ -46,7 +54,7 @@ impl UnitControl for RadarDrawControl {
             p0: [0.0, 0.0, 0.0],
             p1: [0.0, 0.0, 5.0],
             width: 0.01,
-            color: Color::GREEN,
+            color: GREEN,
         });
         use cgmath::Rad;
 
@@ -64,7 +72,7 @@ impl UnitControl for RadarDrawControl {
             p0: [global_radar.w.x, global_radar.w.y, global_radar.w.z],
             p1: [p1.w.x, p1.w.y, p1.w.z],
             width: 0.01,
-            color: Color::BLUE,
+            color: BLUE,
         });
 
         let p1 = global_offset
@@ -77,7 +85,7 @@ impl UnitControl for RadarDrawControl {
             p0: [global_radar.w.x, global_radar.w.y, global_radar.w.z],
             p1: [p1.w.x, p1.w.y, p1.w.z],
             width: 0.01,
-            color: Color::BLUE,
+            color: BLUE,
         });
 
         let radar_hits = interface.get_i32(tank::RADAR_MODULE, 3).unwrap();
@@ -98,7 +106,7 @@ impl UnitControl for RadarDrawControl {
                 p0: [global_radar.w.x, global_radar.w.y, global_radar.w.z],
                 p1: [draw_target.w.x, draw_target.w.y, draw_target.w.z - body_z],
                 width: 0.05,
-                color: Color::RED,
+                color: RED,
             });
         }
 

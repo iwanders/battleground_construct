@@ -1,58 +1,7 @@
 use super::primitives::*;
 use engine::prelude::*;
 
-#[repr(C)]
-#[derive(Debug, Clone, PartialEq)]
-pub struct LineSegment {
-    pub p0: [f32; 3],
-    pub p1: [f32; 3],
-    pub width: f32,
-    pub color: Color,
-}
-
-impl LineSegment {
-    pub fn into_le_bytes(self) -> [u8; std::mem::size_of::<LineSegment>()] {
-        self.into()
-    }
-}
-
-impl From<[u8; std::mem::size_of::<LineSegment>()]> for LineSegment {
-    fn from(b: [u8; std::mem::size_of::<LineSegment>()]) -> Self {
-        let read_f32 = |offset: usize| {
-            let mut res = [0u8; 4];
-            res[..].copy_from_slice(&b[offset * 4..(offset + 1) * 4]);
-            f32::from_le_bytes(res)
-        };
-        LineSegment {
-            p0: [read_f32(0), read_f32(1), read_f32(2)],
-            p1: [read_f32(3), read_f32(4), read_f32(5)],
-            width: read_f32(6),
-            color: Color {
-                r: b[7 * 4],
-                g: b[7 * 4 + 1],
-                b: b[7 * 4 + 2],
-                a: b[7 * 4 + 3],
-            },
-        }
-    }
-}
-impl From<LineSegment> for [u8; std::mem::size_of::<LineSegment>()] {
-    fn from(l: LineSegment) -> [u8; std::mem::size_of::<LineSegment>()] {
-        let mut res = [0u8; std::mem::size_of::<LineSegment>()];
-        res[0..4].copy_from_slice(&l.p0[0].to_le_bytes());
-        res[4..8].copy_from_slice(&l.p0[1].to_le_bytes());
-        res[8..12].copy_from_slice(&l.p0[2].to_le_bytes());
-        res[12..16].copy_from_slice(&l.p1[0].to_le_bytes());
-        res[16..20].copy_from_slice(&l.p1[1].to_le_bytes());
-        res[20..24].copy_from_slice(&l.p1[2].to_le_bytes());
-        res[24..28].copy_from_slice(&l.width.to_le_bytes());
-        res[28] = l.color.r;
-        res[29] = l.color.g;
-        res[30] = l.color.b;
-        res[31] = l.color.a;
-        res
-    }
-}
+pub use battleground_unit_control::modules::draw::LineSegment;
 
 #[derive(Debug, Clone, Default)]
 pub struct DrawComponent {
@@ -78,7 +27,13 @@ impl Drawable for DrawComponent {
                     p1: (l.p1[0], l.p1[1], l.p1[2]),
                     width: l.width,
                 }),
-                material: l.color.into(),
+                material: Color {
+                    r: l.color[0],
+                    g: l.color[1],
+                    b: l.color[2],
+                    a: l.color[3],
+                }
+                .into(),
             })
             .collect()
     }

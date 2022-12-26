@@ -2,6 +2,7 @@ use crate::components;
 use crate::control;
 use crate::display;
 use crate::units;
+use unit_control_builtin;
 
 use units::tank::{spawn_tank, TankSpawnConfig};
 
@@ -50,7 +51,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             x: 0.0,
             y: 0.0,
             yaw: 0.0,
-            controller: Box::new(control::tank_swivel_shoot::TankSwivelShoot {}),
+            controller: Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot {}),
             // controller: control::dynamic_load_control::DynamicLoadControl::new(
             // "../target/release/libvehicle_control_wasm.so",
             // )
@@ -115,7 +116,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
                     y: y as f32 * 3.0 - 2.5,
                     yaw: std::f32::consts::PI / 2.0,
                     controller: Box::new(
-                        control::diff_drive_forwards_backwards::DiffDriveForwardsBackwardsControl {
+                        unit_control_builtin::diff_drive_forwards_backwards::DiffDriveForwardsBackwardsControl {
                             velocities: (1.0, 1.0),
                             last_flip: 0.0,
                             duration: 5.0,

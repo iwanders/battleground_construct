@@ -145,11 +145,11 @@ dependencies = [
  "battleground_unit_control",
  "cgmath",
  "engine",
- "libloading",
  "rand",
  "rand_chacha",
  "serde",
  "serde_yaml",
+ "unit_control_builtin",
  "unit_control_wasm",
 ]
 
@@ -2115,6 +2115,14 @@ name = "unicode-width"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0edd1e5b14653f783770bce4a4dabb4a5108a5370a5f5d8cfe8710c361f6c8b"
+
+[[package]]
+name = "unit_control_builtin"
+version = "0.1.0"
+dependencies = [
+ "battleground_unit_control",
+ "libloading",
+]
 
 [[package]]
 name = "unit_control_example"

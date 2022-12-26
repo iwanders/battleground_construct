@@ -1,5 +1,4 @@
 use crate::components;
-use crate::control;
 use crate::display;
 use crate::units;
 
@@ -237,7 +236,7 @@ pub fn populate_tree_trailer(construct: &mut crate::Construct) {
             x: -8.0,
             y: -8.0,
             yaw: (-110.0) / 360.0 * 2.0 * std::f32::consts::PI,
-            controller: Box::new(control::idle::Idle {}),
+            controller: Box::new(unit_control_builtin::idle::Idle {}),
             ..Default::default()
         },
     );

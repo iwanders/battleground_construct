@@ -8,6 +8,9 @@ pub mod wasm_interface;
 #[cfg(feature = "register_interface")]
 pub mod register_interface;
 
+pub mod modules;
+pub mod units;
+
 pub use log;
 
 /// Plugins will provide a function of this signature.
