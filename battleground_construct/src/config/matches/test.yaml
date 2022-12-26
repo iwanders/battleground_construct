@@ -1,4 +1,5 @@
 match_config:
+  time_limit: 3.0
   mode:
     type: KingOfTheHill
     capture_points:
@@ -8,7 +9,7 @@ match_config:
         radius: 10.0
         capture_speed: 0.1
         team: 0
-    point_limit: 5.0
+    point_limit: 10.0
 
 spawn_config:
   teams:

@@ -1,6 +1,7 @@
 use crate::components;
 use components::match_finished::MatchFinished;
 use components::match_king_of_the_hill::MatchKingOfTheHill;
+use components::match_time_limit::MatchTimeLimit;
 
 use engine::prelude::*;
 
@@ -12,11 +13,21 @@ impl System for MatchLogicFinished {
         }
 
         let mut is_finished = false;
+
+        // Check king of the hill criteria.
         for (_e, match_koth) in world.component_iter::<MatchKingOfTheHill>() {
-            // println!("Match koth: {:?}", match_koth);
             if match_koth.is_finished() {
                 is_finished = true;
-                // println!("King of the hill decides finished");
+                break;
+            }
+        }
+
+        // Check time limit criteria.
+        for (_e, match_time_limit) in world.component_iter::<MatchTimeLimit>() {
+            // println!("Match match_time_limit: {:?}", match_time_limit);
+            if match_time_limit.is_finished() {
+                is_finished = true;
+                // println!("match_time_limit decides finished");
                 break;
             }
         }

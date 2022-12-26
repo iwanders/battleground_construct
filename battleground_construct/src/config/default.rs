@@ -29,6 +29,9 @@ pub fn add_systems(systems: &mut Systems) {
         systems::match_logic_king_of_the_hill::MatchLogicKingOfTheHill {},
     ));
     systems.add_system(Box::new(
+        systems::match_logic_time_limit::MatchLogicTimeLimit {},
+    ));
+    systems.add_system(Box::new(
         systems::match_logic_finished::MatchLogicFinished {},
     ));
 

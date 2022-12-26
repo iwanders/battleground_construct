@@ -130,7 +130,13 @@ pub fn setup_match(
     cannon.set_firing(true);
     world.add_component(static_cannon, cannon);
 
-    if let Some(_v) = config.match_config.time_limit {}
+    if let Some(time_limit) = config.match_config.time_limit {
+        let entity = world.add_entity();
+        world.add_component(
+            entity,
+            components::match_time_limit::MatchTimeLimit::new(time_limit),
+        );
+    }
 
     Ok(construct)
 }
