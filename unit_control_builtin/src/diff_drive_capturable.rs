@@ -1,4 +1,4 @@
-use battleground_unit_control::modules;
+use battleground_unit_control::modules::objectives::registers as objective_registers;
 use battleground_unit_control::units::tank;
 use battleground_unit_control::{Interface, UnitControl};
 
@@ -15,26 +15,26 @@ impl UnitControl for DiffDriveCapturable {
         let count = interface
             .get_i32(
                 tank::OBJECTIVES_MODULE,
-                modules::objectives::register::CAPTURE_POINT_COUNT,
+                objective_registers::CAPTURE_POINT_COUNT,
             )
             .unwrap();
         for i in 0..count as u32 {
             let x = interface
                 .get_f32(
                     tank::OBJECTIVES_MODULE,
-                    modules::objectives::register::CAPTURE_POINT_COUNT + 1 + (i * 4) + 0,
+                    objective_registers::CAPTURE_POINT_COUNT + 1 + (i * 4) + 0,
                 )
                 .unwrap();
             let y = interface
                 .get_f32(
                     tank::OBJECTIVES_MODULE,
-                    modules::objectives::register::CAPTURE_POINT_COUNT + 1 + (i * 4) + 1,
+                    objective_registers::CAPTURE_POINT_COUNT + 1 + (i * 4) + 1,
                 )
                 .unwrap();
             let owner = interface
                 .get_i32(
                     tank::OBJECTIVES_MODULE,
-                    modules::objectives::register::CAPTURE_POINT_COUNT + 1 + (i * 4) + 2,
+                    objective_registers::CAPTURE_POINT_COUNT + 1 + (i * 4) + 2,
                 )
                 .unwrap();
 

@@ -23,7 +23,7 @@ impl UnitModule for TeamModule {
             .and_then(|t| Some(t.team().as_u64() as i32))
             .unwrap_or(-1);
         registers.insert(
-            battleground_unit_control::modules::team::register::TEAM,
+            battleground_unit_control::modules::team::registers::TEAM,
             Register::new_i32("team", value),
         );
     }
