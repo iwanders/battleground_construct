@@ -86,7 +86,7 @@ pub fn setup_match(
         specification::MatchType::DeathMatch => {}
         specification::MatchType::KingOfTheHill {
             capture_points,
-            point_limit: _,
+            point_limit,
         } => {
             for point in capture_points {
                 let optional_team_component = if let Some(team_index) = point.team {
@@ -108,19 +108,27 @@ pub fn setup_match(
                 };
                 crate::units::capturable_flag::spawn_capturable_flag(world, config);
             }
+            // Spawn the king of the hill component.
+            let entity = world.add_entity();
+            world.add_component(
+                entity,
+                components::match_king_of_the_hill::MatchKingOfTheHill::new(point_limit),
+            );
         }
     }
 
     use cgmath::Deg;
     let static_cannon = world.add_entity();
-    world.add_component(static_cannon, components::pose::Pose::from_xyz(2.0, 0.0, 15.0).rotated_angle_y(Deg(-90.0)));
-    let mut cannon = components::cannon::Cannon::new(components::cannon::CannonConfig{
+    world.add_component(
+        static_cannon,
+        components::pose::Pose::from_xyz(2.0, 0.0, 15.0).rotated_angle_y(Deg(-90.0)),
+    );
+    let mut cannon = components::cannon::Cannon::new(components::cannon::CannonConfig {
         fire_effect: std::rc::Rc::new(crate::units::tank::cannon_function),
         reload_time: 1.0,
     });
     cannon.set_firing(true);
     world.add_component(static_cannon, cannon);
-
 
     if let Some(_v) = config.match_config.time_limit {}
 

@@ -33,7 +33,7 @@ impl System for Capture {
                             < capture_point.radius()
                         {
                             *influence.entry(team_membership.team()).or_insert(0.0) +=
-                                1.0 * dt * capture_point.speed();
+                                1.0 * dt * capture_point.capture_speed();
                         }
                     }
                 }

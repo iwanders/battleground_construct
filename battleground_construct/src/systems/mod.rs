@@ -10,6 +10,8 @@ pub mod function_pose;
 pub mod health_check;
 pub mod health_tank_body;
 pub mod kinematics_differential_drive;
+pub mod match_logic_finished;
+pub mod match_logic_king_of_the_hill;
 pub mod process_hit_by;
 pub mod process_impact;
 pub mod projectile_hit;

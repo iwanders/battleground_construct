@@ -25,6 +25,12 @@ pub fn add_systems(systems: &mut Systems) {
 
     // Then, run any game systems.
     systems.add_system(Box::new(systems::capture::Capture {}));
+    systems.add_system(Box::new(
+        systems::match_logic_king_of_the_hill::MatchLogicKingOfTheHill {},
+    ));
+    systems.add_system(Box::new(
+        systems::match_logic_finished::MatchLogicFinished {},
+    ));
 
     // Physics systems
     systems.add_system(Box::new(
