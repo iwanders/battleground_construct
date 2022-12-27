@@ -16,6 +16,7 @@ impl System for RadioTransmission {
             .1
             .elapsed_as_f32();
 
+        #[derive(Debug)]
         struct Transmission {
             entity: EntityId,
             msgs: Vec<Vec<u8>>,
@@ -43,6 +44,7 @@ impl System for RadioTransmission {
                     });
             }
         }
+        // println!("Delivering {pending_transmissions:?}");
 
         for (entity, mut receiver) in world.component_iter_mut::<RadioReceiver>() {
             let receiver_pose = world_pose(world, entity).to_translation();
@@ -57,6 +59,7 @@ impl System for RadioTransmission {
                         let ratio_towards = 1.0 / distance.powi(2);
                         let total_strength = transmission.strength * ratio_towards;
                         for payload in transmission.msgs.iter() {
+                            println!("Delivering {transmission:?} to {entity:?}");
                             receiver.add_payload(total_strength, &payload[..]);
                         }
                     }

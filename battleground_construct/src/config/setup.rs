@@ -54,6 +54,9 @@ pub fn setup_match(
                 Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot {})
             }
             specification::ControllerType::None => Box::new(unit_control_builtin::idle::Idle {}),
+            specification::ControllerType::RadioPosition => {
+                Box::new(unit_control_builtin::radio_position::RadioPosition {})
+            }
             specification::ControllerType::DiffDriveCapturable => {
                 Box::new(unit_control_builtin::diff_drive_capturable::DiffDriveCapturable {})
             }

@@ -63,6 +63,7 @@ pub enum ControllerType {
     #[default]
     None,
     SwivelShoot,
+    RadioPosition,
     LibraryLoad {
         name: String,
     },
@@ -85,13 +86,6 @@ pub enum Unit {
     Tank,
 }
 
-/// Radio config, for both transmitter and receiver.
-#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy)]
-pub struct RadioConfig {
-    pub channel_min: usize,
-    pub channel_max: usize,
-}
-
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct Spawn {
     pub team: Option<usize>,
@@ -103,7 +97,7 @@ pub struct Spawn {
     #[serde(default)]
     pub controller: ControllerType,
     #[serde(default)]
-    pub radio: RadioConfig,
+    pub radio: crate::units::common::RadioConfig,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]

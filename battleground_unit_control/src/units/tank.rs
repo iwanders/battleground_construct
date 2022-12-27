@@ -1,6 +1,8 @@
 pub const CLOCK_MODULE: u32 = 0x0100;
 pub const OBJECTIVES_MODULE: u32 = 0x0200;
 pub const TEAM_MODULE: u32 = 0x0300;
+pub const RADIO_TRANSMITTER_MODULE: u32 = 0x0400;
+pub const RADIO_RECEIVER_MODULE: u32 = 0x0500;
 
 pub const BASE_MODULE: u32 = 0x1000;
 pub const TURRET_MODULE: u32 = 0x1100;

@@ -12,7 +12,7 @@ pub struct TankSpawnConfig {
     pub yaw: f32,
     pub controller: Box<dyn battleground_unit_control::UnitControl>,
     pub team_member: Option<components::team_member::TeamMember>,
-    pub radio_config: Option<crate::config::specification::RadioConfig>,
+    pub radio_config: Option<super::common::RadioConfig>,
 }
 
 impl Default for TankSpawnConfig {
@@ -95,6 +95,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         vehicle_id,
         components::radio_transmitter::RadioTransmitter::new_with_config(transmitter_config),
     );
+    register_interface.get_mut().add_module(
+        "radio_transmitter",
+        RADIO_TRANSMITTER_MODULE,
+        components::radio_transmitter::RadioTransmitterModule::new(vehicle_id),
+    );
+
     let receiver_config = config
         .radio_config
         .map(|v| components::radio_receiver::RadioReceiverConfig {
@@ -106,6 +112,11 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(
         vehicle_id,
         components::radio_receiver::RadioReceiver::new_with_config(receiver_config),
+    );
+    register_interface.get_mut().add_module(
+        "radio_receiver",
+        RADIO_RECEIVER_MODULE,
+        components::radio_receiver::RadioReceiverModule::new(vehicle_id),
     );
 
     if let Some(team_member) = config.team_member {

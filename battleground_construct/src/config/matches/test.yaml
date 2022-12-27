@@ -50,3 +50,5 @@ spawn_config:
       y: 10.0
       yaw: -1.5708
       team: 1
+      controller:
+        type: RadioPosition
