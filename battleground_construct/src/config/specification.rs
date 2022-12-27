@@ -78,6 +78,9 @@ pub enum ControllerType {
     },
     #[serde(skip)]
     Function(battleground_unit_control::ControllerSpawn),
+    CompositeControl {
+        controllers: Vec<ControllerType>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, Copy, Default, Clone)]

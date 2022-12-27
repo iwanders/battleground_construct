@@ -51,4 +51,8 @@ spawn_config:
       yaw: -1.5708
       team: 1
       controller:
-        type: RadioPosition
+        type: CompositeControl
+        controllers:
+          - type: RadioPosition
+          - type: DiffDriveCapturable
+          - type: SwivelShoot

@@ -49,29 +49,44 @@ pub fn setup_match(
             None
         };
 
-        let controller: Box<dyn UnitControl> = match spawn.controller {
-            specification::ControllerType::SwivelShoot => {
-                Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot {})
-            }
-            specification::ControllerType::None => Box::new(unit_control_builtin::idle::Idle {}),
-            specification::ControllerType::RadioPosition => {
-                Box::new(unit_control_builtin::radio_position::RadioPosition {})
-            }
-            specification::ControllerType::DiffDriveCapturable => {
-                Box::new(unit_control_builtin::diff_drive_capturable::DiffDriveCapturable {})
-            }
-            specification::ControllerType::LibraryLoad { name } => {
-                unit_control_builtin::dynamic_load_control::DynamicLoadControl::new(&name)?
-            }
-            #[cfg(feature = "unit_control_wasm")]
-            specification::ControllerType::Wasm { module } => {
-                Box::new(unit_control_wasm::UnitControlWasm::new(&module)?)
-            }
+        fn controller_type_to_control(
+            controller_type: &specification::ControllerType,
+        ) -> Result<Box<dyn UnitControl>, Box<dyn std::error::Error>> {
+            Ok(match controller_type {
+                specification::ControllerType::SwivelShoot => {
+                    Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot {})
+                }
+                specification::ControllerType::None => {
+                    Box::new(unit_control_builtin::idle::Idle {})
+                }
+                specification::ControllerType::RadioPosition => {
+                    Box::new(unit_control_builtin::radio_position::RadioPosition {})
+                }
+                specification::ControllerType::DiffDriveCapturable => {
+                    Box::new(unit_control_builtin::diff_drive_capturable::DiffDriveCapturable {})
+                }
+                specification::ControllerType::LibraryLoad { name } => {
+                    unit_control_builtin::dynamic_load_control::DynamicLoadControl::new(&name)?
+                }
+                #[cfg(feature = "unit_control_wasm")]
+                specification::ControllerType::Wasm { module } => {
+                    Box::new(unit_control_wasm::UnitControlWasm::new(&module)?)
+                }
+                specification::ControllerType::CompositeControl { controllers } => {
+                    let mut v = vec![];
+                    for t in controllers.iter() {
+                        v.push(controller_type_to_control(t)?);
+                    }
+                    Box::new(unit_control_builtin::composite_control::CompositeControl::new(v))
+                }
 
-            _ => {
-                unimplemented!()
-            }
-        };
+                _ => {
+                    unimplemented!()
+                }
+            })
+        }
+
+        let controller: Box<dyn UnitControl> = controller_type_to_control(&spawn.controller)?;
         match spawn.vehicle {
             specification::Unit::Tank => {
                 let tank_config = units::tank::TankSpawnConfig {
