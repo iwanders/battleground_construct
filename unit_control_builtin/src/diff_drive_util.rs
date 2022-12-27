@@ -1,19 +1,13 @@
-use battleground_unit_control::modules::differential_drive::registers as drive_register;
-use battleground_unit_control::modules::gps::registers as gps_register;
+use battleground_unit_control::modules::differential_drive::*;
+use battleground_unit_control::modules::gps::*;
 use battleground_unit_control::units::tank;
 use battleground_unit_control::Interface;
 
 pub fn drive_to_goal(goal: (f32, f32, f32), interface: &mut dyn Interface) {
     // Get the current position.
-    let x = interface
-        .get_f32(tank::GPS_MODULE, gps_register::X)
-        .unwrap();
-    let y = interface
-        .get_f32(tank::GPS_MODULE, gps_register::Y)
-        .unwrap();
-    let yaw = interface
-        .get_f32(tank::GPS_MODULE, gps_register::YAW)
-        .unwrap();
+    let x = interface.get_f32(tank::GPS_MODULE, REG_X).unwrap();
+    let y = interface.get_f32(tank::GPS_MODULE, REG_Y).unwrap();
+    let yaw = interface.get_f32(tank::GPS_MODULE, REG_YAW).unwrap();
 
     let goal_x = goal.0;
     let goal_y = goal.1;
@@ -53,18 +47,18 @@ pub fn drive_to_goal(goal: (f32, f32, f32), interface: &mut dyn Interface) {
     }
 
     interface
-        .set_f32(tank::BASE_MODULE, drive_register::LEFT_CMD, left)
+        .set_f32(tank::BASE_MODULE, REG_LEFT_CMD, left)
         .unwrap();
     interface
-        .set_f32(tank::BASE_MODULE, drive_register::RIGHT_CMD, right)
+        .set_f32(tank::BASE_MODULE, REG_RIGHT_CMD, right)
         .unwrap();
 }
 
 pub fn stop(interface: &mut dyn Interface) {
     interface
-        .set_f32(tank::BASE_MODULE, drive_register::LEFT_CMD, 0.0)
+        .set_f32(tank::BASE_MODULE, REG_LEFT_CMD, 0.0)
         .unwrap();
     interface
-        .set_f32(tank::BASE_MODULE, drive_register::RIGHT_CMD, 0.0)
+        .set_f32(tank::BASE_MODULE, REG_RIGHT_CMD, 0.0)
         .unwrap();
 }

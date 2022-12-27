@@ -1,5 +1,5 @@
-use battleground_unit_control::modules::gps::registers as gps_registers;
-use battleground_unit_control::modules::radio_transmitter::registers as radio_registers;
+use battleground_unit_control::modules::gps::*;
+use battleground_unit_control::modules::radio_transmitter::*;
 use battleground_unit_control::units::tank;
 use battleground_unit_control::{Interface, UnitControl};
 
@@ -9,29 +9,19 @@ impl UnitControl for RadioPosition {
         let team = interface
             .get_i32(
                 tank::TEAM_MODULE,
-                battleground_unit_control::modules::team::registers::TEAM,
+                battleground_unit_control::modules::team::REG_TEAM,
             )
             .unwrap();
 
-        let x = interface
-            .get_f32(tank::GPS_MODULE, gps_registers::X)
-            .unwrap();
-        let y = interface
-            .get_f32(tank::GPS_MODULE, gps_registers::Y)
-            .unwrap();
+        let x = interface.get_f32(tank::GPS_MODULE, REG_X).unwrap();
+        let y = interface.get_f32(tank::GPS_MODULE, REG_Y).unwrap();
 
         let payload_count_limit = interface
-            .get_i32(
-                tank::RADIO_TRANSMITTER_MODULE,
-                radio_registers::PAYLOAD_COUNT_LIMIT,
-            )
+            .get_i32(tank::RADIO_TRANSMITTER_MODULE, REG_PAYLOAD_COUNT_LIMIT)
             .unwrap();
 
         let mut payload_count = interface
-            .get_i32(
-                tank::RADIO_TRANSMITTER_MODULE,
-                radio_registers::PAYLOAD_COUNT,
-            )
+            .get_i32(tank::RADIO_TRANSMITTER_MODULE, REG_PAYLOAD_COUNT)
             .unwrap();
 
         // println!("payload_count: {payload_count:?}, payload_count_limit: {payload_count_limit}");
@@ -44,7 +34,7 @@ impl UnitControl for RadioPosition {
             interface
                 .set_bytes(
                     tank::RADIO_TRANSMITTER_MODULE,
-                    radio_registers::PAYLOAD_START + payload_count as u32,
+                    REG_PAYLOAD_START + payload_count as u32,
                     &payload[..],
                 )
                 .unwrap();
@@ -52,7 +42,7 @@ impl UnitControl for RadioPosition {
             interface
                 .set_i32(
                     tank::RADIO_TRANSMITTER_MODULE,
-                    radio_registers::PAYLOAD_COUNT,
+                    REG_PAYLOAD_COUNT,
                     payload_count,
                 )
                 .unwrap();

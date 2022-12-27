@@ -21,9 +21,9 @@ impl UnitModule for TeamModule {
         let value = world
             .component::<components::team_member::TeamMember>(self.entity)
             .and_then(|t| Some(t.team().as_u64() as i32))
-            .unwrap_or(-1);
+            .unwrap_or(battleground_unit_control::modules::team::TEAM_NO_TEAM);
         registers.insert(
-            battleground_unit_control::modules::team::registers::TEAM,
+            battleground_unit_control::modules::team::REG_TEAM,
             Register::new_i32("team", value),
         );
     }

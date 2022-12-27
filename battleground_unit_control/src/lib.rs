@@ -1,3 +1,14 @@
+//! This crate provides the interface used to control units.
+//!
+//! It exposes the [`UnitControl`] trait which all unit controllers should implement. Interaction
+//! with the unit itself happens through the [`Interface`] that's provided to the controller.
+//! A unit may expose several modules of the same type, information about the modules themselves is
+//! provided in the [`modules`] submodule of this crate, and [`units`] provides the module ids per
+//! unit.
+//!
+//! This crate also provides the necessary boilerplate to allow compiling a unit controller as a
+//! `wasm32-unknown-unknown` type, as is used by the `unit_control_wasm` crate.
+
 // Only for wasm32, load the wasm_interface, it has a bunch of extern "C" methods to create an
 // interface.
 #[cfg(target_arch = "wasm32")]
@@ -8,9 +19,12 @@ pub mod wasm_interface;
 #[cfg(feature = "register_interface")]
 pub mod register_interface;
 
+/// The constants and helpers for modules.
 pub mod modules;
+/// The constants for units.
 pub mod units;
 
+/// Export the log interface, this is used on wasm32 to be able to print.
 pub use log;
 
 /// Plugins will provide a function of this signature.
@@ -39,7 +53,7 @@ impl TryFrom<u32> for RegisterType {
     }
 }
 
-/// Interface to control the unit, the ai uses this to interact with the unit.
+/// Interface to control the unit, the unit controller uses this to interact with the unit.
 pub trait Interface {
     /// Retrieve the list of module ids that are available.
     fn modules(&self) -> Result<Vec<u32>, Error>;
@@ -79,7 +93,7 @@ pub trait Interface {
     fn set_bytes(&mut self, module: u32, register: u32, values: &[u8]) -> Result<(), Error>;
 }
 
-/// The unit ai should implement this trait. Update gets called periodically.
+/// The unit controller should implement this trait. Update gets called periodically.
 pub trait UnitControl {
     fn update(&mut self, interface: &mut dyn Interface);
 }

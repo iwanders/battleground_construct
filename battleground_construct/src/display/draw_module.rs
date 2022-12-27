@@ -62,7 +62,7 @@ impl UnitModule for DrawModule {
             draw_component.lines.clear();
 
             let instructions = registers
-                .get(&0)
+                .get(&battleground_unit_control::modules::draw::REG_LINES)
                 .expect("register doesnt exist")
                 .value_bytes()
                 .expect("wrong value type");

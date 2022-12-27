@@ -1,3 +1,4 @@
-pub mod registers {
-    pub const ELAPSED: u32 = 0;
-}
+//! Clock information.
+
+/// Returns the elapsed time since some epoch, float value.
+pub const REG_ELAPSED: u32 = 0;

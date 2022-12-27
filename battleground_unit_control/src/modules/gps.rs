@@ -1,8 +1,14 @@
-pub mod registers {
-    pub const X: u32 = 0;
-    pub const Y: u32 = 1;
-    pub const Z: u32 = 2;
-    pub const ROLL: u32 = 3;
-    pub const PITCH: u32 = 4;
-    pub const YAW: u32 = 5;
-}
+//! The global position of the unit.
+
+/// Register holding the x coordinate, float value.
+pub const REG_X: u32 = 0;
+/// Register holding the y coordinate, float value.
+pub const REG_Y: u32 = 1;
+/// Register holding the z coordinate, float value.
+pub const REG_Z: u32 = 2;
+/// Register holding the roll, float value, radians.
+pub const REG_ROLL: u32 = 3;
+/// Register holding the pitch, float value, radians.
+pub const REG_PITCH: u32 = 4;
+/// Register holding the yaw, float value, radians.
+pub const REG_YAW: u32 = 5;

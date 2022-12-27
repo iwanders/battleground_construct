@@ -73,7 +73,7 @@ impl Revolute {
 impl Component for Revolute {}
 
 use crate::components::unit_interface::{Register, RegisterMap, UnitModule};
-use battleground_unit_control::modules::revolute::registers;
+use battleground_unit_control::modules::revolute::*;
 pub struct RevoluteModule {
     entity: EntityId,
 }
@@ -89,26 +89,20 @@ impl UnitModule for RevoluteModule {
         registers.clear();
         if let Some(revolute) = world.component::<Revolute>(self.entity) {
             registers.insert(
-                registers::POSITION,
+                REG_POSITION,
                 Register::new_f32("position", revolute.position()),
             );
             registers.insert(
-                registers::VELOCITY,
+                REG_VELOCITY,
                 Register::new_f32("velocity", revolute.velocity()),
             );
 
             let (vel_min, vel_max) = revolute.velocity_bounds();
-            registers.insert(
-                registers::VELOCITY_MIN,
-                Register::new_f32("velocity_min", vel_min),
-            );
-            registers.insert(
-                registers::VELOCITY_MAX,
-                Register::new_f32("velocity_max", vel_max),
-            );
+            registers.insert(REG_VELOCITY_MIN, Register::new_f32("velocity_min", vel_min));
+            registers.insert(REG_VELOCITY_MAX, Register::new_f32("velocity_max", vel_max));
 
             registers.insert(
-                registers::VELOCITY_CMD,
+                REG_VELOCITY_CMD,
                 Register::new_f32("velocity_cmd", revolute.velocity()),
             );
         }
@@ -117,7 +111,7 @@ impl UnitModule for RevoluteModule {
     fn set_component(&self, world: &mut World, registers: &RegisterMap) {
         if let Some(mut revolute) = world.component_mut::<Revolute>(self.entity) {
             let vel_cmd = registers
-                .get(&registers::VELOCITY_CMD)
+                .get(&REG_VELOCITY_CMD)
                 .expect("register doesnt exist")
                 .value_f32()
                 .expect("wrong value type");

@@ -56,7 +56,7 @@ impl Cannon {
 impl Component for Cannon {}
 
 use crate::components::unit_interface::{Register, RegisterMap, UnitModule};
-use battleground_unit_control::modules::cannon::registers;
+use battleground_unit_control::modules::cannon::*;
 pub struct CannonModule {
     entity: EntityId,
 }
@@ -72,15 +72,15 @@ impl UnitModule for CannonModule {
         registers.clear();
         if let Some(cannon) = world.component::<Cannon>(self.entity) {
             registers.insert(
-                registers::FIRING,
+                REG_FIRING,
                 Register::new_i32("firing", cannon.is_firing() as i32),
             );
             registers.insert(
-                registers::READY,
+                REG_READY,
                 Register::new_i32("ready", cannon.is_ready() as i32),
             );
             registers.insert(
-                registers::RELOAD_TIME,
+                REG_RELOAD_TIME,
                 Register::new_f32("reload_time", cannon.reload_time),
             );
         }
@@ -89,7 +89,7 @@ impl UnitModule for CannonModule {
     fn set_component(&self, world: &mut World, registers: &RegisterMap) {
         if let Some(mut cannon) = world.component_mut::<Cannon>(self.entity) {
             let firing = registers
-                .get(&registers::FIRING)
+                .get(&REG_FIRING)
                 .expect("register doesnt exist")
                 .value_i32()
                 .expect("wrong value type");

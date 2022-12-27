@@ -15,7 +15,7 @@ impl ObjectivesModule {
     }
 }
 
-use battleground_unit_control::modules::objectives::registers::*;
+use battleground_unit_control::modules::objectives::*;
 
 impl UnitModule for ObjectivesModule {
     fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
@@ -36,28 +36,29 @@ impl UnitModule for ObjectivesModule {
         }
 
         registers.insert(
-            CAPTURE_POINT_COUNT,
+            REG_CAPTURE_POINT_COUNT,
             Register::new_i32("capture_point_count", capture_points.len() as i32),
         );
 
         for (i, (x, y, owner, radius)) in capture_points.iter().enumerate() {
+            let base_offset = REG_CAPTURE_POINT_START + i as u32 * REG_CAPTURE_POINT_STRIDE;
             registers.insert(
-                CAPTURE_POINT_START + i as u32 * CAPTURE_POINT_STRIDE + CAPTURE_POINT_OFFSET_X,
+                base_offset + REG_CAPTURE_POINT_OFFSET_X,
                 Register::new_f32("x", *x),
             );
             registers.insert(
-                CAPTURE_POINT_START + i as u32 * CAPTURE_POINT_STRIDE + CAPTURE_POINT_OFFSET_Y,
+                base_offset + REG_CAPTURE_POINT_OFFSET_Y,
                 Register::new_f32("y", *y),
             );
             let owner_value = owner
                 .map(|v| v.as_u64() as i32)
                 .unwrap_or(CAPTURE_POINT_UNOWNED);
             registers.insert(
-                CAPTURE_POINT_START + i as u32 * CAPTURE_POINT_STRIDE + CAPTURE_POINT_OFFSET_OWNER,
+                base_offset + REG_CAPTURE_POINT_OFFSET_OWNER,
                 Register::new_i32("owner", owner_value),
             );
             registers.insert(
-                CAPTURE_POINT_START + i as u32 * CAPTURE_POINT_STRIDE + CAPTURE_POINT_OFFSET_RADIUS,
+                base_offset + REG_CAPTURE_POINT_OFFSET_RADIUS,
                 Register::new_f32("radius", *radius),
             );
         }

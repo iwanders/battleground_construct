@@ -1,13 +1,27 @@
+//! Drawing lines in the world.
+//!
+//! Lines are created by writing serialized [`LineSegment`] structs into the byte register.
+
+/// Register accepts serialized [`LineSegment`] structs, multiple may be provided. Bytes value.
+pub const REG_LINES: u32 = 0;
+
 #[repr(C)]
 #[derive(Debug, Clone, PartialEq)]
+/// Struct that is used to represent a line segment
 pub struct LineSegment {
+    /// The start point of the line.
     pub p0: [f32; 3],
+    /// The end point of the line.
     pub p1: [f32; 3],
+    /// the width of the line.
     pub width: f32,
+    /// The color of the line in [r, g, b, a].
     pub color: [u8; 4],
 }
 
 impl LineSegment {
+    /// Convenience function to serialize the [`LineSegment`] to bytes. The `From` trait is also
+    /// implemented for both directions.
     pub fn into_le_bytes(self) -> [u8; std::mem::size_of::<LineSegment>()] {
         self.into()
     }
