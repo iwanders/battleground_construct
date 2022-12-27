@@ -62,6 +62,9 @@ pub fn setup_match(
                 specification::ControllerType::RadioPosition => {
                     Box::new(unit_control_builtin::radio_position::RadioPosition {})
                 }
+                specification::ControllerType::TankNaiveShoot => {
+                    Box::new(unit_control_builtin::tank_naive_shoot::TankNaiveShoot::new())
+                }
                 specification::ControllerType::DiffDriveCapturable => {
                     Box::new(unit_control_builtin::diff_drive_capturable::DiffDriveCapturable {})
                 }

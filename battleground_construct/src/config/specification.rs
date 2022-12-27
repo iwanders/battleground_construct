@@ -72,6 +72,7 @@ pub enum ControllerType {
         duration: f32,
     },
     DiffDriveCapturable,
+    TankNaiveShoot,
     #[cfg(feature = "unit_control_wasm")]
     Wasm {
         module: String,

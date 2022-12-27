@@ -59,8 +59,8 @@ impl System for RadioTransmission {
                         let ratio_towards = 1.0 / distance.powi(2);
                         let total_strength = transmission.strength * ratio_towards;
                         for payload in transmission.msgs.iter() {
-                            println!("Delivering {transmission:?} to {entity:?}");
-                            receiver.add_payload(total_strength, &payload[..]);
+                            // println!("Delivering {transmission:?} to {entity:?}");
+                            receiver.add_message(total_strength, &payload[..]);
                         }
                     }
                 }
