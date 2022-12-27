@@ -9,12 +9,12 @@ impl UnitControl for RadioPosition {
         let team = interface
             .get_i32(
                 tank::MODULE_TEAM,
-                battleground_unit_control::modules::team::REG_TEAM,
+                battleground_unit_control::modules::team::REG_TEAM_TEAMID,
             )
             .unwrap();
 
-        let x = interface.get_f32(tank::MODULE_GPS, REG_X).unwrap();
-        let y = interface.get_f32(tank::MODULE_GPS, REG_Y).unwrap();
+        let x = interface.get_f32(tank::MODULE_GPS, REG_GPS_X).unwrap();
+        let y = interface.get_f32(tank::MODULE_GPS, REG_GPS_Y).unwrap();
 
         let payload_count_limit = interface
             .get_i32(tank::MODULE_RADIO_TRANSMITTER, REG_PAYLOAD_COUNT_LIMIT)

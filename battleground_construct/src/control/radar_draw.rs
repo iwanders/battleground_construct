@@ -20,10 +20,10 @@ use battleground_unit_control::modules::radar::*;
 use battleground_unit_control::modules::revolute::*;
 impl UnitControl for RadarDrawControl {
     fn update(&mut self, interface: &mut dyn Interface) {
-        let x = interface.get_f32(tank::MODULE_GPS, REG_X).unwrap();
-        let y = interface.get_f32(tank::MODULE_GPS, REG_Y).unwrap();
-        let z = interface.get_f32(tank::MODULE_GPS, REG_Z).unwrap();
-        let yaw = interface.get_f32(tank::MODULE_GPS, REG_YAW).unwrap();
+        let x = interface.get_f32(tank::MODULE_GPS, REG_GPS_X).unwrap();
+        let y = interface.get_f32(tank::MODULE_GPS, REG_GPS_Y).unwrap();
+        let z = interface.get_f32(tank::MODULE_GPS, REG_GPS_Z).unwrap();
+        let yaw = interface.get_f32(tank::MODULE_GPS, REG_GPS_YAW).unwrap();
 
         let body_z = 0.25;
         let turret_z = 0.375 + 0.1 / 2.0;
@@ -40,10 +40,10 @@ impl UnitControl for RadarDrawControl {
         // Then, we can calculate everything in global frame, and finally draw in local.
 
         let turret_pos = interface
-            .get_f32(tank::MODULE_REVOLUTE_TURRET, REG_POSITION)
+            .get_f32(tank::MODULE_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)
             .unwrap();
         let radar_pos = interface
-            .get_f32(tank::MODULE_REVOLUTE_RADAR, REG_POSITION)
+            .get_f32(tank::MODULE_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)
             .unwrap();
 
         // radar position in world:
@@ -65,13 +65,13 @@ impl UnitControl for RadarDrawControl {
         use cgmath::Rad;
 
         let radar_range_max = interface
-            .get_f32(tank::MODULE_RADAR, REG_RANGE_MAX)
+            .get_f32(tank::MODULE_RADAR, REG_RADAR_RANGE_MAX)
             .unwrap();
         let radar_detection_yaw = interface
-            .get_f32(tank::MODULE_RADAR, REG_DETECTION_ANGLE_YAW)
+            .get_f32(tank::MODULE_RADAR, REG_RADAR_DETECTION_ANGLE_YAW)
             .unwrap();
         let _radar_detection_pitch = interface
-            .get_f32(tank::MODULE_RADAR, REG_DETECTION_ANGLE_PITCH)
+            .get_f32(tank::MODULE_RADAR, REG_RADAR_DETECTION_ANGLE_PITCH)
             .unwrap();
 
         let p1 = global_offset
@@ -101,18 +101,24 @@ impl UnitControl for RadarDrawControl {
         });
 
         let radar_hits = interface
-            .get_i32(tank::MODULE_RADAR, REG_REFLECTION_COUNT)
+            .get_i32(tank::MODULE_RADAR, REG_RADAR_REFLECTION_COUNT)
             .unwrap();
         for i in 0..radar_hits {
-            let offset = i as u32 * REG_REFLECTION_STRIDE + REG_REFLECTION_START;
+            let offset = i as u32 * REG_RADAR_REFLECTION_STRIDE + REG_RADAR_REFLECTION_START;
             let reading_yaw = interface
-                .get_f32(tank::MODULE_RADAR, offset + REG_REFLECTION_OFFSET_YAW)
+                .get_f32(tank::MODULE_RADAR, offset + REG_RADAR_REFLECTION_OFFSET_YAW)
                 .unwrap();
             let pitch = interface
-                .get_f32(tank::MODULE_RADAR, offset + REG_REFLECTION_OFFSET_PITCH)
+                .get_f32(
+                    tank::MODULE_RADAR,
+                    offset + REG_RADAR_REFLECTION_OFFSET_PITCH,
+                )
                 .unwrap();
             let distance = interface
-                .get_f32(tank::MODULE_RADAR, offset + REG_REFLECTION_OFFSET_DISTANCE)
+                .get_f32(
+                    tank::MODULE_RADAR,
+                    offset + REG_RADAR_REFLECTION_OFFSET_DISTANCE,
+                )
                 .unwrap();
             // println!("Reading {i}: yaw: {reading_yaw}, pitch: {pitch}, distance: {distance}");
 
@@ -138,7 +144,7 @@ impl UnitControl for RadarDrawControl {
         interface
             .set_bytes(
                 tank::MODULE_DRAW,
-                battleground_unit_control::modules::draw::REG_LINES,
+                battleground_unit_control::modules::draw::REG_DRAW_LINES,
                 &draw_instructions,
             )
             .expect("");

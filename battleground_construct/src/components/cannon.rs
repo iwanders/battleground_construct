@@ -72,15 +72,15 @@ impl UnitModule for CannonModule {
         registers.clear();
         if let Some(cannon) = world.component::<Cannon>(self.entity) {
             registers.insert(
-                REG_FIRING,
+                REG_CANNON_FIRING,
                 Register::new_i32("firing", cannon.is_firing() as i32),
             );
             registers.insert(
-                REG_READY,
+                REG_CANNON_READY,
                 Register::new_i32("ready", cannon.is_ready() as i32),
             );
             registers.insert(
-                REG_RELOAD_TIME,
+                REG_CANNON_RELOAD_TIME,
                 Register::new_f32("reload_time", cannon.reload_time),
             );
         }
@@ -89,7 +89,7 @@ impl UnitModule for CannonModule {
     fn set_component(&self, world: &mut World, registers: &RegisterMap) {
         if let Some(mut cannon) = world.component_mut::<Cannon>(self.entity) {
             let firing = registers
-                .get(&REG_FIRING)
+                .get(&REG_CANNON_FIRING)
                 .expect("register doesnt exist")
                 .value_i32()
                 .expect("wrong value type");

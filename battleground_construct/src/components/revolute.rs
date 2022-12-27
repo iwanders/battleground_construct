@@ -89,20 +89,26 @@ impl UnitModule for RevoluteModule {
         registers.clear();
         if let Some(revolute) = world.component::<Revolute>(self.entity) {
             registers.insert(
-                REG_POSITION,
+                REG_REVOLUTE_POSITION,
                 Register::new_f32("position", revolute.position()),
             );
             registers.insert(
-                REG_VELOCITY,
+                REG_REVOLUTE_VELOCITY,
                 Register::new_f32("velocity", revolute.velocity()),
             );
 
             let (vel_min, vel_max) = revolute.velocity_bounds();
-            registers.insert(REG_VELOCITY_MIN, Register::new_f32("velocity_min", vel_min));
-            registers.insert(REG_VELOCITY_MAX, Register::new_f32("velocity_max", vel_max));
+            registers.insert(
+                REG_REVOLUTE_VELOCITY_MIN,
+                Register::new_f32("velocity_min", vel_min),
+            );
+            registers.insert(
+                REG_REVOLUTE_VELOCITY_MAX,
+                Register::new_f32("velocity_max", vel_max),
+            );
 
             registers.insert(
-                REG_VELOCITY_CMD,
+                REG_REVOLUTE_VELOCITY_CMD,
                 Register::new_f32("velocity_cmd", revolute.velocity()),
             );
         }
@@ -111,7 +117,7 @@ impl UnitModule for RevoluteModule {
     fn set_component(&self, world: &mut World, registers: &RegisterMap) {
         if let Some(mut revolute) = world.component_mut::<Revolute>(self.entity) {
             let vel_cmd = registers
-                .get(&REG_VELOCITY_CMD)
+                .get(&REG_REVOLUTE_VELOCITY_CMD)
                 .expect("register doesnt exist")
                 .value_f32()
                 .expect("wrong value type");

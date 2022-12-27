@@ -36,29 +36,30 @@ impl UnitModule for ObjectivesModule {
         }
 
         registers.insert(
-            REG_CAPTURE_POINT_COUNT,
+            REG_OBJECTIVES_CAPTURE_POINT_COUNT,
             Register::new_i32("capture_point_count", capture_points.len() as i32),
         );
 
         for (i, (x, y, owner, radius)) in capture_points.iter().enumerate() {
-            let base_offset = REG_CAPTURE_POINT_START + i as u32 * REG_CAPTURE_POINT_STRIDE;
+            let base_offset =
+                REG_OBJECTIVES_CAPTURE_POINT_START + i as u32 * REG_OBJECTIVES_CAPTURE_POINT_STRIDE;
             registers.insert(
-                base_offset + REG_CAPTURE_POINT_OFFSET_X,
+                base_offset + REG_OBJECTIVES_CAPTURE_POINT_OFFSET_X,
                 Register::new_f32("x", *x),
             );
             registers.insert(
-                base_offset + REG_CAPTURE_POINT_OFFSET_Y,
+                base_offset + REG_OBJECTIVES_CAPTURE_POINT_OFFSET_Y,
                 Register::new_f32("y", *y),
             );
             let owner_value = owner
                 .map(|v| v.as_u64() as i32)
-                .unwrap_or(CAPTURE_POINT_UNOWNED);
+                .unwrap_or(OBJECTIVES_CAPTURE_POINT_UNOWNED);
             registers.insert(
-                base_offset + REG_CAPTURE_POINT_OFFSET_OWNER,
+                base_offset + REG_OBJECTIVES_CAPTURE_POINT_OFFSET_OWNER,
                 Register::new_i32("owner", owner_value),
             );
             registers.insert(
-                base_offset + REG_CAPTURE_POINT_OFFSET_RADIUS,
+                base_offset + REG_OBJECTIVES_CAPTURE_POINT_OFFSET_RADIUS,
                 Register::new_f32("radius", *radius),
             );
         }

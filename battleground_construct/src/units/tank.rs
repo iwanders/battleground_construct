@@ -29,6 +29,30 @@ impl Default for TankSpawnConfig {
 }
 
 pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
+    /*
+        Topology of the tank;
+
+        Unit Entity:
+            - Health
+            - TeamMember
+            - HitBy
+            - Eternal
+
+        Control Entity:
+            - UnitController
+
+        Base Entity:
+            - Diff Drive controller
+            - Revolute
+            -> Turret Entity
+                - Revolute
+                -> Barrel Entity
+                    -> Muzzle Entity
+
+        The Unit and Control entities are 'free'.
+        Base to Barrel forms a chain of Parent, all entities are part of the group.
+    */
+
     let mut tank_group_ids: Vec<EntityId> = vec![];
     use components::group::Group;
     use components::parent::Parent;

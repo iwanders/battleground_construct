@@ -3,7 +3,7 @@
 //! Lines are created by writing serialized [`LineSegment`] structs into the byte register.
 
 /// Register accepts serialized [`LineSegment`] structs, multiple may be provided. Bytes value.
-pub const REG_LINES: u32 = 0;
+pub const REG_DRAW_LINES: u32 = 0;
 
 #[repr(C)]
 #[derive(Debug, Clone, PartialEq)]

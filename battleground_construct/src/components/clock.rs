@@ -55,7 +55,7 @@ impl UnitModule for ClockModule {
     fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
         if let Some((_entity, clock)) = world.component_iter::<Clock>().next() {
             registers.insert(
-                battleground_unit_control::modules::clock::REG_ELAPSED,
+                battleground_unit_control::modules::clock::REG_CLOCK_ELAPSED,
                 Register::new_f32("elapsed", clock.elapsed_as_f32()),
             );
         }

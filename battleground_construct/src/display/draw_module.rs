@@ -56,7 +56,7 @@ impl UnitModule for DrawModule {
     fn get_registers(&self, _world: &World, registers: &mut RegisterMap) {
         registers.clear();
         registers.insert(
-            battleground_unit_control::modules::draw::REG_LINES,
+            battleground_unit_control::modules::draw::REG_DRAW_LINES,
             Register::new_bytes("instructions"),
         );
     }
@@ -65,7 +65,7 @@ impl UnitModule for DrawModule {
             draw_component.lines.clear();
 
             let instructions = registers
-                .get(&battleground_unit_control::modules::draw::REG_LINES)
+                .get(&battleground_unit_control::modules::draw::REG_DRAW_LINES)
                 .expect("register doesnt exist")
                 .value_bytes()
                 .expect("wrong value type");
