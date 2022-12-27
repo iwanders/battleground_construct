@@ -1,5 +1,4 @@
 use super::components::hit_box::HitBox;
-// use super::components::hit_by::HitBy;
 use super::components::hit_effect::HitEffect;
 use super::components::hit_plane::HitPlane;
 use super::components::hit_sphere::HitSphere;

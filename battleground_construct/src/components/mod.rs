@@ -38,6 +38,8 @@ pub mod team;
 pub mod team_member;
 pub mod team_module;
 pub mod timed_function_trigger;
+pub mod unit;
 pub mod unit_controller;
+pub mod unit_member;
 pub mod unit_interface;
 pub mod velocity;
