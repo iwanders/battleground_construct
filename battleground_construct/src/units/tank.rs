@@ -1,9 +1,9 @@
 use crate::components;
 use crate::display;
 use crate::display::primitives::Vec3;
-use components::pose::{Pose, PreTransform};
 use components::group::Group;
 use components::parent::Parent;
+use components::pose::{Pose, PreTransform};
 use engine::prelude::*;
 
 use battleground_unit_control::units::tank::*;
@@ -60,6 +60,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     */
     let unit_entity = world.add_entity();
     let control_entity = world.add_entity();
+
     let base_entity = world.add_entity();
     let body_entity = world.add_entity();
     let turret_entity = world.add_entity();
@@ -67,8 +68,18 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let flag_entity = world.add_entity();
     let barrel_entity = world.add_entity();
     let nozzle_entity = world.add_entity();
-    
-    let tank_group_entitys: Vec<EntityId> = vec![unit_entity, control_entity, base_entity, body_entity, turret_entity, radar_entity, flag_entity, barrel_entity, nozzle_entity];
+
+    let tank_group_entities: Vec<EntityId> = vec![
+        unit_entity,
+        control_entity,
+        base_entity,
+        body_entity,
+        turret_entity,
+        radar_entity,
+        flag_entity,
+        barrel_entity,
+        nozzle_entity,
+    ];
 
     // Create the register interface, we'll add modules throughout this function.
     let register_interface = components::unit_interface::RegisterInterfaceContainer::new(
@@ -90,9 +101,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     // -----   Unit
     world.add_component(unit_entity, components::health::Health::new());
     world.add_component(unit_entity, components::eternal::Eternal::new());
-    if let Some(team_member) = config.team_member {
-        world.add_component(unit_entity, team_member);
-    }
     register_interface.get_mut().add_module(
         "team",
         MODULE_TEAM,
@@ -103,11 +111,13 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let unit_id = unit_component.id();
     world.add_component(unit_entity, unit_component);
 
-
     // -----   Base
     world.add_component(base_entity, Pose::from_se2(config.x, config.y, config.yaw));
     world.add_component(base_entity, components::velocity::Velocity::new());
-    world.add_component(base_entity, components::differential_drive_base::DifferentialDriveBase::new());
+    world.add_component(
+        base_entity,
+        components::differential_drive_base::DifferentialDriveBase::new(),
+    );
     register_interface.get_mut().add_module(
         "diff_drive",
         MODULE_DIFF_DRIVE,
@@ -124,10 +134,15 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let hitbox = body.hitbox();
     world.add_component(body_entity, body);
     world.add_component(body_entity, hitbox);
-    world.add_component(body_entity, components::radar_reflector::RadarReflector::new());
-    world.add_component(body_entity, components::capture_marker::CaptureMarker::new());
+    world.add_component(
+        body_entity,
+        components::radar_reflector::RadarReflector::new(),
+    );
+    world.add_component(
+        body_entity,
+        components::capture_marker::CaptureMarker::new(),
+    );
     world.add_component(body_entity, Parent::new(base_entity));
-
 
     // Lets place drawing and gps in the base as well.
     world.add_component(body_entity, display::draw_module::DrawComponent::new());
@@ -179,7 +194,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         components::radio_receiver::RadioReceiverModule::new(body_entity),
     );
 
-
     // -----   Turret
     register_interface.get_mut().add_module(
         "turret",
@@ -224,7 +238,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         reload_time: 1.0,
         fire_effect: std::rc::Rc::new(cannon_function),
     };
-    world.add_component(nozzle_entity, components::cannon::Cannon::new(cannon_config));
+    world.add_component(
+        nozzle_entity,
+        components::cannon::Cannon::new(cannon_config),
+    );
     world.add_component(
         nozzle_entity,
         PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
@@ -286,8 +303,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         flag_entity,
         display::flag::Flag::from_scale_color(0.5, display::Color::RED),
     );
-    world.add_component(flag_entity, Parent::new(unit_entity));
-
+    world.add_component(flag_entity, Parent::new(base_entity));
 
     // -----   Control
     world.add_component(control_entity, register_interface);
@@ -299,11 +315,14 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         components::unit_controller::UnitController::new(rc),
     );
 
-    // Add the group and unit membership to each of the component.
-    let group = Group::from(&tank_group_entitys[..]);
-    for e in tank_group_entitys.iter() {
+    // Add the group, unit and team membership to each of the component.
+    let group = Group::from(&tank_group_entities);
+    for e in tank_group_entities.iter() {
         world.add_component(*e, group.clone());
         world.add_component(*e, components::unit_member::UnitMember::new(unit_id));
+        if let Some(team_member) = config.team_member {
+            world.add_component(*e, team_member);
+        }
     }
 
     unit_entity
@@ -318,7 +337,6 @@ pub fn cannon_function(world: &mut World, cannon_entity: EntityId) {
     let muzzle_world_velocity = components::velocity::world_velocity(world, cannon_entity);
 
     // Get the unit source of this cannel.
-    let unit_id = world.component::<components::unit_member::UnitMember>(cannon_entity).expect("cannon entity should have unit member").unit();
 
     let muzzle_velocity = 10.0;
 
@@ -326,7 +344,12 @@ pub fn cannon_function(world: &mut World, cannon_entity: EntityId) {
     // Orientation in the global frame.
     let projectile_entity = world.add_entity();
     world.add_component::<PointProjectile>(projectile_entity, PointProjectile::new());
-    world.add_component(projectile_entity, UnitSource::new(unit_id));
+    let unit_id = world
+        .component::<components::unit_member::UnitMember>(cannon_entity)
+        .map(|v| v.unit());
+    if let Some(unit_member) = unit_id {
+        world.add_component(projectile_entity, UnitSource::new(unit_member));
+    }
     world.add_component::<Pose>(
         projectile_entity,
         Pose::from_mat4(cgmath::Matrix4::<f32>::from_translation(
@@ -407,5 +430,8 @@ fn cannon_hit_effect(
         world.add_component_boxed(emitter_entity, emitter);
     }
 
-    world.add_component(emitter_entity, crate::components::expiry::Expiry::lifetime(5.0));
+    world.add_component(
+        emitter_entity,
+        crate::components::expiry::Expiry::lifetime(5.0),
+    );
 }

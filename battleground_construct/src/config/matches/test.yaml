@@ -51,7 +51,7 @@ spawn_config:
       yaw: -1.5708
       team: 1
       controller:
-        type: CompositeControl
+        type: SequenceControl
         controllers:
           - type: RadioPosition
           - type: DiffDriveCapturable

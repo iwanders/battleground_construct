@@ -1,8 +1,8 @@
 use engine::prelude::*;
 
+use super::unit::UnitId;
 use crate::components::damage_hit::DamageHit;
 use crate::components::impact::Impact;
-use super::unit::UnitId;
 
 #[derive(Debug, Clone)]
 pub struct HitRecord {
@@ -31,7 +31,13 @@ impl HitBy {
         HitBy { hits: vec![] }
     }
 
-    pub fn add_hit(&mut self, damage_hit: DamageHit, impact: Impact, source: Option<UnitId>, time: f32) {
+    pub fn add_hit(
+        &mut self,
+        damage_hit: DamageHit,
+        impact: Impact,
+        source: Option<UnitId>,
+        time: f32,
+    ) {
         self.hits.push(HitRecord {
             damage_hit,
             impact,

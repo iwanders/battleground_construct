@@ -1,5 +1,5 @@
-use engine::prelude::*;
 use super::unit::UnitId;
+use engine::prelude::*;
 
 #[derive(Debug, Clone, Copy)]
 pub struct UnitSource {

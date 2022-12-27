@@ -72,12 +72,12 @@ pub fn setup_match(
                 specification::ControllerType::Wasm { module } => {
                     Box::new(unit_control_wasm::UnitControlWasm::new(&module)?)
                 }
-                specification::ControllerType::CompositeControl { controllers } => {
+                specification::ControllerType::SequenceControl { controllers } => {
                     let mut v = vec![];
                     for t in controllers.iter() {
                         v.push(controller_type_to_control(t)?);
                     }
-                    Box::new(unit_control_builtin::composite_control::CompositeControl::new(v))
+                    Box::new(unit_control_builtin::sequence_control::SequenceControl::new(v))
                 }
 
                 _ => {

@@ -8,5 +8,5 @@ pub mod dynamic_load_control;
 pub mod idle;
 pub mod tank_swivel_shoot;
 
-pub mod composite_control;
 pub mod radio_position;
+pub mod sequence_control;

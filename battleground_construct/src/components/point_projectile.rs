@@ -5,7 +5,7 @@ pub struct PointProjectile {}
 
 impl PointProjectile {
     pub fn new() -> Self {
-        PointProjectile { }
+        PointProjectile {}
     }
 }
 impl Component for PointProjectile {}

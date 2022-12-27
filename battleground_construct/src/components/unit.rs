@@ -21,9 +21,7 @@ pub struct Unit {
 
 impl Unit {
     pub fn new(id: u64) -> Self {
-        Unit {
-            id: UnitId(id),
-        }
+        Unit { id: UnitId(id) }
     }
 
     pub fn id(&self) -> UnitId {

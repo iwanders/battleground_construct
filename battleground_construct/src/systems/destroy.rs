@@ -25,7 +25,10 @@ impl System for Destroy {
                     .unwrap();
                 for sub_entity in g.entities().iter() {
                     // Only if components are not marked eternal, mark them for deletion.
-                    if world.component::<components::eternal::Eternal>(*sub_entity).is_none() {
+                    if world
+                        .component::<components::eternal::Eternal>(*sub_entity)
+                        .is_none()
+                    {
                         elements_here.push(*sub_entity);
                     }
                 }
