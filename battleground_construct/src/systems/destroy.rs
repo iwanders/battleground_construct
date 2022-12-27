@@ -23,7 +23,12 @@ impl System for Destroy {
                 let g = world
                     .component::<components::group::Group>(*root_entity)
                     .unwrap();
-                elements_here.append(&mut g.entities().to_vec());
+                for sub_entity in g.entities().iter() {
+                    // Only if components are not marked eternal, mark them for deletion.
+                    if world.component::<components::eternal::Eternal>(*sub_entity).is_none() {
+                        elements_here.push(*sub_entity);
+                    }
+                }
             }
 
             // Create the destruction effect.
@@ -53,7 +58,10 @@ impl System for Destroy {
             all_to_be_removed.append(&mut elements_here);
         }
 
-        // Now, remove all these entities, later we will keep the tank id and statistics entity around.
+        // Remove the destroyed markers.
+        world.remove_components::<components::destroyed::Destroyed>(&destroyed);
+
+        // Now, remove all entities marked for removal.
         world.remove_entities(&all_to_be_removed);
     }
 }

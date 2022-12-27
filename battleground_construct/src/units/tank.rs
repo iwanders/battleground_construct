@@ -89,6 +89,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
 
     // -----   Unit
     world.add_component(unit_entity, components::health::Health::new());
+    world.add_component(unit_entity, components::eternal::Eternal::new());
     if let Some(team_member) = config.team_member {
         world.add_component(unit_entity, team_member);
     }

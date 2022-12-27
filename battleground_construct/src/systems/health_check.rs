@@ -10,7 +10,9 @@ impl System for HealthCheck {
             .collect::<Vec<(EntityId, components::health::Health)>>();
         for (entity, health) in entity_health {
             if health.is_destroyed() {
-                world.add_component(entity, components::destroyed::Destroyed::new())
+                world.add_component(entity, components::destroyed::Destroyed::new());
+                // Also remove the health component here, to avoid recalculating it.
+                world.remove_component::<components::health::Health>(entity);
             }
         }
     }

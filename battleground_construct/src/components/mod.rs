@@ -9,6 +9,7 @@ pub mod clock;
 pub mod damage_hit;
 pub mod destroyed;
 pub mod differential_drive_base;
+pub mod eternal;
 pub mod expiry;
 pub mod function_pose;
 pub mod gps;
