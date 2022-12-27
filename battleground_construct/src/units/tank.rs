@@ -2,6 +2,8 @@ use crate::components;
 use crate::display;
 use crate::display::primitives::Vec3;
 use components::pose::{Pose, PreTransform};
+use components::group::Group;
+use components::parent::Parent;
 use engine::prelude::*;
 
 use battleground_unit_control::units::tank::*;
@@ -35,7 +37,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         Unit Entity:
             - Health
             - TeamMember
-            - HitBy
             - Eternal
 
         Control Entity:
@@ -43,48 +44,74 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
 
         Base Entity:
             - Diff Drive controller
-            - Revolute
+            -> Body entity
+                - RadarReflector
+                - CaptureMarker
+                - Radio's
+            -> Flag entity
             -> Turret Entity
                 - Revolute
                 -> Barrel Entity
-                    -> Muzzle Entity
+                    -> Nozzle Entity
+                -> Radar entity
 
         The Unit and Control entities are 'free'.
         Base to Barrel forms a chain of Parent, all entities are part of the group.
     */
 
-    let mut tank_group_ids: Vec<EntityId> = vec![];
-    use components::group::Group;
-    use components::parent::Parent;
+    let unit_id = world.add_entity();
+    let control_id = world.add_entity();
+    let base_id = world.add_entity();
+    let body_id = world.add_entity();
+    let turret_id = world.add_entity();
+    let radar_id = world.add_entity();
+    let flag_id = world.add_entity();
+    let barrel_id = world.add_entity();
+    let nozzle_id = world.add_entity();
+    
+    let tank_group_ids: Vec<EntityId> = vec![unit_id, control_id, base_id, body_id, turret_id, radar_id, flag_id, barrel_id, nozzle_id];
 
-    // Create the base tank, root element with the health.
-    let vehicle_id = world.add_entity();
-    tank_group_ids.push(vehicle_id);
-
+    // Create the register interface, we'll add modules throughout this function.
     let register_interface = components::unit_interface::RegisterInterfaceContainer::new(
         components::unit_interface::RegisterInterface::new(),
     );
 
-    world.add_component(vehicle_id, Pose::from_se2(config.x, config.y, config.yaw));
-    world.add_component(vehicle_id, components::velocity::Velocity::new());
-    let base = components::differential_drive_base::DifferentialDriveBase::new();
-    // Register the base as a controllable.
+    // -----    Global modules
     register_interface.get_mut().add_module(
         "clock",
         MODULE_CLOCK,
         components::clock::ClockModule::new(),
     );
-
     register_interface.get_mut().add_module(
-        "base",
-        MODULE_DIFF_DRIVE,
-        components::differential_drive_base::DifferentialDriveBaseModule::new(vehicle_id),
+        "objectives",
+        MODULE_OBJECTIVES,
+        components::objectives::ObjectivesModule::new(),
     );
 
-    world.add_component(vehicle_id, base);
-    world.add_component(vehicle_id, display::tank_tracks::TankTracks::new());
+    // -----   Unit
+    world.add_component(unit_id, components::health::Health::new());
+    if let Some(team_member) = config.team_member {
+        world.add_component(unit_id, team_member);
+    }
+    register_interface.get_mut().add_module(
+        "team",
+        MODULE_TEAM,
+        components::team_module::TeamModule::new(unit_id),
+    );
 
-    let body_id = world.add_entity();
+
+    // -----   Base
+    world.add_component(base_id, Pose::from_se2(config.x, config.y, config.yaw));
+    world.add_component(base_id, components::velocity::Velocity::new());
+    world.add_component(base_id, components::differential_drive_base::DifferentialDriveBase::new());
+    register_interface.get_mut().add_module(
+        "diff_drive",
+        MODULE_DIFF_DRIVE,
+        components::differential_drive_base::DifferentialDriveBaseModule::new(base_id),
+    );
+    world.add_component(base_id, display::tank_tracks::TankTracks::new());
+
+    // -----   Body
     world.add_component(
         body_id,
         PreTransform::from_translation(Vec3::new(0.0, 0.0, 0.25)),
@@ -94,19 +121,24 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(body_id, body);
     world.add_component(body_id, hitbox);
     world.add_component(body_id, components::radar_reflector::RadarReflector::new());
-    // world.add_component(body_id, components::hit_sphere::HitSphere::with_radius(1.0));
-    world.add_component(body_id, Parent::new(vehicle_id));
-    tank_group_ids.push(body_id);
+    world.add_component(body_id, components::capture_marker::CaptureMarker::new());
+    world.add_component(body_id, Parent::new(base_id));
 
-    let rc = components::unit_controller::UnitControlStorage::new(config.controller);
-    world.add_component(
-        vehicle_id,
-        components::unit_controller::UnitController::new(rc),
+
+    // Lets place drawing and gps in the base as well.
+    world.add_component(body_id, display::draw_module::DrawComponent::new());
+    register_interface.get_mut().add_module(
+        "draw",
+        MODULE_DRAW,
+        display::draw_module::DrawModule::new(body_id),
     );
-    // world.add_component(vehicle_id, display::debug_sphere::DebugSphere::with_radius(1.0));
-    world.add_component(vehicle_id, components::health::Health::new());
+    register_interface.get_mut().add_module(
+        "localization",
+        MODULE_GPS,
+        components::gps::GpsModule::new(body_id),
+    );
 
-    // Lets add the radios, with their respective configurations.
+    // Radios are also on the body, because the gps is also there.
     let transmitter_config = config
         .radio_config
         .map(|v| components::radio_transmitter::RadioTransmitterConfig {
@@ -116,13 +148,13 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         })
         .unwrap_or_default();
     world.add_component(
-        vehicle_id,
+        body_id,
         components::radio_transmitter::RadioTransmitter::new_with_config(transmitter_config),
     );
     register_interface.get_mut().add_module(
         "radio_transmitter",
         MODULE_RADIO_TRANSMITTER,
-        components::radio_transmitter::RadioTransmitterModule::new(vehicle_id),
+        components::radio_transmitter::RadioTransmitterModule::new(body_id),
     );
 
     let receiver_config = config
@@ -134,58 +166,24 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         })
         .unwrap_or_default();
     world.add_component(
-        vehicle_id,
+        body_id,
         components::radio_receiver::RadioReceiver::new_with_config(receiver_config),
     );
     register_interface.get_mut().add_module(
         "radio_receiver",
         MODULE_RADIO_RECEIVER,
-        components::radio_receiver::RadioReceiverModule::new(vehicle_id),
+        components::radio_receiver::RadioReceiverModule::new(body_id),
     );
 
-    if let Some(team_member) = config.team_member {
-        world.add_component(body_id, team_member);
-    }
-    world.add_component(body_id, components::capture_marker::CaptureMarker::new());
 
-    register_interface.get_mut().add_module(
-        "localization",
-        MODULE_GPS,
-        components::gps::GpsModule::new(body_id),
-    );
-    world.add_component(body_id, display::draw_module::DrawComponent::new());
-    register_interface.get_mut().add_module(
-        "draw_module",
-        MODULE_DRAW,
-        display::draw_module::DrawModule::new(body_id),
-    );
-
-    register_interface.get_mut().add_module(
-        "objectives",
-        MODULE_OBJECTIVES,
-        components::objectives::ObjectivesModule::new(),
-    );
-    register_interface.get_mut().add_module(
-        "team",
-        MODULE_TEAM,
-        components::team_module::TeamModule::new(body_id),
-    );
-
-    // Add the turrent entity.
-    let turret_id = world.add_entity();
-
-    // Register this revolute as a controllable.
+    // -----   Turret
     register_interface.get_mut().add_module(
         "turret",
         MODULE_REVOLUTE_TURRET,
         components::revolute::RevoluteModule::new(turret_id),
     );
 
-    tank_group_ids.push(turret_id);
     let turret_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
-    // turret_revolute.set_velocity_bounds(-std::f32::consts::PI * 2.0, std::f32::consts::PI * 2.0);
-    // turret_revolute.set_velocity(-6.28);
-
     world.add_component(turret_id, turret_revolute);
     world.add_component(
         turret_id,
@@ -193,12 +191,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     world.add_component(turret_id, components::pose::Pose::new());
     world.add_component(turret_id, components::velocity::Velocity::new());
-    world.add_component(turret_id, Parent::new(vehicle_id));
+    world.add_component(turret_id, Parent::new(base_id));
     world.add_component(turret_id, display::tank_turret::TankTurret::new());
 
-    // Add the barrel entity
-    let barrel_id = world.add_entity();
-    tank_group_ids.push(barrel_id);
+    // -----   Barrel
     let barrel_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 1.0, 0.0));
     register_interface.get_mut().add_module(
         "barrel",
@@ -217,16 +213,13 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(barrel_id, display::tank_barrel::TankBarrel::new());
     // world.add_component(barrel_id, display::debug_lines::DebugLines::straight(10.0, 0.1, display::primitives::Color::BLUE));
 
-    // If the tank is shooting, add the nozzle and associated components
-    let nozzle_id = world.add_entity();
-    tank_group_ids.push(nozzle_id);
+    // -----   Nozzle
     world.add_component(nozzle_id, Parent::new(barrel_id));
 
     let cannon_config = components::cannon::CannonConfig {
         reload_time: 1.0,
         fire_effect: std::rc::Rc::new(cannon_function),
     };
-
     world.add_component(nozzle_id, components::cannon::Cannon::new(cannon_config));
     world.add_component(
         nozzle_id,
@@ -239,38 +232,36 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         components::cannon::CannonModule::new(nozzle_id),
     );
 
-    let radar_joint = world.add_entity();
-    tank_group_ids.push(radar_joint);
+    // -----   Radar
     let mut radar_revolute =
         components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
     radar_revolute.set_velocity_bounds(-std::f32::consts::PI * 2.0, std::f32::consts::PI * 2.0);
-    // radar_revolute.set_velocity(-2.0 * std::f32::consts::PI);
     radar_revolute.set_velocity(-std::f32::consts::PI);
     register_interface.get_mut().add_module(
         "radar_rotation",
         MODULE_REVOLUTE_RADAR,
-        components::revolute::RevoluteModule::new(radar_joint),
+        components::revolute::RevoluteModule::new(radar_id),
     );
     register_interface.get_mut().add_module(
         "radar",
         MODULE_RADAR,
-        components::radar::RadarModule::new(radar_joint),
+        components::radar::RadarModule::new(radar_id),
     );
 
-    world.add_component(radar_joint, radar_revolute);
-    // world.add_component(radar_joint, display::debug_lines::DebugLines::straight(10.0, 0.01, display::primitives::Color::RED));
+    world.add_component(radar_id, radar_revolute);
+    // world.add_component(radar_id, display::debug_lines::DebugLines::straight(10.0, 0.01, display::primitives::Color::RED));
     world.add_component(
-        radar_joint,
+        radar_id,
         PreTransform::from_translation(Vec3::new(0.0, 0.0, 0.07)),
     );
 
-    world.add_component(radar_joint, components::pose::Pose::new());
-    world.add_component(radar_joint, components::velocity::Velocity::new());
-    world.add_component(radar_joint, Parent::new(turret_id));
-    // world.add_component(radar_joint, display::debug_box::DebugBox::new(0.1, 0.1, 0.1));
-    world.add_component(radar_joint, display::radar_model::RadarModel::new());
+    world.add_component(radar_id, components::pose::Pose::new());
+    world.add_component(radar_id, components::velocity::Velocity::new());
+    world.add_component(radar_id, Parent::new(turret_id));
+    // world.add_component(radar_id, display::debug_box::DebugBox::new(0.1, 0.1, 0.1));
+    world.add_component(radar_id, display::radar_model::RadarModel::new());
     world.add_component(
-        radar_joint,
+        radar_id,
         components::radar::Radar::new_with_config(components::radar::RadarConfig {
             range_max: 30.0,
             detection_angle_yaw: 10.0f32.to_radians(),
@@ -282,10 +273,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         }),
     );
 
-    // Finally, add the register interface.
-    world.add_component(vehicle_id, register_interface);
-
-    let flag_id = world.add_entity();
+    // -----   Flag
     world.add_component(
         flag_id,
         Pose::from_xyz(-0.8, -0.4, 0.3).rotated_angle_z(cgmath::Deg(180.0)),
@@ -294,17 +282,26 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         flag_id,
         display::flag::Flag::from_scale_color(0.5, display::Color::RED),
     );
-    world.add_component(flag_id, Parent::new(vehicle_id));
-    tank_group_ids.push(flag_id);
+    world.add_component(flag_id, Parent::new(unit_id));
 
-    // Finally, add the group to each of the components.
-    world.add_component(vehicle_id, Group::from(&tank_group_ids[..]));
-    world.add_component(turret_id, Group::from(&tank_group_ids[..]));
-    world.add_component(barrel_id, Group::from(&tank_group_ids[..]));
-    world.add_component(nozzle_id, Group::from(&tank_group_ids[..]));
-    world.add_component(body_id, Group::from(&tank_group_ids[..]));
-    world.add_component(radar_joint, Group::from(&tank_group_ids[..]));
-    vehicle_id
+
+    // -----   Control
+    world.add_component(control_id, register_interface);
+
+    // Finally, add the controller.
+    let rc = components::unit_controller::UnitControlStorage::new(config.controller);
+    world.add_component(
+        control_id,
+        components::unit_controller::UnitController::new(rc),
+    );
+
+    // Add the group to each of the components.
+    let group = Group::from(&tank_group_ids[..]);
+    for e in tank_group_ids.iter() {
+        world.add_component(*e, group.clone());
+    }
+
+    unit_id
 }
 
 pub fn cannon_function(world: &mut World, cannon_entity: EntityId) {
