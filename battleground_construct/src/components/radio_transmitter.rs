@@ -118,57 +118,60 @@ impl UnitModule for RadioTransmitterModule {
         if let Some(radio_transmitter) = world.component::<RadioTransmitter>(self.entity) {
             // Read only
             registers.insert(
-                REG_TRANSMIT_RANGE_MAX,
+                REG_RADIO_TX_RANGE_MAX,
                 Register::new_f32(
                     "transmit_range_max",
                     radio_transmitter.config.transmit_range_max,
                 ),
             );
             registers.insert(
-                REG_TRANSMIT_INTERVAL,
+                REG_RADIO_TX_INTERVAL,
                 Register::new_f32(
                     "transmit_interval",
                     radio_transmitter.config.transmit_interval,
                 ),
             );
             registers.insert(
-                REG_PAYLOAD_SIZE_LIMIT,
+                REG_RADIO_TX_MSG_SIZE_LIMIT,
                 Register::new_i32(
                     "payload_size_limit",
                     radio_transmitter.config.payload_size_limit as i32,
                 ),
             );
             registers.insert(
-                REG_PAYLOAD_COUNT_LIMIT,
+                REG_RADIO_TX_MSG_COUNT_LIMIT,
                 Register::new_i32(
                     "payload_count_limit",
                     radio_transmitter.config.payload_count_limit as i32,
                 ),
             );
             registers.insert(
-                REG_CHANNEL_MIN,
+                REG_RADIO_TX_CHANNEL_MIN,
                 Register::new_i32("channel_min", radio_transmitter.config.channel_min as i32),
             );
             registers.insert(
-                REG_CHANNEL_MAX,
+                REG_RADIO_TX_CHANNEL_MAX,
                 Register::new_i32("channel_max", radio_transmitter.config.channel_max as i32),
             );
 
             // Writeable registers.
             registers.insert(
-                REG_CHANNEL_SELECT,
+                REG_RADIO_TX_CHANNEL_SELECT,
                 Register::new_i32("channel_select", radio_transmitter.channel() as i32),
             );
 
             let payloads = radio_transmitter.payloads();
             registers.insert(
-                REG_PAYLOAD_COUNT,
+                REG_RADIO_TX_MSG_COUNT,
                 Register::new_i32("payload_count", payloads.len() as i32),
             );
             for i in 0..radio_transmitter.config.payload_count_limit {
-                let v = registers.entry(REG_PAYLOAD_START + (i as u32)).or_insert(
-                    Register::new_bytes_max("payload", radio_transmitter.config.payload_size_limit),
-                );
+                let v = registers
+                    .entry(REG_RADIO_TX_MSG_START + (i as u32))
+                    .or_insert(Register::new_bytes_max(
+                        "payload",
+                        radio_transmitter.config.payload_size_limit,
+                    ));
                 let value = if i < payloads.len() {
                     payloads[i].clone()
                 } else {
@@ -182,7 +185,7 @@ impl UnitModule for RadioTransmitterModule {
     fn set_component(&self, world: &mut World, registers: &RegisterMap) {
         if let Some(mut radio_transmitter) = world.component_mut::<RadioTransmitter>(self.entity) {
             let channel = registers
-                .get(&REG_CHANNEL_SELECT)
+                .get(&REG_RADIO_TX_CHANNEL_SELECT)
                 .expect("register doesnt exist")
                 .value_i32()
                 .expect("wrong value type")
@@ -190,7 +193,7 @@ impl UnitModule for RadioTransmitterModule {
             radio_transmitter.set_channel(channel);
 
             let payload_count = registers
-                .get(&REG_PAYLOAD_COUNT)
+                .get(&REG_RADIO_TX_MSG_COUNT)
                 .expect("register doesnt exist")
                 .value_i32()
                 .expect("wrong value type")
@@ -204,7 +207,7 @@ impl UnitModule for RadioTransmitterModule {
             let payloads = (0..upper)
                 .map(|i| {
                     registers
-                        .get(&(REG_PAYLOAD_START + (i as u32)))
+                        .get(&(REG_RADIO_TX_MSG_START + (i as u32)))
                         .unwrap()
                         .value_bytes()
                         .unwrap()

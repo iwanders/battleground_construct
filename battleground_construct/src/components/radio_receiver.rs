@@ -84,36 +84,36 @@ impl UnitModule for RadioReceiverModule {
         registers.clear();
         if let Some(radio_receiver) = world.component::<RadioReceiver>(self.entity) {
             registers.insert(
-                REG_CHANNEL_MIN,
+                REG_RADIO_RX_CHANNEL_MIN,
                 Register::new_i32("channel_min", radio_receiver.config.channel_min as i32),
             );
             registers.insert(
-                REG_CHANNEL_MAX,
+                REG_RADIO_RX_CHANNEL_MAX,
                 Register::new_i32("channel_max", radio_receiver.config.channel_max as i32),
             );
 
             registers.insert(
-                REG_CHANNEL_SELECT,
+                REG_RADIO_RX_CHANNEL_SELECT,
                 Register::new_i32("channel_select", radio_receiver.channel() as i32),
             );
 
             let payloads = radio_receiver.payloads();
             registers.insert(
-                REG_PAYLOAD_COUNT,
+                REG_RADIO_RX_MSG_COUNT,
                 Register::new_i32("payload_count", radio_receiver.payloads().len() as i32),
             );
             for i in 0..payloads.len() {
                 registers.insert(
-                    REG_PAYLOAD_START
-                        + (REG_PAYLOAD_STRIDE * i as u32)
-                        + REG_PAYLOAD_OFFSET_STRENGTH,
+                    REG_RADIO_RX_MSG_START
+                        + (REG_RADIO_RX_MSG_STRIDE * i as u32)
+                        + REG_RADIO_RX_MSG_OFFSET_STRENGTH,
                     Register::new_f32("payload_strength", payloads[i].strength),
                 );
                 let v = registers
                     .entry(
-                        REG_PAYLOAD_START
-                            + (REG_PAYLOAD_STRIDE * i as u32)
-                            + REG_PAYLOAD_OFFSET_DATA,
+                        REG_RADIO_RX_MSG_START
+                            + (REG_RADIO_RX_MSG_STRIDE * i as u32)
+                            + REG_RADIO_RX_MSG_OFFSET_DATA,
                     )
                     .or_insert(Register::new_bytes("payload_data"));
                 *v.value_bytes_mut().unwrap() = payloads[i].payload.clone();
@@ -124,7 +124,7 @@ impl UnitModule for RadioReceiverModule {
     fn set_component(&self, world: &mut World, registers: &RegisterMap) {
         if let Some(mut radio_receiver) = world.component_mut::<RadioReceiver>(self.entity) {
             let channel = registers
-                .get(&REG_CHANNEL_SELECT)
+                .get(&REG_RADIO_RX_CHANNEL_SELECT)
                 .expect("register doesnt exist")
                 .value_i32()
                 .expect("wrong value type")
@@ -132,7 +132,7 @@ impl UnitModule for RadioReceiverModule {
             radio_receiver.set_channel(channel);
 
             let payload_count = registers
-                .get(&REG_PAYLOAD_COUNT)
+                .get(&REG_RADIO_RX_MSG_COUNT)
                 .expect("register doesnt exist")
                 .value_i32()
                 .expect("wrong value type");
