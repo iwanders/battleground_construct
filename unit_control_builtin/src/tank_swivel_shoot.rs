@@ -1,15 +1,14 @@
 use battleground_unit_control::{Interface, UnitControl};
 use std::f32::consts::PI;
 
+use battleground_unit_control::modules::cannon::*;
+use battleground_unit_control::modules::radar::*;
+use battleground_unit_control::modules::revolute::*;
 use battleground_unit_control::units::tank;
 
 pub struct TankSwivelShoot {}
 impl UnitControl for TankSwivelShoot {
     fn update(&mut self, interface: &mut dyn Interface) {
-        let revolve_pos = 0;
-        let revolve_vel = 1;
-        let revolve_cmd_vel = 4;
-
         if false {
             for m_index in interface.modules().unwrap() {
                 println!(
@@ -22,16 +21,16 @@ impl UnitControl for TankSwivelShoot {
             }
         }
 
-        let write_res = interface.set_i32(tank::CANNON_MODULE, 0, true as i32);
+        let write_res = interface.set_i32(tank::CANNON_MODULE, REG_FIRING, true as i32);
         write_res.unwrap();
 
         let clock = interface.get_f32(tank::CLOCK_MODULE, 0).unwrap();
         if clock < 0.1 {
             interface
-                .set_f32(tank::TURRET_MODULE, revolve_cmd_vel, 0.3)
+                .set_f32(tank::TURRET_MODULE, REG_VELOCITY_CMD, 0.3)
                 .unwrap();
             interface
-                .set_f32(tank::BARREL_MODULE, revolve_cmd_vel, -0.1)
+                .set_f32(tank::BARREL_MODULE, REG_VELOCITY_CMD, -0.1)
                 .unwrap();
             return;
         }
@@ -41,7 +40,9 @@ impl UnitControl for TankSwivelShoot {
         // interface.set_f32(0x1000, 2, 1.0).unwrap();
         // interface.set_f32(0x1000, 3, 1.0).unwrap();
 
-        let turret_pos = interface.get_f32(tank::TURRET_MODULE, revolve_pos).unwrap();
+        let turret_pos = interface
+            .get_f32(tank::TURRET_MODULE, REG_POSITION)
+            .unwrap();
         // println!("turret_pos: {turret_pos}");
         if (turret_pos > PI && turret_pos < (PI * 2.0 - PI / 8.0))
             || (turret_pos > PI / 8.0 && turret_pos < PI)
@@ -49,20 +50,26 @@ impl UnitControl for TankSwivelShoot {
             interface
                 .set_f32(
                     tank::TURRET_MODULE,
-                    revolve_cmd_vel,
-                    -interface.get_f32(tank::TURRET_MODULE, revolve_vel).unwrap(),
+                    REG_VELOCITY_CMD,
+                    -interface
+                        .get_f32(tank::TURRET_MODULE, REG_VELOCITY)
+                        .unwrap(),
                 )
                 .unwrap();
         }
 
-        let barrel_pos = interface.get_f32(tank::BARREL_MODULE, revolve_pos).unwrap();
+        let barrel_pos = interface
+            .get_f32(tank::BARREL_MODULE, REG_POSITION)
+            .unwrap();
         // println!("barrel_pos: {barrel_pos}");
         if barrel_pos < (PI * 2.0 - PI / 8.0) || (barrel_pos < PI / 8.0) {
             interface
                 .set_f32(
                     tank::BARREL_MODULE,
-                    revolve_cmd_vel,
-                    -interface.get_f32(tank::BARREL_MODULE, revolve_vel).unwrap(),
+                    REG_VELOCITY_CMD,
+                    -interface
+                        .get_f32(tank::BARREL_MODULE, REG_VELOCITY)
+                        .unwrap(),
                 )
                 .unwrap();
         }
@@ -71,14 +78,26 @@ impl UnitControl for TankSwivelShoot {
         // interface.set_f32(0x1200, 4, -1.0).unwrap();
 
         if false {
-            let turret_yaw = interface.get_f32(tank::TURRET_MODULE, 0).unwrap();
-            let radar_yaw = interface.get_f32(tank::RADAR_ROTATION, 0).unwrap();
-            let radar_hits = interface.get_i32(tank::RADAR_MODULE, 0).unwrap();
+            let turret_yaw = interface
+                .get_f32(tank::TURRET_MODULE, REG_POSITION)
+                .unwrap();
+            let radar_yaw = interface
+                .get_f32(tank::RADAR_ROTATION, REG_POSITION)
+                .unwrap();
+            let radar_hits = interface
+                .get_i32(tank::RADAR_MODULE, REG_REFLECTION_COUNT)
+                .unwrap();
             for i in 0..radar_hits {
-                let offset = i as u32 * 4 + 1;
-                let reading_yaw = interface.get_f32(tank::RADAR_MODULE, offset).unwrap();
-                let pitch = interface.get_f32(tank::RADAR_MODULE, offset + 1).unwrap();
-                let distance = interface.get_f32(tank::RADAR_MODULE, offset + 2).unwrap();
+                let offset = i as u32 * REG_REFLECTION_STRIDE + REG_REFLECTION_START;
+                let reading_yaw = interface
+                    .get_f32(tank::RADAR_MODULE, offset + REG_REFLECTION_OFFSET_YAW)
+                    .unwrap();
+                let pitch = interface
+                    .get_f32(tank::RADAR_MODULE, offset + REG_REFLECTION_OFFSET_PITCH)
+                    .unwrap();
+                let distance = interface
+                    .get_f32(tank::RADAR_MODULE, offset + REG_REFLECTION_OFFSET_DISTANCE)
+                    .unwrap();
                 // let strength = interface.get_f32(tank::RADAR_MODULE, offset + 3).unwrap();
                 let combined_yaw =
                     (reading_yaw + radar_yaw + turret_yaw).rem_euclid(std::f32::consts::PI * 2.0);

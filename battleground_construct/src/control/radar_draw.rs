@@ -15,13 +15,15 @@ pub struct RadarDrawControl {}
 const GREEN: [u8; 4] = [0, 255, 0, 255];
 const BLUE: [u8; 4] = [0, 0, 255, 255];
 const RED: [u8; 4] = [255, 0, 0, 255];
-
+use battleground_unit_control::modules::gps::*;
+use battleground_unit_control::modules::radar::*;
+use battleground_unit_control::modules::revolute::*;
 impl UnitControl for RadarDrawControl {
     fn update(&mut self, interface: &mut dyn Interface) {
-        let x = interface.get_f32(tank::GPS_MODULE, 0).unwrap();
-        let y = interface.get_f32(tank::GPS_MODULE, 1).unwrap();
-        let z = interface.get_f32(tank::GPS_MODULE, 2).unwrap();
-        let yaw = interface.get_f32(tank::GPS_MODULE, 5).unwrap();
+        let x = interface.get_f32(tank::GPS_MODULE, REG_X).unwrap();
+        let y = interface.get_f32(tank::GPS_MODULE, REG_Y).unwrap();
+        let z = interface.get_f32(tank::GPS_MODULE, REG_Z).unwrap();
+        let yaw = interface.get_f32(tank::GPS_MODULE, REG_YAW).unwrap();
 
         let body_z = 0.25;
         let turret_z = 0.375 + 0.1 / 2.0;
@@ -37,8 +39,12 @@ impl UnitControl for RadarDrawControl {
         let draw_to_global = global_offset.to_inv_h();
         // Then, we can calculate everything in global frame, and finally draw in local.
 
-        let turret_pos = interface.get_f32(tank::TURRET_MODULE, 0).unwrap();
-        let radar_pos = interface.get_f32(tank::RADAR_ROTATION, 0).unwrap();
+        let turret_pos = interface
+            .get_f32(tank::TURRET_MODULE, REG_POSITION)
+            .unwrap();
+        let radar_pos = interface
+            .get_f32(tank::RADAR_ROTATION, REG_POSITION)
+            .unwrap();
 
         // radar position in world:
         let rot = turret_pos + radar_pos;
@@ -58,9 +64,15 @@ impl UnitControl for RadarDrawControl {
         });
         use cgmath::Rad;
 
-        let radar_range_max = interface.get_f32(tank::RADAR_MODULE, 0).unwrap();
-        let radar_detection_yaw = interface.get_f32(tank::RADAR_MODULE, 1).unwrap();
-        let _radar_detection_pitch = interface.get_f32(tank::RADAR_MODULE, 2).unwrap();
+        let radar_range_max = interface
+            .get_f32(tank::RADAR_MODULE, REG_RANGE_MAX)
+            .unwrap();
+        let radar_detection_yaw = interface
+            .get_f32(tank::RADAR_MODULE, REG_DETECTION_ANGLE_YAW)
+            .unwrap();
+        let _radar_detection_pitch = interface
+            .get_f32(tank::RADAR_MODULE, REG_DETECTION_ANGLE_PITCH)
+            .unwrap();
 
         let p1 = global_offset
             * local_radar
@@ -88,12 +100,20 @@ impl UnitControl for RadarDrawControl {
             color: BLUE,
         });
 
-        let radar_hits = interface.get_i32(tank::RADAR_MODULE, 3).unwrap();
+        let radar_hits = interface
+            .get_i32(tank::RADAR_MODULE, REG_REFLECTION_COUNT)
+            .unwrap();
         for i in 0..radar_hits {
-            let offset = i as u32 * 4 + 3 + 1;
-            let reading_yaw = interface.get_f32(tank::RADAR_MODULE, offset).unwrap();
-            let pitch = interface.get_f32(tank::RADAR_MODULE, offset + 1).unwrap();
-            let distance = interface.get_f32(tank::RADAR_MODULE, offset + 2).unwrap();
+            let offset = i as u32 * REG_REFLECTION_STRIDE + REG_REFLECTION_START;
+            let reading_yaw = interface
+                .get_f32(tank::RADAR_MODULE, offset + REG_REFLECTION_OFFSET_YAW)
+                .unwrap();
+            let pitch = interface
+                .get_f32(tank::RADAR_MODULE, offset + REG_REFLECTION_OFFSET_PITCH)
+                .unwrap();
+            let distance = interface
+                .get_f32(tank::RADAR_MODULE, offset + REG_REFLECTION_OFFSET_DISTANCE)
+                .unwrap();
             // println!("Reading {i}: yaw: {reading_yaw}, pitch: {pitch}, distance: {distance}");
 
             let radar_hit_frame = Mat4::from_angle_z(cgmath::Rad(reading_yaw))
@@ -116,7 +136,11 @@ impl UnitControl for RadarDrawControl {
             draw_instructions.extend(l.into_le_bytes());
         }
         interface
-            .set_bytes(tank::DRAW_MODULE, 0, &draw_instructions)
+            .set_bytes(
+                tank::DRAW_MODULE,
+                battleground_unit_control::modules::draw::REG_LINES,
+                &draw_instructions,
+            )
             .expect("");
     }
 }

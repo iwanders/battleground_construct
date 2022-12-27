@@ -55,7 +55,10 @@ use crate::components::unit_interface::{Register, RegisterMap, UnitModule};
 impl UnitModule for DrawModule {
     fn get_registers(&self, _world: &World, registers: &mut RegisterMap) {
         registers.clear();
-        registers.insert(0, Register::new_bytes("instructions"));
+        registers.insert(
+            battleground_unit_control::modules::draw::REG_LINES,
+            Register::new_bytes("instructions"),
+        );
     }
     fn set_component(&self, world: &mut World, registers: &RegisterMap) {
         if let Some(mut draw_component) = world.component_mut::<DrawComponent>(self.entity) {
