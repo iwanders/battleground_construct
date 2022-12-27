@@ -167,7 +167,7 @@ impl UnitModule for RadioTransmitterModule {
             );
             for i in 0..radio_transmitter.config.payload_count_limit {
                 let v = registers
-                    .entry(registers::PAYLOAD_OFFSET + (i as u32))
+                    .entry(registers::PAYLOAD_START + (i as u32))
                     .or_insert(Register::new_bytes_max(
                         "payload",
                         radio_transmitter.config.payload_size_limit,
@@ -207,7 +207,7 @@ impl UnitModule for RadioTransmitterModule {
             let payloads = (0..upper)
                 .map(|i| {
                     registers
-                        .get(&(registers::PAYLOAD_OFFSET + (i as u32)))
+                        .get(&(registers::PAYLOAD_START + (i as u32)))
                         .unwrap()
                         .value_bytes()
                         .unwrap()

@@ -104,6 +104,8 @@ impl Radar {
 impl Component for Radar {}
 
 use crate::components::unit_interface::{Register, RegisterMap, UnitModule};
+use battleground_unit_control::modules::radar::registers::*;
+
 pub struct RadarModule {
     entity: EntityId,
 }
@@ -119,34 +121,38 @@ impl UnitModule for RadarModule {
         registers.clear();
         if let Some(radar) = world.component::<Radar>(self.entity) {
             let reflections = radar.reflections();
-            let mut index = 0;
-            registers.insert(index, Register::new_f32("range_max", radar.range_max));
-            index += 1;
+            registers.insert(RANGE_MAX, Register::new_f32("range_max", radar.range_max));
             registers.insert(
-                index,
+                DETECTION_ANGLE_YAW,
                 Register::new_f32("detection_angle_yaw", radar.detection_angle_yaw),
             );
-            index += 1;
+
             registers.insert(
-                index,
+                DETECTION_ANGLE_PITCH,
                 Register::new_f32("detection_angle_pitch", radar.detection_angle_pitch),
             );
-            index += 1;
+
             registers.insert(
-                index,
+                REFLECTION_COUNT,
                 Register::new_i32("reflections", reflections.len() as i32),
             );
-            index += 1;
+
             for (i, reflection) in reflections.iter().enumerate() {
-                let offset = i as u32 * 4 + index;
-                registers.insert(offset, Register::new_f32("yaw", reflection.yaw));
-                registers.insert(offset + 1, Register::new_f32("pitch", reflection.pitch));
+                let offset = i as u32 * REFLECTION_STRIDE + REFLECTION_START;
                 registers.insert(
-                    offset + 2,
+                    offset + REFLECTION_OFFSET_YAW,
+                    Register::new_f32("yaw", reflection.yaw),
+                );
+                registers.insert(
+                    offset + REFLECTION_OFFSET_PITCH,
+                    Register::new_f32("pitch", reflection.pitch),
+                );
+                registers.insert(
+                    offset + REFLECTION_OFFSET_DISTANCE,
                     Register::new_f32("distance", reflection.distance),
                 );
                 registers.insert(
-                    offset + 3,
+                    offset + REFLECTION_OFFSET_STRENGTH,
                     Register::new_f32("strength", reflection.strength),
                 );
             }

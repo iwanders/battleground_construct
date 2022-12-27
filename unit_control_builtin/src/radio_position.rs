@@ -6,7 +6,12 @@ use battleground_unit_control::{Interface, UnitControl};
 pub struct RadioPosition {}
 impl UnitControl for RadioPosition {
     fn update(&mut self, interface: &mut dyn Interface) {
-        let team = interface.get_i32(tank::TEAM_MODULE, 0).unwrap();
+        let team = interface
+            .get_i32(
+                tank::TEAM_MODULE,
+                battleground_unit_control::modules::team::registers::TEAM,
+            )
+            .unwrap();
 
         let x = interface
             .get_f32(tank::GPS_MODULE, gps_registers::X)
@@ -39,7 +44,7 @@ impl UnitControl for RadioPosition {
             interface
                 .set_bytes(
                     tank::RADIO_TRANSMITTER_MODULE,
-                    radio_registers::PAYLOAD_OFFSET + payload_count as u32,
+                    radio_registers::PAYLOAD_START + payload_count as u32,
                     &payload[..],
                 )
                 .unwrap();

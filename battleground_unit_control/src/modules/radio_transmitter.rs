@@ -11,5 +11,5 @@ pub mod registers {
     pub const CHANNEL_SELECT: u32 = 0x1000;
 
     pub const PAYLOAD_COUNT: u32 = 0x2000;
-    pub const PAYLOAD_OFFSET: u32 = 0x2001;
+    pub const PAYLOAD_START: u32 = 0x2001;
 }

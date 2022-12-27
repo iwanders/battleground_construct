@@ -73,6 +73,7 @@ impl Revolute {
 impl Component for Revolute {}
 
 use crate::components::unit_interface::{Register, RegisterMap, UnitModule};
+use battleground_unit_control::modules::revolute::registers;
 pub struct RevoluteModule {
     entity: EntityId,
 }
@@ -87,21 +88,36 @@ impl UnitModule for RevoluteModule {
     fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
         registers.clear();
         if let Some(revolute) = world.component::<Revolute>(self.entity) {
-            registers.insert(0, Register::new_f32("position", revolute.position()));
-            registers.insert(1, Register::new_f32("velocity", revolute.velocity()));
+            registers.insert(
+                registers::POSITION,
+                Register::new_f32("position", revolute.position()),
+            );
+            registers.insert(
+                registers::VELOCITY,
+                Register::new_f32("velocity", revolute.velocity()),
+            );
 
             let (vel_min, vel_max) = revolute.velocity_bounds();
-            registers.insert(2, Register::new_f32("velocity_min", vel_min));
-            registers.insert(3, Register::new_f32("velocity_max", vel_max));
+            registers.insert(
+                registers::VELOCITY_MIN,
+                Register::new_f32("velocity_min", vel_min),
+            );
+            registers.insert(
+                registers::VELOCITY_MAX,
+                Register::new_f32("velocity_max", vel_max),
+            );
 
-            registers.insert(4, Register::new_f32("velocity_cmd", revolute.velocity()));
+            registers.insert(
+                registers::VELOCITY_CMD,
+                Register::new_f32("velocity_cmd", revolute.velocity()),
+            );
         }
     }
 
     fn set_component(&self, world: &mut World, registers: &RegisterMap) {
         if let Some(mut revolute) = world.component_mut::<Revolute>(self.entity) {
             let vel_cmd = registers
-                .get(&4)
+                .get(&registers::VELOCITY_CMD)
                 .expect("register doesnt exist")
                 .value_f32()
                 .expect("wrong value type");
