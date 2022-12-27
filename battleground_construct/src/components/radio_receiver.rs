@@ -8,28 +8,38 @@ struct ReceivedPayload {
 
 #[derive(Debug, Clone)]
 pub struct RadioReceiver {
+    config: RadioReceiverConfig,
     payloads: Vec<ReceivedPayload>,
+    channel: usize,
 }
 
-/*
 #[derive(Copy, Debug, Clone)]
 pub struct RadioReceiverConfig {
-    /// Minimum strength at which messages can still be received.
-    pub receive_floor: f32,
+    /// The minimum channel to be selected, transmitters on a certain channel will only be received
+    /// by receivers listening on that channel.
+    pub channel_min: usize,
+
+    /// The maximum channel to be selected, transmitters on a certain channel will only be received
+    /// by receivers listening on that channel.
+    pub channel_max: usize,
 }
 
-impl Default for RadioTransmitterConfig {
+impl Default for RadioReceiverConfig {
     fn default() -> Self {
         Self {
-            receive_floor: 0.0
+            channel_min: 0,
+            channel_max: 4,
         }
     }
 }
-*/
 
 impl RadioReceiver {
-    pub fn new() -> Self {
-        Self { payloads: vec![] }
+    pub fn new_with_config(config: RadioReceiverConfig) -> Self {
+        Self {
+            config,
+            payloads: vec![],
+            channel: config.channel_min,
+        }
     }
 
     pub fn add_payload(&mut self, strength: f32, payload: &[u8]) {
@@ -45,6 +55,14 @@ impl RadioReceiver {
 
     fn payloads(&self) -> &[ReceivedPayload] {
         &self.payloads[..]
+    }
+
+    pub fn channel(&self) -> usize {
+        self.channel
+    }
+
+    pub fn set_channel(&mut self, channel: usize) {
+        self.channel = channel.clamp(self.config.channel_min, self.config.channel_max);
     }
 }
 impl Component for RadioReceiver {}
@@ -65,6 +83,20 @@ impl UnitModule for RadioReceiverModule {
     fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
         registers.clear();
         if let Some(radio_receiver) = world.component::<RadioReceiver>(self.entity) {
+            registers.insert(
+                registers::CHANNEL_MIN,
+                Register::new_i32("channel_min", radio_receiver.config.channel_min as i32),
+            );
+            registers.insert(
+                registers::CHANNEL_MAX,
+                Register::new_i32("channel_max", radio_receiver.config.channel_max as i32),
+            );
+
+            registers.insert(
+                registers::CHANNEL_SELECT,
+                Register::new_i32("channel_select", radio_receiver.channel() as i32),
+            );
+
             let payloads = radio_receiver.payloads();
             registers.insert(
                 registers::PAYLOAD_COUNT,
@@ -91,6 +123,14 @@ impl UnitModule for RadioReceiverModule {
 
     fn set_component(&self, world: &mut World, registers: &RegisterMap) {
         if let Some(mut radio_receiver) = world.component_mut::<RadioReceiver>(self.entity) {
+            let channel = registers
+                .get(&registers::CHANNEL_SELECT)
+                .expect("register doesnt exist")
+                .value_i32()
+                .expect("wrong value type")
+                .max(0) as usize;
+            radio_receiver.set_channel(channel);
+
             let payload_count = registers
                 .get(&registers::PAYLOAD_COUNT)
                 .expect("register doesnt exist")

@@ -24,34 +24,41 @@ impl System for RadioTransmission {
             transmit_max_range: f32,
         }
 
-        let mut pending_transmissions: Vec<Transmission> = vec![];
+        let mut pending_transmissions: std::collections::HashMap<usize, Vec<Transmission>> =
+            Default::default();
         for (entity, mut transmitter) in world.component_iter_mut::<RadioTransmitter>() {
             let msgs = transmitter.to_transmit(t);
+            let channel = transmitter.channel();
             if !msgs.is_empty() {
                 let pose = world_pose(world, entity);
-                pending_transmissions.push(Transmission {
-                    entity,
-                    msgs,
-                    pos: pose.to_translation(),
-                    strength: transmitter.transmit_strength(),
-                    transmit_max_range: transmitter.config().transmit_range_max,
-                });
+                pending_transmissions
+                    .entry(channel)
+                    .or_insert(vec![])
+                    .push(Transmission {
+                        entity,
+                        msgs,
+                        pos: pose.to_translation(),
+                        strength: transmitter.transmit_strength(),
+                        transmit_max_range: transmitter.config().transmit_range_max,
+                    });
             }
         }
 
         for (entity, mut receiver) in world.component_iter_mut::<RadioReceiver>() {
             let receiver_pose = world_pose(world, entity).to_translation();
-            for transmission in pending_transmissions.iter() {
-                if transmission.entity == entity {
-                    continue; // a receiver attached to this transmitter, lets not deliver echoes.
-                }
-                let distance = (transmission.pos - receiver_pose).euclid_norm();
-                if distance < transmission.transmit_max_range {
-                    // calculate the strength.
-                    let ratio_towards = 1.0 / distance.powi(2);
-                    let total_strength = transmission.strength * ratio_towards;
-                    for payload in transmission.msgs.iter() {
-                        receiver.add_payload(total_strength, &payload[..]);
+            if let Some(pending) = pending_transmissions.get(&receiver.channel()) {
+                for transmission in pending.iter() {
+                    if transmission.entity == entity {
+                        continue; // a receiver attached to this transmitter, lets not deliver echoes.
+                    }
+                    let distance = (transmission.pos - receiver_pose).euclid_norm();
+                    if distance < transmission.transmit_max_range {
+                        // calculate the strength.
+                        let ratio_towards = 1.0 / distance.powi(2);
+                        let total_strength = transmission.strength * ratio_towards;
+                        for payload in transmission.msgs.iter() {
+                            receiver.add_payload(total_strength, &payload[..]);
+                        }
                     }
                 }
             }

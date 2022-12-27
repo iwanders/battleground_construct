@@ -6,32 +6,42 @@ pub struct RadioTransmitter {
     config: RadioTransmitterConfig,
     next_send_time: f32,
     last_update_time: f32,
-    transmit_strength: f32,
     payloads: VecDeque<Vec<u8>>,
+    channel: usize,
 }
 
 #[derive(Copy, Debug, Clone)]
 pub struct RadioTransmitterConfig {
     /// Maximum range for which transmissions are still delivered.
     pub transmit_range_max: f32,
+
     /// Interval at which the radio sends out each message.
     pub transmit_interval: f32,
-    /// The transmission strength, used to calculate the receipt strength.
-    pub transmit_strength_max: f32,
+
     /// Maximum length of each transmission, in bytes, longer messages are truncated.
     pub payload_size_limit: usize,
+
     /// The maximum number of pending transmissions.
     pub payload_count_limit: usize,
+
+    /// The minimum channel to be selected, transmitters on a certain channel will only be received
+    /// by receivers listening on that channel.
+    pub channel_min: usize,
+
+    /// The maximum channel to be selected, transmitters on a certain channel will only be received
+    /// by receivers listening on that channel.
+    pub channel_max: usize,
 }
 
 impl Default for RadioTransmitterConfig {
     fn default() -> Self {
         Self {
             transmit_range_max: 30.0,
-            transmit_strength_max: 1.0,
             transmit_interval: 0.01,
             payload_size_limit: 32,
             payload_count_limit: 16,
+            channel_min: 0,
+            channel_max: 4,
         }
     }
 }
@@ -42,7 +52,7 @@ impl RadioTransmitter {
             config,
             next_send_time: -config.transmit_interval - 1.0,
             last_update_time: 0.0,
-            transmit_strength: config.transmit_strength_max,
+            channel: config.channel_min,
             payloads: VecDeque::new(),
         }
     }
@@ -73,11 +83,15 @@ impl RadioTransmitter {
     }
 
     pub fn transmit_strength(&self) -> f32 {
-        self.transmit_strength
+        1.0
     }
 
-    pub fn set_transmit_strength(&mut self, strength: f32) {
-        self.transmit_strength = strength.clamp(0.0, self.config.transmit_strength_max);
+    pub fn channel(&self) -> usize {
+        self.channel
+    }
+
+    pub fn set_channel(&mut self, channel: usize) {
+        self.channel = channel.clamp(self.config.channel_min, self.config.channel_max);
     }
 
     pub fn config(&self) -> RadioTransmitterConfig {
@@ -118,13 +132,6 @@ impl UnitModule for RadioTransmitterModule {
                 ),
             );
             registers.insert(
-                registers::TRANSMIT_STRENGTH_MAX,
-                Register::new_f32(
-                    "transmit_strength_max",
-                    radio_transmitter.config.transmit_strength_max,
-                ),
-            );
-            registers.insert(
                 registers::PAYLOAD_SIZE_LIMIT,
                 Register::new_i32(
                     "payload_size_limit",
@@ -138,11 +145,19 @@ impl UnitModule for RadioTransmitterModule {
                     radio_transmitter.config.payload_count_limit as i32,
                 ),
             );
+            registers.insert(
+                registers::CHANNEL_MIN,
+                Register::new_i32("channel_min", radio_transmitter.config.channel_min as i32),
+            );
+            registers.insert(
+                registers::CHANNEL_MAX,
+                Register::new_i32("channel_max", radio_transmitter.config.channel_max as i32),
+            );
 
             // Writeable registers.
             registers.insert(
-                registers::TRANSMIT_STRENGTH,
-                Register::new_f32("transmit_strength", radio_transmitter.transmit_strength),
+                registers::CHANNEL_SELECT,
+                Register::new_i32("channel_select", radio_transmitter.channel() as i32),
             );
 
             let payloads = radio_transmitter.payloads();
@@ -169,12 +184,13 @@ impl UnitModule for RadioTransmitterModule {
 
     fn set_component(&self, world: &mut World, registers: &RegisterMap) {
         if let Some(mut radio_transmitter) = world.component_mut::<RadioTransmitter>(self.entity) {
-            let transmit_strength = registers
-                .get(&registers::TRANSMIT_STRENGTH)
+            let channel = registers
+                .get(&registers::CHANNEL_SELECT)
                 .expect("register doesnt exist")
-                .value_f32()
-                .expect("wrong value type");
-            radio_transmitter.set_transmit_strength(transmit_strength);
+                .value_i32()
+                .expect("wrong value type")
+                .max(0) as usize;
+            radio_transmitter.set_channel(channel);
 
             let payload_count = registers
                 .get(&registers::PAYLOAD_COUNT)
@@ -209,10 +225,12 @@ mod test {
     #[test]
     fn test_radio_transmitter() {
         let config = RadioTransmitterConfig {
-            transmit_strength_max: 10.0,
+            transmit_range_max: 1.0,
             transmit_interval: 0.1,
             payload_size_limit: 4,
             payload_count_limit: 3,
+            channel_min: 0,
+            channel_max: 0,
         };
         let mut radio = RadioTransmitter::new_with_config(config);
         radio.set_payloads(&[&[0], &[1], &[2]]);
@@ -264,7 +282,7 @@ mod test {
 
         // Radio is now empty, advance time,
         t += 10.0;
-        let msgs = radio.to_transmit(t);
+        let _msgs = radio.to_transmit(t);
 
         // If we add three messages and advance the time by more than three intervals, we should
         // get all of them.
@@ -276,7 +294,7 @@ mod test {
 
         // Flush the radio.
         t += 10.0;
-        let msgs = radio.to_transmit(t);
+        let _msgs = radio.to_transmit(t);
 
         // Add payloads, first message is too long, and there's too many payloads.
         radio.set_payloads(&[&[1, 2, 3, 4, 5, 6], &[1], &[2], &[3], &[4]]);
