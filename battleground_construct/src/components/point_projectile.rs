@@ -1,17 +1,11 @@
 use engine::prelude::*;
 
 #[derive(Debug, Copy, Clone)]
-pub struct PointProjectile {
-    source: EntityId,
-}
+pub struct PointProjectile {}
 
 impl PointProjectile {
-    pub fn new(source: EntityId) -> Self {
-        PointProjectile { source }
-    }
-
-    pub fn source(&self) -> EntityId {
-        self.source
+    pub fn new() -> Self {
+        PointProjectile { }
     }
 }
 impl Component for PointProjectile {}

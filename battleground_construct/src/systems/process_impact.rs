@@ -31,10 +31,9 @@ impl System for ProcessImpact {
             let damage_hit = world
                 .component::<components::damage_hit::DamageHit>(impact_entity)
                 .map(|v| v.clone());
-            let projectile_source = world
-                .component::<components::projectile_source::ProjectileSource>(impact_entity)
-                .map(|v| *v)
-                .expect("projectiles should have source");
+            let unit_source = world
+                .component::<components::unit_source::UnitSource>(impact_entity)
+                .map(|v| v.source());
 
             if let Some(damage_hit) = damage_hit {
                 if let Some(impact_on) = impact.impact_on() {
@@ -49,7 +48,7 @@ impl System for ProcessImpact {
                     let mut hit_by = world
                         .component_mut::<components::hit_by::HitBy>(impact_on)
                         .unwrap();
-                    hit_by.add_hit(damage_hit, impact, projectile_source.source(), t);
+                    hit_by.add_hit(damage_hit, impact, unit_source, t);
                 }
             }
         }

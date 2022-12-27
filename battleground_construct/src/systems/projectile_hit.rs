@@ -4,6 +4,8 @@ use super::components::hit_plane::HitPlane;
 use super::components::hit_sphere::HitSphere;
 use super::components::impact::Impact;
 use super::components::point_projectile::PointProjectile;
+use crate::components::unit::UnitId;
+use crate::components::unit_source::UnitSource;
 use super::components::pose::world_pose;
 use super::components::pose::Pose;
 use crate::components::acceleration::Acceleration;
@@ -26,9 +28,9 @@ impl System for ProjectileHit {
 
         // Get all projectiles' world poses.
         let mut projectiles = world
-            .component_iter::<PointProjectile>()
-            .map(|(entity, projectile)| (entity, projectile.source()))
-            .collect::<Vec<(EntityId, EntityId)>>();
+            .component_entities::<PointProjectile>().iter()
+            .map(|entity| (*entity, world.component::<UnitSource>(*entity).map(|v|v.source())))
+            .collect::<Vec<(EntityId, Option<UnitId>)>>();
 
         let projectile_poses = projectiles
             .drain(..)
@@ -36,7 +38,7 @@ impl System for ProjectileHit {
                 let pose = world_pose(world, projectile_id);
                 (projectile_id, source_id, pose)
             })
-            .collect::<Vec<(EntityId, EntityId, Pose)>>();
+            .collect::<Vec<(EntityId, Option<UnitId>, Pose)>>();
 
         {
             // Get all the hit planes

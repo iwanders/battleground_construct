@@ -310,19 +310,22 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
 
 pub fn cannon_function(world: &mut World, cannon_entity: EntityId) {
     use crate::components::point_projectile::PointProjectile;
-    use crate::components::projectile_source::ProjectileSource;
+    use crate::components::unit_source::UnitSource;
     use crate::components::velocity::Velocity;
 
     let muzzle_pose = components::pose::world_pose(world, cannon_entity);
     let muzzle_world_velocity = components::velocity::world_velocity(world, cannon_entity);
+
+    // Get the unit source of this cannel.
+    let unit_id = world.component::<components::unit_member::UnitMember>(cannon_entity).expect("cannon entity should have unit member").unit();
 
     let muzzle_velocity = 10.0;
 
     // Get the pose of the cannon in the world coordinates. Then create the pose with the
     // Orientation in the global frame.
     let projectile_entity = world.add_entity();
-    world.add_component::<PointProjectile>(projectile_entity, PointProjectile::new(cannon_entity));
-    world.add_component(projectile_entity, ProjectileSource::new(cannon_entity));
+    world.add_component::<PointProjectile>(projectile_entity, PointProjectile::new());
+    world.add_component(projectile_entity, UnitSource::new(unit_id));
     world.add_component::<Pose>(
         projectile_entity,
         Pose::from_mat4(cgmath::Matrix4::<f32>::from_translation(

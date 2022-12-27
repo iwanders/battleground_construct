@@ -2,12 +2,13 @@ use engine::prelude::*;
 
 use crate::components::damage_hit::DamageHit;
 use crate::components::impact::Impact;
+use super::unit::UnitId;
 
 #[derive(Debug, Clone)]
 pub struct HitRecord {
     pub damage_hit: DamageHit,
     pub impact: Impact,
-    pub source: EntityId,
+    pub source: Option<UnitId>,
     pub time: f32,
 }
 
@@ -15,7 +16,7 @@ impl HitRecord {
     pub fn impact(&self) -> Impact {
         self.impact.clone()
     }
-    pub fn source(&self) -> EntityId {
+    pub fn source(&self) -> Option<UnitId> {
         self.source
     }
 }
@@ -30,7 +31,7 @@ impl HitBy {
         HitBy { hits: vec![] }
     }
 
-    pub fn add_hit(&mut self, damage_hit: DamageHit, impact: Impact, source: EntityId, time: f32) {
+    pub fn add_hit(&mut self, damage_hit: DamageHit, impact: Impact, source: Option<UnitId>, time: f32) {
         self.hits.push(HitRecord {
             damage_hit,
             impact,

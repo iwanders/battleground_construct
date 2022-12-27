@@ -1,9 +1,10 @@
 use engine::prelude::*;
+use super::unit::UnitId;
 
 #[derive(Debug, Clone)]
 pub struct Impact {
     impact_on: Option<EntityId>,
-    source: EntityId,
+    source: Option<UnitId>,
     position: cgmath::Matrix4<f32>,
 }
 
@@ -11,7 +12,7 @@ impl Impact {
     pub fn new(
         impact_on: Option<EntityId>,
         position: cgmath::Matrix4<f32>,
-        source: EntityId,
+        source: Option<UnitId>,
     ) -> Self {
         Impact {
             impact_on,
@@ -28,7 +29,7 @@ impl Impact {
     pub fn position(&self) -> cgmath::Matrix4<f32> {
         self.position
     }
-    pub fn source(&self) -> EntityId {
+    pub fn source(&self) -> Option<UnitId> {
         self.source
     }
 }
