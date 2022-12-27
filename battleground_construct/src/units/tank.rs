@@ -12,6 +12,7 @@ pub struct TankSpawnConfig {
     pub yaw: f32,
     pub controller: Box<dyn battleground_unit_control::UnitControl>,
     pub team_member: Option<components::team_member::TeamMember>,
+    pub radio_config: Option<crate::config::specification::RadioConfig>,
 }
 
 impl Default for TankSpawnConfig {
@@ -22,106 +23,9 @@ impl Default for TankSpawnConfig {
             yaw: 0.0,
             controller: Box::new(unit_control_builtin::idle::Idle {}),
             team_member: None,
+            radio_config: None,
         }
     }
-}
-
-fn cannon_hit_effect(
-    world: &mut World,
-    projectile: EntityId,
-    _impact: &components::impact::Impact,
-) {
-    // Create a bullet destructor.
-    let projectile_destructor = world.add_entity();
-    let effect_id = components::id_generator::generate_id(world);
-    let mut destructor = crate::display::deconstructor::Deconstructor::new(effect_id);
-    // destructor.add_impact(impact.position(), 0.005);
-    destructor.add_element::<crate::display::tank_bullet::TankBullet>(projectile, world);
-    world.add_component(projectile_destructor, destructor);
-    world.add_component(
-        projectile_destructor,
-        crate::components::expiry::Expiry::lifetime(10.0),
-    );
-    // Now, we can remove the displayable mesh.
-    world.remove_component::<display::tank_bullet::TankBullet>(projectile);
-
-    // Copy the bullet to a new entity.
-    let emitter_id = world.add_entity();
-    let emitter =
-        world.remove_component::<crate::display::particle_emitter::ParticleEmitter>(emitter_id);
-    // Disable the particle emitter.
-    if let Some(mut emitter) = emitter {
-        emitter.emitting = false;
-        world.add_component_boxed(emitter_id, emitter);
-    }
-
-    world.add_component(emitter_id, crate::components::expiry::Expiry::lifetime(5.0));
-}
-
-pub fn cannon_function(world: &mut World, cannon_entity: EntityId) {
-    use crate::components::point_projectile::PointProjectile;
-    use crate::components::projectile_source::ProjectileSource;
-    use crate::components::velocity::Velocity;
-
-    let muzzle_pose = components::pose::world_pose(world, cannon_entity);
-    let muzzle_world_velocity = components::velocity::world_velocity(world, cannon_entity);
-
-    let muzzle_velocity = 10.0;
-
-    // Get the pose of the cannon in the world coordinates. Then create the pose with the
-    // Orientation in the global frame.
-    let projectile_id = world.add_entity();
-    world.add_component::<PointProjectile>(projectile_id, PointProjectile::new(cannon_entity));
-    world.add_component(projectile_id, ProjectileSource::new(cannon_entity));
-    world.add_component::<Pose>(
-        projectile_id,
-        Pose::from_mat4(cgmath::Matrix4::<f32>::from_translation(
-            muzzle_pose.w.truncate(),
-        )),
-    );
-
-    // Calculate the velocity vector in the global frame.
-    let mut muzzle_pose = *muzzle_pose.transform();
-    // zero out the translation components.
-    muzzle_pose.w[0] = 0.0;
-    muzzle_pose.w[1] = 0.0;
-    let v = muzzle_pose * cgmath::Vector4::<f32>::new(muzzle_velocity, 0.0, 0.0, 1.0);
-    let v = v + muzzle_world_velocity.v.extend(0.0);
-    let projectile_velocity =
-        Velocity::from_velocities(v.truncate(), cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0));
-
-    // And add the velocity to the projectile.
-    world.add_component::<Velocity>(projectile_id, projectile_velocity);
-    // world.add_component(projectile_id, crate::display::debug_box::DebugBox::from_size(0.2));
-    world.add_component(
-        projectile_id,
-        crate::display::tank_bullet::TankBullet::new(),
-    );
-
-    // Clearly not the place for this to be... but works for now.
-    world.add_component(
-        projectile_id,
-        crate::components::acceleration::Acceleration::gravity(),
-    );
-    world.add_component(
-        projectile_id,
-        components::damage_hit::DamageHit::new(3330.3),
-    );
-
-    world.add_component(
-        projectile_id,
-        components::hit_effect::HitEffect::new(std::rc::Rc::new(cannon_hit_effect)),
-    );
-
-    let effect_id = components::id_generator::generate_id(world);
-    world.add_component(
-        projectile_id,
-        crate::display::particle_emitter::ParticleEmitter::bullet_trail(
-            effect_id,
-            0.05,
-            crate::display::Color::WHITE,
-        ),
-    );
 }
 
 pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
@@ -177,6 +81,32 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     // world.add_component(vehicle_id, display::debug_sphere::DebugSphere::with_radius(1.0));
     world.add_component(vehicle_id, components::health::Health::new());
+
+    // Lets add the radios, with their respective configurations.
+    let transmitter_config = config
+        .radio_config
+        .map(|v| components::radio_transmitter::RadioTransmitterConfig {
+            channel_min: v.channel_min,
+            channel_max: v.channel_max,
+            ..Default::default()
+        })
+        .unwrap_or_default();
+    world.add_component(
+        vehicle_id,
+        components::radio_transmitter::RadioTransmitter::new_with_config(transmitter_config),
+    );
+    let receiver_config = config
+        .radio_config
+        .map(|v| components::radio_receiver::RadioReceiverConfig {
+            channel_min: v.channel_min,
+            channel_max: v.channel_max,
+            ..Default::default()
+        })
+        .unwrap_or_default();
+    world.add_component(
+        vehicle_id,
+        components::radio_receiver::RadioReceiver::new_with_config(receiver_config),
+    );
 
     if let Some(team_member) = config.team_member {
         world.add_component(body_id, team_member);
@@ -340,4 +270,102 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(body_id, Group::from(&tank_group_ids[..]));
     world.add_component(radar_joint, Group::from(&tank_group_ids[..]));
     vehicle_id
+}
+
+pub fn cannon_function(world: &mut World, cannon_entity: EntityId) {
+    use crate::components::point_projectile::PointProjectile;
+    use crate::components::projectile_source::ProjectileSource;
+    use crate::components::velocity::Velocity;
+
+    let muzzle_pose = components::pose::world_pose(world, cannon_entity);
+    let muzzle_world_velocity = components::velocity::world_velocity(world, cannon_entity);
+
+    let muzzle_velocity = 10.0;
+
+    // Get the pose of the cannon in the world coordinates. Then create the pose with the
+    // Orientation in the global frame.
+    let projectile_id = world.add_entity();
+    world.add_component::<PointProjectile>(projectile_id, PointProjectile::new(cannon_entity));
+    world.add_component(projectile_id, ProjectileSource::new(cannon_entity));
+    world.add_component::<Pose>(
+        projectile_id,
+        Pose::from_mat4(cgmath::Matrix4::<f32>::from_translation(
+            muzzle_pose.w.truncate(),
+        )),
+    );
+
+    // Calculate the velocity vector in the global frame.
+    let mut muzzle_pose = *muzzle_pose.transform();
+    // zero out the translation components.
+    muzzle_pose.w[0] = 0.0;
+    muzzle_pose.w[1] = 0.0;
+    let v = muzzle_pose * cgmath::Vector4::<f32>::new(muzzle_velocity, 0.0, 0.0, 1.0);
+    let v = v + muzzle_world_velocity.v.extend(0.0);
+    let projectile_velocity =
+        Velocity::from_velocities(v.truncate(), cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0));
+
+    // And add the velocity to the projectile.
+    world.add_component::<Velocity>(projectile_id, projectile_velocity);
+    // world.add_component(projectile_id, crate::display::debug_box::DebugBox::from_size(0.2));
+    world.add_component(
+        projectile_id,
+        crate::display::tank_bullet::TankBullet::new(),
+    );
+
+    // Clearly not the place for this to be... but works for now.
+    world.add_component(
+        projectile_id,
+        crate::components::acceleration::Acceleration::gravity(),
+    );
+    world.add_component(
+        projectile_id,
+        components::damage_hit::DamageHit::new(3330.3),
+    );
+
+    world.add_component(
+        projectile_id,
+        components::hit_effect::HitEffect::new(std::rc::Rc::new(cannon_hit_effect)),
+    );
+
+    let effect_id = components::id_generator::generate_id(world);
+    world.add_component(
+        projectile_id,
+        crate::display::particle_emitter::ParticleEmitter::bullet_trail(
+            effect_id,
+            0.05,
+            crate::display::Color::WHITE,
+        ),
+    );
+}
+
+fn cannon_hit_effect(
+    world: &mut World,
+    projectile: EntityId,
+    _impact: &components::impact::Impact,
+) {
+    // Create a bullet destructor.
+    let projectile_destructor = world.add_entity();
+    let effect_id = components::id_generator::generate_id(world);
+    let mut destructor = crate::display::deconstructor::Deconstructor::new(effect_id);
+    // destructor.add_impact(impact.position(), 0.005);
+    destructor.add_element::<crate::display::tank_bullet::TankBullet>(projectile, world);
+    world.add_component(projectile_destructor, destructor);
+    world.add_component(
+        projectile_destructor,
+        crate::components::expiry::Expiry::lifetime(10.0),
+    );
+    // Now, we can remove the displayable mesh.
+    world.remove_component::<display::tank_bullet::TankBullet>(projectile);
+
+    // Copy the bullet to a new entity.
+    let emitter_id = world.add_entity();
+    let emitter =
+        world.remove_component::<crate::display::particle_emitter::ParticleEmitter>(emitter_id);
+    // Disable the particle emitter.
+    if let Some(mut emitter) = emitter {
+        emitter.emitting = false;
+        world.add_component_boxed(emitter_id, emitter);
+    }
+
+    world.add_component(emitter_id, crate::components::expiry::Expiry::lifetime(5.0));
 }

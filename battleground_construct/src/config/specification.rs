@@ -85,6 +85,13 @@ pub enum Unit {
     Tank,
 }
 
+/// Radio config, for both transmitter and receiver.
+#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy)]
+pub struct RadioConfig {
+    pub channel_min: usize,
+    pub channel_max: usize,
+}
+
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct Spawn {
     pub team: Option<usize>,
@@ -95,6 +102,8 @@ pub struct Spawn {
     pub yaw: f32,
     #[serde(default)]
     pub controller: ControllerType,
+    #[serde(default)]
+    pub radio: RadioConfig,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]

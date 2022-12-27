@@ -77,6 +77,7 @@ pub fn setup_match(
                     yaw: spawn.yaw,
                     controller,
                     team_member: optional_team_component,
+                    radio_config: Some(spawn.radio),
                 };
                 units::tank::spawn_tank(world, tank_config);
             }
