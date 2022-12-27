@@ -70,7 +70,10 @@ pub fn add_systems(systems: &mut Systems) {
     systems.add_system(Box::new(systems::function_pose::FunctionPose {}));
     systems.add_system(Box::new(systems::timed_function::TimedFunction {}));
 
-    // Finally, calculate the radar hits
+    // Calculate the radio messagse.
+    systems.add_system(Box::new(systems::radio_transmission::RadioTransmission {}));
+
+    // Calculate the radar hits
     systems.add_system(Box::new(systems::radar_scan::RadarScan {}));
     // Run the unit controllers
     systems.add_system(Box::new(systems::unit_control::UnitControl {}));
