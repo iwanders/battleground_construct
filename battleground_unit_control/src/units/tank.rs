@@ -1,14 +1,14 @@
-pub const CLOCK_MODULE: u32 = 0x0100;
-pub const OBJECTIVES_MODULE: u32 = 0x0200;
-pub const TEAM_MODULE: u32 = 0x0300;
-pub const RADIO_TRANSMITTER_MODULE: u32 = 0x0400;
-pub const RADIO_RECEIVER_MODULE: u32 = 0x0500;
+pub const MODULE_CLOCK: u32 = 0x0100;
+pub const MODULE_OBJECTIVES: u32 = 0x0200;
+pub const MODULE_TEAM: u32 = 0x0300;
+pub const MODULE_RADIO_TRANSMITTER: u32 = 0x0400;
+pub const MODULE_RADIO_RECEIVER: u32 = 0x0500;
 
-pub const BASE_MODULE: u32 = 0x1000;
-pub const TURRET_MODULE: u32 = 0x1100;
-pub const BARREL_MODULE: u32 = 0x1200;
-pub const CANNON_MODULE: u32 = 0x1300;
-pub const RADAR_ROTATION: u32 = 0x1500;
-pub const RADAR_MODULE: u32 = 0x1600;
-pub const GPS_MODULE: u32 = 0x1700;
-pub const DRAW_MODULE: u32 = 0x1800;
+pub const MODULE_DIFF_DRIVE: u32 = 0x1000;
+pub const MODULE_REVOLUTE_TURRET: u32 = 0x1100;
+pub const MODULE_REVOLUTE_BARREL: u32 = 0x1200;
+pub const MODULE_CANNON: u32 = 0x1300;
+pub const MODULE_REVOLUTE_RADAR: u32 = 0x1500;
+pub const MODULE_RADAR: u32 = 0x1600;
+pub const MODULE_GPS: u32 = 0x1700;
+pub const MODULE_DRAW: u32 = 0x1800;

@@ -47,13 +47,13 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     // Register the base as a controllable.
     register_interface.get_mut().add_module(
         "clock",
-        CLOCK_MODULE,
+        MODULE_CLOCK,
         components::clock::ClockModule::new(),
     );
 
     register_interface.get_mut().add_module(
         "base",
-        BASE_MODULE,
+        MODULE_DIFF_DRIVE,
         components::differential_drive_base::DifferentialDriveBaseModule::new(vehicle_id),
     );
 
@@ -97,7 +97,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     register_interface.get_mut().add_module(
         "radio_transmitter",
-        RADIO_TRANSMITTER_MODULE,
+        MODULE_RADIO_TRANSMITTER,
         components::radio_transmitter::RadioTransmitterModule::new(vehicle_id),
     );
 
@@ -115,7 +115,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     register_interface.get_mut().add_module(
         "radio_receiver",
-        RADIO_RECEIVER_MODULE,
+        MODULE_RADIO_RECEIVER,
         components::radio_receiver::RadioReceiverModule::new(vehicle_id),
     );
 
@@ -126,24 +126,24 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
 
     register_interface.get_mut().add_module(
         "localization",
-        GPS_MODULE,
+        MODULE_GPS,
         components::gps::GpsModule::new(body_id),
     );
     world.add_component(body_id, display::draw_module::DrawComponent::new());
     register_interface.get_mut().add_module(
         "draw_module",
-        DRAW_MODULE,
+        MODULE_DRAW,
         display::draw_module::DrawModule::new(body_id),
     );
 
     register_interface.get_mut().add_module(
         "objectives",
-        OBJECTIVES_MODULE,
+        MODULE_OBJECTIVES,
         components::objectives::ObjectivesModule::new(),
     );
     register_interface.get_mut().add_module(
         "team",
-        TEAM_MODULE,
+        MODULE_TEAM,
         components::team_module::TeamModule::new(body_id),
     );
 
@@ -153,7 +153,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     // Register this revolute as a controllable.
     register_interface.get_mut().add_module(
         "turret",
-        TURRET_MODULE,
+        MODULE_REVOLUTE_TURRET,
         components::revolute::RevoluteModule::new(turret_id),
     );
 
@@ -178,7 +178,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let barrel_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 1.0, 0.0));
     register_interface.get_mut().add_module(
         "barrel",
-        BARREL_MODULE,
+        MODULE_REVOLUTE_BARREL,
         components::revolute::RevoluteModule::new(barrel_id),
     );
 
@@ -211,7 +211,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
 
     register_interface.get_mut().add_module(
         "cannon",
-        CANNON_MODULE,
+        MODULE_CANNON,
         components::cannon::CannonModule::new(nozzle_id),
     );
 
@@ -224,12 +224,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     radar_revolute.set_velocity(-std::f32::consts::PI);
     register_interface.get_mut().add_module(
         "radar_rotation",
-        RADAR_ROTATION,
+        MODULE_REVOLUTE_RADAR,
         components::revolute::RevoluteModule::new(radar_joint),
     );
     register_interface.get_mut().add_module(
         "radar",
-        RADAR_MODULE,
+        MODULE_RADAR,
         components::radar::RadarModule::new(radar_joint),
     );
 

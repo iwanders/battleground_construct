@@ -11,27 +11,27 @@ impl UnitControl for DiffDriveCapturable {
     fn update(&mut self, interface: &mut dyn Interface) {
         // Determine where a capturable is.
         // While we are not there, drive there.
-        let team = interface.get_i32(tank::TEAM_MODULE, REG_TEAM).unwrap();
+        let team = interface.get_i32(tank::MODULE_TEAM, REG_TEAM).unwrap();
 
         let count = interface
-            .get_i32(tank::OBJECTIVES_MODULE, REG_CAPTURE_POINT_COUNT)
+            .get_i32(tank::MODULE_OBJECTIVES, REG_CAPTURE_POINT_COUNT)
             .unwrap();
         for i in 0..count as u32 {
             let x = interface
                 .get_f32(
-                    tank::OBJECTIVES_MODULE,
+                    tank::MODULE_OBJECTIVES,
                     REG_CAPTURE_POINT_COUNT + 1 + (i * 4) + 0,
                 )
                 .unwrap();
             let y = interface
                 .get_f32(
-                    tank::OBJECTIVES_MODULE,
+                    tank::MODULE_OBJECTIVES,
                     REG_CAPTURE_POINT_COUNT + 1 + (i * 4) + 1,
                 )
                 .unwrap();
             let owner = interface
                 .get_i32(
-                    tank::OBJECTIVES_MODULE,
+                    tank::MODULE_OBJECTIVES,
                     REG_CAPTURE_POINT_COUNT + 1 + (i * 4) + 2,
                 )
                 .unwrap();
