@@ -15,9 +15,10 @@ use instanced_entity::InstancedEntity;
 
 use three_d::renderer::material::PhysicalMaterial;
 
-struct Properties {
-    object: InstancedEntity<PhysicalMaterial>,
+struct Properties<M: Material> {
+    object: InstancedEntity<M>,
     cast_shadow: bool,
+    is_emissive: bool,
 }
 
 trait DrawableKey {
@@ -65,6 +66,7 @@ impl DrawableKey for battleground_construct::display::primitives::Primitive {
         hasher.finish()
     }
 }
+
 impl DrawableKey for battleground_construct::display::primitives::Material {
     fn to_draw_key(&self) -> u64 {
         use std::hash::Hash;
@@ -108,15 +110,23 @@ impl DrawableKey for battleground_construct::display::primitives::Element {
 
 /// The object used to render a construct.
 pub struct ConstructRender {
-    static_gms: Vec<Gm<Mesh, PhysicalMaterial>>,
-    instanced_meshes: std::collections::HashMap<u64, Properties>,
-    grid_lines: InstancedEntity<ColorMaterial>,
+    static_geometries: Vec<Gm<Mesh, PhysicalMaterial>>,
+    /// All meshes that are rendered with a physical material (both opaque and translucent)
+    pbr_meshes: std::collections::HashMap<u64, Properties<PhysicalMaterial>>,
+    /// All meshes that are use for emisive rendering
+    emissive_meshes: std::collections::HashMap<u64, Properties<ColorMaterial>>,
+    /// Grid.
+    grid: InstancedEntity<ColorMaterial>,
 
+    /// Tracked effects that are carried over to the next frame.
     effects: std::collections::HashMap<u64, Box<dyn RenderableEffect>>,
 }
 
 impl ConstructRender {
     pub fn new(context: &Context) -> Self {
+        let mut static_geometries = vec![];
+
+        // Ground plane
         let mut ground_plane = Gm::new(
             Mesh::new(context, &CpuMesh::square()),
             PhysicalMaterial::new_opaque(
@@ -130,10 +140,10 @@ impl ConstructRender {
         ground_plane.set_transformation(
             Mat4::from_translation(vec3(0.0, 0.0, 0.0)) * Mat4::from_scale(1000.0),
         );
-        let static_gms = vec![ground_plane];
+        static_geometries.push(ground_plane);
 
-        // At some point we should try to render the grid only underneath robots, or something.
-        let mut grid_lines = InstancedEntity::new_colored(context, &CpuMesh::cylinder(4));
+        // Grid lines
+        let mut grid = InstancedEntity::new_colored(context, &CpuMesh::cylinder(4));
         let mut lines = vec![];
         let lower = -10isize;
         let upper = 10;
@@ -171,12 +181,13 @@ impl ConstructRender {
         lines.push(line(upper, lower - 5, upper, upper + 5, t, main_color));
         lines.push(line(lower, lower - 5, lower, upper + 5, t, main_color));
 
-        grid_lines.set_lines(&lines);
+        grid.set_lines(&lines);
 
         ConstructRender {
-            static_gms,
-            grid_lines,
-            instanced_meshes: Default::default(),
+            static_geometries,
+            grid,
+            pbr_meshes: Default::default(),
+            emissive_meshes: Default::default(),
             effects: Default::default(),
         }
     }
@@ -211,28 +222,62 @@ impl ConstructRender {
 
     /// Return a list of geometrise to be used for shadow calculations.
     pub fn shadow_meshes(&self) -> Vec<&impl Geometry> {
-        self.instanced_meshes
+        self.pbr_meshes
             .values()
             .filter(|p| p.cast_shadow)
             .map(|x| &x.object.gm().geometry)
             .collect::<_>()
     }
 
+    pub fn non_emissive_meshes(&self) -> Vec<&dyn Object> {
+        let mut meshes: Vec<&dyn Object> = vec![];
+        meshes.push(self.grid.gm());
+        meshes.append(
+            &mut self
+                .pbr_meshes
+                .values()
+                .filter(|p| !p.is_emissive)
+                .map(|x| x.object.gm() as &dyn Object)
+                .collect::<_>(),
+        );
+        meshes.append(
+            &mut self
+                .static_geometries
+                .iter()
+                .map(|x| x as &dyn Object)
+                .collect::<_>(),
+        );
+        meshes.append(
+            &mut self
+                .effects
+                .iter()
+                .filter_map(|v| v.1.object())
+                .collect::<Vec<_>>(),
+        );
+        meshes
+    }
+
+    pub fn emissive_objects(&self) -> Vec<&dyn Object> {
+        self.emissive_meshes
+            .values()
+            .map(|x| x.object.gm() as &dyn Object)
+            .collect::<_>()
+    }
+
     /// Return the objects to be rendered.
     pub fn objects(&self) -> Vec<&dyn Object> {
         let mut renderables: Vec<&dyn Object> = vec![];
-        renderables.push(self.grid_lines.gm());
-        // renderables.push(&fireworks);
+        renderables.push(self.grid.gm());
         renderables.append(
             &mut self
-                .instanced_meshes
+                .pbr_meshes
                 .values()
                 .map(|x| x.object.gm() as &dyn Object)
                 .collect::<Vec<&dyn Object>>(),
         );
         renderables.append(
             &mut self
-                .static_gms
+                .static_geometries
                 .iter()
                 .map(|x| x as &dyn Object)
                 .collect::<Vec<_>>(),
@@ -249,20 +294,24 @@ impl ConstructRender {
     }
 
     fn update_instances(&mut self) {
-        for instance_entity in self.instanced_meshes.values_mut() {
-            instance_entity.object.update_instances()
+        for instance_entity in self.pbr_meshes.values_mut() {
+            instance_entity.object.update_instances();
+        }
+        for instance_entity in self.emissive_meshes.values_mut() {
+            instance_entity.object.update_instances();
         }
     }
 
     fn reset_instances(&mut self) {
-        self.instanced_meshes.clear();
+        self.pbr_meshes.clear();
+        self.emissive_meshes.clear();
     }
 
     pub fn render(&mut self, camera: &Camera, context: &Context, construct: &Construct) {
         // a new cycle, clear the previous instances.
         self.reset_instances();
 
-        // Iterate through all displayables.
+        // Iterate through all displayables to collect meshes
         self.component_to_meshes::<display::tank_body::TankBody>(context, construct);
         self.component_to_meshes::<display::tank_tracks::TankTracks>(context, construct);
 
@@ -404,57 +453,23 @@ impl ConstructRender {
         el: &display::primitives::Element,
         entity_transform: &Matrix4<f32>,
     ) {
-        self.instanced_meshes
+        // Add the elements to the pbr_meshes
+        let instanced = &mut self
+            .pbr_meshes
             .entry(el.to_draw_key())
             .or_insert_with(|| {
-                let mut cast_shadow = true;
-                let primitive_mesh = match el.primitive {
-                    display::primitives::Primitive::Cuboid(cuboid) => {
-                        let mut m = CpuMesh::cube();
-                        // Returns an axis aligned unconnected cube mesh with positions in the range [-1..1] in all axes.
-                        // So default box is not identity.
-                        m.transform(&Mat4::from_nonuniform_scale(
-                            cuboid.length / 2.0,
-                            cuboid.width / 2.0,
-                            cuboid.height / 2.0,
-                        ))
-                        .unwrap();
-                        m
-                    }
-                    display::primitives::Primitive::Sphere(sphere) => {
-                        let mut m = CpuMesh::sphere(16);
-                        m.transform(&Mat4::from_scale(sphere.radius)).unwrap();
-                        m
-                    }
-                    display::primitives::Primitive::Cylinder(cylinder) => {
-                        let mut m = CpuMesh::cylinder(16);
-                        m.transform(&Mat4::from_nonuniform_scale(
-                            cylinder.height,
-                            cylinder.radius,
-                            cylinder.radius,
-                        ))
-                        .unwrap();
-                        m
-                    }
-                    display::primitives::Primitive::Cone(cone) => {
-                        let mut m = CpuMesh::cone(16);
-                        m.transform(&Mat4::from_nonuniform_scale(
-                            cone.height,
-                            cone.radius,
-                            cone.radius,
-                        ))
-                        .unwrap();
-                        m
-                    }
-                    display::primitives::Primitive::Line(_line) => {
-                        cast_shadow = false;
-                        CpuMesh::cylinder(4)
-                    }
-                    display::primitives::Primitive::Circle(circle) => {
-                        let mut m = CpuMesh::circle(circle.subdivisions);
-                        m.transform(&Mat4::from_scale(circle.radius)).unwrap();
-                        m
-                    }
+                let primitive_mesh = Self::primitive_to_mesh(el);
+
+                let cast_shadow = match el.primitive {
+                    display::primitives::Primitive::Line(_) => false,
+                    _ => true,
+                };
+
+                let is_emissive = match el.material {
+                    battleground_construct::display::primitives::Material::FlatMaterial(
+                        flat_material,
+                    ) => flat_material.is_emissive,
+                    battleground_construct::display::primitives::Material::TeamMaterial => todo!(),
                 };
 
                 // Need to make the appropriate material here based on the material passed in.
@@ -492,13 +507,9 @@ impl ConstructRender {
                 Properties {
                     object: InstancedEntity::new(context, &primitive_mesh, material),
                     cast_shadow,
+                    is_emissive,
                 }
-            });
-
-        let instanced = &mut self
-            .instanced_meshes
-            .get_mut(&el.to_draw_key())
-            .expect("just checked it, will be there")
+            })
             .object;
         let transform = entity_transform * el.transform;
         // At some point, we have to handle different material types here.
@@ -520,6 +531,129 @@ impl ConstructRender {
                 instanced.add_line(p0_transformed, p1_transformed, l.width, color);
             }
             _ => instanced.add(transform, color),
+        };
+
+        let is_emissive = match el.material {
+            battleground_construct::display::primitives::Material::FlatMaterial(flat_material) => {
+                flat_material.is_emissive
+            }
+            battleground_construct::display::primitives::Material::TeamMaterial => todo!(),
+        };
+
+        if is_emissive {
+            // Add the elements to the emissive meshes
+            let instanced = &mut self
+                .emissive_meshes
+                .entry(el.to_draw_key())
+                .or_insert_with(|| {
+                    let primitive_mesh = Self::primitive_to_mesh(el);
+
+                    // Need to make the appropriate material here based on the material passed in.
+                    let material = match el.material {
+                        battleground_construct::display::primitives::Material::FlatMaterial(
+                            flat_material,
+                        ) => {
+                            let fun = if flat_material.is_transparent {
+                                three_d::renderer::material::ColorMaterial::new_transparent
+                            } else {
+                                three_d::renderer::material::ColorMaterial::new_opaque
+                            };
+                            fun(
+                                context,
+                                &CpuMaterial {
+                                    albedo: Color {
+                                        r: 255,
+                                        g: 255,
+                                        b: 255,
+                                        a: 255,
+                                    },
+                                    ..Default::default()
+                                },
+                            )
+                        }
+                        battleground_construct::display::primitives::Material::TeamMaterial => {
+                            todo!()
+                        }
+                    };
+
+                    Properties {
+                        object: InstancedEntity::new(context, &primitive_mesh, material),
+                        cast_shadow: false,
+                        is_emissive: true,
+                    }
+                })
+                .object;
+
+            let transform = entity_transform * el.transform;
+            // At some point, we have to handle different material types here.
+            let material =
+                if let display::primitives::Material::FlatMaterial(material) = el.material {
+                    material
+                } else {
+                    panic!("unsupported material");
+                };
+            let color = material.emissive.to_color();
+
+            match &el.primitive {
+                display::primitives::Primitive::Line(l) => {
+                    use battleground_construct::util::cgmath::ToHomogenous;
+                    use battleground_construct::util::cgmath::ToTranslation;
+                    let p0_original = vec3(l.p0.0, l.p0.1, l.p0.2);
+                    let p1_original = vec3(l.p1.0, l.p1.1, l.p1.2);
+                    let p0_transformed = (transform * p0_original.to_h()).to_translation();
+                    let p1_transformed = (transform * p1_original.to_h()).to_translation();
+                    instanced.add_line(p0_transformed, p1_transformed, l.width, color);
+                }
+                _ => instanced.add(transform, color),
+            };
+        }
+    }
+
+    fn primitive_to_mesh(el: &display::primitives::Element) -> CpuMesh {
+        match el.primitive {
+            display::primitives::Primitive::Cuboid(cuboid) => {
+                let mut m = CpuMesh::cube();
+                // Returns an axis aligned unconnected cube mesh with positions in the range [-1..1] in all axes.
+                // So default box is not identity.
+                m.transform(&Mat4::from_nonuniform_scale(
+                    cuboid.length / 2.0,
+                    cuboid.width / 2.0,
+                    cuboid.height / 2.0,
+                ))
+                .unwrap();
+                m
+            }
+            display::primitives::Primitive::Sphere(sphere) => {
+                let mut m = CpuMesh::sphere(16);
+                m.transform(&Mat4::from_scale(sphere.radius)).unwrap();
+                m
+            }
+            display::primitives::Primitive::Cylinder(cylinder) => {
+                let mut m = CpuMesh::cylinder(16);
+                m.transform(&Mat4::from_nonuniform_scale(
+                    cylinder.height,
+                    cylinder.radius,
+                    cylinder.radius,
+                ))
+                .unwrap();
+                m
+            }
+            display::primitives::Primitive::Cone(cone) => {
+                let mut m = CpuMesh::cone(16);
+                m.transform(&Mat4::from_nonuniform_scale(
+                    cone.height,
+                    cone.radius,
+                    cone.radius,
+                ))
+                .unwrap();
+                m
+            }
+            display::primitives::Primitive::Line(_line) => CpuMesh::cylinder(4),
+            display::primitives::Primitive::Circle(circle) => {
+                let mut m = CpuMesh::circle(circle.subdivisions);
+                m.transform(&Mat4::from_scale(circle.radius)).unwrap();
+                m
+            }
         }
     }
 }

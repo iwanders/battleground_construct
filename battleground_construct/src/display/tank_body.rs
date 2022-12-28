@@ -41,14 +41,42 @@ impl Component for TankBody {}
 
 impl Drawable for TankBody {
     fn drawables(&self) -> Vec<Element> {
-        vec![Element {
-            transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
-            primitive: Primitive::Cuboid(Cuboid {
-                length: self.length,
-                width: self.width,
-                height: self.height,
-            }),
-            material: self.color.into(),
-        }]
+        let addition = Color::rgb(10, 10, 10);
+        let emissive_material = Material::FlatMaterial(FlatMaterial {
+            color: self.color, // .saturating_add(&addition)
+            is_emissive: true,
+            emissive: self.color.saturating_add(&addition),
+            ..Default::default()
+        });
+
+        vec![
+            Element {
+                transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+                primitive: Primitive::Cuboid(Cuboid {
+                    length: self.length,
+                    width: self.width,
+                    height: self.height,
+                }),
+                material: self.color.into(),
+            },
+            Element {
+                transform: Mat4::from_translation(Vec3::new(0.0, 0.4, 0.125 + 0.01)),
+                primitive: Primitive::Cuboid(Cuboid {
+                    length: self.length - 0.25,
+                    width: 0.1,
+                    height: 0.02,
+                }),
+                material: emissive_material,
+            },
+            Element {
+                transform: Mat4::from_translation(Vec3::new(0.0, -0.4, 0.125 + 0.01)),
+                primitive: Primitive::Cuboid(Cuboid {
+                    length: self.length - 0.25,
+                    width: 0.1,
+                    height: 0.02,
+                }),
+                material: emissive_material,
+            },
+        ]
     }
 }

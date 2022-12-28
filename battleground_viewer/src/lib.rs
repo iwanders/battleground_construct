@@ -207,7 +207,6 @@ impl ConstructViewer {
             }
 
             let screen = frame_input.screen();
-            screen.clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0));
 
             let now = std::time::Instant::now();
 
@@ -224,19 +223,92 @@ impl ConstructViewer {
                 println!("elements: {}", now.elapsed().as_secs_f64());
             }
 
+            let now = std::time::Instant::now();
+
+            /* The rendering steps will look something like this:
+                0) Prerender shadow maps
+                A) Scene render (targets framebuffer)
+                B1) Render depth of non-emissives into depth texture
+                B2) Render emissives into color texture (use B1 as depth texture)
+                C) Write B2 into A additively
+            */
+
+            // 0) Prerender shadow maps
             // Skip the ground plane in the shadow map, otherwise we get no resolution.
             self.directional_light
                 .generate_shadow_map(2048, self.construct_render.shadow_meshes());
 
-            let now = std::time::Instant::now();
-
+            // A) Render normal scene
             screen
+                .clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0))
                 .render(
                     &self.camera,
                     &self.construct_render.objects(),
                     &[&self.ambient_light, &self.directional_light],
+                );
+
+            // B1) Render depth buffer with non-emissives
+            let mut depth_texture = DepthTexture2D::new::<f32>(
+                &self.context,
+                frame_input.viewport.width,
+                frame_input.viewport.height,
+                Wrapping::ClampToEdge,
+                Wrapping::ClampToEdge,
+            );
+
+            let depth_material = DepthMaterial {
+                render_states: RenderStates {
+                    write_mask: WriteMask::DEPTH,
+                    ..Default::default()
+                },
+                ..Default::default()
+            };
+            depth_texture
+                .as_depth_target()
+                .clear(ClearState::default())
+                .render_with_material(
+                    &depth_material,
+                    &self.camera,
+                    &self.construct_render.non_emissive_meshes(),
+                    &[],
+                );
+
+            // B2) Render emissives to color texture
+            let mut emissive_texture = Texture2D::new_empty::<[u8; 4]>(
+                &self.context,
+                frame_input.viewport.width,
+                frame_input.viewport.height,
+                Interpolation::Nearest,
+                Interpolation::Nearest,
+                None,
+                Wrapping::ClampToEdge,
+                Wrapping::ClampToEdge,
+            );
+
+            RenderTarget::new(
+                emissive_texture.as_color_target(None),
+                depth_texture.as_depth_target(),
+            )
+            .render(&self.camera, &self.construct_render.emissive_objects(), &[]);
+
+            // C) Write B2 into A additively
+            screen.write(|| {
+                apply_effect(
+                    &self.context,
+                    include_str!("shaders/bloom_effect.frag"),
+                    RenderStates {
+                        write_mask: WriteMask::COLOR,
+                        blend: Blend::ADD,
+                        cull: Cull::Back,
+                        depth_test: DepthTest::Always,
+                        ..Default::default()
+                    },
+                    self.camera.viewport(),
+                    |program| {
+                        program.use_texture("emissive_buffer", &emissive_texture);
+                    },
                 )
-                .write(|| gui.render());
+            }).write(|| gui.render());
 
             //----------------------------------------------------------------
 
