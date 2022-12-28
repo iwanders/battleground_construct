@@ -43,4 +43,5 @@ pub mod unit_controller;
 pub mod unit_interface;
 pub mod unit_member;
 pub mod unit_source;
+pub mod unit_type;
 pub mod velocity;

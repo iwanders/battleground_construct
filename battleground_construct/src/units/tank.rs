@@ -30,6 +30,21 @@ impl Default for TankSpawnConfig {
     }
 }
 
+
+#[derive(Debug, Clone, Copy)]
+pub struct UnitTank {
+    pub unit_entity: EntityId,
+    pub control_entity: EntityId,
+    pub base_entity: EntityId,
+    pub body_entity: EntityId,
+    pub turret_entity: EntityId,
+    pub radar_entity: EntityId,
+    pub flag_entity: EntityId,
+    pub barrel_entity: EntityId,
+    pub nozzle_entity: EntityId,
+}
+impl Component for UnitTank {}
+
 pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     /*
         Topology of the tank;
@@ -80,6 +95,17 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         barrel_entity,
         nozzle_entity,
     ];
+    let unit_tank = UnitTank {
+        unit_entity,
+        control_entity,
+        base_entity,
+        body_entity,
+        turret_entity,
+        radar_entity,
+        flag_entity,
+        barrel_entity,
+        nozzle_entity,
+    };
 
     // Create the register interface, we'll add modules throughout this function.
     let register_interface = components::unit_interface::RegisterInterfaceContainer::new(
@@ -106,6 +132,8 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         MODULE_TEAM,
         components::team_module::TeamModule::new(unit_entity),
     );
+    world.add_component(unit_entity, components::unit_type::UnitType::new(battleground_unit_control::units::UnitType::Tank));
+    world.add_component(unit_entity, unit_tank);
 
     let unit_component = components::unit::Unit::new(components::id_generator::generate_id(world));
     let unit_id = unit_component.id();
@@ -320,6 +348,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     for e in tank_group_entities.iter() {
         world.add_component(*e, group.clone());
         world.add_component(*e, components::unit_member::UnitMember::new(unit_id));
+        // This feels a bit like a crux... but it's cheap and easy.
         if let Some(team_member) = config.team_member {
             world.add_component(*e, team_member);
         }
