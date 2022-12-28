@@ -22,6 +22,9 @@ impl DebugLines {
             )],
         }
     }
+    pub fn add_line(&mut self, line: Line, color: Color) {
+        self.lines.push((line, color))
+    }
 }
 impl Component for DebugLines {}
 

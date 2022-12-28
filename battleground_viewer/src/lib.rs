@@ -250,16 +250,59 @@ impl ConstructViewer {
             for e in frame_input.events.iter() {
                 match *e {
                     three_d::Event::MousePress {
-                        button: _,
-                        position,
-                        ..
+                        button, position, ..
                     } => {
-                        let position = (position.0 as f32, position.1 as f32);
-                        //println!("press at: {:?}, {:?}", button, position);
-                        let _pos = self.camera.position_at_pixel(position);
-                        let _dir = self.camera.view_direction_at_pixel(position);
-                        // Now that we have the ray, we can calculate what and if it hit something.
-                        // We need the construct to do that though.
+                        if button == three_d::renderer::control::MouseButton::Middle {
+                            println!("button: {button:?} -> {position:?}");
+                            println!("  frame_input.viewport: {:?}", frame_input.viewport);
+                            println!(
+                                "  frame_input.device_pixel_ratio: {:?}",
+                                frame_input.device_pixel_ratio
+                            );
+                            /*
+                            Position for mouse button events:
+                            The screen position in logical pixels, to get it in physical pixels,
+                            multiply it with the device pixel ratio. The first value defines the
+                            position on the horizontal axis with zero being at the left border of
+                            the window and the second on the vertical axis with zero being at the
+                            top edge of the window.
+
+                            position_at_pixel(&self, pixel: (f32, f32)) -> Vector3<f32>
+                            Returns the 3D position at the given pixel coordinate. The pixel
+                            coordinate must be in physical pixels, where (viewport.x, viewport.y)
+                            indicate the bottom left corner of the viewport and
+                            (viewport.x + viewport.width, viewport.y + viewport.height) indicate
+                            the top right corner.
+
+                            So, to go from logical to physical, one hint is device_pixel_ratio.
+
+                            Horizontal:
+                            First says; left = 0
+                            Second says; left = viewport.x, right = (viewport.x + viewport.width)
+
+                            Vertical:
+                            First says: top = 0
+                            Second says: bottom = viewport.y, top = (viewport.y + viewport.height)
+                            */
+                            let device_pixel_ratio = frame_input.device_pixel_ratio;
+                            let logical_x = position.0 * device_pixel_ratio;
+                            let logical_y = position.1 * device_pixel_ratio;
+                            println!("x, y: {logical_x}, {logical_y}"); // correctly maps to the viewport.
+
+                            // Now, only y is still incorrect.
+                            let y = frame_input.viewport.y as f64
+                                + (frame_input.viewport.height as f64 - logical_y);
+                            let x = frame_input.viewport.x as f64 + logical_x;
+
+                            let position = (x as f32, y as f32);
+                            //println!("press at: {:?}, {:?}", button, position);
+                            let pos = self.camera.position_at_pixel(position);
+                            let dir = self.camera.view_direction_at_pixel(position);
+                            // Now that we have the ray, we can calculate what and if it hit something.
+                            // We need the construct to do that though.
+                            let intersects = self.construct.select_intersect(&pos, &dir);
+                            println!("intersects: {intersects:?}");
+                        }
                     }
                     _ => {
                         // println!("e: {e:?}");

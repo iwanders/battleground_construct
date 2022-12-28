@@ -168,6 +168,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let body = display::tank_body::TankBody::new();
     let hitbox = body.hitbox();
     world.add_component(body_entity, body);
+    world.add_component(
+        body_entity,
+        components::select_box::SelectBox::from_hit_box(&hitbox),
+    );
     world.add_component(body_entity, hitbox);
     world.add_component(
         body_entity,

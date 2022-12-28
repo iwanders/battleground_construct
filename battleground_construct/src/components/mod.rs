@@ -34,6 +34,7 @@ pub mod radar_reflector;
 pub mod radio_receiver;
 pub mod radio_transmitter;
 pub mod revolute;
+pub mod select_box;
 pub mod team;
 pub mod team_member;
 pub mod team_module;
