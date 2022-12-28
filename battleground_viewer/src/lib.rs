@@ -198,14 +198,46 @@ impl ConstructViewer {
                     egui::TopBottomPanel::top("my_panel").show(gui_context, |ui| {
                         menu::bar(ui, |ui| {
                             ui.menu_button("Construct", |ui| {
-                                if ui.button("Pause/Unpause").clicked() {
-                                    viewer_state.paused = !viewer_state.paused;
-                                    self.limiter.set_paused(viewer_state.paused);
-                                }
                                 if ui.button("Quit").clicked() {
                                     viewer_state.exiting = true;
                                 }
                             });
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |ui| {
+                                    ui.menu_button(
+                                        format!(
+                                            "{:.2} x {:.2}",
+                                            self.construct.elapsed_as_f32(),
+                                            self.limiter.real_speed()
+                                        ),
+                                        |ui| {
+                                            let label = if viewer_state.paused {
+                                                "Resume"
+                                            } else {
+                                                "Pause"
+                                            };
+                                            if ui.button(label).clicked() {
+                                                viewer_state.paused = !viewer_state.paused;
+                                                self.limiter.set_paused(viewer_state.paused);
+                                                ui.close_menu();
+                                            }
+                                            if ui.button("x0.25").clicked() {
+                                                self.limiter.set_desired_speed(0.25);
+                                                ui.close_menu();
+                                            }
+                                            if ui.button("x1.0").clicked() {
+                                                self.limiter.set_desired_speed(1.0);
+                                                ui.close_menu();
+                                            }
+                                            if ui.button("x2.0").clicked() {
+                                                self.limiter.set_desired_speed(2.0);
+                                                ui.close_menu();
+                                            }
+                                        },
+                                    );
+                                },
+                            );
                         });
                     });
                 },
