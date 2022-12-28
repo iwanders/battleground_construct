@@ -3,6 +3,11 @@ use battleground_unit_control::modules::gps::*;
 use battleground_unit_control::units::tank;
 use battleground_unit_control::Interface;
 
+pub fn angle_diff(a: f32, b: f32) -> f32 {
+    let a = a - b;
+    (a + std::f32::consts::PI).rem_euclid(std::f32::consts::PI * 2.0) - std::f32::consts::PI
+}
+
 pub fn drive_to_goal(goal: (f32, f32, f32), interface: &mut dyn Interface) {
     // Get the current position.
     let x = interface.get_f32(tank::MODULE_GPS, REG_GPS_X).unwrap();
@@ -21,10 +26,6 @@ pub fn drive_to_goal(goal: (f32, f32, f32), interface: &mut dyn Interface) {
     let mut left = 0.0;
     let mut right = 0.0;
 
-    fn angle_diff(a: f32, b: f32) -> f32 {
-        let a = a - b;
-        (a + std::f32::consts::PI).rem_euclid(std::f32::consts::PI * 2.0) - std::f32::consts::PI
-    }
     let yaw_error = angle_diff(desired_orient, yaw);
     // println!("goal:    {goal_x}, {goal_y}, {goal_yaw}");
     // println!("current: {x}, {y}, {yaw}");
