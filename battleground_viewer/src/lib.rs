@@ -310,7 +310,6 @@ impl ConstructViewer {
                 )
             }).write(|| gui.render());
 
-
             //----------------------------------------------------------------
 
             // self.construct_render.reset_instances();

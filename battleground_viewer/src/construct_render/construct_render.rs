@@ -463,9 +463,10 @@ impl ConstructRender {
             };
 
             let is_emissive = match el.material {
-                battleground_construct::display::primitives::Material::FlatMaterial(flat_material) => flat_material.is_emissive,
+                battleground_construct::display::primitives::Material::FlatMaterial(
+                    flat_material,
+                ) => flat_material.is_emissive,
                 battleground_construct::display::primitives::Material::TeamMaterial => todo!(),
-
             };
 
             // Need to make the appropriate material here based on the material passed in.
