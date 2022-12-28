@@ -41,10 +41,11 @@ impl Component for TankBody {}
 
 impl Drawable for TankBody {
     fn drawables(&self) -> Vec<Element> {
+        let addition = Color::rgb(10, 10, 10);
         let emissive_material = Material::FlatMaterial(FlatMaterial {
-            color: Color::rgb(0, 50, 0),
+            color: self.color, // .saturating_add(&addition)
             is_emissive: true,
-            emissive: Color::rgb(0, 180, 0),
+            emissive: self.color.saturating_add(&addition),
             ..Default::default()
         });
 

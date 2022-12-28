@@ -111,6 +111,14 @@ impl Color {
     pub fn rgb(r: u8, g: u8, b: u8) -> Self {
         Color { r, g, b, a: 255 }
     }
+    pub fn saturating_add(&self, rhs: &Color) -> Self {
+        Color {
+            r: self.r.saturating_add(rhs.r),
+            g: self.g.saturating_add(rhs.g),
+            b: self.b.saturating_add(rhs.b),
+            a: self.a.saturating_add(rhs.a),
+        }
+    }
 }
 
 impl From<(u8, u8, u8)> for Color {
