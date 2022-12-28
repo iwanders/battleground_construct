@@ -205,6 +205,12 @@ impl ConstructViewer {
                                 }
                             });
                             ui.with_layout(
+                                egui::Layout::centered_and_justified(egui::Direction::LeftToRight),
+                                |ui| {
+                                    ui.label(if viewer_state.selected.is_empty() {"select with middle click".to_owned()} else {format!("{:?}", viewer_state.selected)});
+                                },
+                            );
+                            ui.with_layout(
                                 egui::Layout::right_to_left(egui::Align::Center),
                                 |ui| {
                                     ui.menu_button(
