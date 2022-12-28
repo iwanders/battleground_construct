@@ -8,31 +8,74 @@ use construct_render::ConstructRender;
 const PRINT_DURATIONS: bool = false;
 
 pub struct Limiter {
-    pub period: std::time::Duration,
-    pub last_time: std::time::Instant,
-    pub epoch: std::time::Instant,
+    desired_speed: f32,
+    real_speed: f32,
+    is_paused: bool,
+    last_update_time: std::time::Instant,
+    last_construct_time: f32,
+    update_deadline: std::time::Duration,
 }
 
 impl Limiter {
-    pub fn new(period: f32) -> Self {
+    pub fn new() -> Self {
         Limiter {
-            epoch: std::time::Instant::now(),
-            period: std::time::Duration::from_secs_f32(period),
-            last_time: std::time::Instant::now(),
+            desired_speed: 1.0,
+            real_speed: 1.0,
+            last_construct_time: 0.0,
+            is_paused: false,
+            last_update_time: std::time::Instant::now(),
+            update_deadline: std::time::Duration::from_secs_f64(1.0 / 60.0),
         }
     }
 
-    pub fn elapsed_as_f32(&self) -> f32 {
-        self.epoch.elapsed().as_secs_f32()
+    pub fn set_paused(&mut self, paused: bool) {
+        self.is_paused = paused;
     }
 
-    pub fn rate_elapsed(&mut self) -> bool {
-        let now = std::time::Instant::now();
-        if (now - self.last_time) > self.period {
-            self.last_time = now;
-            return true;
+    pub fn is_paused(&self) -> bool {
+        self.is_paused
+    }
+
+    pub fn set_desired_speed(&mut self, speed: f32) {
+        self.desired_speed = speed;
+    }
+
+    /// Real speed is always a bit off from the desired speed, that is expected as the construct
+    /// uses constant steps.
+    pub fn real_speed(&self) -> f32 {
+        self.real_speed
+    }
+
+    pub fn update<F: FnMut() -> f32>(&mut self, mut v: F) {
+        if self.is_paused {
+            self.last_update_time = std::time::Instant::now();
+            self.real_speed = 0.0;
+            return;
         }
-        false
+
+        let start_of_update = std::time::Instant::now();
+
+        let time_since_last = (start_of_update - self.last_update_time).as_secs_f32();
+        let desired_construct_change = self.desired_speed * time_since_last;
+        let desired_construct_finish_time = self.last_construct_time + desired_construct_change;
+        let start_construct_time = self.last_construct_time;
+
+        if desired_construct_finish_time > start_construct_time {
+            loop {
+                if start_of_update.elapsed() >= self.update_deadline {
+                    // We didn't meet the update deadline, well... bummer.
+                    // println!("Didn't meet rate");
+                    break;
+                }
+                self.last_construct_time = v();
+                if self.last_construct_time >= desired_construct_finish_time {
+                    break;
+                }
+            }
+        }
+        // Calculate the real speed we achieved.
+        self.real_speed = (self.last_construct_time - start_construct_time) / time_since_last;
+        self.last_update_time = std::time::Instant::now();
     }
 }
 
@@ -63,7 +106,7 @@ impl ConstructViewer {
 
         let context = window.gl();
 
-        let limiter = Limiter::new(0.001);
+        let limiter = Limiter::new();
 
         let camera = Camera::new_perspective(
             window.viewport(),
@@ -111,15 +154,13 @@ impl ConstructViewer {
 
     // Consumes the viewer...
     fn view_loop(mut self) {
-        let jump = 0.0;
-        // let stop_sim_at = 5.023; // second impact.
-        let stop_sim_at = 1000000.3;
-        // let stop_sim_at = 0.1;
-        let timespeed = 1.0;
+        let jump = 10.0;
+
+        self.limiter.set_desired_speed(1.0);
+
         while self.construct.elapsed_as_f32() < jump {
             self.construct.update();
         }
-        // battleground_construct::systems::velocity_pose::print_poses.store(true, std::sync::atomic::Ordering::Relaxed);
 
         let mut gui = three_d::GUI::new(&self.context);
 
@@ -131,33 +172,20 @@ impl ConstructViewer {
         let mut viewer_state = ViewerState::default();
 
         self.window.render_loop(move |mut frame_input: FrameInput| {
-
-            while self.construct.elapsed_as_f32() < stop_sim_at
-                && (self.construct.elapsed_as_f32() * (1.0 / timespeed))
-                    < (self.limiter.elapsed_as_f32() + jump) && !viewer_state.paused
-            {
-                let now = std::time::Instant::now();
+            let now = std::time::Instant::now();
+            // Run the limiter to update the construct.s
+            self.limiter.update(|| {
                 self.construct.update();
-                if PRINT_DURATIONS {
-                    println!(
-                        "construct taken: {:1.8}, entities: {}",
-                        now.elapsed().as_secs_f32(),
-                        self.construct.world().entity_count()
-                    );
-                }
-            }
+                self.construct.elapsed_as_f32()
+            });
 
-            /*
-            if self.limiter.rate_elapsed() {
-                let (_entity, clock) = self
-                    .construct
-                    .world()
-                    .component_iter_mut::<battleground_construct::components::clock::Clock>()
-                    .next()
-                    .expect("Should have one clock");
-                println!("Realtime ratio: {}", clock.ratio_of_realtime());
+            if PRINT_DURATIONS {
+                println!(
+                    "construct update (not a single step!): {:1.8}, entities: {}",
+                    now.elapsed().as_secs_f32(),
+                    self.construct.world().entity_count()
+                );
             }
-            */
 
             // Gui rendering.
             gui.update(
@@ -172,6 +200,7 @@ impl ConstructViewer {
                             ui.menu_button("Construct", |ui| {
                                 if ui.button("Pause/Unpause").clicked() {
                                     viewer_state.paused = !viewer_state.paused;
+                                    self.limiter.set_paused(viewer_state.paused);
                                 }
                                 if ui.button("Quit").clicked() {
                                     viewer_state.exiting = true;
@@ -292,23 +321,25 @@ impl ConstructViewer {
             .render(&self.camera, &self.construct_render.emissive_objects(), &[]);
 
             // C) Write B2 into A additively
-            screen.write(|| {
-                apply_effect(
-                    &self.context,
-                    include_str!("shaders/bloom_effect.frag"),
-                    RenderStates {
-                        write_mask: WriteMask::COLOR,
-                        blend: Blend::ADD,
-                        cull: Cull::Back,
-                        depth_test: DepthTest::Always,
-                        ..Default::default()
-                    },
-                    self.camera.viewport(),
-                    |program| {
-                        program.use_texture("emissive_buffer", &emissive_texture);
-                    },
-                )
-            }).write(|| gui.render());
+            screen
+                .write(|| {
+                    apply_effect(
+                        &self.context,
+                        include_str!("shaders/bloom_effect.frag"),
+                        RenderStates {
+                            write_mask: WriteMask::COLOR,
+                            blend: Blend::ADD,
+                            cull: Cull::Back,
+                            depth_test: DepthTest::Always,
+                            ..Default::default()
+                        },
+                        self.camera.viewport(),
+                        |program| {
+                            program.use_texture("emissive_buffer", &emissive_texture);
+                        },
+                    )
+                })
+                .write(|| gui.render());
 
             //----------------------------------------------------------------
 
@@ -320,7 +351,7 @@ impl ConstructViewer {
 
             if viewer_state.exiting {
                 // This does not just exit the render loop, it also shuts down the program.
-                return FrameOutput{
+                return FrameOutput {
                     exit: true,
                     ..Default::default()
                 };
