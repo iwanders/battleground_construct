@@ -121,10 +121,20 @@ impl ConstructViewer {
         }
         // battleground_construct::systems::velocity_pose::print_poses.store(true, std::sync::atomic::Ordering::Relaxed);
 
+        let mut gui = three_d::GUI::new(&self.context);
+
+        #[derive(Default, Debug)]
+        struct ViewerState {
+            exiting: bool,
+            paused: bool,
+        }
+        let mut viewer_state = ViewerState::default();
+
         self.window.render_loop(move |mut frame_input: FrameInput| {
+
             while self.construct.elapsed_as_f32() < stop_sim_at
                 && (self.construct.elapsed_as_f32() * (1.0 / timespeed))
-                    < (self.limiter.elapsed_as_f32() + jump)
+                    < (self.limiter.elapsed_as_f32() + jump) && !viewer_state.paused
             {
                 let now = std::time::Instant::now();
                 self.construct.update();
@@ -148,6 +158,29 @@ impl ConstructViewer {
                 println!("Realtime ratio: {}", clock.ratio_of_realtime());
             }
             */
+
+            // Gui rendering.
+            gui.update(
+                &mut frame_input.events,
+                frame_input.accumulated_time,
+                frame_input.viewport,
+                frame_input.device_pixel_ratio,
+                |gui_context| {
+                    use three_d::egui::*;
+                    egui::TopBottomPanel::top("my_panel").show(gui_context, |ui| {
+                        menu::bar(ui, |ui| {
+                            ui.menu_button("Construct", |ui| {
+                                if ui.button("Pause/Unpause").clicked() {
+                                    viewer_state.paused = !viewer_state.paused;
+                                }
+                                if ui.button("Quit").clicked() {
+                                    viewer_state.exiting = true;
+                                }
+                            });
+                        });
+                    });
+                },
+            );
 
             self.camera.set_viewport(frame_input.viewport);
             self.control
@@ -197,11 +230,13 @@ impl ConstructViewer {
 
             let now = std::time::Instant::now();
 
-            screen.render(
-                &self.camera,
-                &self.construct_render.objects(),
-                &[&self.ambient_light, &self.directional_light],
-            );
+            screen
+                .render(
+                    &self.camera,
+                    &self.construct_render.objects(),
+                    &[&self.ambient_light, &self.directional_light],
+                )
+                .write(|| gui.render());
 
             //----------------------------------------------------------------
 
@@ -209,6 +244,14 @@ impl ConstructViewer {
 
             if PRINT_DURATIONS {
                 println!("render: {}", now.elapsed().as_secs_f64());
+            }
+
+            if viewer_state.exiting {
+                // This does not just exit the render loop, it also shuts down the program.
+                return FrameOutput{
+                    exit: true,
+                    ..Default::default()
+                };
             }
 
             FrameOutput::default()
