@@ -32,8 +32,8 @@ spawn_config:
       y: 0.0
       yaw: 0
       team: 0
-      #controller: 
-      #  type: Wasm
+      controller: 
+        type: DiffDriveCapturable
       #  module: "../target/wasm32-unknown-unknown/release/example_driving_ai.wasm"
 
     -
@@ -42,6 +42,9 @@ spawn_config:
       #  yaw: 1.5708
       yaw: 0.0
       team: 1
+      radio_config:
+        channel_min: 10
+        channel_max: 10
       controller:
         type: SequenceControl
         controllers:
@@ -54,6 +57,9 @@ spawn_config:
       y: 10.0
       yaw: -1.5708
       team: 1
+      radio_config:
+        channel_min: 10
+        channel_max: 10
       controller:
         type: SequenceControl
         controllers:

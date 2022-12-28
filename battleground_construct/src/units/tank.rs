@@ -95,7 +95,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     register_interface.get_mut().add_module(
         "objectives",
         MODULE_OBJECTIVES,
-        components::objectives::ObjectivesModule::new(),
+        components::objectives_module::ObjectivesModule::new(),
     );
 
     // -----   Unit
