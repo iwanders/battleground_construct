@@ -3,6 +3,7 @@ use three_d::*;
 use super::effects;
 use super::instanced_entity;
 
+use battleground_construct::components::unit::UnitId;
 use battleground_construct::display;
 use battleground_construct::display::primitives::{Drawable, Primitive};
 use battleground_construct::Construct;
@@ -307,9 +308,29 @@ impl ConstructRender {
         self.emissive_meshes.clear();
     }
 
-    pub fn render(&mut self, camera: &Camera, context: &Context, construct: &Construct) {
+    fn selected_to_units(
+        construct: &Construct,
+        selected: &std::collections::HashSet<EntityId>,
+    ) -> std::collections::HashSet<UnitId> {
+        construct
+            .world()
+            .component_iter::<battleground_construct::components::unit_member::UnitMember>()
+            .filter(|(e, _m)| selected.contains(e))
+            .map(|(_e, m)| m.unit())
+            .collect()
+    }
+
+    pub fn render(
+        &mut self,
+        camera: &Camera,
+        context: &Context,
+        construct: &Construct,
+        selected: &std::collections::HashSet<EntityId>,
+    ) {
         // a new cycle, clear the previous instances.
         self.reset_instances();
+
+        let units = Self::selected_to_units(construct, &selected);
 
         // Iterate through all displayables to collect meshes
         self.component_to_meshes::<display::tank_body::TankBody>(context, construct);
@@ -320,7 +341,19 @@ impl ConstructRender {
         self.component_to_meshes::<display::tank_bullet::TankBullet>(context, construct);
         self.component_to_meshes::<display::radar_model::RadarModel>(context, construct);
 
-        self.component_to_meshes::<display::draw_module::DrawComponent>(context, construct);
+        // We could also pre-calculate all entities that have the correct unit members, and then
+        // filter based on that...
+        self.component_to_meshes_filtered::<display::draw_module::DrawComponent, _>(
+            context,
+            construct,
+            |e| {
+                construct
+                    .world()
+                    .component::<battleground_construct::components::unit_member::UnitMember>(e)
+                    .map(|v| units.contains(&v.unit()))
+                    .unwrap_or(false)
+            },
+        );
 
         self.component_to_meshes::<display::debug_box::DebugBox>(context, construct);
         self.component_to_meshes::<display::debug_sphere::DebugSphere>(context, construct);
@@ -365,18 +398,31 @@ impl ConstructRender {
     }
 
     /// Function to iterate over the components and convert their drawables into elements.
-    fn component_to_meshes<C: Component + Drawable + 'static>(
+    fn component_to_meshes_filtered<C: Component + Drawable + 'static, F: Fn(EntityId) -> bool>(
         &mut self,
         context: &Context,
         construct: &Construct,
+        filter_function: F,
     ) {
         for (element_id, component_with_drawables) in construct.world().component_iter::<C>() {
+            if !filter_function(element_id) {
+                continue;
+            }
             // Get the world pose for this entity, to add draw transform local to this component.
             let world_pose = construct.entity_pose(element_id);
             for el in component_with_drawables.drawables() {
                 self.add_primitive_element(context, &el, world_pose.transform())
             }
         }
+    }
+
+    /// Function to iterate over the components and convert their drawables into elements.
+    fn component_to_meshes<C: Component + Drawable + 'static>(
+        &mut self,
+        context: &Context,
+        construct: &Construct,
+    ) {
+        self.component_to_meshes_filtered::<C, _>(context, construct, |_| true);
     }
 
     /// Function to iterate over the components and convert their drawables into elements.

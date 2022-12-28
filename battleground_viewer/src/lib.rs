@@ -163,13 +163,13 @@ impl ConstructViewer {
         }
 
         let mut gui = three_d::GUI::new(&self.context);
-        
+
         use engine::EntityId;
         #[derive(Default, Debug)]
         struct ViewerState {
             exiting: bool,
             paused: bool,
-            selected: std::collections::HashSet<EntityId>
+            selected: std::collections::HashSet<EntityId>,
         }
         let mut viewer_state = ViewerState::default();
 
@@ -252,7 +252,10 @@ impl ConstructViewer {
             for e in frame_input.events.iter() {
                 match *e {
                     three_d::Event::MousePress {
-                        button, position, modifiers, ..
+                        button,
+                        position,
+                        modifiers,
+                        ..
                     } => {
                         if button == three_d::renderer::control::MouseButton::Middle {
                             let position = three_d::control::control_position_to_viewport_position(
@@ -302,8 +305,12 @@ impl ConstructViewer {
             {
                 self.camera.set_view(pos, target, vec3(0.0, 0.0, 1.0));
             }
-            self.construct_render
-                .render(&self.camera, &self.context, &self.construct);
+            self.construct_render.render(
+                &self.camera,
+                &self.context,
+                &self.construct,
+                &viewer_state.selected,
+            );
 
             if PRINT_DURATIONS {
                 println!("elements: {}", now.elapsed().as_secs_f64());
