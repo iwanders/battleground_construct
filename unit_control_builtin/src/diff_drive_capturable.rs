@@ -16,7 +16,10 @@ impl UnitControl for DiffDriveCapturable {
             .unwrap();
 
         let count = interface
-            .get_i32(tank::MODULE_TANK_OBJECTIVES, REG_OBJECTIVES_CAPTURE_POINT_COUNT)
+            .get_i32(
+                tank::MODULE_TANK_OBJECTIVES,
+                REG_OBJECTIVES_CAPTURE_POINT_COUNT,
+            )
             .unwrap();
         for i in 0..count as u32 {
             let x = interface

@@ -46,7 +46,9 @@ impl UnitControl for TankNaiveShoot {
         let tank_x = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_X).unwrap();
         let tank_y = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_Y).unwrap();
         let tank_z = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_Z).unwrap();
-        let tank_yaw = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_YAW).unwrap();
+        let tank_yaw = interface
+            .get_f32(tank::MODULE_TANK_GPS, REG_GPS_YAW)
+            .unwrap();
 
         // Check the radio for broadcasted friendlies.
         let msg_count = interface
@@ -97,7 +99,9 @@ impl UnitControl for TankNaiveShoot {
             let reflection_offset = REG_RADAR_REFLECTION_START + i * REG_RADAR_REFLECTION_STRIDE;
             let yaw_offset = reflection_offset + REG_RADAR_REFLECTION_OFFSET_YAW;
             let distance_offset = reflection_offset + REG_RADAR_REFLECTION_OFFSET_DISTANCE;
-            let reflection_yaw = interface.get_f32(tank::MODULE_TANK_RADAR, yaw_offset).unwrap();
+            let reflection_yaw = interface
+                .get_f32(tank::MODULE_TANK_RADAR, yaw_offset)
+                .unwrap();
             let distance = interface
                 .get_f32(tank::MODULE_TANK_RADAR, distance_offset)
                 .unwrap();

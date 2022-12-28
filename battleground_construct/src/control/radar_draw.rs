@@ -23,7 +23,9 @@ impl UnitControl for RadarDrawControl {
         let x = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_X).unwrap();
         let y = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_Y).unwrap();
         let z = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_Z).unwrap();
-        let yaw = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_YAW).unwrap();
+        let yaw = interface
+            .get_f32(tank::MODULE_TANK_GPS, REG_GPS_YAW)
+            .unwrap();
 
         let body_z = 0.25;
         let turret_z = 0.375 + 0.1 / 2.0;
@@ -106,7 +108,10 @@ impl UnitControl for RadarDrawControl {
         for i in 0..radar_hits {
             let offset = i as u32 * REG_RADAR_REFLECTION_STRIDE + REG_RADAR_REFLECTION_START;
             let reading_yaw = interface
-                .get_f32(tank::MODULE_TANK_RADAR, offset + REG_RADAR_REFLECTION_OFFSET_YAW)
+                .get_f32(
+                    tank::MODULE_TANK_RADAR,
+                    offset + REG_RADAR_REFLECTION_OFFSET_YAW,
+                )
                 .unwrap();
             let pitch = interface
                 .get_f32(

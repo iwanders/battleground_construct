@@ -27,7 +27,11 @@ impl UnitControl for TankSwivelShoot {
         let clock = interface.get_f32(tank::MODULE_TANK_CLOCK, 0).unwrap();
         if clock < 0.1 {
             interface
-                .set_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_VELOCITY_CMD, 0.3)
+                .set_f32(
+                    tank::MODULE_TANK_REVOLUTE_TURRET,
+                    REG_REVOLUTE_VELOCITY_CMD,
+                    0.3,
+                )
                 .unwrap();
             interface
                 .set_f32(
@@ -94,7 +98,10 @@ impl UnitControl for TankSwivelShoot {
             for i in 0..radar_hits {
                 let offset = i as u32 * REG_RADAR_REFLECTION_STRIDE + REG_RADAR_REFLECTION_START;
                 let reading_yaw = interface
-                    .get_f32(tank::MODULE_TANK_RADAR, offset + REG_RADAR_REFLECTION_OFFSET_YAW)
+                    .get_f32(
+                        tank::MODULE_TANK_RADAR,
+                        offset + REG_RADAR_REFLECTION_OFFSET_YAW,
+                    )
                     .unwrap();
                 let pitch = interface
                     .get_f32(

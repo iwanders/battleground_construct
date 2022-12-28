@@ -40,7 +40,7 @@ pub struct UnitTank {
     pub radar_entity: EntityId,
     pub flag_entity: EntityId,
     pub barrel_entity: EntityId,
-    pub nozzle_entity: EntityId,
+    pub muzzle_entity: EntityId,
 }
 impl Component for UnitTank {}
 
@@ -81,7 +81,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let radar_entity = world.add_entity();
     let flag_entity = world.add_entity();
     let barrel_entity = world.add_entity();
-    let nozzle_entity = world.add_entity();
+    let muzzle_entity = world.add_entity();
 
     let tank_group_entities: Vec<EntityId> = vec![
         unit_entity,
@@ -92,7 +92,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         radar_entity,
         flag_entity,
         barrel_entity,
-        nozzle_entity,
+        muzzle_entity,
     ];
     let unit_tank = UnitTank {
         unit_entity,
@@ -103,7 +103,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         radar_entity,
         flag_entity,
         barrel_entity,
-        nozzle_entity,
+        muzzle_entity,
     };
 
     // Create the register interface, we'll add modules throughout this function.
@@ -163,7 +163,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     // -----   Body
     world.add_component(
         body_entity,
-        PreTransform::from_translation(Vec3::new(0.0, 0.0, 0.25)),
+        PreTransform::from_translation(Vec3::new(0.0, 0.0, TANK_DIM_FLOOR_TO_BODY_Z)),
     );
     let body = display::tank_body::TankBody::new();
     let hitbox = body.hitbox();
@@ -240,7 +240,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(turret_entity, turret_revolute);
     world.add_component(
         turret_entity,
-        PreTransform::from_translation(Vec3::new(0.0, 0.0, 0.375 + 0.1 / 2.0)),
+        PreTransform::from_translation(Vec3::new(0.0, 0.0, TANK_DIM_FLOOR_TO_TURRET_Z)),
     );
     world.add_component(turret_entity, components::pose::Pose::new());
     world.add_component(turret_entity, components::velocity::Velocity::new());
@@ -258,7 +258,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(barrel_entity, barrel_revolute);
     world.add_component(
         barrel_entity,
-        PreTransform::from_translation(Vec3::new(0.25, 0.0, 0.0)),
+        PreTransform::from_translation(Vec3::new(TANK_DIM_TURRET_TO_BARREL_X, 0.0, 0.0)),
     );
     world.add_component(barrel_entity, components::pose::Pose::new());
     world.add_component(barrel_entity, components::velocity::Velocity::new());
@@ -267,25 +267,25 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     // world.add_component(barrel_entity, display::debug_lines::DebugLines::straight(10.0, 0.1, display::primitives::Color::BLUE));
 
     // -----   Nozzle
-    world.add_component(nozzle_entity, Parent::new(barrel_entity));
+    world.add_component(muzzle_entity, Parent::new(barrel_entity));
 
     let cannon_config = components::cannon::CannonConfig {
         reload_time: 1.0,
         fire_effect: std::rc::Rc::new(cannon_function),
     };
     world.add_component(
-        nozzle_entity,
+        muzzle_entity,
         components::cannon::Cannon::new(cannon_config),
     );
     world.add_component(
-        nozzle_entity,
-        PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
+        muzzle_entity,
+        PreTransform::from_translation(Vec3::new(TANK_DIM_BARREL_TO_MUZZLE, 0.0, 0.0)),
     );
 
     register_interface.get_mut().add_module(
         "cannon",
         MODULE_TANK_CANNON,
-        components::cannon::CannonModule::new(nozzle_entity),
+        components::cannon::CannonModule::new(muzzle_entity),
     );
 
     // -----   Radar
@@ -308,7 +308,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     // world.add_component(radar_entity, display::debug_lines::DebugLines::straight(10.0, 0.01, display::primitives::Color::RED));
     world.add_component(
         radar_entity,
-        PreTransform::from_translation(Vec3::new(0.0, 0.0, 0.07)),
+        PreTransform::from_translation(Vec3::new(0.0, 0.0, TANK_DIM_TURRET_TO_RADAR_Z)),
     );
 
     world.add_component(radar_entity, components::pose::Pose::new());

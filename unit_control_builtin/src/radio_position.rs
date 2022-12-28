@@ -17,7 +17,10 @@ impl UnitControl for RadioPosition {
         let y = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_Y).unwrap();
 
         let payload_count_limit = interface
-            .get_i32(tank::MODULE_TANK_RADIO_TRANSMITTER, REG_RADIO_TX_MSG_COUNT_LIMIT)
+            .get_i32(
+                tank::MODULE_TANK_RADIO_TRANSMITTER,
+                REG_RADIO_TX_MSG_COUNT_LIMIT,
+            )
             .unwrap();
 
         let mut payload_count = interface

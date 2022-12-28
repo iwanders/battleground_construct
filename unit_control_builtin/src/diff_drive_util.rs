@@ -12,7 +12,9 @@ pub fn drive_to_goal(goal: (f32, f32, f32), interface: &mut dyn Interface) {
     // Get the current position.
     let x = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_X).unwrap();
     let y = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_Y).unwrap();
-    let yaw = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_YAW).unwrap();
+    let yaw = interface
+        .get_f32(tank::MODULE_TANK_GPS, REG_GPS_YAW)
+        .unwrap();
 
     let goal_x = goal.0;
     let goal_y = goal.1;
@@ -51,7 +53,11 @@ pub fn drive_to_goal(goal: (f32, f32, f32), interface: &mut dyn Interface) {
         .set_f32(tank::MODULE_TANK_DIFF_DRIVE, REG_DIFF_DRIVE_LEFT_CMD, left)
         .unwrap();
     interface
-        .set_f32(tank::MODULE_TANK_DIFF_DRIVE, REG_DIFF_DRIVE_RIGHT_CMD, right)
+        .set_f32(
+            tank::MODULE_TANK_DIFF_DRIVE,
+            REG_DIFF_DRIVE_RIGHT_CMD,
+            right,
+        )
         .unwrap();
 }
 
