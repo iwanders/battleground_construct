@@ -114,12 +114,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     // -----    Global modules
     register_interface.get_mut().add_module(
         "clock",
-        MODULE_CLOCK,
+        MODULE_TANK_CLOCK,
         components::clock::ClockModule::new(),
     );
     register_interface.get_mut().add_module(
         "objectives",
-        MODULE_OBJECTIVES,
+        MODULE_TANK_OBJECTIVES,
         components::objectives_module::ObjectivesModule::new(),
     );
 
@@ -128,7 +128,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(unit_entity, components::eternal::Eternal::new());
     register_interface.get_mut().add_module(
         "team",
-        MODULE_TEAM,
+        MODULE_TANK_TEAM,
         components::team_module::TeamModule::new(unit_entity),
     );
     world.add_component(unit_entity, unit_tank);
@@ -142,7 +142,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
 
     register_interface.get_mut().add_module(
         "unit",
-        MODULE_UNIT,
+        MODULE_TANK_UNIT,
         components::unit::UnitModuleComponent::new(unit_entity),
     );
 
@@ -155,7 +155,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     register_interface.get_mut().add_module(
         "diff_drive",
-        MODULE_DIFF_DRIVE,
+        MODULE_TANK_DIFF_DRIVE,
         components::differential_drive_base::DifferentialDriveBaseModule::new(base_entity),
     );
     world.add_component(base_entity, display::tank_tracks::TankTracks::new());
@@ -183,12 +183,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(body_entity, display::draw_module::DrawComponent::new());
     register_interface.get_mut().add_module(
         "draw",
-        MODULE_DRAW,
+        MODULE_TANK_DRAW,
         display::draw_module::DrawModule::new(body_entity),
     );
     register_interface.get_mut().add_module(
         "localization",
-        MODULE_GPS,
+        MODULE_TANK_GPS,
         components::gps::GpsModule::new(body_entity),
     );
 
@@ -207,7 +207,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     register_interface.get_mut().add_module(
         "radio_transmitter",
-        MODULE_RADIO_TRANSMITTER,
+        MODULE_TANK_RADIO_TRANSMITTER,
         components::radio_transmitter::RadioTransmitterModule::new(body_entity),
     );
 
@@ -225,14 +225,14 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     register_interface.get_mut().add_module(
         "radio_receiver",
-        MODULE_RADIO_RECEIVER,
+        MODULE_TANK_RADIO_RECEIVER,
         components::radio_receiver::RadioReceiverModule::new(body_entity),
     );
 
     // -----   Turret
     register_interface.get_mut().add_module(
         "turret",
-        MODULE_REVOLUTE_TURRET,
+        MODULE_TANK_REVOLUTE_TURRET,
         components::revolute::RevoluteModule::new(turret_entity),
     );
 
@@ -251,7 +251,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let barrel_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 1.0, 0.0));
     register_interface.get_mut().add_module(
         "barrel",
-        MODULE_REVOLUTE_BARREL,
+        MODULE_TANK_REVOLUTE_BARREL,
         components::revolute::RevoluteModule::new(barrel_entity),
     );
 
@@ -284,7 +284,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
 
     register_interface.get_mut().add_module(
         "cannon",
-        MODULE_CANNON,
+        MODULE_TANK_CANNON,
         components::cannon::CannonModule::new(nozzle_entity),
     );
 
@@ -295,12 +295,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     radar_revolute.set_velocity(-std::f32::consts::PI);
     register_interface.get_mut().add_module(
         "radar_rotation",
-        MODULE_REVOLUTE_RADAR,
+        MODULE_TANK_REVOLUTE_RADAR,
         components::revolute::RevoluteModule::new(radar_entity),
     );
     register_interface.get_mut().add_module(
         "radar",
-        MODULE_RADAR,
+        MODULE_TANK_RADAR,
         components::radar::RadarModule::new(radar_entity),
     );
 

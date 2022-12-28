@@ -34,23 +34,23 @@ impl UnitControl for TankNaiveShoot {
         // Lay waste to the target.
 
         let elapsed = interface
-            .get_f32(tank::MODULE_CLOCK, REG_CLOCK_ELAPSED)
+            .get_f32(tank::MODULE_TANK_CLOCK, REG_CLOCK_ELAPSED)
             .unwrap();
         let tank_team = interface
             .get_i32(
-                tank::MODULE_TEAM,
+                tank::MODULE_TANK_TEAM,
                 battleground_unit_control::modules::team::REG_TEAM_TEAMID,
             )
             .unwrap() as u32;
 
-        let tank_x = interface.get_f32(tank::MODULE_GPS, REG_GPS_X).unwrap();
-        let tank_y = interface.get_f32(tank::MODULE_GPS, REG_GPS_Y).unwrap();
-        let tank_z = interface.get_f32(tank::MODULE_GPS, REG_GPS_Z).unwrap();
-        let tank_yaw = interface.get_f32(tank::MODULE_GPS, REG_GPS_YAW).unwrap();
+        let tank_x = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_X).unwrap();
+        let tank_y = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_Y).unwrap();
+        let tank_z = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_Z).unwrap();
+        let tank_yaw = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_YAW).unwrap();
 
         // Check the radio for broadcasted friendlies.
         let msg_count = interface
-            .get_i32(tank::MODULE_RADIO_RECEIVER, REG_RADIO_RX_MSG_COUNT)
+            .get_i32(tank::MODULE_TANK_RADIO_RECEIVER, REG_RADIO_RX_MSG_COUNT)
             .unwrap();
 
         let mut team_xy = vec![];
@@ -58,7 +58,7 @@ impl UnitControl for TankNaiveShoot {
             let msg_offset = REG_RADIO_RX_MSG_START + i * REG_RADIO_RX_MSG_STRIDE;
             let data_offset = msg_offset + REG_RADIO_RX_MSG_OFFSET_DATA;
             let c = interface
-                .get_bytes_len(tank::MODULE_RADIO_RECEIVER, data_offset)
+                .get_bytes_len(tank::MODULE_TANK_RADIO_RECEIVER, data_offset)
                 .unwrap();
             if c != 12 {
                 continue;
@@ -66,7 +66,7 @@ impl UnitControl for TankNaiveShoot {
 
             let mut d = vec![0; c];
             interface
-                .get_bytes(tank::MODULE_RADIO_RECEIVER, data_offset, &mut d)
+                .get_bytes(tank::MODULE_TANK_RADIO_RECEIVER, data_offset, &mut d)
                 .unwrap();
             // Now that we have the bytes, we can reconstruct the (team, x, y).
             let team = u32::from_le_bytes([d[0], d[1], d[2], d[3]]);
@@ -76,20 +76,20 @@ impl UnitControl for TankNaiveShoot {
         }
         // Drop all messages now that we have obtained them.
         interface
-            .set_i32(tank::MODULE_RADIO_RECEIVER, REG_RADIO_RX_MSG_COUNT, 0)
+            .set_i32(tank::MODULE_TANK_RADIO_RECEIVER, REG_RADIO_RX_MSG_COUNT, 0)
             .unwrap();
 
         // Next, check that radar, calculating expressing things in global pose.
         let turret_pos = interface
-            .get_f32(tank::MODULE_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)
+            .get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)
             .unwrap();
         let radar_pos = interface
-            .get_f32(tank::MODULE_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)
+            .get_f32(tank::MODULE_TANK_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)
             .unwrap();
         let radar_yaw = turret_pos + radar_pos + tank_yaw;
 
         let reflection_count = interface
-            .get_i32(tank::MODULE_RADAR, REG_RADAR_REFLECTION_COUNT)
+            .get_i32(tank::MODULE_TANK_RADAR, REG_RADAR_REFLECTION_COUNT)
             .unwrap();
 
         let mut reflections = vec![];
@@ -97,9 +97,9 @@ impl UnitControl for TankNaiveShoot {
             let reflection_offset = REG_RADAR_REFLECTION_START + i * REG_RADAR_REFLECTION_STRIDE;
             let yaw_offset = reflection_offset + REG_RADAR_REFLECTION_OFFSET_YAW;
             let distance_offset = reflection_offset + REG_RADAR_REFLECTION_OFFSET_DISTANCE;
-            let reflection_yaw = interface.get_f32(tank::MODULE_RADAR, yaw_offset).unwrap();
+            let reflection_yaw = interface.get_f32(tank::MODULE_TANK_RADAR, yaw_offset).unwrap();
             let distance = interface
-                .get_f32(tank::MODULE_RADAR, distance_offset)
+                .get_f32(tank::MODULE_TANK_RADAR, distance_offset)
                 .unwrap();
             reflections.push((radar_yaw + reflection_yaw, distance));
         }
@@ -148,7 +148,7 @@ impl UnitControl for TankNaiveShoot {
         if (elapsed - self.last_seen) > 5.0 {
             self.shoot_at = None;
             interface
-                .set_i32(tank::MODULE_CANNON, REG_CANNON_FIRING, false as i32)
+                .set_i32(tank::MODULE_TANK_CANNON, REG_CANNON_FIRING, false as i32)
                 .unwrap();
         }
 
@@ -180,7 +180,7 @@ impl UnitControl for TankNaiveShoot {
             };
             interface
                 .set_f32(
-                    tank::MODULE_REVOLUTE_TURRET,
+                    tank::MODULE_TANK_REVOLUTE_TURRET,
                     REG_REVOLUTE_VELOCITY_CMD,
                     yaw_error_minned,
                 )
@@ -189,7 +189,7 @@ impl UnitControl for TankNaiveShoot {
             // Then, calculate the angle we need to fire at.
             let distance = (dx * dx + dy * dy).sqrt();
             let barrel_angle = interface
-                .get_f32(tank::MODULE_REVOLUTE_BARREL, REG_REVOLUTE_POSITION)
+                .get_f32(tank::MODULE_TANK_REVOLUTE_BARREL, REG_REVOLUTE_POSITION)
                 .unwrap();
             let barrel_length = 1.0;
 
@@ -230,14 +230,14 @@ impl UnitControl for TankNaiveShoot {
                 };
                 interface
                     .set_f32(
-                        tank::MODULE_REVOLUTE_BARREL,
+                        tank::MODULE_TANK_REVOLUTE_BARREL,
                         REG_REVOLUTE_VELOCITY_CMD,
                         angle_error_minned,
                     )
                     .unwrap();
 
                 interface
-                    .set_i32(tank::MODULE_CANNON, REG_CANNON_FIRING, true as i32)
+                    .set_i32(tank::MODULE_TANK_CANNON, REG_CANNON_FIRING, true as i32)
                     .unwrap();
             }
         }
