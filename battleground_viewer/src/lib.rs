@@ -163,11 +163,13 @@ impl ConstructViewer {
         }
 
         let mut gui = three_d::GUI::new(&self.context);
-
+        
+        use engine::EntityId;
         #[derive(Default, Debug)]
         struct ViewerState {
             exiting: bool,
             paused: bool,
+            selected: std::collections::HashSet<EntityId>
         }
         let mut viewer_state = ViewerState::default();
 
@@ -250,7 +252,7 @@ impl ConstructViewer {
             for e in frame_input.events.iter() {
                 match *e {
                     three_d::Event::MousePress {
-                        button, position, ..
+                        button, position, modifiers, ..
                     } => {
                         if button == three_d::renderer::control::MouseButton::Middle {
                             let position = three_d::control::control_position_to_viewport_position(
@@ -264,7 +266,26 @@ impl ConstructViewer {
                             // Now that we have the ray, we can calculate what and if it hit something.
                             // We need the construct to do that though.
                             let intersects = self.construct.select_intersect(&pos, &dir);
-                            println!("intersects: {intersects:?}");
+
+                            // Shooting one ray through multiple entities is hard... allow shift to
+                            // add or remove from the selected set.
+                            if modifiers.shift {
+                                // toggle whatever is clicked.
+                                for v in intersects {
+                                    if viewer_state.selected.contains(&v) {
+                                        viewer_state.selected.remove(&v);
+                                    } else {
+                                        viewer_state.selected.insert(v);
+                                    }
+                                }
+                            } else {
+                                // just assign the new selection.
+                                viewer_state.selected.clear();
+                                for v in intersects {
+                                    viewer_state.selected.insert(v);
+                                }
+                            }
+                            println!("viewer_state.selected: {:?}", viewer_state.selected);
                         }
                     }
                     _ => {}
