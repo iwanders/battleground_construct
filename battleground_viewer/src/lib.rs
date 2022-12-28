@@ -153,6 +153,26 @@ impl ConstructViewer {
             self.control
                 .handle_events(&mut self.camera, &mut frame_input.events);
 
+            for e in frame_input.events.iter() {
+                match *e {
+                    three_d::Event::MousePress {
+                        button: _,
+                        position,
+                        ..
+                    } => {
+                        let position = (position.0 as f32, position.1 as f32);
+                        //println!("press at: {:?}, {:?}", button, position);
+                        let _pos = self.camera.position_at_pixel(position);
+                        let _dir = self.camera.view_direction_at_pixel(position);
+                        // Now that we have the ray, we can calculate what and if it hit something.
+                        // We need the construct to do that though.
+                    }
+                    _ => {
+                        // println!("e: {e:?}");
+                    }
+                }
+            }
+
             let screen = frame_input.screen();
             screen.clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0));
 
