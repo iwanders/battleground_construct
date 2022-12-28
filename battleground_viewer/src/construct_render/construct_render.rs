@@ -454,64 +454,62 @@ impl ConstructRender {
         entity_transform: &Matrix4<f32>,
     ) {
         // Add the elements to the pbr_meshes
-        self.pbr_meshes.entry(el.to_draw_key()).or_insert_with(|| {
-            let primitive_mesh = Self::primitive_to_mesh(el);
-
-            let cast_shadow = match el.primitive {
-                display::primitives::Primitive::Line(_) => false,
-                _ => true,
-            };
-
-            let is_emissive = match el.material {
-                battleground_construct::display::primitives::Material::FlatMaterial(
-                    flat_material,
-                ) => flat_material.is_emissive,
-                battleground_construct::display::primitives::Material::TeamMaterial => todo!(),
-            };
-
-            // Need to make the appropriate material here based on the material passed in.
-            let material = match el.material {
-                battleground_construct::display::primitives::Material::FlatMaterial(
-                    flat_material,
-                ) => {
-                    let emissive = if flat_material.is_emissive {
-                        flat_material.emissive.to_color()
-                    } else {
-                        Color::BLACK
-                    };
-                    let fun = if flat_material.is_transparent {
-                        three_d::renderer::material::PhysicalMaterial::new_transparent
-                    } else {
-                        three_d::renderer::material::PhysicalMaterial::new_opaque
-                    };
-                    fun(
-                        context,
-                        &CpuMaterial {
-                            albedo: Color {
-                                r: 255,
-                                g: 255,
-                                b: 255,
-                                a: 255,
-                            },
-                            emissive,
-                            ..Default::default()
-                        },
-                    )
-                }
-                battleground_construct::display::primitives::Material::TeamMaterial => todo!(),
-            };
-
-            Properties {
-                object: InstancedEntity::new(context, &primitive_mesh, material),
-                cast_shadow,
-                is_emissive,
-            }
-        });
-
         let instanced = &mut self
             .pbr_meshes
-            .get_mut(&el.to_draw_key())
-            .expect("just checked it, will be there")
+            .entry(el.to_draw_key())
+            .or_insert_with(|| {
+                let primitive_mesh = Self::primitive_to_mesh(el);
+
+                let cast_shadow = match el.primitive {
+                    display::primitives::Primitive::Line(_) => false,
+                    _ => true,
+                };
+
+                let is_emissive = match el.material {
+                    battleground_construct::display::primitives::Material::FlatMaterial(
+                        flat_material,
+                    ) => flat_material.is_emissive,
+                    battleground_construct::display::primitives::Material::TeamMaterial => todo!(),
+                };
+
+                // Need to make the appropriate material here based on the material passed in.
+                let material = match el.material {
+                    battleground_construct::display::primitives::Material::FlatMaterial(
+                        flat_material,
+                    ) => {
+                        let emissive = if flat_material.is_emissive {
+                            flat_material.emissive.to_color()
+                        } else {
+                            Color::BLACK
+                        };
+                        let fun = if flat_material.is_transparent {
+                            three_d::renderer::material::PhysicalMaterial::new_transparent
+                        } else {
+                            three_d::renderer::material::PhysicalMaterial::new_opaque
+                        };
+                        fun(
+                            context,
+                            &CpuMaterial {
+                                albedo: Color {
+                                    r: 255,
+                                    g: 255,
+                                    b: 255,
+                                    a: 255,
+                                },
+                                emissive,
+                                ..Default::default()
+                            },
+                        )
+                    }
+                    battleground_construct::display::primitives::Material::TeamMaterial => todo!(),
+                };
+
+                Properties {
+                    object: InstancedEntity::new(context, &primitive_mesh, material),
+                    cast_shadow,
+                    is_emissive,
+                }
+            })
             .object;
         let transform = entity_transform * el.transform;
         // At some point, we have to handle different material types here.
@@ -543,8 +541,9 @@ impl ConstructRender {
         };
 
         if is_emissive {
-            // Add the elements to the pbr_meshes
-            self.emissive_meshes
+            // Add the elements to the emissive meshes
+            let instanced = &mut self
+                .emissive_meshes
                 .entry(el.to_draw_key())
                 .or_insert_with(|| {
                     let primitive_mesh = Self::primitive_to_mesh(el);
@@ -582,13 +581,9 @@ impl ConstructRender {
                         cast_shadow: false,
                         is_emissive: true,
                     }
-                });
-
-            let instanced = &mut self
-                .emissive_meshes
-                .get_mut(&el.to_draw_key())
-                .expect("just checked it, will be there")
+                })
                 .object;
+
             let transform = entity_transform * el.transform;
             // At some point, we have to handle different material types here.
             let material =
