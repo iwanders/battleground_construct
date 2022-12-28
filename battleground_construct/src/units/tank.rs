@@ -140,6 +140,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let unit_id = unit_component.id();
     world.add_component(unit_entity, unit_component);
 
+    register_interface.get_mut().add_module(
+        "unit",
+        MODULE_UNIT,
+        components::unit::UnitModuleComponent::new(unit_entity),
+    );
+
     // -----   Base
     world.add_component(base_entity, Pose::from_se2(config.x, config.y, config.yaw));
     world.add_component(base_entity, components::velocity::Velocity::new());

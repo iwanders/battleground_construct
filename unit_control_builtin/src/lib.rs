@@ -6,6 +6,7 @@ mod diff_drive_util;
 pub mod dynamic_load_control;
 
 pub mod idle;
+pub mod interface_printer;
 pub mod tank_naive_shoot;
 pub mod tank_swivel_shoot;
 

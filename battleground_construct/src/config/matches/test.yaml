@@ -66,3 +66,4 @@ spawn_config:
           - type: RadioPosition
           - type: DiffDriveCapturable
           - type: TankNaiveShoot
+          - type: InterfacePrinter
