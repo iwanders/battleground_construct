@@ -13,14 +13,12 @@ impl System for TeamColorTank {
                     .component::<components::team::Team>(team_entity)
                     .unwrap();
                 // Now that we have the team, we can iterate over the elements:
-                if let Some(group) = world.component::<components::group::Group>(entity) {
-                    for v in group.entities() {
-                        if let Some(mut flag) = world.component_mut::<Flag>(*v) {
-                            flag.set_color(*team.color());
-                        }
-                        if let Some(mut tank) = world.component_mut::<TankBody>(*v) {
-                            tank.set_color(*team.color());
-                        }
+                if let Some(tank) = world.component::<crate::units::tank::UnitTank>(entity) {
+                    if let Some(mut flag) = world.component_mut::<Flag>(tank.flag_entity) {
+                        flag.set_color(*team.color());
+                    }
+                    if let Some(mut tank) = world.component_mut::<TankBody>(tank.body_entity) {
+                        tank.set_color(*team.color());
                     }
                 }
             }
