@@ -279,7 +279,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     world.add_component(
         muzzle_entity,
-        PreTransform::from_translation(Vec3::new(TANK_DIM_BARREL_TO_MUZZLE, 0.0, 0.0)),
+        PreTransform::from_translation(Vec3::new(TANK_DIM_BARREL_TO_MUZZLE_X, 0.0, 0.0)),
     );
 
     register_interface.get_mut().add_module(
@@ -374,7 +374,7 @@ pub fn cannon_function(world: &mut World, cannon_entity: EntityId) {
 
     // Get the unit source of this cannel.
 
-    let muzzle_velocity = 10.0;
+    let muzzle_velocity = TANK_PARAM_MUZZLE_VELOCITY;
 
     // Get the pose of the cannon in the world coordinates. Then create the pose with the
     // Orientation in the global frame.

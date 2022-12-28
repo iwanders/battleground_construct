@@ -26,4 +26,7 @@ pub const TANK_DIM_TURRET_TO_BARREL_X: f32 = 0.25;
 /// Distance between the turret and the radar joint.
 pub const TANK_DIM_TURRET_TO_RADAR_Z: f32 = 0.07;
 /// Distance between the barrel joint and the muzzle (barrel length).
-pub const TANK_DIM_BARREL_TO_MUZZLE: f32 = 1.0;
+pub const TANK_DIM_BARREL_TO_MUZZLE_X: f32 = 1.0;
+
+/// Velocity at which cannon bullets exit the tank's muzzle.
+pub const TANK_PARAM_MUZZLE_VELOCITY: f32 = 10.0;
