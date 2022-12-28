@@ -1,5 +1,7 @@
 use engine::prelude::*;
 
+pub use battleground_unit_control::units::UnitType;
+
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct UnitId(u64);
 
@@ -17,15 +19,23 @@ pub fn make_unit_id(v: u64) -> TeamId {
 #[derive(Debug, Clone)]
 pub struct Unit {
     id: UnitId,
+    unit_type: UnitType,
 }
 
 impl Unit {
-    pub fn new(id: u64) -> Self {
-        Unit { id: UnitId(id) }
+    pub fn new(id: u64, unit_type: UnitType) -> Self {
+        Unit {
+            id: UnitId(id),
+            unit_type,
+        }
     }
 
     pub fn id(&self) -> UnitId {
         self.id
+    }
+
+    pub fn unit_type(&self) -> UnitType {
+        self.unit_type
     }
 }
 impl Component for Unit {}

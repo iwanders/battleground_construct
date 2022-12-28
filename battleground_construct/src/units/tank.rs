@@ -30,7 +30,6 @@ impl Default for TankSpawnConfig {
     }
 }
 
-
 #[derive(Debug, Clone, Copy)]
 pub struct UnitTank {
     pub unit_entity: EntityId,
@@ -132,10 +131,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         MODULE_TEAM,
         components::team_module::TeamModule::new(unit_entity),
     );
-    world.add_component(unit_entity, components::unit_type::UnitType::new(battleground_unit_control::units::UnitType::Tank));
     world.add_component(unit_entity, unit_tank);
 
-    let unit_component = components::unit::Unit::new(components::id_generator::generate_id(world));
+    let unit_component = components::unit::Unit::new(
+        components::id_generator::generate_id(world),
+        battleground_unit_control::units::UnitType::Tank,
+    );
     let unit_id = unit_component.id();
     world.add_component(unit_entity, unit_component);
 
