@@ -36,5 +36,12 @@ impl UnitController {
     pub fn set_error(&mut self, error: Box<dyn std::error::Error>) {
         self.error = Some(error);
     }
+
+    pub fn error(&self) -> Option<&dyn std::error::Error> {
+        if let Some(ref e) = self.error {
+            return Some(&**e);
+        }
+        None
+    }
 }
 impl Component for UnitController {}

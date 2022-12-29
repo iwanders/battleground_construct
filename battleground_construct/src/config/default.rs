@@ -77,6 +77,15 @@ pub fn add_systems(systems: &mut Systems) {
     systems.add_system(Box::new(systems::radar_scan::RadarScan {}));
     // Run the unit controllers
     systems.add_system(Box::new(systems::unit_control::UnitControl {}));
+
+    // After the unit controller, check if any controllers errored.
+    systems.add_system(Box::new(
+        systems::unit_controller_error_check::UnitControllerErrorCheck {},
+    ));
+    // Run another destroy check, it's cheap and this ensures units that are destroyed because
+    // their controller failed don't fire anymore with their dying breath.
+    systems.add_system(Box::new(systems::destroy::Destroy {}));
+
     // Shoot any cannons
     systems.add_system(Box::new(systems::cannon_trigger::CannonTrigger {}));
 }

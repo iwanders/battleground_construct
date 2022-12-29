@@ -23,6 +23,7 @@ pub mod revolute_velocity;
 pub mod team_color_tank;
 pub mod timed_function;
 pub mod unit_control;
+pub mod unit_controller_error_check;
 pub mod velocity_pose;
 
 use super::components;
