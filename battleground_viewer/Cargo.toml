@@ -13,7 +13,7 @@ battleground_construct = { path = "../battleground_construct" }
 #three-d = {version = "0.15.0", features=["egui-gui"], git = "https://github.com/iwanders/asny-three-d", branch = "orbit-control-improvements"  }
 # Instanced with alpha rendering order:
 #three-d = {version = "0.15.0", features=["egui-gui"], git = "https://github.com/asny/three-d", rev = "a2a083e1823c6813e349d49547744ab375f8821b"  }
-# Control position to viewport position:
+# Control position to viewport position conversion function.
 three-d = {version = "0.15.0", features=["egui-gui"], git = "https://github.com/iwanders/asny-three-d", rev = "e14b34e6eaa37e3ca2d5f21d27078db53b3a7e20"  }
 rand = "0.8.5"
 rand_distr = "0.4.3"

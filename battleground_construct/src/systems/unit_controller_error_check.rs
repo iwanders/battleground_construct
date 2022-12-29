@@ -17,7 +17,7 @@ impl System for UnitControllerErrorCheck {
                     .component::<components::unit_controller::UnitController>(entity)
                     .unwrap();
                 println!(
-                    "Controller for {entity:?} failed with: {:?}",
+                    "Controller for {entity:?} failed, applying destroyed state, error: {:?}",
                     controller.error().unwrap()
                 );
             }
