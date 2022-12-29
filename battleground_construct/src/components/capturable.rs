@@ -62,7 +62,15 @@ impl Capturable {
                 }
             }
             if Some(*team_id) == self.owner {
-                self.strength += value;
+                // In exclusive mode, the owner may only contribute towards its strength if it is
+                // the sole contender towards the point. In domination mode it always contributes.
+                let owner_is_single_contender =
+                    contenders.len() == 1 && contenders.first().map(|v| v.0) == self.owner;
+                let owner_increases =
+                    self.capture_type == CaptureType::Exclusive && owner_is_single_contender;
+                if self.capture_type == CaptureType::Domination || owner_increases {
+                    self.strength += value;
+                }
             } else {
                 self.strength -= value;
                 summed_strength += value;
@@ -119,7 +127,7 @@ mod test {
     use crate::util::test_util::*;
 
     #[test]
-    fn test_exclusive_capturable() {
+    fn test_capturable_exclusive() {
         let t1 = make_team_id(1);
         let t2 = make_team_id(2);
         let t3 = make_team_id(3);
@@ -144,9 +152,27 @@ mod test {
         assert!(c.owner().is_none());
         approx_equal!(c.strength(), 0.0, 0.0001);
 
+        // Check if t2 takes ownership after it gets exclusive contention.
         c.update(&[(t2, 0.3)]);
         assert_eq!(c.owner(), Some(t2));
         approx_equal!(c.strength(), 0.3, 0.0001);
+
+        // With t2 being the owner, add back t1, there's now both non-owner and owner present, with
+        // equal strength, the hold should still decrease by whoever is the non-owner.
+        c.update(&[(t2, 0.1), (t1, 0.1)]);
+        assert_eq!(c.owner(), Some(t2));
+        approx_equal!(c.strength(), 0.2, 0.0001);
+
+        // Another round of that.
+        c.update(&[(t2, 0.1), (t1, 0.1)]);
+        assert_eq!(c.owner(), Some(t2));
+        approx_equal!(c.strength(), 0.1, 0.0001);
+
+        // Next round, make sure there's no rounding errors, apply 0.15 pressure, owner should
+        // change to none, staying at 0.0.
+        c.update(&[(t2, 0.15), (t1, 0.15)]);
+        assert_eq!(c.owner(), None);
+        approx_equal!(c.strength(), 0.0, 0.0001);
     }
 
     #[test]
