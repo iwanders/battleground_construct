@@ -418,32 +418,20 @@ impl UnitControl for UnitControlWasm {
             .expect("should be correct signature");
 
         let update_res = wasm_controller_update.call(&mut self.store, ());
+
+        // Check the return code.
         match update_res {
             Ok(v) => {
                 // Numbers match wasm interface.
                 const UPDATE_OK: i64 = 0;
-                const UPDATE_ERR_RESOURCES_EXCEEDED: i64 = -1;
-                const UPDATE_ERR_WRAPPED_ERROR: i64 = -2;
                 match v {
                     UPDATE_OK => {
                         // do nothing, fall through, perform the register update and return ok.
                     }
-                    UPDATE_ERR_RESOURCES_EXCEEDED => {
-                        todo!();
-                        // return Err(Box::new(ControlError::ResourcesExceeded));
-                    }
-                    UPDATE_ERR_WRAPPED_ERROR => {
-                        todo!();
-                        // let control_string_error =
-                            // ControlStringError(self.store.data().control_update_error.clone());
-                        // return Err(Box::new(ControlError::WrappedError(Box::new(
-                            // control_string_error,
-                        // ))));
-                    }
-                    other_integer => {
-                        todo!();
-                        // let z: u32 = other_integer.try_into().unwrap_or(u32::MAX);
-                        // return Err(Box::new(ControlError::ErrorCode(z)));
+                    _ => {
+                        // the string in the store will be populated, convert this to an error and
+                        // bubble up.
+                        return Err(self.store.data().control_update_error.as_str().into());
                     }
                 }
             }
