@@ -1,6 +1,6 @@
 use battleground_unit_control::register_interface::RegisterInterface;
 use battleground_unit_control::{
-    unit_control::ControlStringError, ControlError, Interface, InterfaceError, UnitControl,
+    Interface, InterfaceError, UnitControl
 };
 
 use wasmtime::{Caller, Engine, Extern, Instance, Linker, Module, Store, TypedFunc};
@@ -395,7 +395,7 @@ impl UnitControlWasm {
 }
 
 impl UnitControl for UnitControlWasm {
-    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<ControlError>> {
+    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::Error>> {
         // Clunky, but ah well... interface can't outlive this scope, so setting functions here that
         // use it doesn't work. Instead, copy the interface's state completely.
 
@@ -429,18 +429,21 @@ impl UnitControl for UnitControlWasm {
                         // do nothing, fall through, perform the register update and return ok.
                     }
                     UPDATE_ERR_RESOURCES_EXCEEDED => {
-                        return Err(Box::new(ControlError::ResourcesExceeded));
+                        todo!();
+                        // return Err(Box::new(ControlError::ResourcesExceeded));
                     }
                     UPDATE_ERR_WRAPPED_ERROR => {
-                        let control_string_error =
-                            ControlStringError(self.store.data().control_update_error.clone());
-                        return Err(Box::new(ControlError::WrappedError(Box::new(
-                            control_string_error,
-                        ))));
+                        todo!();
+                        // let control_string_error =
+                            // ControlStringError(self.store.data().control_update_error.clone());
+                        // return Err(Box::new(ControlError::WrappedError(Box::new(
+                            // control_string_error,
+                        // ))));
                     }
                     other_integer => {
-                        let z: u32 = other_integer.try_into().unwrap_or(u32::MAX);
-                        return Err(Box::new(ControlError::ErrorCode(z)));
+                        todo!();
+                        // let z: u32 = other_integer.try_into().unwrap_or(u32::MAX);
+                        // return Err(Box::new(ControlError::ErrorCode(z)));
                     }
                 }
             }

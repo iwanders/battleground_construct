@@ -1,5 +1,6 @@
 use battleground_unit_control::units::tank;
-use battleground_unit_control::{ControlError, Interface, UnitControl};
+use battleground_unit_control::{Interface, UnitControl};
+use crate::UnitControlResult;
 
 pub struct DiffDriveForwardsBackwardsControl {
     pub velocities: (f32, f32),
@@ -8,7 +9,7 @@ pub struct DiffDriveForwardsBackwardsControl {
 }
 
 impl UnitControl for DiffDriveForwardsBackwardsControl {
-    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<ControlError>> {
+    fn update(&mut self, interface: &mut dyn Interface) -> UnitControlResult {
         let revolve_cmd_vel = 4;
         let clock = interface.get_f32(tank::MODULE_TANK_CLOCK, 0).unwrap();
         if (self.last_flip + self.duration) < clock {

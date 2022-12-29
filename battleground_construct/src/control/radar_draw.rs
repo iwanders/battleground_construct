@@ -1,5 +1,5 @@
 use crate::display::primitives::*;
-use battleground_unit_control::{ControlError, Interface, UnitControl};
+use battleground_unit_control::{Interface, UnitControl};
 
 use crate::display::draw_module::LineSegment;
 // use crate::units::tank;
@@ -19,7 +19,7 @@ use battleground_unit_control::modules::gps::*;
 use battleground_unit_control::modules::radar::*;
 use battleground_unit_control::modules::revolute::*;
 impl UnitControl for RadarDrawControl {
-    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<ControlError>> {
+    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::Error>> {
         let x = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_X).unwrap();
         let y = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_Y).unwrap();
         let z = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_Z).unwrap();

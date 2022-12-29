@@ -1,8 +1,8 @@
-use battleground_unit_control::{ControlError, Interface, RegisterType, UnitControl};
-
+use battleground_unit_control::{Interface, RegisterType, UnitControl};
+use crate::UnitControlResult;
 pub struct InterfacePrinter {}
 impl UnitControl for InterfacePrinter {
-    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<ControlError>> {
+    fn update(&mut self, interface: &mut dyn Interface) -> UnitControlResult {
         for m_index in interface.modules().unwrap() {
             println!("- {}", interface.module_name(m_index).unwrap());
             let mut v = interface.registers(m_index).unwrap();

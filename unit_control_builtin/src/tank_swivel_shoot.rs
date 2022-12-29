@@ -1,4 +1,5 @@
-use battleground_unit_control::{ControlError, Interface, UnitControl};
+use battleground_unit_control::{Interface, UnitControl};
+use crate::UnitControlResult;
 use std::f32::consts::PI;
 
 use battleground_unit_control::modules::cannon::*;
@@ -8,7 +9,7 @@ use battleground_unit_control::units::tank;
 
 pub struct TankSwivelShoot {}
 impl UnitControl for TankSwivelShoot {
-    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<ControlError>> {
+    fn update(&mut self, interface: &mut dyn Interface) -> UnitControlResult {
         if false {
             for m_index in interface.modules().unwrap() {
                 println!(

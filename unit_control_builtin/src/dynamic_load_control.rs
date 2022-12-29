@@ -1,4 +1,5 @@
-use battleground_unit_control::{ControlError, ControllerSpawn, Interface, UnitControl};
+use battleground_unit_control::{ControllerSpawn, Interface, UnitControl};
+use crate::UnitControlResult;
 pub struct DynamicLoadControl {
     _lib: libloading::Library,
     controller: Option<Box<dyn UnitControl>>,
@@ -19,7 +20,7 @@ impl DynamicLoadControl {
 }
 
 impl UnitControl for DynamicLoadControl {
-    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<ControlError>> {
+    fn update(&mut self, interface: &mut dyn Interface) -> UnitControlResult {
         self.controller.as_mut().unwrap().update(interface)
     }
 }

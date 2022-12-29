@@ -23,8 +23,7 @@ pub extern "C" fn wasm_controller_update() -> i64 {
 
 pub mod controller {
     const UPDATE_OK: i64 = 0;
-    const UPDATE_ERR_RESOURCES_EXCEEDED: i64 = -1;
-    const UPDATE_ERR_WRAPPED_ERROR: i64 = -2;
+    const UPDATE_ERR: i64 = 1;
 
     extern "Rust" {
         fn create_unit_control() -> Box<dyn UnitControl>;
@@ -62,18 +61,13 @@ pub mod controller {
         match res {
             Ok(_) => UPDATE_OK,
             Err(e) => {
-                match *e {
-                    unit_control::ControlError::ResourcesExceeded => UPDATE_ERR_RESOURCES_EXCEEDED,
-                    unit_control::ControlError::WrappedError(w) => {
-                        // Well... ehm, lets just exfiltrate something...
-                        let v = format!("{:?}", w);
-                        let bytes_v = v.as_bytes();
-                        unsafe { wasm_update_error(bytes_v.as_ptr(), bytes_v.len() as u32) };
-                        UPDATE_ERR_WRAPPED_ERROR
-                    }
-                    unit_control::ControlError::ErrorCode(code) => code as i64,
-                }
+                // Well... ehm, lets just exfiltrate something...
+                let v = format!("{:?}", e);
+                let bytes_v = v.as_bytes();
+                unsafe { wasm_update_error(bytes_v.as_ptr(), bytes_v.len() as u32) };
+                UPDATE_ERR
             }
+        
         }
     }
 }

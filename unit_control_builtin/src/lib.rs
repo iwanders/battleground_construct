@@ -12,3 +12,5 @@ pub mod tank_swivel_shoot;
 
 pub mod radio_position;
 pub mod sequence_control;
+
+pub type UnitControlResult = Result<(), Box<dyn std::error::Error>>;

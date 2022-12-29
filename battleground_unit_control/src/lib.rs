@@ -37,4 +37,4 @@ pub use interface::{Interface, InterfaceError, RegisterType};
 
 /// The unit control trait and related types.
 pub mod unit_control;
-pub use unit_control::{ControlError, UnitControl};
+pub use unit_control::UnitControl;

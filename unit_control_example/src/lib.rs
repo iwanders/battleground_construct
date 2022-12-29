@@ -1,4 +1,4 @@
-use battleground_unit_control::{log, ControlError, Interface, RegisterType, UnitControl};
+use battleground_unit_control::{log, Interface, RegisterType, UnitControl};
 
 #[derive(Default)]
 pub struct SimpleUnitControl {}
@@ -9,14 +9,13 @@ impl SimpleUnitControl {
     }
 }
 
-use std::io::{Error, ErrorKind};
 
 impl UnitControl for SimpleUnitControl {
-    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<ControlError>> {
+    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::Error>> {
         // errors can be created from strings
         let sparkle_heart = vec![240, 159, 146, 150];
         let sparkle_heart = vec![0, 0, 146, 150];
-        let sparkle_heart = String::from_utf8(sparkle_heart);
+        let sparkle_heart = String::from_utf8(sparkle_heart)?;
 
         log::info!("We got called");
 

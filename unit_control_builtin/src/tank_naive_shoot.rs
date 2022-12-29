@@ -1,4 +1,5 @@
-use battleground_unit_control::{ControlError, Interface, UnitControl};
+use battleground_unit_control::{Interface, UnitControl};
+use crate::UnitControlResult;
 use std::f32::consts::PI;
 
 use battleground_unit_control::modules::cannon::*;
@@ -26,7 +27,7 @@ impl TankNaiveShoot {
 }
 
 impl UnitControl for TankNaiveShoot {
-    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<ControlError>> {
+    fn update(&mut self, interface: &mut dyn Interface) -> UnitControlResult {
         // Check the radio for broadcasted friendlies.
         // Check the radar, remove any reflections that are broadcasted friendlies.
         // Put the closest target in shoot_at

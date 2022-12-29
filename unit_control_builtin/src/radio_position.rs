@@ -1,11 +1,13 @@
 use battleground_unit_control::modules::gps::*;
 use battleground_unit_control::modules::radio_transmitter::*;
 use battleground_unit_control::units::tank;
-use battleground_unit_control::{ControlError, Interface, UnitControl};
+use battleground_unit_control::{Interface, UnitControl};
+
+use crate::UnitControlResult;
 
 pub struct RadioPosition {}
 impl UnitControl for RadioPosition {
-    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<ControlError>> {
+    fn update(&mut self, interface: &mut dyn Interface) -> UnitControlResult {
         let team = interface
             .get_i32(
                 tank::MODULE_TANK_TEAM,
