@@ -12,7 +12,7 @@ impl UnitId {
 }
 
 #[cfg(test)]
-pub fn make_unit_id(v: u64) -> TeamId {
+pub fn make_unit_id(v: u64) -> UnitId {
     UnitId(v)
 }
 

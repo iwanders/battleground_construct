@@ -227,58 +227,58 @@ mod test {
         let config = RadioTransmitterConfig {
             transmit_range_max: 1.0,
             transmit_interval: 0.1,
-            msg_size_limit: 4,
-            msg_count_limit: 3,
+            message_size_limit: 4,
+            message_count_limit: 3,
             channel_min: 0,
             channel_max: 0,
         };
         let mut radio = RadioTransmitter::new_with_config(config);
-        radio.set_payloads(&[&[0], &[1], &[2]]);
+        radio.set_messages(&[&[0], &[1], &[2]]);
         let mut t = 0.0;
 
         let messages = radio.to_transmit(t);
         assert_eq!(messages.len(), 1);
-        assert_eq!(radio.payloads().len(), 2);
+        assert_eq!(radio.messages().len(), 2);
 
         // Calling transmit again without any time change, means nothing should happen.
         let messages = radio.to_transmit(t);
         assert_eq!(messages.len(), 0);
-        assert_eq!(radio.payloads().len(), 2);
+        assert_eq!(radio.messages().len(), 2);
         t += 0.05;
         // Half an interval later, still nothing should change.
         let messages = radio.to_transmit(t);
         assert_eq!(messages.len(), 0);
-        assert_eq!(radio.payloads().len(), 2);
+        assert_eq!(radio.messages().len(), 2);
 
         // Full interval later, we should get one message.
         t += 0.1;
         let messages = radio.to_transmit(t);
         assert_eq!(messages.len(), 1);
-        assert_eq!(radio.payloads().len(), 1);
+        assert_eq!(radio.messages().len(), 1);
 
         // Now, little over half an interval later, we should get the last message.
         t += 0.06;
         let messages = radio.to_transmit(t);
         assert_eq!(messages.len(), 1);
-        assert_eq!(radio.payloads().len(), 0);
+        assert_eq!(radio.messages().len(), 0);
 
         // Now, if we idle for like 10 seconds, our last send is way in the past.
         t += 10.0;
         let messages = radio.to_transmit(t);
         assert_eq!(messages.len(), 0);
-        assert_eq!(radio.payloads().len(), 0);
+        assert_eq!(radio.messages().len(), 0);
 
         // Now, adding payloads should only allow a single to be sent.
-        radio.set_payloads(&[&[0], &[1], &[2]]);
+        radio.set_messages(&[&[0], &[1], &[2]]);
         t += 0.1;
         let messages = radio.to_transmit(t);
         assert_eq!(messages.len(), 1);
-        assert_eq!(radio.payloads().len(), 2);
+        assert_eq!(radio.messages().len(), 2);
         // Advancing more than two intervals should allow all to be sent.
         t += 0.5;
         let messages = radio.to_transmit(t);
         assert_eq!(messages.len(), 2);
-        assert_eq!(radio.payloads().len(), 0);
+        assert_eq!(radio.messages().len(), 0);
 
         // Radio is now empty, advance time,
         t += 10.0;
@@ -287,22 +287,22 @@ mod test {
         // If we add three messages and advance the time by more than three intervals, we should
         // get all of them.
         t += 5.0;
-        radio.set_payloads(&[&[0], &[1], &[2]]);
+        radio.set_messages(&[&[0], &[1], &[2]]);
         let messages = radio.to_transmit(t);
         assert_eq!(messages.len(), 3);
-        assert_eq!(radio.payloads().len(), 0);
+        assert_eq!(radio.messages().len(), 0);
 
         // Flush the radio.
         t += 10.0;
         let _messages = radio.to_transmit(t);
 
         // Add payloads, first message is too long, and there's too many payloads.
-        radio.set_payloads(&[&[1, 2, 3, 4, 5, 6], &[1], &[2], &[3], &[4]]);
+        radio.set_messages(&[&[1, 2, 3, 4, 5, 6], &[1], &[2], &[3], &[4]]);
         t += 0.1;
         let messages = radio.to_transmit(t);
         assert_eq!(messages.len(), 1);
         assert_eq!(messages[0].len(), 4);
         assert_eq!(messages[0], [1, 2, 3, 4]);
-        assert_eq!(radio.payloads().len(), 2); // 3 is the limit, 1 got retrieved.
+        assert_eq!(radio.messages().len(), 2); // 3 is the limit, 1 got retrieved.
     }
 }
