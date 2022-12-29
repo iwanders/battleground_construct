@@ -1,7 +1,5 @@
 use battleground_unit_control::register_interface::RegisterInterface;
-use battleground_unit_control::{
-    Interface, InterfaceError, UnitControl
-};
+use battleground_unit_control::{Interface, InterfaceError, UnitControl};
 
 use wasmtime::{Caller, Engine, Extern, Instance, Linker, Module, Store, TypedFunc};
 

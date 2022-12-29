@@ -9,7 +9,6 @@ impl SimpleUnitControl {
     }
 }
 
-
 impl UnitControl for SimpleUnitControl {
     fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::Error>> {
         // test error propagation.

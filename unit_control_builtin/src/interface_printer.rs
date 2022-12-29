@@ -1,5 +1,5 @@
-use battleground_unit_control::{Interface, RegisterType, UnitControl};
 use crate::UnitControlResult;
+use battleground_unit_control::{Interface, RegisterType, UnitControl};
 pub struct InterfacePrinter {}
 impl UnitControl for InterfacePrinter {
     fn update(&mut self, interface: &mut dyn Interface) -> UnitControlResult {

@@ -1,6 +1,6 @@
+use crate::UnitControlResult;
 use battleground_unit_control::units::tank;
 use battleground_unit_control::{Interface, UnitControl};
-use crate::UnitControlResult;
 
 pub struct DiffDriveForwardsBackwardsControl {
     pub velocities: (f32, f32),

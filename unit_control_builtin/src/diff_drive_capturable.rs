@@ -1,8 +1,8 @@
+use crate::UnitControlResult;
 use battleground_unit_control::modules::objectives::*;
 use battleground_unit_control::modules::team::*;
 use battleground_unit_control::units::tank;
 use battleground_unit_control::{Interface, UnitControl};
-use crate::UnitControlResult;
 
 use crate::diff_drive_util;
 

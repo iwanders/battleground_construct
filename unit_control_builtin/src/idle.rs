@@ -1,5 +1,5 @@
-use battleground_unit_control::{Interface, UnitControl};
 use crate::UnitControlResult;
+use battleground_unit_control::{Interface, UnitControl};
 
 pub struct Idle {}
 impl UnitControl for Idle {

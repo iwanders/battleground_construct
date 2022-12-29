@@ -1,5 +1,5 @@
-use battleground_unit_control::{Interface, UnitControl};
 use crate::UnitControlResult;
+use battleground_unit_control::{Interface, UnitControl};
 use std::f32::consts::PI;
 
 use battleground_unit_control::modules::cannon::*;

@@ -67,7 +67,6 @@ pub mod controller {
                 unsafe { wasm_update_error(bytes_v.as_ptr(), bytes_v.len() as u32) };
                 UPDATE_ERR
             }
-        
         }
     }
 }

@@ -10,5 +10,3 @@ pub trait UnitControl {
         "unknown"
     }
 }
-
-

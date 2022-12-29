@@ -1,5 +1,5 @@
-use battleground_unit_control::{ControllerSpawn, Interface, UnitControl};
 use crate::UnitControlResult;
+use battleground_unit_control::{ControllerSpawn, Interface, UnitControl};
 pub struct DynamicLoadControl {
     _lib: libloading::Library,
     controller: Option<Box<dyn UnitControl>>,
