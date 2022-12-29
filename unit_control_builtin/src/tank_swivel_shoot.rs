@@ -1,4 +1,4 @@
-use battleground_unit_control::{Interface, UnitControl};
+use battleground_unit_control::{ControlError, Interface, UnitControl};
 use std::f32::consts::PI;
 
 use battleground_unit_control::modules::cannon::*;
@@ -8,7 +8,7 @@ use battleground_unit_control::units::tank;
 
 pub struct TankSwivelShoot {}
 impl UnitControl for TankSwivelShoot {
-    fn update(&mut self, interface: &mut dyn Interface) {
+    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<ControlError>> {
         if false {
             for m_index in interface.modules().unwrap() {
                 println!(
@@ -40,7 +40,7 @@ impl UnitControl for TankSwivelShoot {
                     -0.1,
                 )
                 .unwrap();
-            return;
+            return Ok(());
         }
 
         // println!("Clock: {clock}");
@@ -123,5 +123,6 @@ impl UnitControl for TankSwivelShoot {
                 println!("Radar {i} at {combined_yaw:.2}, {pitch:.2}, x: {x:.3}, y: {y:.3}, dist: {distance:.3}, read yaw: {reading_yaw:?}");
             }
         }
+        Ok(())
     }
 }

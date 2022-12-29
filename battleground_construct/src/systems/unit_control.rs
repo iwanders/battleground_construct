@@ -42,7 +42,10 @@ impl System for UnitControl {
         for (entity, mut controller) in world.component_iter_mut::<UnitController>() {
             if let Some(interface) = interface_map.get_mut(&entity) {
                 let control = controller.vehicle_control();
-                control.update(&mut *interface.get_mut());
+                match control.update(&mut *interface.get_mut()) {
+                    Ok(_) => {}
+                    Err(v) => todo!("control update returned error; {:?}", v),
+                }
                 controller.set_updated(time);
             }
         }

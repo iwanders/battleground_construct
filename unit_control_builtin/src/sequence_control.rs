@@ -1,4 +1,4 @@
-use battleground_unit_control::{Interface, UnitControl};
+use battleground_unit_control::{ControlError, Interface, UnitControl};
 pub struct SequenceControl {
     controllers: Vec<Box<dyn UnitControl>>,
 }
@@ -10,9 +10,10 @@ impl SequenceControl {
 }
 
 impl UnitControl for SequenceControl {
-    fn update(&mut self, interface: &mut dyn Interface) {
+    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<ControlError>> {
         for c in self.controllers.iter_mut() {
-            c.update(interface);
+            c.update(interface)?;
         }
+        Ok(())
     }
 }

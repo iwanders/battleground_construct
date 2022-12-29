@@ -1,5 +1,8 @@
 use engine::World;
 
+type BoxedError = Box<crate::interface::InterfaceError>;
+use crate::interface::InterfaceErrorType;
+
 /// A register value record.
 #[derive(Debug)]
 pub enum Value {
@@ -118,7 +121,7 @@ impl Module {
         &mut self,
         module: ModuleId,
         interface: &dyn crate::Interface,
-    ) -> Result<(), crate::Error> {
+    ) -> Result<(), BoxedError> {
         for reg_id in interface.registers(module)? {
             let name = interface.register_name(module, reg_id)?;
             let reg = match interface.register_type(module, reg_id)? {
@@ -146,7 +149,7 @@ impl Module {
         &self,
         module: ModuleId,
         interface: &mut dyn crate::Interface,
-    ) -> Result<(), crate::Error> {
+    ) -> Result<(), BoxedError> {
         for (k, v) in self.registers.iter() {
             let register = *k;
             match v.value {
@@ -170,14 +173,13 @@ pub struct RegisterInterface {
     modules: std::collections::HashMap<ModuleId, Module>,
 }
 
-use crate::ErrorType;
 impl RegisterInterface {
     pub fn new() -> Self {
         RegisterInterface::default()
     }
 
     /// Copy all registers from the interface to self.
-    pub fn read_interface(&mut self, interface: &dyn crate::Interface) -> Result<(), crate::Error> {
+    pub fn read_interface(&mut self, interface: &dyn crate::Interface) -> Result<(), BoxedError> {
         self.modules.clear();
         for module in interface.modules()? {
             let name = interface.module_name(module)?;
@@ -198,10 +200,7 @@ impl RegisterInterface {
     }
 
     /// Copy all registers from self to the interface.
-    pub fn write_interface(
-        &self,
-        interface: &mut dyn crate::Interface,
-    ) -> Result<(), crate::Error> {
+    pub fn write_interface(&self, interface: &mut dyn crate::Interface) -> Result<(), BoxedError> {
         for module in interface.modules()? {
             self.modules
                 .get(&module)
@@ -253,19 +252,27 @@ impl RegisterInterface {
         }
     }
 
-    fn get_module(&self, module: ModuleId) -> Result<&Module, crate::Error> {
+    fn get_module(&self, module: ModuleId) -> Result<&Module, BoxedError> {
         if let Some(m) = self.modules.get(&module) {
             Ok(m)
         } else {
-            Err(Self::interface_error(module, 0, ErrorType::NoSuchModule))
+            Err(Self::interface_error(
+                module,
+                0,
+                InterfaceErrorType::NoSuchModule,
+            ))
         }
     }
 
-    fn get_module_mut(&mut self, module: ModuleId) -> Result<&mut Module, crate::Error> {
+    fn get_module_mut(&mut self, module: ModuleId) -> Result<&mut Module, BoxedError> {
         if let Some(m) = self.modules.get_mut(&module) {
             Ok(m)
         } else {
-            Err(Self::interface_error(module, 0, ErrorType::NoSuchModule))
+            Err(Self::interface_error(
+                module,
+                0,
+                InterfaceErrorType::NoSuchModule,
+            ))
         }
     }
 
@@ -273,7 +280,7 @@ impl RegisterInterface {
         &self,
         module: ModuleId,
         register_index: RegisterId,
-    ) -> Result<&Register, crate::Error> {
+    ) -> Result<&Register, BoxedError> {
         let m = self.get_module(module)?;
         if let Some(reg) = m.registers.get(&register_index) {
             Ok(reg)
@@ -281,7 +288,7 @@ impl RegisterInterface {
             Err(Self::interface_error(
                 module,
                 register_index,
-                ErrorType::NoSuchRegister,
+                InterfaceErrorType::NoSuchRegister,
             ))
         }
     }
@@ -290,7 +297,7 @@ impl RegisterInterface {
         &mut self,
         module: ModuleId,
         register_index: RegisterId,
-    ) -> Result<&mut Register, crate::Error> {
+    ) -> Result<&mut Register, BoxedError> {
         let m = self.get_module_mut(module)?;
         if let Some(reg) = m.registers.get_mut(&register_index) {
             Ok(reg)
@@ -298,16 +305,12 @@ impl RegisterInterface {
             Err(Self::interface_error(
                 module,
                 register_index,
-                ErrorType::NoSuchRegister,
+                InterfaceErrorType::NoSuchRegister,
             ))
         }
     }
 
-    fn interface_error(
-        module: u32,
-        register: u32,
-        error_type: crate::ErrorType,
-    ) -> Box<InterfaceError> {
+    fn interface_error(module: u32, register: u32, error_type: InterfaceErrorType) -> BoxedError {
         Box::new(InterfaceError {
             module,
             register,
@@ -318,9 +321,9 @@ impl RegisterInterface {
 // This is useless as a component, we need an interior mutability pattern.
 // impl Component for RegisterInterface {}
 
-use crate::InterfaceError;
-impl crate::Interface for RegisterInterface {
-    fn modules(&self) -> Result<Vec<u32>, crate::Error> {
+use crate::interface::InterfaceError;
+impl crate::interface::Interface for RegisterInterface {
+    fn modules(&self) -> Result<Vec<u32>, BoxedError> {
         Ok(self
             .modules
             .iter()
@@ -328,7 +331,7 @@ impl crate::Interface for RegisterInterface {
             .collect::<_>())
     }
 
-    fn registers(&self, module: u32) -> Result<Vec<u32>, crate::Error> {
+    fn registers(&self, module: u32) -> Result<Vec<u32>, BoxedError> {
         let m = self.get_module(module)?;
         Ok(m.registers
             .iter()
@@ -337,22 +340,18 @@ impl crate::Interface for RegisterInterface {
     }
 
     /// Retrieve the name of a particular module.
-    fn module_name(&self, module: u32) -> Result<String, crate::Error> {
+    fn module_name(&self, module: u32) -> Result<String, BoxedError> {
         Ok(self.get_module(module)?.name.clone())
     }
 
     /// Retrieve a register name
-    fn register_name(&self, module: u32, register: u32) -> Result<String, crate::Error> {
+    fn register_name(&self, module: u32, register: u32) -> Result<String, BoxedError> {
         let r = self.get_register(module, register)?;
         Ok(r.name.clone())
     }
 
     /// Retrieve a register type.
-    fn register_type(
-        &self,
-        module: u32,
-        register: u32,
-    ) -> Result<crate::RegisterType, crate::Error> {
+    fn register_type(&self, module: u32, register: u32) -> Result<crate::RegisterType, BoxedError> {
         let r = self.get_register(module, register)?;
         Ok(match &r.value {
             Value::I32(..) => crate::RegisterType::I32,
@@ -362,32 +361,32 @@ impl crate::Interface for RegisterInterface {
     }
 
     /// Get an f32 register.
-    fn get_f32(&self, module: u32, register: u32) -> Result<f32, crate::Error> {
+    fn get_f32(&self, module: u32, register: u32) -> Result<f32, BoxedError> {
         let r = self.get_register(module, register)?;
         match r.value {
             Value::F32(v) => Ok(v),
             _ => Err(RegisterInterface::interface_error(
                 module,
                 register,
-                ErrorType::WrongType,
+                InterfaceErrorType::WrongType,
             )),
         }
     }
     /// Get an u32 register.
-    fn get_i32(&self, module: u32, register: u32) -> Result<i32, crate::Error> {
+    fn get_i32(&self, module: u32, register: u32) -> Result<i32, BoxedError> {
         let r = self.get_register(module, register)?;
         match r.value {
             Value::I32(v) => Ok(v),
             _ => Err(RegisterInterface::interface_error(
                 module,
                 register,
-                ErrorType::WrongType,
+                InterfaceErrorType::WrongType,
             )),
         }
     }
 
     /// Set an f32 register.
-    fn set_f32(&mut self, module: u32, register: u32, value: f32) -> Result<f32, crate::Error> {
+    fn set_f32(&mut self, module: u32, register: u32, value: f32) -> Result<f32, BoxedError> {
         let r = self.get_register_mut(module, register)?;
         match &mut r.value {
             Value::F32(v) => {
@@ -398,13 +397,13 @@ impl crate::Interface for RegisterInterface {
             _ => Err(RegisterInterface::interface_error(
                 module,
                 register,
-                ErrorType::WrongType,
+                InterfaceErrorType::WrongType,
             )),
         }
     }
 
     /// Set an i32 register.
-    fn set_i32(&mut self, module: u32, register: u32, value: i32) -> Result<i32, crate::Error> {
+    fn set_i32(&mut self, module: u32, register: u32, value: i32) -> Result<i32, BoxedError> {
         let r = self.get_register_mut(module, register)?;
         match &mut r.value {
             Value::I32(v) => {
@@ -415,20 +414,20 @@ impl crate::Interface for RegisterInterface {
             _ => Err(RegisterInterface::interface_error(
                 module,
                 register,
-                ErrorType::WrongType,
+                InterfaceErrorType::WrongType,
             )),
         }
     }
 
     /// Get the length required to read a byte register.
-    fn get_bytes_len(&self, module: u32, register: u32) -> Result<usize, crate::Error> {
+    fn get_bytes_len(&self, module: u32, register: u32) -> Result<usize, BoxedError> {
         let r = self.get_register(module, register)?;
         match &r.value {
             Value::Bytes { values, .. } => Ok(values.len()),
             _ => Err(RegisterInterface::interface_error(
                 module,
                 register,
-                ErrorType::WrongType,
+                InterfaceErrorType::WrongType,
             )),
         }
     }
@@ -439,7 +438,7 @@ impl crate::Interface for RegisterInterface {
         module: u32,
         register: u32,
         destination: &mut [u8],
-    ) -> Result<usize, crate::Error> {
+    ) -> Result<usize, BoxedError> {
         let r = self.get_register(module, register)?;
         match &r.value {
             Value::Bytes { ref values, .. } => {
@@ -447,7 +446,7 @@ impl crate::Interface for RegisterInterface {
                     Err(RegisterInterface::interface_error(
                         module,
                         register,
-                        ErrorType::ReadOverflow,
+                        InterfaceErrorType::ReadOverflow,
                     ))
                 } else {
                     // Must be the correct size.
@@ -458,7 +457,7 @@ impl crate::Interface for RegisterInterface {
             _ => Err(RegisterInterface::interface_error(
                 module,
                 register,
-                ErrorType::WrongType,
+                InterfaceErrorType::WrongType,
             )),
         }
     }
@@ -469,7 +468,7 @@ impl crate::Interface for RegisterInterface {
         module: u32,
         register: u32,
         input_values: &[u8],
-    ) -> Result<(), crate::Error> {
+    ) -> Result<(), BoxedError> {
         let r = self.get_register_mut(module, register)?;
         match &mut r.value {
             Value::Bytes {
@@ -481,13 +480,13 @@ impl crate::Interface for RegisterInterface {
                     Err(RegisterInterface::interface_error(
                         module,
                         register,
-                        ErrorType::WriteUnderflow,
+                        InterfaceErrorType::WriteUnderflow,
                     ))
                 } else if values.len() > *max_len {
                     Err(RegisterInterface::interface_error(
                         module,
                         register,
-                        ErrorType::WriteOverflow,
+                        InterfaceErrorType::WriteOverflow,
                     ))
                 } else {
                     // Must be the correct size.
@@ -499,7 +498,7 @@ impl crate::Interface for RegisterInterface {
             _ => Err(RegisterInterface::interface_error(
                 module,
                 register,
-                ErrorType::WrongType,
+                InterfaceErrorType::WrongType,
             )),
         }
     }

@@ -1,5 +1,5 @@
 use battleground_unit_control::register_interface::RegisterInterface;
-use battleground_unit_control::{Interface, InterfaceError, UnitControl};
+use battleground_unit_control::{ControlError, Interface, InterfaceError, UnitControl};
 
 use wasmtime::{Caller, Engine, Extern, Instance, Linker, Module, Store, TypedFunc};
 
@@ -368,7 +368,7 @@ impl UnitControlWasm {
 }
 
 impl UnitControl for UnitControlWasm {
-    fn update(&mut self, interface: &mut dyn Interface) {
+    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<ControlError>> {
         // Clunky, but ah well... interface can't outlive this scope, so setting functions here that
         // use it doesn't work. Instead, copy the interface's state completely.
 
@@ -405,6 +405,8 @@ impl UnitControl for UnitControlWasm {
             .register_interface
             .write_interface(interface)
             .expect("shouldnt fail");
+
+        Ok(())
     }
 }
 

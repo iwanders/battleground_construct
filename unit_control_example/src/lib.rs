@@ -1,4 +1,4 @@
-use battleground_unit_control::{log, Interface, RegisterType, UnitControl};
+use battleground_unit_control::{log, ControlError, Interface, RegisterType, UnitControl};
 
 #[derive(Default)]
 pub struct SimpleUnitControl {}
@@ -10,7 +10,7 @@ impl SimpleUnitControl {
 }
 
 impl UnitControl for SimpleUnitControl {
-    fn update(&mut self, interface: &mut dyn Interface) {
+    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<ControlError>> {
         log::info!("We got called");
 
         if true {
@@ -61,6 +61,7 @@ impl UnitControl for SimpleUnitControl {
                 }
             }
         }
+        Ok(())
     }
 }
 

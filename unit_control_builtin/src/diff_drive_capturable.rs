@@ -1,14 +1,14 @@
 use battleground_unit_control::modules::objectives::*;
 use battleground_unit_control::modules::team::*;
 use battleground_unit_control::units::tank;
-use battleground_unit_control::{Interface, UnitControl};
+use battleground_unit_control::{ControlError, Interface, UnitControl};
 
 use crate::diff_drive_util;
 
 pub struct DiffDriveCapturable {}
 
 impl UnitControl for DiffDriveCapturable {
-    fn update(&mut self, interface: &mut dyn Interface) {
+    fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<ControlError>> {
         // Determine where a capturable is.
         // While we are not there, drive there.
         let team = interface
@@ -44,9 +44,10 @@ impl UnitControl for DiffDriveCapturable {
             // We don't own this point, lets go there.
             if owner != team {
                 diff_drive_util::drive_to_goal((x, y, 0.0), interface);
-                return;
+                return Ok(());
             }
         }
         diff_drive_util::stop(interface);
+        Ok(())
     }
 }
