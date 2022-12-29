@@ -154,7 +154,7 @@ impl ConstructViewer {
 
     // Consumes the viewer...
     fn view_loop(mut self) {
-        let jump = 10.0;
+        let jump = 0.0;
 
         self.limiter.set_desired_speed(1.0);
 

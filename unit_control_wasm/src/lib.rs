@@ -3,6 +3,22 @@ use battleground_unit_control::{Interface, InterfaceError, UnitControl};
 
 use wasmtime::{Caller, Engine, Extern, Instance, Linker, Module, Store, TypedFunc};
 
+/// Configuration struct for the wasm control unit.
+#[derive(Clone, Debug)]
+pub struct UnitControlWasmConfig {
+    /// Path to the wasm file to load, it MUST provide the helpers from [`battleground_unit_control::wasm_interface`] side.
+    pub wasm_path: std::path::PathBuf,
+
+    /// The alloted fuel per update call, if this is exceeded an exception is raised.
+    pub fuel_per_update: Option<u64>,
+
+    /// Print the exports provided by the wasm module?
+    pub print_exports: bool,
+
+    /// The alloted fuel for the setup call, defaults to 100000000 if fuel_per_update is not None.
+    pub fuel_for_setup: Option<u64>,
+}
+
 struct State {
     register_interface: RegisterInterface,
     control_update_error: String,
@@ -12,15 +28,43 @@ pub struct UnitControlWasm {
     // engine: Engine,
     instance: Instance,
     store: Store<State>,
+    control_config: UnitControlWasmConfig,
 }
 // Is this ok..?
-unsafe impl std::marker::Send for UnitControlWasm {}
+// unsafe impl std::marker::Send for UnitControlWasm {}
 
 impl UnitControlWasm {
-    pub fn new(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let serialized_module_file = path;
+    pub fn zero_fuel(&mut self) {
+        // Well.. https://github.com/bytecodealliance/wasmtime/pull/5220
+        // we can call consume with zero, to get the current value, and then consume that.
+        let remaining = self
+            .store
+            .consume_fuel(0)
+            .expect("always valid on store with fuel");
+        let v = self
+            .store
+            .consume_fuel(remaining)
+            .expect("always valid on store with fuel");
+        assert_eq!(v, 0);
+    }
+
+    pub fn remaining_fuel(&mut self) -> u64 {
+        self.store
+            .consume_fuel(0)
+            .expect("always valid on store with fuel")
+    }
+
+    pub fn new_with_config(
+        control_config: UnitControlWasmConfig,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let mut config = wasmtime::Config::default();
-        config.consume_fuel(true);
+
+        let using_fuel = control_config.fuel_per_update.is_some();
+
+        if using_fuel {
+            config.consume_fuel(true);
+        }
+        // Always assume we have symbols, otherwise people will have a very bad day debugging.
         config.debug_info(true);
 
         let engine = Engine::new(&config)?;
@@ -363,18 +407,35 @@ impl UnitControlWasm {
             },
         )?;
 
-        let module = Module::from_file(&engine, serialized_module_file)?;
+        if !control_config.wasm_path.is_file() {
+            return Err(format!(
+                "module {} could not be found.",
+                control_config.wasm_path.display()
+            )
+            .into());
+        }
+
+        let module = Module::from_file(&engine, control_config.wasm_path.clone())?;
         let state_object = State {
             register_interface: RegisterInterface::new(),
             control_update_error: Default::default(),
         };
         let mut store = Store::new(&engine, state_object);
-        store.add_fuel(10000000)?;
+        if using_fuel {
+            // We cannot add inifinite fuel for setup, the fuel is calculated based on lifetime
+            // consumed vs lifetime added, it is not a proper level.
+            let setup_fuel = control_config.fuel_for_setup.unwrap_or(100000000);
+            store.add_fuel(setup_fuel)?;
+        }
+
         let instance = linker.instantiate(&mut store, &module)?;
 
         let exports = module.exports();
-        for exp in exports {
-            println!("exp: {}", exp.name());
+
+        if control_config.print_exports {
+            for exp in exports {
+                println!("exp: {}", exp.name());
+            }
         }
 
         // Obtain the setup function and call it.
@@ -385,7 +446,7 @@ impl UnitControlWasm {
         wasm_setup_fun.call(&mut store, ())?;
 
         Ok(UnitControlWasm {
-            // engine,
+            control_config,
             store,
             instance,
         })
@@ -397,7 +458,13 @@ impl UnitControl for UnitControlWasm {
         // Clunky, but ah well... interface can't outlive this scope, so setting functions here that
         // use it doesn't work. Instead, copy the interface's state completely.
 
-        self.store.add_fuel(100000000).expect("");
+        if let Some(v) = self.control_config.fuel_per_update {
+            self.zero_fuel();
+            // println!("V: {v}");
+            self.store.add_fuel(v).expect("adding fuel failed");
+            // let remaining = self.remaining_fuel();
+            // println!("after addition: {remaining}");
+        }
 
         // Copy all registers into the state.
         self.store

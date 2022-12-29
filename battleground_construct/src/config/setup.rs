@@ -75,8 +75,19 @@ pub fn setup_match(
                     unit_control_builtin::dynamic_load_control::DynamicLoadControl::new(&name)?
                 }
                 #[cfg(feature = "unit_control_wasm")]
-                specification::ControllerType::Wasm { module } => {
-                    Box::new(unit_control_wasm::UnitControlWasm::new(&module)?)
+                specification::ControllerType::Wasm {
+                    path,
+                    fuel_per_update,
+                    print_exports,
+                    fuel_for_setup,
+                } => {
+                    let config = unit_control_wasm::UnitControlWasmConfig {
+                        wasm_path: path.into(),
+                        fuel_per_update: *fuel_per_update,
+                        print_exports: *print_exports,
+                        fuel_for_setup: *fuel_for_setup,
+                    };
+                    Box::new(unit_control_wasm::UnitControlWasm::new_with_config(config)?)
                 }
                 specification::ControllerType::SequenceControl { controllers } => {
                     let mut v = vec![];

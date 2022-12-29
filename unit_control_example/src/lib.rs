@@ -1,4 +1,9 @@
 use battleground_unit_control::{log, Interface, RegisterType, UnitControl};
+use std::f32::consts::PI;
+
+use battleground_unit_control::modules::cannon::*;
+use battleground_unit_control::modules::revolute::*;
+use battleground_unit_control::units::tank;
 
 #[derive(Default)]
 pub struct SimpleUnitControl {}
@@ -18,7 +23,68 @@ impl UnitControl for SimpleUnitControl {
 
         log::info!("We got called");
 
-        if true {
+        let write_res = interface.set_i32(tank::MODULE_TANK_CANNON, REG_CANNON_FIRING, true as i32);
+        write_res.unwrap();
+
+        let clock = interface.get_f32(tank::MODULE_TANK_CLOCK, 0).unwrap();
+        if clock < 0.1 {
+            interface
+                .set_f32(
+                    tank::MODULE_TANK_REVOLUTE_TURRET,
+                    REG_REVOLUTE_VELOCITY_CMD,
+                    0.3,
+                )
+                .unwrap();
+            interface
+                .set_f32(
+                    tank::MODULE_TANK_REVOLUTE_BARREL,
+                    REG_REVOLUTE_VELOCITY_CMD,
+                    -0.1,
+                )
+                .unwrap();
+            return Ok(());
+        }
+
+        // println!("Clock: {clock}");
+        // base
+        // interface.set_f32(0x1000, 2, 1.0).unwrap();
+        // interface.set_f32(0x1000, 3, 1.0).unwrap();
+
+        let turret_pos = interface
+            .get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)
+            .unwrap();
+        // println!("turret_pos: {turret_pos}");
+        if (turret_pos > PI && turret_pos < (PI * 2.0 - PI / 8.0))
+            || (turret_pos > PI / 8.0 && turret_pos < PI)
+        {
+            interface
+                .set_f32(
+                    tank::MODULE_TANK_REVOLUTE_TURRET,
+                    REG_REVOLUTE_VELOCITY_CMD,
+                    -interface
+                        .get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_VELOCITY)
+                        .unwrap(),
+                )
+                .unwrap();
+        }
+
+        let barrel_pos = interface
+            .get_f32(tank::MODULE_TANK_REVOLUTE_BARREL, REG_REVOLUTE_POSITION)
+            .unwrap();
+        // println!("barrel_pos: {barrel_pos}");
+        if barrel_pos < (PI * 2.0 - PI / 8.0) || (barrel_pos < PI / 8.0) {
+            interface
+                .set_f32(
+                    tank::MODULE_TANK_REVOLUTE_BARREL,
+                    REG_REVOLUTE_VELOCITY_CMD,
+                    -interface
+                        .get_f32(tank::MODULE_TANK_REVOLUTE_BARREL, REG_REVOLUTE_VELOCITY)
+                        .unwrap(),
+                )
+                .unwrap();
+        }
+
+        if false {
             for m_index in interface.modules().unwrap() {
                 log::info!(
                     "update, module name: {}",

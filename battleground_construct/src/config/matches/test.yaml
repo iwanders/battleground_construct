@@ -34,7 +34,9 @@ spawn_config:
       team: 0
       controller: 
         type: Wasm
-        module: "../target/wasm32-unknown-unknown/release/unit_control_example.wasm"
+        path: "../target/wasm32-unknown-unknown/release/unit_control_example.wasm"
+        #  fuel_for_setup: 1
+        #  fuel_per_update: 10000000
 
     -
       x: 0.0

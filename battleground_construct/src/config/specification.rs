@@ -76,7 +76,13 @@ pub enum ControllerType {
     TankNaiveShoot,
     #[cfg(feature = "unit_control_wasm")]
     Wasm {
-        module: String,
+        path: String,
+        #[serde(default)]
+        fuel_per_update: Option<u64>,
+        #[serde(default)]
+        fuel_for_setup: Option<u64>,
+        #[serde(default)]
+        print_exports: bool,
     },
     #[serde(skip)]
     Function(battleground_unit_control::ControllerSpawn),
