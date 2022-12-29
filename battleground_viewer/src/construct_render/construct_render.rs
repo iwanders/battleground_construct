@@ -112,10 +112,16 @@ impl DrawableKey for battleground_construct::display::primitives::Element {
 /// The object used to render a construct.
 pub struct ConstructRender {
     static_geometries: Vec<Gm<Mesh, PhysicalMaterial>>,
+
     /// All meshes that are rendered with a physical material (both opaque and translucent)
     pbr_meshes: std::collections::HashMap<u64, Properties<PhysicalMaterial>>,
+
     /// All meshes that are use for emisive rendering
     emissive_meshes: std::collections::HashMap<u64, Properties<ColorMaterial>>,
+
+    /// element to draw the selection boxes without any shading on the lines.
+    select_boxes: InstancedEntity<ColorMaterial>,
+
     /// Grid.
     grid: InstancedEntity<ColorMaterial>,
 
@@ -184,12 +190,15 @@ impl ConstructRender {
 
         grid.set_lines(&lines);
 
+        let select_boxes = InstancedEntity::new_colored(context, &CpuMesh::cylinder(4));
+
         ConstructRender {
             static_geometries,
             grid,
             pbr_meshes: Default::default(),
             emissive_meshes: Default::default(),
             effects: Default::default(),
+            select_boxes,
         }
     }
 
@@ -269,6 +278,7 @@ impl ConstructRender {
     pub fn objects(&self) -> Vec<&dyn Object> {
         let mut renderables: Vec<&dyn Object> = vec![];
         renderables.push(self.grid.gm());
+        renderables.push(self.select_boxes.object());
         renderables.append(
             &mut self
                 .pbr_meshes
@@ -301,11 +311,60 @@ impl ConstructRender {
         for instance_entity in self.emissive_meshes.values_mut() {
             instance_entity.object.update_instances();
         }
+        self.select_boxes.update_instances();
     }
 
     fn reset_instances(&mut self) {
         self.pbr_meshes.clear();
         self.emissive_meshes.clear();
+        self.select_boxes.clear();
+    }
+
+    fn draw_select_boxes(&mut self, construct: &Construct, selected: &[EntityId]) {
+        use battleground_construct::util::cgmath::prelude::*;
+        let boxes = &mut self.select_boxes;
+        let d = 0.01;
+        let c = Color::WHITE;
+
+        for e in selected.iter() {
+            if let Some(b) =
+                construct
+                    .world()
+                    .component::<battleground_construct::components::select_box::SelectBox>(*e)
+            {
+                let world_pose = construct.entity_pose(*e);
+                let w = (b.width() + (b.width() * 0.1).min(0.5)) / 2.0;
+                let l = (b.length() + (b.length() * 0.1).min(0.5)) / 2.0;
+                let h = (b.height() + (b.height() * 0.1).min(0.5)) / 2.0;
+                let t = |p: Vec3| (world_pose.transform() * p.to_h()).to_translation();
+                let pt = |x: f32, y: f32, z: f32| t(vec3(x, y, z));
+                let points = [
+                    pt(l, w, h),    // 0
+                    pt(l, w, -h),   // 1
+                    pt(l, -w, -h),  // 2
+                    pt(l, -w, h),   // 3
+                    pt(-l, w, h),   // 4
+                    pt(-l, w, -h),  // 5
+                    pt(-l, -w, -h), // 6
+                    pt(-l, -w, h),  // 7
+                ];
+
+                boxes.add_line(points[0], points[1], d, c);
+                boxes.add_line(points[1], points[2], d, c);
+                boxes.add_line(points[2], points[3], d, c);
+                boxes.add_line(points[4], points[0], d, c);
+
+                boxes.add_line(points[0], points[3], d, c);
+                boxes.add_line(points[1], points[5], d, c);
+                boxes.add_line(points[2], points[6], d, c);
+                boxes.add_line(points[3], points[7], d, c);
+
+                boxes.add_line(points[4], points[5], d, c);
+                boxes.add_line(points[5], points[6], d, c);
+                boxes.add_line(points[6], points[7], d, c);
+                boxes.add_line(points[7], points[4], d, c);
+            }
+        }
     }
 
     fn selected_to_units(
@@ -329,6 +388,11 @@ impl ConstructRender {
     ) {
         // a new cycle, clear the previous instances.
         self.reset_instances();
+
+        self.draw_select_boxes(
+            construct,
+            &selected.iter().copied().collect::<Vec<EntityId>>(),
+        );
 
         let units = Self::selected_to_units(construct, &selected);
 

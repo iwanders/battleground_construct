@@ -121,4 +121,10 @@ impl<M: Material> InstancedEntity<M> {
         }
         self.update_instances();
     }
+
+    pub fn clear(&mut self) {
+        self.transforms.clear();
+        self.colors.clear();
+        self.update_instances();
+    }
 }
