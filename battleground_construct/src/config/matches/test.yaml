@@ -33,8 +33,8 @@ spawn_config:
       yaw: 0
       team: 0
       controller: 
-        type: DiffDriveCapturable
-      #  module: "../target/wasm32-unknown-unknown/release/example_driving_ai.wasm"
+        type: Wasm
+        module: "../target/wasm32-unknown-unknown/release/unit_control_example.wasm"
 
     -
       x: 0.0

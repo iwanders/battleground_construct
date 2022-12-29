@@ -17,14 +17,23 @@ pub extern "C" fn wasm_setup() {
 }
 
 #[no_mangle]
-pub extern "C" fn wasm_controller_update() {
-    controller::update();
+pub extern "C" fn wasm_controller_update() -> i64 {
+    controller::update()
 }
 
 pub mod controller {
+    const UPDATE_OK: i64 = 0;
+    const UPDATE_ERR_RESOURCES_EXCEEDED: i64 = -1;
+    const UPDATE_ERR_WRAPPED_ERROR: i64 = -2;
+
     extern "Rust" {
         fn create_unit_control() -> Box<dyn UnitControl>;
     }
+
+    extern "C" {
+        fn wasm_update_error(p: *const u8, len: u32);
+    }
+
     use crate::*;
 
     // Not sure if this is 100% properly safe... but we're in wasm land where everything is single
@@ -42,14 +51,30 @@ pub mod controller {
             unsafe { Some(ControllerWrapper(create_unit_control())) };
     }
 
-    pub fn update() {
+    pub fn update() -> i64 {
         let mut static_interface = super::interface::StaticInterface;
-        (CONTROLLER.lock().expect("cant be poisoned"))
+        let res = (CONTROLLER.lock().expect("cant be poisoned"))
             .deref_mut()
             .as_mut()
             .unwrap()
             .0
             .update(&mut static_interface);
+        match res {
+            Ok(_) => UPDATE_OK,
+            Err(e) => {
+                match *e {
+                    unit_control::ControlError::ResourcesExceeded => UPDATE_ERR_RESOURCES_EXCEEDED,
+                    unit_control::ControlError::WrappedError(w) => {
+                        // Well... ehm, lets just exfiltrate something...
+                        let v = format!("{:?}", w);
+                        let bytes_v = v.as_bytes();
+                        unsafe { wasm_update_error(bytes_v.as_ptr(), bytes_v.len() as u32) };
+                        UPDATE_ERR_WRAPPED_ERROR
+                    }
+                    unit_control::ControlError::ErrorCode(code) => code as i64,
+                }
+            }
+        }
     }
 }
 
@@ -92,7 +117,7 @@ mod interface {
         *error = v;
     }
 
-    fn get_error(register: u32, module: u32) -> Result<(), Error> {
+    fn get_error(register: u32, module: u32) -> Result<(), Box<InterfaceError>> {
         let error = *ERROR.lock().expect("cannot be poisoned");
         if error == NO_ERROR {
             Ok(())
@@ -128,7 +153,7 @@ mod interface {
         match String::from_utf8(buffer[0..length as usize].to_vec()) {
             Ok(v) => v,
             Err(_) => {
-                wasm_set_error(crate::ErrorType::WrongType as u32);
+                wasm_set_error(crate::interface::InterfaceErrorType::WrongType as u32);
                 "<non utf8 string>".to_owned()
             }
         }
@@ -138,7 +163,7 @@ mod interface {
 
     impl crate::Interface for StaticInterface {
         /// Retrieve the list of module ids that are available.
-        fn modules(&self) -> Result<Vec<u32>, Error> {
+        fn modules(&self) -> Result<Vec<u32>, Box<InterfaceError>> {
             clear_error();
             let count = unsafe { wasm_interface_modules() };
             get_error(0, 0)?;
@@ -146,7 +171,7 @@ mod interface {
         }
 
         /// Retrieve the name of a particular module.
-        fn module_name(&self, module: u32) -> Result<String, Error> {
+        fn module_name(&self, module: u32) -> Result<String, Box<InterfaceError>> {
             clear_error();
             let string_length = unsafe { wasm_interface_module_name(module) };
             get_error(module, 0)?;
@@ -156,7 +181,7 @@ mod interface {
         }
 
         /// Return the available register ids in a particular module.
-        fn registers(&self, module: u32) -> Result<Vec<u32>, Error> {
+        fn registers(&self, module: u32) -> Result<Vec<u32>, Box<InterfaceError>> {
             clear_error();
             let count = unsafe { wasm_interface_registers(module) };
             get_error(module, 0)?;
@@ -164,7 +189,7 @@ mod interface {
         }
 
         /// Retrieve a register name.
-        fn register_name(&self, module: u32, register: u32) -> Result<String, Error> {
+        fn register_name(&self, module: u32, register: u32) -> Result<String, Box<InterfaceError>> {
             clear_error();
             let string_length = unsafe { wasm_interface_register_name(module, register) };
             get_error(module, register)?;
@@ -174,7 +199,11 @@ mod interface {
         }
 
         /// Retrieve a register type.
-        fn register_type(&self, module: u32, register: u32) -> Result<RegisterType, Error> {
+        fn register_type(
+            &self,
+            module: u32,
+            register: u32,
+        ) -> Result<RegisterType, Box<InterfaceError>> {
             clear_error();
             let register_type = unsafe { wasm_interface_register_type(module, register) };
             get_error(module, register)?;
@@ -185,7 +214,7 @@ mod interface {
         }
 
         /// Get an i32 register.
-        fn get_i32(&self, module: u32, register: u32) -> Result<i32, Error> {
+        fn get_i32(&self, module: u32, register: u32) -> Result<i32, Box<InterfaceError>> {
             clear_error();
             let result = unsafe { wasm_interface_get_i32(module, register) };
             get_error(module, register)?;
@@ -193,7 +222,12 @@ mod interface {
         }
 
         /// Set an i32 register.
-        fn set_i32(&mut self, module: u32, register: u32, value: i32) -> Result<i32, Error> {
+        fn set_i32(
+            &mut self,
+            module: u32,
+            register: u32,
+            value: i32,
+        ) -> Result<i32, Box<InterfaceError>> {
             clear_error();
             let result = unsafe { wasm_interface_set_i32(module, register, value) };
             get_error(module, register)?;
@@ -201,7 +235,7 @@ mod interface {
         }
 
         /// Get an f32 register.
-        fn get_f32(&self, module: u32, register: u32) -> Result<f32, Error> {
+        fn get_f32(&self, module: u32, register: u32) -> Result<f32, Box<InterfaceError>> {
             clear_error();
             let result = unsafe { wasm_interface_get_f32(module, register) };
             get_error(module, register)?;
@@ -209,7 +243,12 @@ mod interface {
         }
 
         /// Set an f32 register.
-        fn set_f32(&mut self, module: u32, register: u32, value: f32) -> Result<f32, Error> {
+        fn set_f32(
+            &mut self,
+            module: u32,
+            register: u32,
+            value: f32,
+        ) -> Result<f32, Box<InterfaceError>> {
             clear_error();
             let result = unsafe { wasm_interface_set_f32(module, register, value) };
             get_error(module, register)?;
@@ -217,7 +256,7 @@ mod interface {
         }
 
         /// Get the length required to read a byte register.
-        fn get_bytes_len(&self, module: u32, register: u32) -> Result<usize, Error> {
+        fn get_bytes_len(&self, module: u32, register: u32) -> Result<usize, Box<InterfaceError>> {
             clear_error();
             let result = unsafe { wasm_interface_get_bytes_len(module, register) };
             get_error(module, register)?;
@@ -230,7 +269,7 @@ mod interface {
             module: u32,
             register: u32,
             destination: &mut [u8],
-        ) -> Result<usize, Error> {
+        ) -> Result<usize, Box<InterfaceError>> {
             clear_error();
             let result = unsafe {
                 wasm_interface_get_bytes(
@@ -245,7 +284,12 @@ mod interface {
         }
 
         /// Set a byte register.
-        fn set_bytes(&mut self, module: u32, register: u32, values: &[u8]) -> Result<(), Error> {
+        fn set_bytes(
+            &mut self,
+            module: u32,
+            register: u32,
+            values: &[u8],
+        ) -> Result<(), Box<InterfaceError>> {
             clear_error();
             unsafe {
                 wasm_interface_set_bytes(

@@ -16,7 +16,8 @@ pub trait UnitControl {
 pub enum ControlError {
     /// The controller exceeded allowed resources.
     ResourcesExceeded,
-    /// An exception occured inside the controller and is propagated up.
+    /// An exception occured inside the controller and is propagated up. If this is used from within
+    /// a wasm environment, the string representation can only be propagated.
     WrappedError(Box<dyn std::error::Error>),
     /// A simple integer return value,
     ErrorCode(u32),
@@ -41,3 +42,14 @@ impl std::fmt::Display for ControlError {
 
 /// And error, such that it is convertible to Box<dyn std::error:Error>
 impl std::error::Error for ControlError {}
+
+/// Simple error struct for strings, used to [`ControlError::WrappedError`] type errors coming from
+/// webassembly modules.
+#[derive(Debug)]
+pub struct ControlStringError(pub String);
+impl std::error::Error for ControlStringError {}
+impl std::fmt::Display for ControlStringError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}

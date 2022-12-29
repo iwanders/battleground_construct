@@ -9,8 +9,15 @@ impl SimpleUnitControl {
     }
 }
 
+use std::io::{Error, ErrorKind};
+
 impl UnitControl for SimpleUnitControl {
     fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<ControlError>> {
+        // errors can be created from strings
+        let sparkle_heart = vec![240, 159, 146, 150];
+        let sparkle_heart = vec![0, 0, 146, 150];
+        let sparkle_heart = String::from_utf8(sparkle_heart);
+
         log::info!("We got called");
 
         if true {

@@ -1,10 +1,13 @@
 use battleground_unit_control::register_interface::RegisterInterface;
-use battleground_unit_control::{ControlError, Interface, InterfaceError, UnitControl};
+use battleground_unit_control::{
+    unit_control::ControlStringError, ControlError, Interface, InterfaceError, UnitControl,
+};
 
 use wasmtime::{Caller, Engine, Extern, Instance, Linker, Module, Store, TypedFunc};
 
 struct State {
     register_interface: RegisterInterface,
+    control_update_error: String,
 }
 
 pub struct UnitControlWasm {
@@ -339,9 +342,33 @@ impl UnitControlWasm {
             },
         )?;
 
+        linker.func_wrap(
+            "env",
+            "wasm_update_error",
+            |mut caller: Caller<'_, State>, ptr: i32, len: i32| {
+                let mem = match caller.get_export("memory") {
+                    Some(Extern::Memory(mem)) => mem,
+                    _ => {
+                        println!("failed to find host memory");
+                        return;
+                    }
+                };
+                let data = mem
+                    .data(&caller)
+                    .get(ptr as u32 as usize..)
+                    .and_then(|arr| arr.get(..len as u32 as usize));
+                let err_string = match data {
+                    Some(data) => std::str::from_utf8(data).unwrap_or("<non utf8 string>"),
+                    None => "out of bounds",
+                };
+                caller.data_mut().control_update_error = err_string.to_owned();
+            },
+        )?;
+
         let module = Module::from_file(&engine, serialized_module_file)?;
         let state_object = State {
             register_interface: RegisterInterface::new(),
+            control_update_error: Default::default(),
         };
         let mut store = Store::new(&engine, state_object);
         store.add_fuel(10000000)?;
@@ -387,12 +414,36 @@ impl UnitControl for UnitControlWasm {
             .get_func(&mut self.store, "wasm_controller_update")
             .expect("`wasm_controller_update` was not an exported function");
         let wasm_controller_update = wasm_controller_update
-            .typed::<(), (), _>(&self.store)
+            .typed::<(), i64, _>(&self.store)
             .expect("should be correct signature");
 
         let update_res = wasm_controller_update.call(&mut self.store, ());
         match update_res {
-            Ok(_) => {}
+            Ok(v) => {
+                // Numbers match wasm interface.
+                const UPDATE_OK: i64 = 0;
+                const UPDATE_ERR_RESOURCES_EXCEEDED: i64 = -1;
+                const UPDATE_ERR_WRAPPED_ERROR: i64 = -2;
+                match v {
+                    UPDATE_OK => {
+                        // do nothing, fall through, perform the register update and return ok.
+                    }
+                    UPDATE_ERR_RESOURCES_EXCEEDED => {
+                        return Err(Box::new(ControlError::ResourcesExceeded));
+                    }
+                    UPDATE_ERR_WRAPPED_ERROR => {
+                        let control_string_error =
+                            ControlStringError(self.store.data().control_update_error.clone());
+                        return Err(Box::new(ControlError::WrappedError(Box::new(
+                            control_string_error,
+                        ))));
+                    }
+                    other_integer => {
+                        let z: u32 = other_integer.try_into().unwrap_or(u32::MAX);
+                        return Err(Box::new(ControlError::ErrorCode(z)));
+                    }
+                }
+            }
             Err(v) => {
                 println!("Something went wrong in update {v:?}");
                 panic!();
@@ -409,7 +460,7 @@ impl UnitControl for UnitControlWasm {
         Ok(())
     }
 }
-
+/*
 #[no_mangle]
 pub fn create_ai() -> Box<dyn UnitControl> {
     Box::new(
@@ -417,3 +468,4 @@ pub fn create_ai() -> Box<dyn UnitControl> {
             .unwrap(),
     )
 }
+*/
