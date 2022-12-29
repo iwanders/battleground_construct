@@ -12,11 +12,14 @@ pub trait UnitControl {
 }
 
 /// If an error occurs in the unit control, this is the type is used in the Err field.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum ControlError {
+    /// The controller exceeded allowed resources.
     ResourcesExceeded,
-    Unrecoverable,
-    ErrorCode(i32),
+    /// An exception occured inside the controller and is propagated up.
+    WrappedError(Box<dyn std::error::Error>),
+    /// A simple integer return value,
+    ErrorCode(u32),
 }
 
 /// Finally, it implements display.
@@ -26,8 +29,8 @@ impl std::fmt::Display for ControlError {
             ControlError::ResourcesExceeded => {
                 write!(f, "resource limit exceeded")
             }
-            ControlError::Unrecoverable => {
-                write!(f, "an unrecoverable error")
+            ControlError::WrappedError(ref e) => {
+                write!(f, "wrapped error: {}", e)
             }
             ControlError::ErrorCode(i) => {
                 write!(f, "error code {i}")
