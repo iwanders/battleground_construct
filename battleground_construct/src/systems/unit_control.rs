@@ -44,7 +44,9 @@ impl System for UnitControl {
                 let control = controller.vehicle_control();
                 match control.update(&mut *interface.get_mut()) {
                     Ok(_) => {}
-                    Err(v) => todo!("control update returned error; {:?}", v),
+                    Err(v) => {
+                        controller.set_error(v);
+                    }
                 }
                 controller.set_updated(time);
             }

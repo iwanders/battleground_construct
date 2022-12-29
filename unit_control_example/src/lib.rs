@@ -18,8 +18,8 @@ impl UnitControl for SimpleUnitControl {
     fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::Error>> {
         // test error propagation.
         // let sparkle_heart = vec![240, 159, 146, 150];
-        // let sparkle_heart = vec![0, 0, 146, 150];
-        // let sparkle_heart = String::from_utf8(sparkle_heart)?;
+        let sparkle_heart = vec![0, 0, 146, 150];
+        let _sparkle_heart = String::from_utf8(sparkle_heart)?;
 
         log::info!("We got called");
 
