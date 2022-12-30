@@ -464,7 +464,7 @@ fn cannon_hit_effect(
     // Copy the bullet to a new entity.
     let emitter_entity = world.add_entity();
     let emitter =
-        world.remove_component::<crate::display::particle_emitter::ParticleEmitter>(emitter_entity);
+        world.remove_component::<crate::display::particle_emitter::ParticleEmitter>(projectile);
     // Disable the particle emitter.
     if let Some(mut emitter) = emitter {
         emitter.emitting = false;
