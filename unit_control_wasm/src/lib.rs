@@ -29,6 +29,7 @@ pub struct UnitControlWasm {
     instance: Instance,
     store: Store<State>,
     control_config: UnitControlWasmConfig,
+    finished_setup: bool,
 }
 // Is this ok..?
 // unsafe impl std::marker::Send for UnitControlWasm {}
@@ -66,6 +67,9 @@ impl UnitControlWasm {
         }
         // Always assume we have symbols, otherwise people will have a very bad day debugging.
         config.debug_info(true);
+        // Always get line numbers from the debug symbols;
+        // https://docs.rs/wasmtime/latest/wasmtime/struct.Config.html#method.wasm_backtrace_details
+        config.wasm_backtrace_details(wasmtime::WasmBacktraceDetails::Enable);
 
         let engine = Engine::new(&config)?;
         let mut linker = Linker::<State>::new(&engine);
@@ -380,7 +384,8 @@ impl UnitControlWasm {
                     Some(data) => std::str::from_utf8(data).unwrap_or("<non utf8 string>"),
                     None => "out of bounds",
                 };
-                println!("{string:?}");
+                // we definitely want something better here...
+                println!("unit_control_wasm: {string:?}");
             },
         )?;
 
@@ -421,12 +426,6 @@ impl UnitControlWasm {
             control_update_error: Default::default(),
         };
         let mut store = Store::new(&engine, state_object);
-        if using_fuel {
-            // We cannot add inifinite fuel for setup, the fuel is calculated based on lifetime
-            // consumed vs lifetime added, it is not a proper level.
-            let setup_fuel = control_config.fuel_for_setup.unwrap_or(100000000);
-            store.add_fuel(setup_fuel)?;
-        }
 
         let instance = linker.instantiate(&mut store, &module)?;
 
@@ -438,14 +437,8 @@ impl UnitControlWasm {
             }
         }
 
-        // Obtain the setup function and call it.
-        let wasm_setup = instance
-            .get_func(&mut store, "wasm_setup")
-            .expect("`wasm_setup` was not an exported function");
-        let wasm_setup_fun = wasm_setup.typed::<(), (), _>(&store)?;
-        wasm_setup_fun.call(&mut store, ())?;
-
         Ok(UnitControlWasm {
+            finished_setup: false,
             control_config,
             store,
             instance,
@@ -455,33 +448,53 @@ impl UnitControlWasm {
 
 impl UnitControl for UnitControlWasm {
     fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::Error>> {
-        // Clunky, but ah well... interface can't outlive this scope, so setting functions here that
-        // use it doesn't work. Instead, copy the interface's state completely.
+        // First cycle? If so, do the setup.
+        if !self.finished_setup {
+            if self.control_config.fuel_per_update.is_some() {
+                // We cannot add infinite fuel for setup, the fuel is calculated based on lifetime
+                // consumed vs lifetime added, it is not a proper level.
+                let setup_fuel = self.control_config.fuel_for_setup.unwrap_or(100000000);
+                self.store.add_fuel(setup_fuel)?;
+            }
+
+            // Obtain the setup function and call it.
+            let wasm_setup = self
+                .instance
+                .get_func(&mut self.store, "wasm_setup")
+                .ok_or_else(|| {
+                    Box::<dyn std::error::Error>::from("function wasm_setup not found in module")
+                })?;
+            let wasm_setup_fun = wasm_setup.typed::<(), (), _>(&self.store)?;
+            wasm_setup_fun.call(&mut self.store, ())?;
+
+            self.finished_setup = true;
+        }
 
         if let Some(v) = self.control_config.fuel_per_update {
             self.zero_fuel();
-            // println!("V: {v}");
             self.store.add_fuel(v).expect("adding fuel failed");
-            // let remaining = self.remaining_fuel();
-            // println!("after addition: {remaining}");
         }
+
+        // Clunky, but ah well... interface can't outlive this scope, so setting functions here that
+        // use it doesn't work. Instead, copy the interface's state completely.
 
         // Copy all registers into the state.
         self.store
             .data_mut()
             .register_interface
-            .read_interface(interface)
-            .expect("shouldnt fail");
+            .read_interface(interface)?;
 
         // execute the controller.
         let wasm_controller_update = self
             .instance
             .get_func(&mut self.store, "wasm_controller_update")
-            .expect("`wasm_controller_update` was not an exported function");
-        let wasm_controller_update = wasm_controller_update
-            .typed::<(), i64, _>(&self.store)
-            .expect("should be correct signature");
+            .ok_or_else(|| {
+                Box::<dyn std::error::Error>::from(
+                    "function wasm_controller_update not found in module",
+                )
+            })?;
 
+        let wasm_controller_update = wasm_controller_update.typed::<(), i64, _>(&self.store)?;
         let update_res = wasm_controller_update.call(&mut self.store, ());
 
         // Check the return code.
@@ -500,9 +513,24 @@ impl UnitControl for UnitControlWasm {
                     }
                 }
             }
-            Err(v) => {
-                println!("Something went wrong in update {v:?}");
-                panic!();
+            Err(e) => {
+                // See https://docs.rs/wasmtime/latest/wasmtime/struct.Func.html#method.call
+                println!("something went wrong in update: {e:?}");
+                if e.is::<wasmtime::Trap>() {
+                    let trap = e.downcast::<wasmtime::Trap>()?;
+                    return Err(Box::<dyn std::error::Error>::from(
+                        format!("trap: {:?}", trap).as_str(),
+                    ));
+                } else if e.is::<wasmtime::WasmBacktrace>() {
+                    let bt = e.downcast::<wasmtime::WasmBacktrace>()?;
+                    return Err(Box::<dyn std::error::Error>::from(
+                        format!("bt: {:?}", bt).as_str(),
+                    ));
+                } else {
+                    return Err(Box::<dyn std::error::Error>::from(
+                        format!("{:?}", e).as_str(),
+                    ));
+                }
             }
         }
 
@@ -510,8 +538,7 @@ impl UnitControl for UnitControlWasm {
         self.store
             .data()
             .register_interface
-            .write_interface(interface)
-            .expect("shouldnt fail");
+            .write_interface(interface)?;
 
         Ok(())
     }

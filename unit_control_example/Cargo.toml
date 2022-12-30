@@ -9,4 +9,3 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 battleground_unit_control = { path = "../battleground_unit_control" }
-

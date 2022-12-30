@@ -58,6 +58,17 @@ pub struct Team {
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
+pub struct WasmControlConfig {
+    pub path: String,
+    #[serde(default)]
+    pub fuel_per_update: Option<u64>,
+    #[serde(default)]
+    pub fuel_for_setup: Option<u64>,
+    #[serde(default)]
+    pub print_exports: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 #[serde(tag = "type")]
 pub enum ControllerType {
     #[default]
@@ -75,15 +86,7 @@ pub enum ControllerType {
     InterfacePrinter,
     TankNaiveShoot,
     #[cfg(feature = "unit_control_wasm")]
-    Wasm {
-        path: String,
-        #[serde(default)]
-        fuel_per_update: Option<u64>,
-        #[serde(default)]
-        fuel_for_setup: Option<u64>,
-        #[serde(default)]
-        print_exports: bool,
-    },
+    Wasm(WasmControlConfig),
     #[serde(skip)]
     Function(battleground_unit_control::ControllerSpawn),
     SequenceControl {

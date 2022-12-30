@@ -14,12 +14,28 @@ impl SimpleUnitControl {
     }
 }
 
+fn _bar() {
+    println!("In bar");
+    panic!("buhuuuu");
+
+}
+
+fn _foo(){
+    println!("In foo");
+    _bar();
+}
+
 impl UnitControl for SimpleUnitControl {
     fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::Error>> {
         // test error propagation.
+        // panic!();
         // let sparkle_heart = vec![240, 159, 146, 150];
-        let sparkle_heart = vec![0, 0, 146, 150];
-        let _sparkle_heart = String::from_utf8(sparkle_heart)?;
+        // let _sparkle_heart = vec![0, 0, 146, 150];
+        // let _sparkle_heart = String::from_utf8(_sparkle_heart)?;
+        // loop {
+            // log::info!("We got called");
+        // }
+        _foo();
 
         log::info!("We got called");
 

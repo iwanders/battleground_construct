@@ -79,17 +79,12 @@ pub fn setup_scenario(
                     unit_control_builtin::dynamic_load_control::DynamicLoadControl::new(&name)?
                 }
                 #[cfg(feature = "unit_control_wasm")]
-                specification::ControllerType::Wasm {
-                    path,
-                    fuel_per_update,
-                    print_exports,
-                    fuel_for_setup,
-                } => {
+                specification::ControllerType::Wasm(wasmconfig) => {
                     let config = unit_control_wasm::UnitControlWasmConfig {
-                        wasm_path: path.into(),
-                        fuel_per_update: *fuel_per_update,
-                        print_exports: *print_exports,
-                        fuel_for_setup: *fuel_for_setup,
+                        wasm_path: wasmconfig.path.clone().into(),
+                        fuel_per_update: wasmconfig.fuel_per_update,
+                        print_exports: wasmconfig.print_exports,
+                        fuel_for_setup: wasmconfig.fuel_for_setup,
                     };
                     Box::new(unit_control_wasm::UnitControlWasm::new_with_config(config)?)
                 }
