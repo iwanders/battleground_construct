@@ -1,9 +1,9 @@
 use std::fs::File;
 use std::io::Read;
 
-pub fn read_match_config(
-    path: &str,
-) -> Result<super::specification::ConstructConfig, Box<dyn std::error::Error>> {
+pub fn read_scenario_config(
+    path: &std::path::Path,
+) -> Result<super::specification::ScenarioConfig, Box<dyn std::error::Error>> {
     match File::open(path) {
         Ok(mut file) => {
             let mut content = String::new();
@@ -17,6 +17,10 @@ pub fn read_match_config(
                 }
             }
         }
-        Err(error) => Err(Box::new(error)),
+        Err(error) => Err(Box::<dyn std::error::Error>::from(format!(
+            "{}, failed to open {}",
+            error,
+            path.display()
+        ))),
     }
 }

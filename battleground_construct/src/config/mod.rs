@@ -1,3 +1,4 @@
+pub mod cli;
 pub mod default;
 pub mod playground;
 pub mod reader;

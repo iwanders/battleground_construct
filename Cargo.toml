@@ -13,4 +13,3 @@ members = [
 [profile.release]
 opt-level = 3
 debug = true
-

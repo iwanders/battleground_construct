@@ -21,8 +21,8 @@ impl std::fmt::Display for SetupError {
     }
 }
 
-pub fn setup_match(
-    config: super::specification::ConstructConfig,
+pub fn setup_scenario(
+    config: super::specification::ScenarioConfig,
 ) -> Result<Construct, Box<dyn std::error::Error>> {
     let mut construct = Construct::new();
     let world = &mut construct.world;
@@ -51,6 +51,7 @@ pub fn setup_match(
 
         fn controller_type_to_control(
             controller_type: &specification::ControllerType,
+            control_config: &std::collections::HashMap<String, specification::ControllerType>,
         ) -> Result<Box<dyn UnitControl>, Box<dyn std::error::Error>> {
             Ok(match controller_type {
                 specification::ControllerType::SwivelShoot => {
@@ -67,6 +68,9 @@ pub fn setup_match(
                 }
                 specification::ControllerType::TankNaiveShoot => {
                     Box::new(unit_control_builtin::tank_naive_shoot::TankNaiveShoot::new())
+                }
+                specification::ControllerType::DiffDriveForwardsBackwards{velocities, duration} => {
+                    Box::new(unit_control_builtin::diff_drive_forwards_backwards::DiffDriveForwardsBackwardsControl::new(*velocities, *duration))
                 }
                 specification::ControllerType::DiffDriveCapturable => {
                     Box::new(unit_control_builtin::diff_drive_capturable::DiffDriveCapturable {})
@@ -92,18 +96,23 @@ pub fn setup_match(
                 specification::ControllerType::SequenceControl { controllers } => {
                     let mut v = vec![];
                     for t in controllers.iter() {
-                        v.push(controller_type_to_control(t)?);
+                        v.push(controller_type_to_control(t, control_config)?);
                     }
                     Box::new(unit_control_builtin::sequence_control::SequenceControl::new(v))
                 }
-
-                _ => {
-                    unimplemented!()
+                specification::ControllerType::Function ( f ) => {
+                    f()
+                }
+                specification::ControllerType::FromControlConfig{ name } => {
+                    let subcontrol = control_config.get(name).ok_or_else(|| {
+                        SetupError::new(&format!("requested controller {} not found", name))})?;
+                    controller_type_to_control(subcontrol, control_config)?
                 }
             })
         }
 
-        let controller: Box<dyn UnitControl> = controller_type_to_control(&spawn.controller)?;
+        let controller: Box<dyn UnitControl> =
+            controller_type_to_control(&spawn.controller, &config.spawn_config.control_config)?;
         match spawn.vehicle {
             specification::Unit::Tank => {
                 let tank_config = units::tank::TankSpawnConfig {

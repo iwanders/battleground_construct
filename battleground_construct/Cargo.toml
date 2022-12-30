@@ -14,6 +14,9 @@ cgmath = "0.18.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
 
+# Technically, this one can be optional for the library itself.
+clap = {version = "4.0.32", features=["derive"]}
+
 [dev-dependencies]
 rand = "0.8.5"
 rand_chacha = "0.3.1"

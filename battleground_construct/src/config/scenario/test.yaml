@@ -12,6 +12,10 @@ match_config:
     #  point_limit: 10.0
 
 spawn_config:
+  control_config:
+    red:
+      type: SwivelShoot
+      
   teams:
     -
       name: Red
@@ -25,13 +29,17 @@ spawn_config:
       y: 0.0
       yaw: 3.14
       controller:
-        type: SwivelShoot
+        type: FromControlConfig
+        name: red
       team: 0
     -
       x: -10.0
       y: 0.0
       yaw: 0
       team: 0
+      #  controller:
+        #  type: FromControlConfig
+        #  name: red
       controller: 
         type: Wasm
         path: "../target/wasm32-unknown-unknown/release/unit_control_example.wasm"

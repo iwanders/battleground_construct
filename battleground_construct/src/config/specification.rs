@@ -67,7 +67,7 @@ pub enum ControllerType {
     LibraryLoad {
         name: String,
     },
-    ForwardBackward {
+    DiffDriveForwardsBackwards {
         velocities: (f32, f32),
         duration: f32,
     },
@@ -88,6 +88,9 @@ pub enum ControllerType {
     Function(battleground_unit_control::ControllerSpawn),
     SequenceControl {
         controllers: Vec<ControllerType>,
+    },
+    FromControlConfig {
+        name: String,
     },
 }
 
@@ -113,12 +116,14 @@ pub struct Spawn {
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct SpawnConfig {
+    #[serde(default)]
+    pub control_config: std::collections::HashMap<String, ControllerType>,
     pub teams: Vec<Team>,
     pub spawns: Vec<Spawn>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct ConstructConfig {
+pub struct ScenarioConfig {
     /// Denotes the match specification.
     #[serde(default)]
     pub match_config: MatchConfig,

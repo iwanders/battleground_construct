@@ -8,6 +8,16 @@ pub struct DiffDriveForwardsBackwardsControl {
     pub duration: f32,
 }
 
+impl DiffDriveForwardsBackwardsControl {
+    pub fn new(velocities: (f32, f32), duration: f32) -> Self {
+        DiffDriveForwardsBackwardsControl {
+            velocities,
+            duration,
+            last_flip: 0.0,
+        }
+    }
+}
+
 impl UnitControl for DiffDriveForwardsBackwardsControl {
     fn update(&mut self, interface: &mut dyn Interface) -> UnitControlResult {
         let revolve_cmd_vel = 4;
