@@ -14,6 +14,7 @@ macro_rules! _function {
 pub extern "C" fn wasm_setup() {
     logging::setup();
     controller::setup();
+    panic::setup();
 }
 
 #[no_mangle]
@@ -300,7 +301,7 @@ mod interface {
 
 mod logging {
     extern "C" {
-        fn wasm_log_record(p: *const u8, len: u32);
+        pub fn wasm_log_record(p: *const u8, len: u32);
     }
     use log::{Level, LevelFilter, Metadata, Record};
     static MY_LOGGER: MyLogger = MyLogger;
@@ -325,5 +326,27 @@ mod logging {
     pub fn setup() {
         log::set_logger(&MY_LOGGER).unwrap();
         log::set_max_level(LevelFilter::Info);
+    }
+}
+
+mod panic {
+    use core::panic::PanicInfo;
+
+    pub fn setup() {
+        use std::panic;
+        // Set a custom panic hook in wasm, we need to exfiltrate the panic message.
+        panic::set_hook(Box::new(|v| {
+            handle_panic(v);
+        }));
+    }
+
+    fn handle_panic(info: &PanicInfo) -> ! {
+        // For now, just dump it on the logger, deal with it.
+        let z = format!("PANIC - {}", info);
+        unsafe {
+            super::logging::wasm_log_record(&z.as_bytes()[0] as *const u8, z.len() as u32);
+        }
+
+        loop {}
     }
 }

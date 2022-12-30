@@ -17,10 +17,9 @@ impl SimpleUnitControl {
 fn _bar() {
     println!("In bar");
     panic!("buhuuuu");
-
 }
 
-fn _foo(){
+fn _foo() {
     println!("In foo");
     _bar();
 }
@@ -33,7 +32,7 @@ impl UnitControl for SimpleUnitControl {
         // let _sparkle_heart = vec![0, 0, 146, 150];
         // let _sparkle_heart = String::from_utf8(_sparkle_heart)?;
         // loop {
-            // log::info!("We got called");
+        // log::info!("We got called");
         // }
         _foo();
 
