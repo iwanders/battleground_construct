@@ -159,18 +159,6 @@ pub fn setup_scenario(
         }
     }
 
-    use cgmath::Deg;
-    let static_cannon = world.add_entity();
-    world.add_component(
-        static_cannon,
-        components::pose::Pose::from_xyz(2.0, 0.0, 15.0).rotated_angle_y(Deg(-90.0)),
-    );
-    let mut cannon = components::cannon::Cannon::new(components::cannon::CannonConfig {
-        fire_effect: std::rc::Rc::new(crate::units::tank::cannon_function),
-        reload_time: 1.0,
-    });
-    cannon.set_firing(true);
-    world.add_component(static_cannon, cannon);
 
     if let Some(time_limit) = config.match_config.time_limit {
         let entity = world.add_entity();
