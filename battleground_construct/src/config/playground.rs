@@ -127,4 +127,34 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             );
         }
     }
+
+    // Add a cannon projectile emitter.
+    use crate::components::timed_function_trigger::TimedFunctionTrigger;
+    use cgmath::Deg;
+    let static_cannon = world.add_entity();
+    world.add_component(
+        static_cannon,
+        components::pose::Pose::from_xyz(2.0, 4.0, 1.0).rotated_angle_y(Deg(-45.0)),
+    );
+    let cannon = components::cannon::Cannon::new(components::cannon::CannonConfig {
+        fire_effect: std::rc::Rc::new(crate::units::tank::cannon_function),
+        reload_time: 1.0,
+    });
+    world.add_component(static_cannon, cannon);
+    world.add_component(static_cannon, display::debug_box::DebugBox::cube(0.1));
+
+    let cannon_shoot_interval = 5.0;
+    world.add_component(
+        static_cannon,
+        TimedFunctionTrigger::new(
+            0.0,
+            Some(cannon_shoot_interval),
+            move |_: _, world: &mut engine::World| {
+                let mut cannon = world
+                    .component_mut::<components::cannon::Cannon>(static_cannon)
+                    .unwrap();
+                cannon.trigger();
+            },
+        ),
+    );
 }
