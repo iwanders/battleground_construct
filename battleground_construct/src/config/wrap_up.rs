@@ -3,6 +3,7 @@ use crate::components;
 use crate::components::team::TeamId;
 use crate::Construct;
 use components::match_finished::MatchReport;
+use engine::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -10,16 +11,12 @@ pub struct WrapUpReport {
     pub winning_team: Option<specification::Team>,
     pub match_report: Option<MatchReport>,
     pub teams: std::collections::HashMap<TeamId, specification::Team>,
-    pub scenario: specification::ScenarioConfig,
 }
 
-pub fn wrap_up_scenario(
-    wrap_up: super::specification::WrapUpConfig,
-    construct: &Construct,
-) -> Result<WrapUpReport, Box<dyn std::error::Error>> {
+/// Should only be called if MatchFinished is present.
+pub fn create_wrap_up_report(world: &World) -> WrapUpReport {
     // First, build the report.
-    let match_report = construct
-        .world()
+    let match_report = world
         .component_iter::<components::match_finished::MatchFinished>()
         .next()
         .map(|(_e, m)| m.report().map(|z| z.clone()))
@@ -28,7 +25,7 @@ pub fn wrap_up_scenario(
     // Collect all teams.
     let mut teams = std::collections::HashMap::<TeamId, specification::Team>::new();
     {
-        for (_e, team) in construct.world().component_iter::<components::team::Team>() {
+        for (_e, team) in world.component_iter::<components::team::Team>() {
             let team_color = team.color();
             teams.insert(
                 team.id(),
@@ -50,10 +47,25 @@ pub fn wrap_up_scenario(
         .flatten();
 
     // Cool, now we can construct the wrap up report.
-    let wrap_up_report = WrapUpReport {
+    WrapUpReport {
         winning_team: winning_team,
         match_report: match_report,
         teams,
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FullMatchReport {
+    pub wrap_up: WrapUpReport,
+    pub scenario: specification::ScenarioConfig,
+}
+
+pub fn wrap_up_scenario(
+    wrap_up: super::specification::WrapUpConfig,
+    construct: &Construct,
+) -> Result<FullMatchReport, Box<dyn std::error::Error>> {
+    let full_report = FullMatchReport {
+        wrap_up: create_wrap_up_report(construct.world()),
         scenario: wrap_up.scenario,
     };
 
@@ -61,8 +73,8 @@ pub fn wrap_up_scenario(
     if let Some(path) = wrap_up.write_wrap_up {
         use std::io::Write;
         let mut file = std::fs::File::create(path)?;
-        file.write_all(serde_yaml::to_string(&wrap_up_report)?.as_bytes())?;
+        file.write_all(serde_yaml::to_string(&full_report)?.as_bytes())?;
     }
 
-    Ok(wrap_up_report)
+    Ok(full_report)
 }

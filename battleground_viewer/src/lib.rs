@@ -93,6 +93,7 @@ struct ConstructViewer {
     limiter: Limiter,
 
     construct_render: ConstructRender,
+    printed_match_result: bool,
 }
 
 impl ConstructViewer {
@@ -149,6 +150,7 @@ impl ConstructViewer {
             construct,
             limiter,
             construct_render,
+            printed_match_result: false,
         }
     }
 
@@ -180,6 +182,16 @@ impl ConstructViewer {
                 self.construct.update();
                 self.construct.elapsed_as_f32()
             });
+
+            // This... should probably also not be here, but it's nice if the gui does something
+            // more elegant with this at some point.
+            if self.construct.is_match_finished() && !self.printed_match_result {
+                let report = battleground_construct::config::wrap_up::create_wrap_up_report(
+                    &self.construct.world(),
+                );
+                println!("{report:#?}");
+                self.printed_match_result = true;
+            }
 
             if PRINT_DURATIONS {
                 println!(
