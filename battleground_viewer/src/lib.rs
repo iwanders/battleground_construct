@@ -440,9 +440,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args();
 
     let construct = if args.len() > 1 {
-        let path = args.nth(1).unwrap();
-        let path = std::path::PathBuf::from(path);
-        let config = battleground_construct::config::reader::read_scenario_config(&path)?;
+        let config = battleground_construct::config::cli::parse_args()?;
         battleground_construct::config::setup::setup_scenario(config)?
     } else {
         let mut construct = Construct::new();

@@ -14,16 +14,13 @@ enum Commands {
     Scenario(Scenario),
 }
 
-/// Battleground Construct
+/// Scenario subcommand
 #[derive(Debug, Args)]
 struct Scenario {
-    /// Scenario to load, can be one of the builtins, or a yaml file specifying the scenario.
-    #[arg(value_hint = clap::ValueHint::DirPath)]
+    /// Scenario to load, can be one of the builtins, or a yaml file specifying the scenario. Use
+    /// 'list' as a special scenario to list the builtins.
+    #[arg(value_hint = clap::ValueHint::FilePath)]
     scenario: String,
-
-    /// List built in scenario's and quit.
-    #[arg(long)]
-    list: bool,
 
     /// Override properties from the configuration, the format of these keys is a bit bespoke.
     #[arg(short, long)]
@@ -32,6 +29,25 @@ struct Scenario {
 
 pub fn parse_args() -> Result<ScenarioConfig, Box<dyn std::error::Error>> {
     let args = Cli::parse();
-    println!("args: {args:?}");
-    Ok(Default::default())
+    match args.command {
+        Commands::Scenario(scenario) => {
+            if scenario.scenario == "list" {
+                let available = super::reader::builtin_scenarios();
+                println!("Available scenarios:");
+                for name in available {
+                    println!("  {}", name);
+                }
+                std::process::exit(0);
+            }
+
+            // Check if it is a built in scenario
+            if super::reader::builtin_scenarios().contains(&scenario.scenario.as_str()) {
+                return super::reader::get_builtin_scenario(&scenario.scenario);
+            }
+
+            // It wasn't... well, lets hope that it is a file...
+            let p = std::path::PathBuf::from(&scenario.scenario);
+            return super::reader::read_scenario_config(&p);
+        }
+    }
 }
