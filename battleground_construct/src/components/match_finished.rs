@@ -1,11 +1,44 @@
+use super::team::TeamId;
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub enum MatchConclusion {
+    TimeLimit,
+    Criteria,
+    // Could have a CriteriaAccelerated here, in case we own the capture points, no no other
+    // possible contenders are alive, in that case there's no need to wait around.
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub struct MatchReport {
+    /// The winner of the match, if any. Technically, this ought to be a list... to support matches
+    /// ending in a draw, but that just makes things complicated.
+    pub winner: Option<TeamId>,
+    /// Cause of the match finish declaration.
+    pub conclusion: MatchConclusion,
+    /// Time at which the match was declared finished.
+    pub duration: f32,
+}
 
 #[derive(Copy, Debug, Clone)]
-pub struct MatchFinished {}
+pub struct MatchFinished {
+    report: Option<MatchReport>,
+}
 
 impl MatchFinished {
     pub fn new() -> Self {
-        Self {}
+        Self { report: None }
+    }
+
+    pub fn from_report(report: MatchReport) -> Self {
+        Self {
+            report: Some(report),
+        }
+    }
+
+    pub fn report(&self) -> Option<&MatchReport> {
+        self.report.as_ref()
     }
 }
 impl Component for MatchFinished {}

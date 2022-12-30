@@ -1,8 +1,9 @@
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
 pub use battleground_unit_control::units::UnitType;
 
-#[derive(Copy, Clone, Debug, Eq, Ord, PartialOrd, PartialEq, Hash)]
+#[derive(Deserialize, Serialize, Copy, Clone, Debug, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct UnitId(u64);
 
 impl UnitId {

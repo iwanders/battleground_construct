@@ -32,5 +32,13 @@ impl MatchKingOfTheHill {
         }
         false
     }
+
+    pub fn get_leader(&self) -> Option<TeamId> {
+        self.points
+            .iter()
+            .max_by(|a, b| a.1.total_cmp(&b.1))
+            .map(|(k, _v)| k)
+            .copied()
+    }
 }
 impl Component for MatchKingOfTheHill {}

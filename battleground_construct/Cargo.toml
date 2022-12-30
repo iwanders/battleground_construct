@@ -14,10 +14,11 @@ cgmath = "0.18.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
 
-# Technically, this one can be optional for the library itself.
+# Used by the cli component, reused by the viewer.
 clap = {version = "4.0.32", features=["derive"]}
 
 [dev-dependencies]
+# Randomness has no place in the actual construct game engine, but is useful for fuzz testing.
 rand = "0.8.5"
 rand_chacha = "0.3.1"
 

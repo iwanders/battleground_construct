@@ -1,7 +1,8 @@
 use crate::display;
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Copy, Clone, Debug, Eq, Ord, PartialOrd, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct TeamId(u64);
 
 impl TeamId {

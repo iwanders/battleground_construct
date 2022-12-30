@@ -1,5 +1,6 @@
 use crate::components;
-use components::match_finished::MatchFinished;
+use crate::components::team::TeamId;
+use components::match_finished::{MatchConclusion, MatchFinished, MatchReport};
 use components::match_king_of_the_hill::MatchKingOfTheHill;
 use components::match_time_limit::MatchTimeLimit;
 
@@ -13,29 +14,51 @@ impl System for MatchLogicFinished {
         }
 
         let mut is_finished = false;
+        let mut conclusion = None;
+        let mut leaders = std::collections::HashSet::<TeamId>::new();
 
         // Check king of the hill criteria.
         for (_e, match_koth) in world.component_iter::<MatchKingOfTheHill>() {
             if match_koth.is_finished() {
                 is_finished = true;
+                conclusion = Some(MatchConclusion::Criteria);
                 break;
+            }
+            if let Some(leader) = match_koth.get_leader() {
+                leaders.insert(leader);
             }
         }
 
         // Check time limit criteria.
         for (_e, match_time_limit) in world.component_iter::<MatchTimeLimit>() {
-            // println!("Match match_time_limit: {:?}", match_time_limit);
             if match_time_limit.is_finished() {
                 is_finished = true;
-                // println!("match_time_limit decides finished");
+                conclusion = Some(MatchConclusion::TimeLimit);
                 break;
             }
         }
 
         if is_finished {
-            // add the marker
+            let duration = world
+                .component_iter::<components::clock::Clock>()
+                .next()
+                .expect("Should have one clock")
+                .1
+                .elapsed_as_f32();
+
+            // We are actually finished... lets collect the information for the match report.
+            if leaders.len() > 1 {
+                println!("Got multiple leaders: {leaders:?}, logic error or draw??");
+            }
+            // Now, we can create the match report.
+            let report = MatchReport {
+                winner: leaders.iter().next().copied(),
+                conclusion: conclusion.unwrap(),
+                duration,
+            };
+            println!("Match finished: {report:#?}");
             let id = world.add_entity();
-            world.add_component(id, MatchFinished::new());
+            world.add_component(id, MatchFinished::from_report(report));
         }
     }
 }
