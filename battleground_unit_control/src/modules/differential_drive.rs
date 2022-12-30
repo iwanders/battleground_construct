@@ -9,3 +9,6 @@ pub const REG_DIFF_DRIVE_RIGHT_VEL: u32 = 1;
 pub const REG_DIFF_DRIVE_LEFT_CMD: u32 = 2;
 /// The commanded right wheel/track velocity, float value.
 pub const REG_DIFF_DRIVE_RIGHT_CMD: u32 = 3;
+
+/// The distance between the left and right wheel/track, float value.
+pub const REG_DIFF_DRIVE_TRACK_WIDTH: u32 = 4;

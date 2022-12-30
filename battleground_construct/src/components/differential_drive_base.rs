@@ -77,6 +77,11 @@ impl UnitModule for DifferentialDriveBaseModule {
                 REG_DIFF_DRIVE_RIGHT_CMD,
                 Register::new_f32("right_wheel_cmd", vels.1),
             );
+
+            registers.insert(
+                REG_DIFF_DRIVE_TRACK_WIDTH,
+                Register::new_f32("track_width", base.track_width()),
+            );
         }
     }
 
