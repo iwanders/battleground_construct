@@ -36,6 +36,13 @@ impl Construct {
         clock.elapsed_as_f32()
     }
 
+    pub fn is_match_finished(&self) -> bool {
+        !self
+            .world
+            .component_entities::<crate::components::match_finished::MatchFinished>()
+            .is_empty()
+    }
+
     // We could have something fancy here... where we generalize this over 'has ray intersect'...
     pub fn select_intersect(
         &mut self,

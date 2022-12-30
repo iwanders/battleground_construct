@@ -1,4 +1,4 @@
-use super::specification::ScenarioConfig;
+use super::specification::{ScenarioConfig, WrapUpConfig};
 use clap::{Args, Parser, Subcommand};
 
 #[derive(Debug, Parser)]
@@ -36,9 +36,27 @@ struct Scenario {
     /// - "control:controller_name:none" -> Set the controller with 'controller_name' to none.
     #[arg(short, long, verbatim_doc_comment)]
     config: Vec<String>,
+
+    /// After the match concludes, write a report yaml file to this path.
+    #[arg(short, long)]
+    report: Option<String>,
 }
 
-pub fn parse_args() -> Result<ScenarioConfig, Box<dyn std::error::Error>> {
+/// This creates a config struct handled by the wrap up functionality...
+pub fn parse_wrap_up_args() -> Result<WrapUpConfig, Box<dyn std::error::Error>> {
+    let scenario = parse_setup_args()?;
+    let args = Cli::parse();
+
+    let write_wrap_up = match args.command {
+        Commands::Scenario(scenario) => scenario.report, // _ => None
+    };
+    Ok(WrapUpConfig {
+        scenario,
+        write_wrap_up,
+    })
+}
+
+pub fn parse_setup_args() -> Result<ScenarioConfig, Box<dyn std::error::Error>> {
     let args = Cli::parse();
     match args.command {
         Commands::Scenario(scenario) => {

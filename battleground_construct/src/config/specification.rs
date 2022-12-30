@@ -134,3 +134,8 @@ pub struct ScenarioConfig {
     /// Spawn of vehicles.
     pub spawn_config: SpawnConfig,
 }
+
+pub struct WrapUpConfig {
+    pub write_wrap_up: Option<String>,
+    pub scenario: ScenarioConfig,
+}

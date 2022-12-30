@@ -64,7 +64,7 @@ impl System for MatchLogicFinished {
                 reports,
                 duration,
             };
-            println!("Match finished: {report:#?}");
+            // println!("Match finished: {report:#?}");
             let id = world.add_entity();
             world.add_component(id, MatchFinished::from_report(report));
         }

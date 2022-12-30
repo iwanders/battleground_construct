@@ -30,11 +30,20 @@ pub fn setup_scenario(
     default::add_components(world);
     default::add_systems(systems);
 
+    let mut team_set = std::collections::HashSet::<String>::new();
     let mut teams = vec![];
     for team in config.spawn_config.teams {
         let team_id = components::id_generator::generate_id(world);
         let team_entity = world.add_entity();
         let team_component = components::team::Team::new(team_id, &team.name, team.color.into());
+        if team_set.contains(&team.name) {
+            // team name occurs twice and the match report won't be able to distinguish, raise
+            // an error to avoid indistinguishable results.
+            return Err(Box::new(SetupError::new(
+                format!("team name {} occurs twice", team.name).as_str(),
+            )));
+        }
+        team_set.insert(team.name.to_owned());
         teams.push(team_component.id());
         world.add_component(team_entity, team_component);
     }
@@ -158,7 +167,6 @@ pub fn setup_scenario(
             );
         }
     }
-
 
     if let Some(time_limit) = config.match_config.time_limit {
         let entity = world.add_entity();

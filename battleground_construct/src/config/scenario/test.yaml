@@ -9,7 +9,7 @@ match_config:
         radius: 5.0
         capture_speed: 0.1
         team: 0
-    #  point_limit: 10.0
+    point_limit: 15.0
 
 spawn_config:
   control_config:

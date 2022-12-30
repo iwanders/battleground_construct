@@ -4,7 +4,7 @@ use engine::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct MatchKingOfTheHillReport{
+pub struct MatchKingOfTheHillReport {
     points: std::collections::HashMap<TeamId, f32>,
     point_limit: Option<f32>,
 }
@@ -56,6 +56,5 @@ impl MatchKingOfTheHill {
             point_limit: self.point_limit.clone(),
         }
     }
-
 }
 impl Component for MatchKingOfTheHill {}

@@ -5,3 +5,4 @@ pub mod reader;
 pub mod setup;
 pub mod specification;
 pub mod tree_trailer;
+pub mod wrap_up;

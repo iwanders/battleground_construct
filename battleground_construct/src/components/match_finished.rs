@@ -18,7 +18,6 @@ pub enum ObjectiveReport {
     MatchKingOfTheHillReport(MatchKingOfTheHillReport),
 }
 
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MatchReport {
     /// The winner of the match, if any. Technically, this ought to be a list... to support matches
