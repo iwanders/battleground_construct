@@ -1,5 +1,5 @@
 match_config:
-  time_limit: 3.0
+  time_limit: 30.0
   mode:
     type: KingOfTheHill
     capture_points:

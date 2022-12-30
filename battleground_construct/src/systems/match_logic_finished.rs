@@ -1,6 +1,6 @@
 use crate::components;
-use crate::components::team::TeamId;
-use components::match_finished::{MatchConclusion, MatchFinished, MatchReport};
+// use crate::components::team::TeamId;
+use components::match_finished::{MatchConclusion, MatchFinished, MatchReport, ObjectiveReport};
 use components::match_king_of_the_hill::MatchKingOfTheHill;
 use components::match_time_limit::MatchTimeLimit;
 
@@ -15,7 +15,6 @@ impl System for MatchLogicFinished {
 
         let mut is_finished = false;
         let mut conclusion = None;
-        let mut leaders = std::collections::HashSet::<TeamId>::new();
 
         // Check king of the hill criteria.
         for (_e, match_koth) in world.component_iter::<MatchKingOfTheHill>() {
@@ -23,9 +22,6 @@ impl System for MatchLogicFinished {
                 is_finished = true;
                 conclusion = Some(MatchConclusion::Criteria);
                 break;
-            }
-            if let Some(leader) = match_koth.get_leader() {
-                leaders.insert(leader);
             }
         }
 
@@ -46,14 +42,26 @@ impl System for MatchLogicFinished {
                 .1
                 .elapsed_as_f32();
 
+            // collect the reports.
+            let mut reports = vec![];
+            let mut leaders = vec![];
+            {
+                for (_e, match_koth) in world.component_iter::<MatchKingOfTheHill>() {
+                    let report = match_koth.report();
+                    leaders.push(report.get_leader());
+                    reports.push(ObjectiveReport::MatchKingOfTheHillReport(report));
+                }
+            }
+
             // We are actually finished... lets collect the information for the match report.
             if leaders.len() > 1 {
                 println!("Got multiple leaders: {leaders:?}, logic error or draw??");
             }
             // Now, we can create the match report.
             let report = MatchReport {
-                winner: leaders.iter().next().copied(),
+                winner: leaders.iter().next().copied().flatten(),
                 conclusion: conclusion.unwrap(),
+                reports,
                 duration,
             };
             println!("Match finished: {report:#?}");

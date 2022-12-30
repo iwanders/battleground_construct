@@ -1,6 +1,23 @@
 use crate::components;
 use components::team::TeamId;
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct MatchKingOfTheHillReport{
+    points: std::collections::HashMap<TeamId, f32>,
+    point_limit: Option<f32>,
+}
+
+impl MatchKingOfTheHillReport {
+    pub fn get_leader(&self) -> Option<TeamId> {
+        self.points
+            .iter()
+            .max_by(|a, b| a.1.total_cmp(&b.1))
+            .map(|(k, _v)| k)
+            .copied()
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct MatchKingOfTheHill {
@@ -33,12 +50,12 @@ impl MatchKingOfTheHill {
         false
     }
 
-    pub fn get_leader(&self) -> Option<TeamId> {
-        self.points
-            .iter()
-            .max_by(|a, b| a.1.total_cmp(&b.1))
-            .map(|(k, _v)| k)
-            .copied()
+    pub fn report(&self) -> MatchKingOfTheHillReport {
+        MatchKingOfTheHillReport {
+            points: self.points.clone(),
+            point_limit: self.point_limit.clone(),
+        }
     }
+
 }
 impl Component for MatchKingOfTheHill {}
