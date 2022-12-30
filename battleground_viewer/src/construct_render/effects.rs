@@ -490,7 +490,6 @@ impl Deconstructor {
                         },
                     )
                 }
-                battleground_construct::display::primitives::Primitive::Circle(_) => todo!(),
             };
 
             for fragment in fragments {
