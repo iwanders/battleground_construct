@@ -16,6 +16,17 @@ impl ParticleEmitter {
             emitting: true,
         }
     }
+    pub fn bullet_impact(id: u64, size: f32, color: Color, velocity: Vec3) -> Self {
+        ParticleEmitter {
+            id,
+            particle_type: ParticleType::BulletImpact {
+                size,
+                color,
+                velocity,
+            },
+            emitting: false,
+        }
+    }
 }
 impl Component for ParticleEmitter {}
 

@@ -175,7 +175,15 @@ pub struct Element {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ParticleType {
-    BulletTrail { size: f32, color: Color },
+    BulletTrail {
+        size: f32,
+        color: Color,
+    },
+    BulletImpact {
+        size: f32,
+        color: Color,
+        velocity: Vec3,
+    },
 }
 impl Eq for ParticleType {}
 

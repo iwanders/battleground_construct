@@ -431,11 +431,11 @@ pub fn cannon_function(world: &mut World, cannon_entity: EntityId) {
         components::hit_effect::HitEffect::new(std::rc::Rc::new(cannon_hit_effect)),
     );
 
-    let effect_entity = components::id_generator::generate_id(world);
+    let effect_id = components::id_generator::generate_id(world);
     world.add_component(
         projectile_entity,
         crate::display::particle_emitter::ParticleEmitter::bullet_trail(
-            effect_entity,
+            effect_id,
             0.05,
             crate::display::Color::WHITE,
         ),
@@ -449,11 +449,26 @@ fn cannon_hit_effect(
 ) {
     // Create a bullet destructor.
     let projectile_destructor = world.add_entity();
-    let effect_entity = components::id_generator::generate_id(world);
+
+    /*
     let mut destructor = crate::display::deconstructor::Deconstructor::new(effect_entity);
     // destructor.add_impact(impact.position(), 0.005);
     destructor.add_element::<crate::display::tank_bullet::TankBullet>(projectile, world);
     world.add_component(projectile_destructor, destructor);
+    */
+    let effect_id = components::id_generator::generate_id(world);
+    let world_pose = crate::components::pose::world_pose(world, projectile);
+    let world_vel = crate::components::velocity::world_velocity(world, projectile).to_twist();
+    world.add_component(
+        projectile_destructor,
+        crate::display::particle_emitter::ParticleEmitter::bullet_impact(
+            effect_id,
+            0.03,
+            crate::display::Color::BLACK,
+            world_vel.v,
+        ),
+    );
+    world.add_component(projectile_destructor, world_pose);
     world.add_component(
         projectile_destructor,
         crate::components::expiry::Expiry::lifetime(10.0),

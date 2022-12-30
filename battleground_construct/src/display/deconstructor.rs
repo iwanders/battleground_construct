@@ -24,7 +24,6 @@ impl Deconstructor {
     ) {
         if let Some(component) = world.component::<C>(entity) {
             // Get the world pose for this entity, to add draw transform local to this component.
-            // let world_pose = construct.entity_pose(entity);
             let world_pose = crate::components::pose::world_pose(world, entity);
             let world_vel = crate::components::velocity::world_velocity(world, entity).to_twist();
             for el in component.drawables() {

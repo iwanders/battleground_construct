@@ -50,6 +50,9 @@ pub struct ParticleEmitter {
     /// Last spawn time.
     next_spawn_time: f32,
 
+    /// Whether to force emitting to true next cycle, then set this flag to false.
+    emit_next_cycle: bool,
+
     /// Interval at which to spawn particles.
     spawn_interval: f32,
     spawn_jitter: f32,
@@ -65,6 +68,8 @@ pub struct ParticleEmitter {
     /// Initial velocity of each particle.
     velocity: Vec3,
     velocity_jitter: Vec3,
+
+    reflect_on_floor: bool,
 
     /// Whether to fade the alpha to the lifetime.
     fade_alpha_to_lifetime: bool,
@@ -89,13 +94,32 @@ impl ParticleEmitter {
         let p_size: f32;
         let lifetime = 0.4;
         let spawn_interval = 0.01;
-        let velocity = vec3(0.0, 0.0, 0.0);
+        let mut initial_particle_velocity = vec3(0.0, 0.0, 0.0);
+        let mut velocity_jitter = vec3(0.1, 0.1, 0.1);
+        let mut next_spawn_time = time;
+        let mut emit_next_cycle = false;
+        let mut reflect_on_floor = false;
+        let initial_particles = vec![];
 
         match display {
             display::primitives::ParticleType::BulletTrail { color, size } => {
                 p_color = color.to_color();
                 p_color.a = 128;
                 p_size = *size;
+            }
+            display::primitives::ParticleType::BulletImpact {
+                color,
+                size,
+                velocity,
+            } => {
+                p_color = color.to_color();
+                p_color.a = 128;
+                p_size = *size;
+                initial_particle_velocity -= *velocity * 0.1;
+                next_spawn_time -= 20.0 * spawn_interval;
+                velocity_jitter *= 3.0;
+                emit_next_cycle = true;
+                reflect_on_floor = true;
             }
         }
         let color = p_color;
@@ -127,19 +151,21 @@ impl ParticleEmitter {
             last_time: time,
             renderable,
 
-            next_spawn_time: time,
+            emit_next_cycle,
+            next_spawn_time,
             spawn_interval,
             spawn_jitter: 0.00,
             lifetime,
             lifetime_jitter: 0.0,
 
-            velocity: velocity,
-            velocity_jitter: vec3(0.1, 0.1, 0.1),
+            velocity: initial_particle_velocity,
+            velocity_jitter,
+            reflect_on_floor,
 
             fade_alpha_to_lifetime: true,
             face_camera: true,
 
-            particles: vec![],
+            particles: initial_particles,
             color,
 
             rng: rand::thread_rng(),
@@ -177,7 +203,7 @@ impl RenderableEffect for ParticleEmitter {
             .collect::<_>();
 
         // Spawn new particles.
-        while (self.next_spawn_time < time) && emitting {
+        while (self.next_spawn_time < time) && (emitting || self.emit_next_cycle) {
             use rand_distr::StandardNormal;
             let spawn_val: f32 = self.rng.sample(StandardNormal);
             self.next_spawn_time += self.spawn_interval + spawn_val * self.spawn_jitter;
@@ -201,11 +227,18 @@ impl RenderableEffect for ParticleEmitter {
             self.particles
                 .push(Particle::new(pos, vel, color, spawn_time, expiry_time));
         }
+        self.emit_next_cycle = false;
 
         // Update position and alphas
         for particle in self.particles.iter_mut() {
             // Always update position.
             particle.pos.w += particle.vel.extend(0.0) * dt;
+
+            if self.reflect_on_floor {
+                if particle.pos.w.z < 0.0 {
+                    particle.vel.z *= -1.0;
+                }
+            }
 
             if self.fade_alpha_to_lifetime {
                 let ratio_of_age =
