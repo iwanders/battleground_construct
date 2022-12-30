@@ -135,7 +135,11 @@ pub struct ScenarioConfig {
     pub spawn_config: SpawnConfig,
 }
 
+/// This struct specifies the steps to be done after a scenario wraps up.
 pub struct WrapUpConfig {
+    /// Write the wrap up report to this file if a path is specified.
     pub write_wrap_up: Option<String>,
+
+    /// The original scenario as setup.
     pub scenario: ScenarioConfig,
 }

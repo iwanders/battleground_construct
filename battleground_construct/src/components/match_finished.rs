@@ -7,7 +7,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub enum MatchConclusion {
+    /// Match was concluded based on a time limit being reached.
     TimeLimit,
+    /// Match was concluded based on the objectives criteria being met.
     Criteria,
     // Could have a CriteriaAccelerated here, in case we own the capture points, no no other
     // possible contenders are alive, in that case there's no need to wait around.

@@ -42,13 +42,14 @@ struct Scenario {
     report: Option<String>,
 }
 
-/// This creates a config struct handled by the wrap up functionality...
+/// This creates a config struct handled by the wrap up functionality
 pub fn parse_wrap_up_args() -> Result<WrapUpConfig, Box<dyn std::error::Error>> {
     let scenario = parse_setup_args()?;
     let args = Cli::parse();
 
     let write_wrap_up = match args.command {
-        Commands::Scenario(scenario) => scenario.report, // _ => None
+        Commands::Scenario(scenario) => scenario.report,
+        // _ => None
     };
     Ok(WrapUpConfig {
         scenario,

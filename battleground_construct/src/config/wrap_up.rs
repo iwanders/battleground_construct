@@ -6,6 +6,11 @@ use components::match_finished::MatchReport;
 use engine::*;
 use serde::{Deserialize, Serialize};
 
+// This struct is more elaborate than the struct in match finished. That just contains entity ids
+// doesn't consume the mapping back to the actual team names. But it is all that is needed for the
+// game logic, so this here is the externally-readable output that contains everything an outside
+// system would need to know.
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WrapUpReport {
     pub winning_team: Option<specification::Team>,
