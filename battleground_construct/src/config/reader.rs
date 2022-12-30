@@ -13,8 +13,8 @@ pub fn read_scenario_config(
         }
         Err(error) => Err(Box::<dyn std::error::Error>::from(format!(
             "failed to open {}: {}",
-            path.display(), error,
-            
+            path.display(),
+            error,
         ))),
     }
 }

@@ -240,6 +240,14 @@ pub fn populate_tree_trailer(construct: &mut crate::Construct) {
             ..Default::default()
         },
     );
+    let main_tank_entities = world
+        .component::<crate::units::tank::UnitTank>(main_tank)
+        .unwrap()
+        .clone();
+    let base_entity = main_tank_entities.base_entity;
+    let turret_entity = main_tank_entities.turret_entity;
+    let barrel_entity = main_tank_entities.barrel_entity;
+    let muzzle_entity = main_tank_entities.muzzle_entity;
 
     let timed_spawn = world.add_entity();
     world.add_component(
@@ -248,59 +256,47 @@ pub fn populate_tree_trailer(construct: &mut crate::Construct) {
             // Teleport the robot to the start position.
             {
                 let mut g = world
-                    .component_mut::<components::pose::Pose>(main_tank)
+                    .component_mut::<components::pose::Pose>(base_entity)
                     .unwrap();
                 g.transform_mut().w.x = -3.5;
                 g.transform_mut().w.y = -3.7;
             }
             // Set the drive to on.
-            let g = world
-                .component::<components::group::Group>(main_tank)
-                .unwrap();
             let mut d = world
                 .component_mut::<components::differential_drive_base::DifferentialDriveBase>(
-                    g.entities()[0],
+                    base_entity,
                 )
                 .expect("diff drive not on expected entity.");
             d.set_velocities(0.5, 0.5);
         }),
     );
 
-    let modify_revolute_speed = |world: &mut World, time: f32, group_offset: usize, vel: f32| {
+    let modify_revolute_speed = |world: &mut World, time: f32, entity: EntityId, vel: f32| {
         let modify_rev = world.add_entity();
         world.add_component(
             modify_rev,
             TimedFunctionTrigger::new(time, None, move |_: _, world: &mut World| {
-                let g = world
-                    .component::<components::group::Group>(main_tank)
-                    .unwrap();
                 let mut d = world
-                    .component_mut::<components::revolute::Revolute>(g.entities()[group_offset])
+                    .component_mut::<components::revolute::Revolute>(entity)
                     .expect("revolute should be here");
                 d.set_velocity(vel);
             }),
         );
     };
 
-    let turret_index_in_group = 2;
-    let barrel_index_in_group = 3;
+    modify_revolute_speed(world, t_blast + 2.0, turret_entity, -0.3);
+    modify_revolute_speed(world, t_blast + 5.0, turret_entity, 0.0);
 
-    modify_revolute_speed(world, t_blast + 2.0, turret_index_in_group, -0.3);
-    modify_revolute_speed(world, t_blast + 5.0, turret_index_in_group, 0.0);
-
-    modify_revolute_speed(world, t_blast + 3.0, barrel_index_in_group, -0.10);
-    modify_revolute_speed(world, t_blast + 5.0, barrel_index_in_group, 0.0);
+    modify_revolute_speed(world, t_blast + 3.0, barrel_entity, -0.10);
+    modify_revolute_speed(world, t_blast + 5.0, barrel_entity, 0.0);
 
     let stop_moving = world.add_entity();
     world.add_component(
         stop_moving,
         TimedFunctionTrigger::new(t_blast + 4.0, None, move |_: _, world: &mut World| {
-            let g = world
-                .component::<components::group::Group>(main_tank)
-                .unwrap();
             let mut d = world
                 .component_mut::<components::differential_drive_base::DifferentialDriveBase>(
-                    g.entities()[0],
+                    base_entity,
                 )
                 .unwrap();
             d.set_velocities(0.0, 0.0);
@@ -312,11 +308,8 @@ pub fn populate_tree_trailer(construct: &mut crate::Construct) {
         world.add_component(
             modify_rev,
             TimedFunctionTrigger::new(time, None, move |_: _, world: &mut World| {
-                let g = world
-                    .component::<components::group::Group>(main_tank)
-                    .unwrap();
                 let mut d = world
-                    .component_mut::<components::cannon::Cannon>(g.entities()[4])
+                    .component_mut::<components::cannon::Cannon>(muzzle_entity)
                     .expect("cannon should be here");
                 d.set_firing(firing);
             }),

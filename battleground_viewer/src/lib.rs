@@ -437,17 +437,27 @@ impl ConstructViewer {
 }
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut args = std::env::args();
+    let args = std::env::args().collect::<Vec<String>>();
 
-    let construct = if args.len() > 1 {
-        let config = battleground_construct::config::cli::parse_args()?;
-        battleground_construct::config::setup::setup_scenario(config)?
-    } else {
+    // Preserve the dev playground.
+    let playground = args.len() >= 2 && args.get(1).unwrap() == "--playground";
+
+    // Preserve the trailer...
+    let tree_trailer = args.len() >= 2 && args.get(1).unwrap() == "--tree-trailer";
+
+    let construct = if playground {
         let mut construct = Construct::new();
         battleground_construct::config::playground::populate_dev_world(&mut construct);
-        // battleground_construct::config::tree_trailer::populate_tree_trailer(&mut construct);
         construct
+    } else if tree_trailer {
+        let mut construct = Construct::new();
+        battleground_construct::config::tree_trailer::populate_tree_trailer(&mut construct);
+        construct
+    } else {
+        let config = battleground_construct::config::cli::parse_args()?;
+        battleground_construct::config::setup::setup_scenario(config)?
     };
+
     let viewer = ConstructViewer::new(construct);
 
     // view loop consumes the viewer... :|

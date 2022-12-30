@@ -44,6 +44,7 @@ pub struct UnitTank {
 }
 impl Component for UnitTank {}
 
+/// Spawn a tank, returning the unit entity.
 pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     /*
         Topology of the tank;
