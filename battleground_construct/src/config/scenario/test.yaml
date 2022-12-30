@@ -37,10 +37,10 @@ spawn_config:
       y: 0.0
       yaw: 0
       team: 0
-      controllerz:
+      controller:
         type: FromControlConfig
         name: red
-      controller: 
+      controllerz: 
         type: Wasm
         path: "../target/wasm32-unknown-unknown/release/unit_control_example.wasm"
         #  fuel_for_setup: 1

@@ -34,7 +34,7 @@ impl UnitControl for SimpleUnitControl {
         // loop {
         // log::info!("We got called");
         // }
-        // _foo();
+        _foo();
 
         log::info!("We got called");
 

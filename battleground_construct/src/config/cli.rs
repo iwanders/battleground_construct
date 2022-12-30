@@ -22,8 +22,14 @@ struct Scenario {
     #[arg(value_hint = clap::ValueHint::FilePath)]
     scenario: String,
 
-    /// Override properties from the configuration, the format of these keys is a bit bespoke.
-    /// It is limited to;
+    #[cfg(feature = "unit_control_wasm")]
+    #[arg(short, long, verbatim_doc_comment)]
+    /// Direct override of the path attribute of wasm controllers. Use with --wasm team_a:path_to_module.wasm --wasm team_b:path_to_module.wasm.
+    wasm: Vec<String>,
+
+    /// Override properties from the configuration, the format of these keys is a bit bespoke and verbose.
+    /// In general, it is prefered to use the --wasm argument.
+    /// It is limited to (depending on enabled controllers)
     /// - "control:controller_name:wasm:path:foo.wasm" -> Set controller by 'controller_name' to wasm and use 'foo.wasm'.
     /// - "control:controller_name:wasm:fuel_per_update:1000"  (or none) -> Set fuel_per_update to none or value.
     /// - "control:controller_name:wasm:fuel_for_setup:1000"  (or none) -> Set fuel_for_setup to none or value.
@@ -46,21 +52,47 @@ pub fn parse_args() -> Result<ScenarioConfig, Box<dyn std::error::Error>> {
             }
 
             // Check if it is a built in scenario
-            let specification = if super::reader::builtin_scenarios().contains(&scenario.scenario.as_str()) {
-                super::reader::get_builtin_scenario(&scenario.scenario)?
-            } else {
-                // It wasn't... well, lets hope that it is a file...
-                let p = std::path::PathBuf::from(&scenario.scenario);
-                super::reader::read_scenario_config(&p)?
+            let specification =
+                if super::reader::builtin_scenarios().contains(&scenario.scenario.as_str()) {
+                    super::reader::get_builtin_scenario(&scenario.scenario)?
+                } else {
+                    // It wasn't... well, lets hope that it is a file...
+                    let p = std::path::PathBuf::from(&scenario.scenario);
+                    super::reader::read_scenario_config(&p)?
+                };
+
+            #[cfg(not(feature = "unit_control_wasm"))]
+            let extra_config: Vec<String> = vec![];
+
+            #[cfg(feature = "unit_control_wasm")]
+            let extra_config = {
+                let mut extra_config = vec![];
+                for wasm in scenario.wasm.iter() {
+                    let split = wasm
+                        .split(":")
+                        .map(|v| v.to_owned())
+                        .collect::<Vec<String>>();
+                    if split.len() != 2 {
+                        return Err(Box::<dyn std::error::Error>::from(
+                            "expected ':' between team name and path",
+                        ));
+                    }
+                    extra_config.push(format!("control:{}:wasm:path:{}", split[0], split[1]));
+                }
+                extra_config
             };
 
             // Apply any config overrides...
-            let config_strs: Vec<&str> = scenario.config.iter().map(|v| v.as_str()).collect();
+            let config_strs: Vec<&str> = scenario
+                .config
+                .iter()
+                .chain(extra_config.iter())
+                .map(|v| v.as_str())
+                .collect();
             apply_config(&config_strs, specification)
         }
     }
 }
-
 
 // Well, this function is a bit... much.
 fn apply_config(
