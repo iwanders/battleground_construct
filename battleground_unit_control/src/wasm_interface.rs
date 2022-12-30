@@ -347,6 +347,7 @@ mod panic {
             super::logging::wasm_log_record(&z.as_bytes()[0] as *const u8, z.len() as u32);
         }
 
-        loop {}
+        // The panic information made it out, now kill the execution.
+        std::process::abort();
     }
 }
