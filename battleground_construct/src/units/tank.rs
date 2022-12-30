@@ -275,7 +275,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(muzzle_entity, Parent::new(barrel_entity));
 
     let cannon_config = components::cannon::CannonConfig {
-        reload_time: 1.0,
+        reload_time: 2.0,
         fire_effect: std::rc::Rc::new(cannon_function),
     };
     world.add_component(

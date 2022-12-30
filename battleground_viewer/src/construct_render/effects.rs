@@ -17,6 +17,7 @@ pub trait RenderableEffect {
     );
 }
 
+#[derive(Debug, Copy, Clone)]
 struct Particle {
     pos: Mat4,
     vel: Vec3,
@@ -115,7 +116,7 @@ impl ParticleEmitter {
                 p_color = color.to_color();
                 p_color.a = 128;
                 p_size = *size;
-                initial_particle_velocity -= *velocity * 0.1;
+                initial_particle_velocity += *velocity * 0.1;
                 next_spawn_time -= 20.0 * spawn_interval;
                 velocity_jitter *= 3.0;
                 emit_next_cycle = true;
@@ -193,7 +194,7 @@ impl RenderableEffect for ParticleEmitter {
             } else {
                 panic!("Called renderable effect with wrong effect type");
             };
-        let dt = self.last_time - time;
+        let dt = time - self.last_time;
 
         // Drop particles that are expired.
         self.particles = self
@@ -236,7 +237,10 @@ impl RenderableEffect for ParticleEmitter {
 
             if self.reflect_on_floor {
                 if particle.pos.w.z < 0.0 {
-                    particle.vel.z *= -1.0;
+                    if particle.vel.z < 0.0 {
+                        particle.vel.z = particle.vel.z.abs();
+                    }
+                    particle.pos.w.z = 0.0;
                 }
             }
 

@@ -143,7 +143,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
     world.add_component(static_cannon, cannon);
     world.add_component(static_cannon, display::debug_box::DebugBox::cube(0.1));
 
-    let cannon_shoot_interval = 5.0;
+    let cannon_shoot_interval = 1.0;
     world.add_component(
         static_cannon,
         TimedFunctionTrigger::new(
