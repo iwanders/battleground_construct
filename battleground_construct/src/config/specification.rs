@@ -57,7 +57,7 @@ pub struct Team {
     pub color: (u8, u8, u8),
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
 pub struct WasmControlConfig {
     pub path: String,
     #[serde(default)]
@@ -68,7 +68,7 @@ pub struct WasmControlConfig {
     pub print_exports: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
 #[serde(tag = "type")]
 pub enum ControllerType {
     #[default]
