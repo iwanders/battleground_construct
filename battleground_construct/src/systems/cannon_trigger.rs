@@ -18,7 +18,7 @@ impl System for CannonTrigger {
             let fired = {
                 let mut cannon = world.component_mut::<Cannon>(cannon_entity).unwrap();
                 cannon.update(current);
-                if cannon.is_firing() && cannon.is_ready() {
+                if cannon.is_triggered() && cannon.is_ready() {
                     cannon.fired(current);
                     true
                 } else {

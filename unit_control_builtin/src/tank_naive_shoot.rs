@@ -150,10 +150,10 @@ impl UnitControl for TankNaiveShoot {
             }
         }
         // Target is not seen for 5 seconds... must be gone.
-        if (elapsed - self.last_seen) > 5.0 {
+        if (elapsed - self.last_seen) > 3.0 {
             self.shoot_at = None;
             interface
-                .set_i32(tank::MODULE_TANK_CANNON, REG_CANNON_FIRING, false as i32)
+                .set_i32(tank::MODULE_TANK_CANNON, REG_CANNON_TRIGGER, false as i32)
                 .unwrap();
         }
 
@@ -242,7 +242,7 @@ impl UnitControl for TankNaiveShoot {
                     .unwrap();
 
                 interface
-                    .set_i32(tank::MODULE_TANK_CANNON, REG_CANNON_FIRING, true as i32)
+                    .set_i32(tank::MODULE_TANK_CANNON, REG_CANNON_TRIGGER, true as i32)
                     .unwrap();
             }
         }

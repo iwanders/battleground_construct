@@ -22,7 +22,8 @@ impl UnitControl for TankSwivelShoot {
             }
         }
 
-        let write_res = interface.set_i32(tank::MODULE_TANK_CANNON, REG_CANNON_FIRING, true as i32);
+        let write_res =
+            interface.set_i32(tank::MODULE_TANK_CANNON, REG_CANNON_TRIGGER, true as i32);
         write_res.unwrap();
 
         let clock = interface.get_f32(tank::MODULE_TANK_CLOCK, 0).unwrap();

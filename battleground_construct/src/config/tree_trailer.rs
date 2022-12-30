@@ -303,7 +303,7 @@ pub fn populate_tree_trailer(construct: &mut crate::Construct) {
         }),
     );
 
-    let set_cannon_firing = |world: &mut World, time: f32, firing: bool| {
+    let set_cannon_firing = |world: &mut World, time: f32| {
         let modify_rev = world.add_entity();
         world.add_component(
             modify_rev,
@@ -311,10 +311,10 @@ pub fn populate_tree_trailer(construct: &mut crate::Construct) {
                 let mut d = world
                     .component_mut::<components::cannon::Cannon>(muzzle_entity)
                     .expect("cannon should be here");
-                d.set_firing(firing);
+                d.trigger();
             }),
         );
     };
-    set_cannon_firing(world, t_blast + 5.5, true);
-    set_cannon_firing(world, t_blast + 5.6, false);
+    set_cannon_firing(world, t_blast + 5.5);
+    set_cannon_firing(world, t_blast + 5.6);
 }
