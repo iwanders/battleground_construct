@@ -41,9 +41,17 @@ pub struct Line {
 }
 impl Eq for Line {}
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Circle {
+    pub radius: f32,
+    pub subdivisions: u32,
+}
+impl Eq for Circle {}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Primitive {
     Cuboid(Cuboid),
+    Circle(Circle),
     Sphere(Sphere),
     Cylinder(Cylinder),
     Line(Line),
