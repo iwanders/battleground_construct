@@ -825,12 +825,12 @@ impl ConstructRender {
                 m
             }
             display::primitives::Primitive::Sphere(sphere) => {
-                let mut m = CpuMesh::sphere(16);
+                let mut m = CpuMesh::sphere(32);
                 m.transform(&Mat4::from_scale(sphere.radius)).unwrap();
                 m
             }
             display::primitives::Primitive::Cylinder(cylinder) => {
-                let mut m = CpuMesh::cylinder(16);
+                let mut m = CpuMesh::cylinder(32);
                 m.transform(&Mat4::from_nonuniform_scale(
                     cylinder.height,
                     cylinder.radius,
@@ -840,7 +840,7 @@ impl ConstructRender {
                 m
             }
             display::primitives::Primitive::Cone(cone) => {
-                let mut m = CpuMesh::cone(16);
+                let mut m = CpuMesh::cone(32);
                 m.transform(&Mat4::from_nonuniform_scale(
                     cone.height,
                     cone.radius,
