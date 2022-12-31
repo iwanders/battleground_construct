@@ -1,8 +1,13 @@
+uniform sampler2D depthTexture;
+uniform mat4 viewProjectionInverse;
+
 uniform vec4 surfaceColor;
 
+in vec3 pos;
 layout (location = 0) out vec4 outColor;
 
 
+// Lifted from shared.frag in three-d
 vec3 srgb_from_rgb(vec3 rgb) {
 	vec3 a = vec3(0.055, 0.055, 0.055);
 	vec3 ap1 = vec3(1.0, 1.0, 1.0) + a;
@@ -14,6 +19,13 @@ vec3 srgb_from_rgb(vec3 rgb) {
 	return mix(lo, hi, select);
 }
 
+// Lifted from shared.frag in three-d
+vec3 world_pos_from_depth(mat4 viewProjectionInverse, float depth, vec2 uv) {
+    vec4 clipSpacePosition = vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+    vec4 position = viewProjectionInverse * clipSpacePosition;
+    return position.xyz / position.w;
+}
+
 void main()
 {
     outColor = surfaceColor;
@@ -22,6 +34,18 @@ void main()
     outColor *= col;
     #endif
 
-    outColor.a = 0.5;
+    ivec2 depthSize = textureSize(depthTexture, 0);
+    vec2 uv = gl_FragCoord.xy / depthSize;
+
+    // Determine distance between background and fence
+    vec3 backgroundPosition = world_pos_from_depth(viewProjectionInverse, texture(depthTexture, uv).x, uv);
+    vec3 fencePosition = pos;
+    float d = distance(fencePosition, backgroundPosition);
+
+    // Use distance to blend in fence near things
+    float f = exp(-11.09 * pow(d, 4));
+    outColor.a = f;
+
+    // Convert color space
     outColor.rgb = srgb_from_rgb(outColor.rgb);
 }

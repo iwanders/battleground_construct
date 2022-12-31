@@ -375,7 +375,7 @@ impl ConstructViewer {
                 Wrapping::ClampToEdge,
             );
 
-            let depth_material = DepthMaterial {
+            let write_depth_material = ColorMaterial {
                 render_states: RenderStates {
                     write_mask: WriteMask::DEPTH,
                     ..Default::default()
@@ -386,7 +386,7 @@ impl ConstructViewer {
                 .as_depth_target()
                 .clear(ClearState::default())
                 .render_with_material(
-                    &depth_material,
+                    &write_depth_material,
                     &self.camera,
                     &self.construct_render.non_emissive_meshes(),
                     &[],
@@ -411,7 +411,7 @@ impl ConstructViewer {
             .render(&self.camera, &self.construct_render.emissive_objects(), &[]);
 
             // C) Render fence meshes to framebuffer (with bound depth texture)
-            let fence_material = FenceMaterial::new();
+            let fence_material = FenceMaterial::new(&depth_texture);
             screen.render_with_material(
                 &fence_material,
                 &self.camera,

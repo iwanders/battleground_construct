@@ -1,13 +1,14 @@
 use three_d::*;
 
-#[derive(Clone, Default)]
-pub struct FenceMaterial {
+#[derive(Clone)]
+pub struct FenceMaterial<'a> {
     pub color: Color,
     pub render_states: RenderStates,
+    pub depth_texture: &'a DepthTexture2D,
 }
 
-impl FenceMaterial {
-    pub fn new() -> Self {
+impl<'a> FenceMaterial<'a> {
+    pub fn new(depth_texture: &'a DepthTexture2D) -> Self {
         Self {
             color: Color {
                 r: 255,
@@ -20,11 +21,12 @@ impl FenceMaterial {
                 blend: Blend::TRANSPARENCY,
                 ..Default::default()
             },
+            depth_texture
         }
     }
 }
 
-impl Material for FenceMaterial {
+impl Material for FenceMaterial<'_> {
     fn fragment_shader_source(&self, use_vertex_colors: bool, _lights: &[&dyn Light]) -> String {
         let mut shader = String::new();
         if use_vertex_colors {
@@ -33,8 +35,13 @@ impl Material for FenceMaterial {
         shader.push_str(include_str!("shaders/fence_material.frag"));
         shader
     }
-    fn use_uniforms(&self, program: &Program, _camera: &Camera, _lights: &[&dyn Light]) {
+    fn use_uniforms(&self, program: &Program, camera: &Camera, _lights: &[&dyn Light]) {
         program.use_uniform("surfaceColor", self.color);
+        program.use_uniform(
+            "viewProjectionInverse",
+            &(camera.projection() * camera.view()).invert().unwrap(),
+        );
+        program.use_depth_texture("depthTexture", self.depth_texture);
     }
     fn render_states(&self) -> RenderStates {
         self.render_states
