@@ -5,6 +5,9 @@ use battleground_construct::Construct;
 mod construct_render;
 use construct_render::ConstructRender;
 
+mod fence_material;
+use fence_material::FenceMaterial;
+
 const PRINT_DURATIONS: bool = false;
 
 pub struct Limiter {
@@ -342,10 +345,11 @@ impl ConstructViewer {
 
             /* The rendering steps will look something like this:
                 0) Prerender shadow maps
-                A) Scene render (targets framebuffer)
+                A1) Scene render (targets framebuffer)
                 B1) Render depth of non-emissives into depth texture
                 B2) Render emissives into color texture (use B1 as depth texture)
-                C) Write B2 into A additively
+                C) Render fence meshes to framebuffer (with bound depth texture)
+                D) Write B2 into A additively
             */
 
             // 0) Prerender shadow maps
@@ -406,7 +410,16 @@ impl ConstructViewer {
             )
             .render(&self.camera, &self.construct_render.emissive_objects(), &[]);
 
-            // C) Write B2 into A additively
+            // C) Render fence meshes to framebuffer (with bound depth texture)
+            let fence_material = FenceMaterial::new();
+            screen.render_with_material(
+                &fence_material,
+                &self.camera,
+                &self.construct_render.fence_objects(),
+                &[],
+            );
+
+            // D) Write B2 into A additively
             screen
                 .write(|| {
                     apply_effect(

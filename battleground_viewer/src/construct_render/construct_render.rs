@@ -84,7 +84,7 @@ impl DrawableKey for battleground_construct::display::primitives::Material {
                     material.emissive.a.hash(state);
                 }
             }
-            battleground_construct::display::primitives::Material::TeamMaterial => {
+            battleground_construct::display::primitives::Material::FenceMaterial(_) => {
                 2usize.hash(state);
             }
         }
@@ -113,6 +113,9 @@ pub struct ConstructRender {
 
     /// All meshes that are use for emisive rendering
     emissive_meshes: std::collections::HashMap<u64, Properties<ColorMaterial>>,
+
+    /// All meshes that will be rendered with a fence material
+    fence_meshes: std::collections::HashMap<u64, Properties<ColorMaterial>>,
 
     /// element to draw the selection boxes without any shading on the lines.
     select_boxes: InstancedEntity<ColorMaterial>,
@@ -193,6 +196,7 @@ impl ConstructRender {
             pbr_meshes: Default::default(),
             emissive_meshes: Default::default(),
             effects: Default::default(),
+            fence_meshes: Default::default(),
             select_boxes,
         }
     }
@@ -225,7 +229,7 @@ impl ConstructRender {
         }
     }
 
-    /// Return a list of geometrise to be used for shadow calculations.
+    /// Return a list of geometries to be used for shadow calculations.
     pub fn shadow_meshes(&self) -> Vec<&impl Geometry> {
         self.pbr_meshes
             .values()
@@ -269,6 +273,13 @@ impl ConstructRender {
             .collect::<_>()
     }
 
+    pub fn fence_objects(&self) -> Vec<&dyn Object> {
+        self.fence_meshes
+            .values()
+            .map(|x| x.object.gm() as &dyn Object)
+            .collect::<_>()
+    }
+
     /// Return the objects to be rendered.
     pub fn objects(&self) -> Vec<&dyn Object> {
         let mut renderables: Vec<&dyn Object> = vec![];
@@ -288,7 +299,6 @@ impl ConstructRender {
                 .map(|x| x as &dyn Object)
                 .collect::<Vec<_>>(),
         );
-
         renderables.append(
             &mut self
                 .effects
@@ -306,12 +316,16 @@ impl ConstructRender {
         for instance_entity in self.emissive_meshes.values_mut() {
             instance_entity.object.update_instances();
         }
+        for instance_entity in self.fence_meshes.values_mut() {
+            instance_entity.object.update_instances();
+        }
         self.select_boxes.update_instances();
     }
 
     fn reset_instances(&mut self) {
         self.pbr_meshes.clear();
         self.emissive_meshes.clear();
+        self.fence_meshes.clear();
         self.select_boxes.clear();
     }
 
@@ -558,6 +572,26 @@ impl ConstructRender {
         el: &display::primitives::Element,
         entity_transform: &Matrix4<f32>,
     ) {
+        match el.material {
+            battleground_construct::display::primitives::Material::FlatMaterial(flat_material) => {
+                self.add_primitive_element_pbr(context, el, entity_transform);
+                if flat_material.is_emissive {
+                    self.add_primitive_element_emissive(context, el, entity_transform);
+                }
+            }
+            battleground_construct::display::primitives::Material::FenceMaterial(_) => {
+                self.add_primitive_element_fence(context, el, entity_transform);
+            }
+        }
+    }
+
+    // All functions in the add_primitive_element_* family resemble each other way too much...
+    fn add_primitive_element_pbr(
+        &mut self,
+        context: &Context,
+        el: &display::primitives::Element,
+        entity_transform: &Matrix4<f32>,
+    ) {
         // Add the elements to the pbr_meshes
         let instanced = &mut self
             .pbr_meshes
@@ -574,14 +608,17 @@ impl ConstructRender {
                     battleground_construct::display::primitives::Material::FlatMaterial(
                         flat_material,
                     ) => flat_material.is_emissive,
-                    battleground_construct::display::primitives::Material::TeamMaterial => todo!(),
+                    battleground_construct::display::primitives::Material::FenceMaterial(_) => {
+                        unimplemented!()
+                    }
                 };
 
                 // Need to make the appropriate material here based on the material passed in.
-                let material = match el.material {
-                    battleground_construct::display::primitives::Material::FlatMaterial(
+                let material =
+                    if let battleground_construct::display::primitives::Material::FlatMaterial(
                         flat_material,
-                    ) => {
+                    ) = el.material
+                    {
                         let emissive = if flat_material.is_emissive {
                             flat_material.emissive.to_color()
                         } else {
@@ -605,9 +642,9 @@ impl ConstructRender {
                                 ..Default::default()
                             },
                         )
-                    }
-                    battleground_construct::display::primitives::Material::TeamMaterial => todo!(),
-                };
+                    } else {
+                        panic!("unsupported material");
+                    };
 
                 Properties {
                     object: InstancedEntity::new(context, &primitive_mesh, material),
@@ -637,81 +674,135 @@ impl ConstructRender {
             }
             _ => instanced.add(transform, color),
         };
+    }
 
-        let is_emissive = match el.material {
-            battleground_construct::display::primitives::Material::FlatMaterial(flat_material) => {
-                flat_material.is_emissive
-            }
-            battleground_construct::display::primitives::Material::TeamMaterial => todo!(),
-        };
+    fn add_primitive_element_emissive(
+        &mut self,
+        context: &Context,
+        el: &display::primitives::Element,
+        entity_transform: &Matrix4<f32>,
+    ) {
+        // Add the elements to the emissive meshes
+        let instanced = &mut self
+            .emissive_meshes
+            .entry(el.to_draw_key())
+            .or_insert_with(|| {
+                let primitive_mesh = Self::primitive_to_mesh(el);
 
-        if is_emissive {
-            // Add the elements to the emissive meshes
-            let instanced = &mut self
-                .emissive_meshes
-                .entry(el.to_draw_key())
-                .or_insert_with(|| {
-                    let primitive_mesh = Self::primitive_to_mesh(el);
-
-                    // Need to make the appropriate material here based on the material passed in.
-                    let material = match el.material {
-                        battleground_construct::display::primitives::Material::FlatMaterial(
-                            flat_material,
-                        ) => {
-                            let fun = if flat_material.is_transparent {
-                                three_d::renderer::material::ColorMaterial::new_transparent
-                            } else {
-                                three_d::renderer::material::ColorMaterial::new_opaque
-                            };
-                            fun(
-                                context,
-                                &CpuMaterial {
-                                    albedo: Color {
-                                        r: 255,
-                                        g: 255,
-                                        b: 255,
-                                        a: 255,
-                                    },
-                                    ..Default::default()
+                // Need to make the appropriate material here based on the material passed in.
+                let material =
+                    if let battleground_construct::display::primitives::Material::FlatMaterial(
+                        flat_material,
+                    ) = el.material
+                    {
+                        let fun = if flat_material.is_transparent {
+                            three_d::renderer::material::ColorMaterial::new_transparent
+                        } else {
+                            three_d::renderer::material::ColorMaterial::new_opaque
+                        };
+                        fun(
+                            context,
+                            &CpuMaterial {
+                                albedo: Color {
+                                    r: 255,
+                                    g: 255,
+                                    b: 255,
+                                    a: 255,
                                 },
-                            )
-                        }
-                        battleground_construct::display::primitives::Material::TeamMaterial => {
-                            todo!()
-                        }
+                                ..Default::default()
+                            },
+                        )
+                    } else {
+                        panic!("unsupported material");
                     };
 
-                    Properties {
-                        object: InstancedEntity::new(context, &primitive_mesh, material),
-                        cast_shadow: false,
-                        is_emissive: true,
-                    }
-                })
-                .object;
-
-            let transform = entity_transform * el.transform;
-            // At some point, we have to handle different material types here.
-            let material =
-                if let display::primitives::Material::FlatMaterial(material) = el.material {
-                    material
-                } else {
-                    panic!("unsupported material");
-                };
-            let color = material.emissive.to_color();
-
-            match &el.primitive {
-                display::primitives::Primitive::Line(l) => {
-                    use battleground_construct::util::cgmath::ToHomogenous;
-                    use battleground_construct::util::cgmath::ToTranslation;
-                    let p0_original = vec3(l.p0.0, l.p0.1, l.p0.2);
-                    let p1_original = vec3(l.p1.0, l.p1.1, l.p1.2);
-                    let p0_transformed = (transform * p0_original.to_h()).to_translation();
-                    let p1_transformed = (transform * p1_original.to_h()).to_translation();
-                    instanced.add_line(p0_transformed, p1_transformed, l.width, color);
+                Properties {
+                    object: InstancedEntity::new(context, &primitive_mesh, material),
+                    cast_shadow: false,
+                    is_emissive: true,
                 }
-                _ => instanced.add(transform, color),
-            };
-        }
+            })
+            .object;
+
+        let transform = entity_transform * el.transform;
+        // At some point, we have to handle different material types here.
+        let material = if let display::primitives::Material::FlatMaterial(material) = el.material {
+            material
+        } else {
+            panic!("unsupported material");
+        };
+        let color = material.emissive.to_color();
+
+        match &el.primitive {
+            display::primitives::Primitive::Line(l) => {
+                use battleground_construct::util::cgmath::ToHomogenous;
+                use battleground_construct::util::cgmath::ToTranslation;
+                let p0_original = vec3(l.p0.0, l.p0.1, l.p0.2);
+                let p1_original = vec3(l.p1.0, l.p1.1, l.p1.2);
+                let p0_transformed = (transform * p0_original.to_h()).to_translation();
+                let p1_transformed = (transform * p1_original.to_h()).to_translation();
+                instanced.add_line(p0_transformed, p1_transformed, l.width, color);
+            }
+            _ => instanced.add(transform, color),
+        };
+    }
+
+    fn add_primitive_element_fence(
+        &mut self,
+        context: &Context,
+        el: &display::primitives::Element,
+        entity_transform: &Matrix4<f32>,
+    ) {
+        // Add the elements to the emissive meshes
+        let instanced = &mut self
+            .fence_meshes
+            .entry(el.to_draw_key())
+            .or_insert_with(|| {
+                let primitive_mesh = Self::primitive_to_mesh(el);
+                Properties {
+                    object: InstancedEntity::new(
+                        context,
+                        &primitive_mesh,
+                        ColorMaterial::new(
+                            context,
+                            &CpuMaterial {
+                                albedo: Color {
+                                    r: 255,
+                                    g: 255,
+                                    b: 255,
+                                    a: 255,
+                                },
+                                ..Default::default()
+                            },
+                        ),
+                    ),
+                    cast_shadow: false,
+                    is_emissive: false,
+                }
+            })
+            .object;
+
+        let transform = entity_transform * el.transform;
+        // At some point, we have to handle different material types here.
+        let material = if let display::primitives::Material::FenceMaterial(material) = el.material {
+            material
+        } else {
+            panic!("unsupported material");
+        };
+        let color = material.color.to_color();
+
+        match &el.primitive {
+            display::primitives::Primitive::Line(l) => {
+                use battleground_construct::util::cgmath::ToHomogenous;
+                use battleground_construct::util::cgmath::ToTranslation;
+                let p0_original = vec3(l.p0.0, l.p0.1, l.p0.2);
+                let p1_original = vec3(l.p1.0, l.p1.1, l.p1.2);
+                let p0_transformed = (transform * p0_original.to_h()).to_translation();
+                let p1_transformed = (transform * p1_original.to_h()).to_translation();
+                instanced.add_line(p0_transformed, p1_transformed, l.width, color);
+            }
+            _ => instanced.add(transform, color),
+        };
     }
 
     fn primitive_to_mesh(el: &display::primitives::Element) -> CpuMesh {
@@ -753,7 +844,7 @@ impl ConstructRender {
                 .unwrap();
                 m
             }
-            display::primitives::Primitive::Line(_line) => CpuMesh::cylinder(4)
+            display::primitives::Primitive::Line(_line) => CpuMesh::cylinder(4),
         }
     }
 }
