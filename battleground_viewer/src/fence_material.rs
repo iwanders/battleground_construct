@@ -21,7 +21,7 @@ impl<'a> FenceMaterial<'a> {
                 blend: Blend::TRANSPARENCY,
                 ..Default::default()
             },
-            depth_texture
+            depth_texture,
         }
     }
 }

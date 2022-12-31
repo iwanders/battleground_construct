@@ -157,4 +157,44 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             },
         ),
     );
+
+    // Spawn two teams.
+    let team_red_entity = world.add_entity();
+    let red_team_id = components::id_generator::generate_id(world);
+    let red_team = components::team::Team::new(red_team_id, &"red", Color::RED);
+    let red_team_id = red_team.id();
+    world.add_component(team_red_entity, red_team);
+    let team_blue_id = components::id_generator::generate_id(world);
+    let team_blue_entity = world.add_entity();
+    let blue_team = components::team::Team::new(team_blue_id, &"blue", Color::BLUE);
+    let team_blue_id = blue_team.id();
+    world.add_component(team_blue_entity, blue_team);
+
+    // Spawn a capturable flag.
+    let mut flag_config = crate::units::capturable_flag::CapturableFlagConfig {
+        x: -3.0,
+        y: 5.0,
+        yaw: 0.0,
+        radius: 3.0,
+        capture_speed: 1.0,
+        initial_owner: Some(red_team_id),
+        ..Default::default()
+    };
+    crate::units::capturable_flag::spawn_capturable_flag(world, flag_config);
+    flag_config.initial_owner = Some(team_blue_id);
+    flag_config.x += -7.0;
+    crate::units::capturable_flag::spawn_capturable_flag(world, flag_config);
+
+    spawn_tank(
+        world,
+        TankSpawnConfig {
+            x: -5.0,
+            y: 2.0,
+            yaw: 0.0,
+            // controller: Box::new(control::tank_swivel_shoot::TankSwivelShoot {}),
+            controller: Box::new(unit_control_builtin::idle::Idle{}),
+            ..Default::default()
+        },
+    );
+
 }
