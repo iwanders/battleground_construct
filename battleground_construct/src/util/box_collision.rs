@@ -22,13 +22,13 @@ impl<S: BaseNum + std::fmt::Display> AxisAlignedBox<S> {
     }
 
     #[inline]
-    pub fn min(&self) -> Vector3<S> {
+    pub fn min_point(&self) -> Vector3<S> {
         let zero = S::zero();
         self.parametrized_point(zero, zero, zero)
     }
 
     #[inline]
-    pub fn max(&self) -> Vector3<S> {
+    pub fn max_point(&self) -> Vector3<S> {
         let one = S::one();
         self.parametrized_point(one, one, one)
     }
@@ -92,14 +92,52 @@ impl<S: BaseNum + std::fmt::Display> AxisAlignedBox<S> {
         dim1 && dim2 && dim3
     }
 
+    // Use a < b, NOT a <= b, the latter doesn't optimise to a single instruction.
+    fn min(a: S, b: S) -> S {
+        if a < b {
+            a
+        } else {
+            b
+        }
+    }
+    fn max(a: S, b: S) -> S {
+        if a > b {
+            a
+        } else {
+            b
+        }
+    }
+
     // https://github.com/tavianator/tavianator.com/blob/main/src/2015/ray_box_nan.md
     // has a nice implementation that's branchless.
     ///
-    /// Check if a line segment is intersecting the box.
+    /// Check if a line segment is intersecting the box, returns a boolean, fastest method.
     ///
     pub fn is_intersecting(&self, p0: Vector3<S>, p1: Vector3<S>) -> bool {
-        let bmin = self.min();
-        let bmax = self.max();
+        let one = S::one();
+        let zero = S::zero();
+        let (tmin, tmax) = self.is_intersecting_worker(p0, p1);
+        tmax > Self::max(tmin, zero) && Self::max(tmin, zero) < one
+    }
+
+    ///
+    /// Check if a line segment is intersecting the box, returning an optional that holds the
+    /// parametrized intersection points, None if there are no intersections.
+    ///
+    pub fn intersections(&self, p0: Vector3<S>, p1: Vector3<S>) -> Option<(S, S)> {
+        let one = S::one();
+        let zero = S::zero();
+        let (tmin, tmax) = self.is_intersecting_worker(p0, p1);
+        if tmax > Self::max(tmin, zero) && Self::max(tmin, zero) < one {
+            return Some((tmin, tmax));
+        }
+        None
+    }
+
+    #[inline]
+    fn is_intersecting_worker(&self, p0: Vector3<S>, p1: Vector3<S>) -> (S, S) {
+        let bmin = self.min_point();
+        let bmax = self.max_point();
         let rorigin = p0;
 
         // Direction of the ray
@@ -107,46 +145,30 @@ impl<S: BaseNum + std::fmt::Display> AxisAlignedBox<S> {
 
         // Normalize that
         let one = S::one();
-        let zero = S::zero();
+        // let zero = S::zero();
         let rdir_inv = Vector3::<S>::new(one / ray_dir.x, one / ray_dir.y, one / ray_dir.z);
-
-        // Use a < b, NOT a <= b, the latter doesn't optimise to a single instruction.
-        fn min<S: std::cmp::PartialOrd>(a: S, b: S) -> S {
-            if a < b {
-                a
-            } else {
-                b
-            }
-        }
-        fn max<S: std::cmp::PartialOrd>(a: S, b: S) -> S {
-            if a > b {
-                a
-            } else {
-                b
-            }
-        }
 
         // Unroll manually such that we can avoid the infty.
         let i = 0;
         let t1 = (bmin[i] - rorigin[i]) * rdir_inv[i];
         let t2 = (bmax[i] - rorigin[i]) * rdir_inv[i];
 
-        let mut tmin = min(t1, t2);
-        let mut tmax = max(t1, t2);
+        let mut tmin = Self::min(t1, t2);
+        let mut tmax = Self::max(t1, t2);
 
         let i = 1;
         let t1 = (bmin[i] - rorigin[i]) * rdir_inv[i];
         let t2 = (bmax[i] - rorigin[i]) * rdir_inv[i];
 
         let i = 2;
-        tmin = max(tmin, min(t1, t2));
-        tmax = min(tmax, max(t1, t2));
+        tmin = Self::max(tmin, Self::min(t1, t2));
+        tmax = Self::min(tmax, Self::max(t1, t2));
 
         let t1 = (bmin[i] - rorigin[i]) * rdir_inv[i];
         let t2 = (bmax[i] - rorigin[i]) * rdir_inv[i];
 
-        tmin = max(tmin, min(t1, t2));
-        tmax = min(tmax, max(t1, t2));
+        tmin = Self::max(tmin, Self::min(t1, t2));
+        tmax = Self::min(tmax, Self::max(t1, t2));
 
         // println!();
         // println!("tmax: {tmax}");
@@ -158,7 +180,8 @@ impl<S: BaseNum + std::fmt::Display> AxisAlignedBox<S> {
         // return tmax > max(tmin, zero);
 
         // Add the condition to check that the line segment (parametrized to [0.0, 1.0]) is met.
-        tmax > max(tmin, zero) && max(tmin, zero) < one
+        // tmax > max(tmin, zero) && max(tmin, zero) < one
+        (tmin, tmax)
     }
 }
 

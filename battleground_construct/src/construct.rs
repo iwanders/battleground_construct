@@ -67,7 +67,9 @@ impl Construct {
         let dir = dir * 10000.0; // 10 km ought to be enough for anyone...
         let p1 = pos + dir;
 
-        if false {
+        const PLOT_DEBUG: bool = false;
+
+        if PLOT_DEBUG {
             // Optionally, we can sprinkle all rays into the world here...
             let z = self.world.add_entity();
             let mut l = crate::display::debug_lines::DebugLines::new();
@@ -90,9 +92,25 @@ impl Construct {
                 (select_box_pose.transform().to_inv_h() * p1.to_h()).to_translation();
             let b =
                 AxisAlignedBox::new(select_box.length(), select_box.width(), select_box.height());
-
-            if b.is_intersecting(pos_in_box_frame, p1_in_box_frame) {
+            let have_intersection = b.is_intersecting(pos_in_box_frame, p1_in_box_frame);
+            if have_intersection {
                 v.push(*entity);
+                if PLOT_DEBUG {
+                    let intersections = b.intersections(pos_in_box_frame, p1_in_box_frame).unwrap();
+                    // parametrized in one coordinate system is also parametrized in another if the
+                    // spaces are uniform. So don't need to transform here.
+                    for n in [intersections.0, intersections.1] {
+                        let z = self.world.add_entity();
+                        let l = crate::display::debug_box::DebugBox::cube(0.1);
+                        let diff = p1 - pos;
+                        let intersect_pos = pos + diff * n;
+                        self.world.add_component(
+                            z,
+                            components::pose::Pose::from_translation(intersect_pos),
+                        );
+                        self.world.add_component(z, l);
+                    }
+                }
             }
         }
         v
