@@ -276,6 +276,14 @@ impl ConstructViewer {
 
             for e in frame_input.events.iter() {
                 match *e {
+                    three_d::Event::KeyPress {
+                        kind: Key::Space,
+                        handled: false,
+                        ..
+                    } => {
+                        viewer_state.paused = !viewer_state.paused;
+                        self.limiter.set_paused(viewer_state.paused);
+                    }
                     three_d::Event::MousePress {
                         button,
                         position,

@@ -43,8 +43,11 @@ void main()
     float d = distance(fencePosition, backgroundPosition);
 
     // Use distance to blend in fence near things
-    float f = exp(-11.09 * pow(d, 4));
-    outColor.a = f;
+    // float f = exp(-11.09 * pow(d, 4));
+    const float lineWidth = 0.1;
+    float fade = exp(-2.0 * (d + 0.2));
+    float step = floor(-d + lineWidth) + 1.0;
+    outColor.a = max(fade, step);
 
     // Convert color space
     outColor.rgb = srgb_from_rgb(outColor.rgb);

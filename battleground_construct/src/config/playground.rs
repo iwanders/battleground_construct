@@ -188,11 +188,18 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
     spawn_tank(
         world,
         TankSpawnConfig {
-            x: -5.0,
-            y: 2.0,
+            x: -6.5,
+            y: 5.0,
             yaw: 0.0,
             // controller: Box::new(control::tank_swivel_shoot::TankSwivelShoot {}),
-            controller: Box::new(unit_control_builtin::idle::Idle{}),
+            // controller: Box::new(unit_control_builtin::idle::Idle{}),
+            controller: Box::new(
+                unit_control_builtin::diff_drive_forwards_backwards::DiffDriveForwardsBackwardsControl {
+                    velocities: (0.75, 1.0),
+                    last_flip: -1.5,
+                    duration: 3.0,
+                },
+            ),
             ..Default::default()
         },
     );
