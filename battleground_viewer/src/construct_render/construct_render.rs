@@ -60,7 +60,6 @@ impl DrawableKey for battleground_construct::display::primitives::Primitive {
             Primitive::Circle(circle) => {
                 5usize.hash(state);
                 circle.radius.to_bits().hash(state);
-                circle.subdivisions.hash(state);
             }
         }
         // val
@@ -830,7 +829,7 @@ impl ConstructRender {
                 m
             }
             display::primitives::Primitive::Cylinder(cylinder) => {
-                let mut m = CpuMesh::cylinder(32);
+                let mut m = CpuMesh::cylinder(128);
                 m.transform(&Mat4::from_nonuniform_scale(
                     cylinder.height,
                     cylinder.radius,
@@ -840,7 +839,7 @@ impl ConstructRender {
                 m
             }
             display::primitives::Primitive::Cone(cone) => {
-                let mut m = CpuMesh::cone(32);
+                let mut m = CpuMesh::cone(128);
                 m.transform(&Mat4::from_nonuniform_scale(
                     cone.height,
                     cone.radius,
@@ -851,7 +850,7 @@ impl ConstructRender {
             }
             display::primitives::Primitive::Line(_line) => CpuMesh::cylinder(4),
             display::primitives::Primitive::Circle(circle) => {
-                let mut m = CpuMesh::circle(circle.subdivisions);
+                let mut m = CpuMesh::circle(128);
                 m.transform(&Mat4::from_scale(circle.radius)).unwrap();
                 m
             }
