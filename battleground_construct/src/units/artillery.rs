@@ -138,7 +138,24 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         MODULE_ARTILLERY_DIFF_DRIVE,
     );
 
-    world.add_component(base_entity, display::artillery_tracks::ArtilleryTracks::new());
+    let track_config = display::tracks_side::TracksSideConfig {
+        width: 0.4,
+        length: 1.0,
+        height: 0.2,
+        track_width: 1.0,
+    };
+    let front_tracks_entity = world.add_entity();
+    world.add_component(front_tracks_entity, Parent::new(base_entity));
+    world.add_component(front_tracks_entity, PreTransform::from_se2(0.75, 0.0, 0.0));
+    world.add_component(front_tracks_entity, display::tracks_side::TracksSide::from_config(track_config, base_entity));
+
+    // Second track set.
+    let rear_tracks_entity = world.add_entity();
+    world.add_component(rear_tracks_entity, Parent::new(base_entity));
+    world.add_component(rear_tracks_entity, PreTransform::from_se2(-0.75, 0.0, 0.0));
+    world.add_component(rear_tracks_entity, display::tracks_side::TracksSide::from_config(track_config, base_entity));
+
+    // world.add_component(base_entity, display::artillery_tracks::ArtilleryTracks::new());
 
     // -----   Body
     world.add_component(body_entity, Parent::new(base_entity));
@@ -146,7 +163,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         body_entity,
         PreTransform::from_translation(Vec3::new(0.0, 0.0, ARTILLERY_DIM_FLOOR_TO_BODY_Z)),
     );
-    let body = display::artillery_body::ArtilleryBody::new();
+    let body = display::tank_body::TankBody::new();
     let hitbox = body.hitbox();
     world.add_component(body_entity, body);
     world.add_component(
@@ -182,7 +199,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         PreTransform::from_translation(Vec3::new(0.0, 0.0, ARTILLERY_DIM_FLOOR_TO_TURRET_Z)),
     );
     world.add_component(turret_entity, Parent::new(base_entity));
-    world.add_component(turret_entity, display::artillery_turret::ArtilleryTurret::new());
+    // world.add_component(turret_entity, display::artillery_turret::ArtilleryTurret::new());
 
     // -----   Barrel
     let revolute_config = components::revolute::RevoluteConfig {
@@ -204,7 +221,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         PreTransform::from_translation(Vec3::new(ARTILLERY_DIM_TURRET_TO_BARREL_X, 0.0, 0.0)),
     );
     world.add_component(barrel_entity, Parent::new(turret_entity));
-    world.add_component(barrel_entity, display::artillery_barrel::ArtilleryBarrel::new());
+    // world.add_component(barrel_entity, display::artillery_barrel::ArtilleryBarrel::new());
     // world.add_component(barrel_entity, display::debug_lines::DebugLines::straight(10.0, 0.1, display::primitives::Color::BLUE));
 
     // -----   Nozzle

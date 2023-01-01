@@ -411,7 +411,7 @@ impl ConstructRender {
 
         // Iterate through all displayables to collect meshes
         self.component_to_meshes::<display::tank_body::TankBody>(context, construct);
-        self.component_to_meshes::<display::tank_tracks::TankTracks>(context, construct);
+        self.component_to_meshes::<display::tracks_side::TracksSide>(context, construct);
 
         self.component_to_meshes::<display::tank_turret::TankTurret>(context, construct);
         self.component_to_meshes::<display::tank_barrel::TankBarrel>(context, construct);

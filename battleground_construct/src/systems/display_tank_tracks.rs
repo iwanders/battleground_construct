@@ -1,5 +1,5 @@
 use super::components::differential_drive_base::DifferentialDriveBase;
-use super::display::tank_tracks::TankTracks;
+use super::display::tracks_side::TracksSide;
 use super::Clock;
 
 use engine::prelude::*;
@@ -14,8 +14,9 @@ impl System for DisplayTankTracks {
             .expect("Should have one clock");
         let dt = clock.step_as_f32();
 
-        for (entity, base) in world.component_iter::<DifferentialDriveBase>() {
-            if let Some(mut tracks) = world.component_mut::<TankTracks>(entity) {
+        for (_entity, mut tracks) in world.component_iter_mut::<TracksSide>() {
+            let diff_drive_entity = tracks.diff_drive_entity();
+            if let Some(base) = world.component::<DifferentialDriveBase>(diff_drive_entity) {
                 let (left, right) = base.wheel_velocities();
                 tracks.add_track_distance(dt * left, dt * right)
             }

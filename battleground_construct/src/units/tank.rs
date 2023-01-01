@@ -137,8 +137,13 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         diff_drive_config,
         MODULE_TANK_DIFF_DRIVE,
     );
-
-    world.add_component(base_entity, display::tank_tracks::TankTracks::new());
+    let track_config = display::tracks_side::TracksSideConfig {
+        width: 0.4,
+        length: 1.4,
+        height: 0.2,
+        track_width: 1.0,
+    };
+    world.add_component(base_entity, display::tracks_side::TracksSide::from_config(track_config, base_entity));
 
     // -----   Body
     world.add_component(body_entity, Parent::new(base_entity));

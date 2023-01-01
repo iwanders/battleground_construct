@@ -74,15 +74,24 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
         },
     );
 
+
+    let _fw_backwards = Box::new(
+        unit_control_builtin::diff_drive_forwards_backwards::DiffDriveForwardsBackwardsControl {
+            velocities: (1.0, 1.0),
+            last_flip: 0.0,
+            duration: 5.0,
+        },
+    );
     let _radar_tank = spawn_artillery(
         world,
         ArtillerySpawnConfig {
             x: -6.0,
-            y: -3.0,
+            y: -0.0,
             yaw: 0.0,
             // controller: Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot::new()),
             // controller: Box::new(control::radar_draw::RadarDrawControl {}),
-            controller: Box::new(unit_control_builtin::idle::Idle {}),
+            // controller: Box::new(unit_control_builtin::idle::Idle {}),
+            controller: _fw_backwards,
             ..Default::default()
         },
     );

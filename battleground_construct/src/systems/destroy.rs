@@ -52,7 +52,7 @@ impl System for Destroy {
                 destructor.add_element::<crate::display::tank_body::TankBody>(*e, world);
                 destructor.add_element::<crate::display::tank_turret::TankTurret>(*e, world);
                 destructor.add_element::<crate::display::tank_barrel::TankBarrel>(*e, world);
-                destructor.add_element::<crate::display::tank_tracks::TankTracks>(*e, world);
+                destructor.add_element::<crate::display::tracks_side::TracksSide>(*e, world);
                 destructor.add_element::<crate::display::radar_model::RadarModel>(*e, world);
             }
             world.add_component(thingy, destructor);
