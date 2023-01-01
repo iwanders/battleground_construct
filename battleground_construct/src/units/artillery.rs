@@ -6,9 +6,9 @@ use components::parent::Parent;
 use components::pose::{Pose, PreTransform};
 use engine::prelude::*;
 
-use battleground_unit_control::units::tank::*;
+use battleground_unit_control::units::artillery::*;
 
-pub struct TankSpawnConfig {
+pub struct ArtillerySpawnConfig {
     pub x: f32,
     pub y: f32,
     pub yaw: f32,
@@ -17,9 +17,9 @@ pub struct TankSpawnConfig {
     pub radio_config: Option<super::common::RadioConfig>,
 }
 
-impl Default for TankSpawnConfig {
+impl Default for ArtillerySpawnConfig {
     fn default() -> Self {
-        TankSpawnConfig {
+        ArtillerySpawnConfig {
             x: 0.0,
             y: 0.0,
             yaw: 0.0,
@@ -31,7 +31,7 @@ impl Default for TankSpawnConfig {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct UnitTank {
+pub struct UnitArtillery {
     pub unit_entity: EntityId,
     pub control_entity: EntityId,
     pub base_entity: EntityId,
@@ -42,12 +42,12 @@ pub struct UnitTank {
     pub barrel_entity: EntityId,
     pub muzzle_entity: EntityId,
 }
-impl Component for UnitTank {}
+impl Component for UnitArtillery {}
 
-/// Spawn a tank, returning the unit entity.
-pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
+/// Spawn a artillery, returning the unit entity.
+pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> EntityId {
     /*
-        Topology of the tank;
+        Topology of the artillery;
 
         Unit Entity:
             - Health
@@ -84,7 +84,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let barrel_entity = world.add_entity();
     let muzzle_entity = world.add_entity();
 
-    let tank_group_entities: Vec<EntityId> = vec![
+    let artillery_group_entities: Vec<EntityId> = vec![
         unit_entity,
         control_entity,
         base_entity,
@@ -95,7 +95,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         barrel_entity,
         muzzle_entity,
     ];
-    let unit_tank = UnitTank {
+    let unit_artillery = UnitArtillery {
         unit_entity,
         control_entity,
         base_entity,
@@ -117,10 +117,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         world,
         &register_interface,
         unit_entity,
-        battleground_unit_control::units::UnitType::Tank,
+        battleground_unit_control::units::UnitType::Artillery,
     );
 
-    world.add_component(unit_entity, unit_tank);
+    world.add_component(unit_entity, unit_artillery);
 
     // -----   Base
 
@@ -135,18 +135,18 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         &register_interface,
         base_entity,
         diff_drive_config,
-        MODULE_TANK_DIFF_DRIVE,
+        MODULE_ARTILLERY_DIFF_DRIVE,
     );
 
-    world.add_component(base_entity, display::tank_tracks::TankTracks::new());
+    world.add_component(base_entity, display::artillery_tracks::ArtilleryTracks::new());
 
     // -----   Body
     world.add_component(body_entity, Parent::new(base_entity));
     world.add_component(
         body_entity,
-        PreTransform::from_translation(Vec3::new(0.0, 0.0, TANK_DIM_FLOOR_TO_BODY_Z)),
+        PreTransform::from_translation(Vec3::new(0.0, 0.0, ARTILLERY_DIM_FLOOR_TO_BODY_Z)),
     );
-    let body = display::tank_body::TankBody::new();
+    let body = display::artillery_body::ArtilleryBody::new();
     let hitbox = body.hitbox();
     world.add_component(body_entity, body);
     world.add_component(
@@ -174,15 +174,15 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         &register_interface,
         turret_entity,
         "turret",
-        MODULE_TANK_REVOLUTE_TURRET,
+        MODULE_ARTILLERY_REVOLUTE_TURRET,
         revolute_config,
     );
     world.add_component(
         turret_entity,
-        PreTransform::from_translation(Vec3::new(0.0, 0.0, TANK_DIM_FLOOR_TO_TURRET_Z)),
+        PreTransform::from_translation(Vec3::new(0.0, 0.0, ARTILLERY_DIM_FLOOR_TO_TURRET_Z)),
     );
     world.add_component(turret_entity, Parent::new(base_entity));
-    world.add_component(turret_entity, display::tank_turret::TankTurret::new());
+    world.add_component(turret_entity, display::artillery_turret::ArtilleryTurret::new());
 
     // -----   Barrel
     let revolute_config = components::revolute::RevoluteConfig {
@@ -196,20 +196,21 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         &register_interface,
         barrel_entity,
         "barrel",
-        MODULE_TANK_REVOLUTE_BARREL,
+        MODULE_ARTILLERY_REVOLUTE_BARREL,
         revolute_config,
     );
     world.add_component(
         barrel_entity,
-        PreTransform::from_translation(Vec3::new(TANK_DIM_TURRET_TO_BARREL_X, 0.0, 0.0)),
+        PreTransform::from_translation(Vec3::new(ARTILLERY_DIM_TURRET_TO_BARREL_X, 0.0, 0.0)),
     );
     world.add_component(barrel_entity, Parent::new(turret_entity));
-    world.add_component(barrel_entity, display::tank_barrel::TankBarrel::new());
+    world.add_component(barrel_entity, display::artillery_barrel::ArtilleryBarrel::new());
     // world.add_component(barrel_entity, display::debug_lines::DebugLines::straight(10.0, 0.1, display::primitives::Color::BLUE));
 
     // -----   Nozzle
     world.add_component(muzzle_entity, Parent::new(barrel_entity));
 
+    /*
     let cannon_config = components::cannon::CannonConfig {
         reload_time: 2.0,
         fire_effect: std::rc::Rc::new(cannon_function),
@@ -220,21 +221,21 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     world.add_component(
         muzzle_entity,
-        PreTransform::from_translation(Vec3::new(TANK_DIM_BARREL_TO_MUZZLE_X, 0.0, 0.0)),
+        PreTransform::from_translation(Vec3::new(ARTILLERY_DIM_BARREL_TO_MUZZLE_X, 0.0, 0.0)),
     );
 
     register_interface.get_mut().add_module(
         "cannon",
-        MODULE_TANK_CANNON,
+        MODULE_ARTILLERY_CANNON,
         components::cannon::CannonModule::new(muzzle_entity),
-    );
+    );*/
 
     // -----   Radar
     world.add_component(radar_entity, Parent::new(turret_entity));
 
     world.add_component(
         radar_entity,
-        PreTransform::from_translation(Vec3::new(0.0, 0.0, TANK_DIM_TURRET_TO_RADAR_Z)),
+        PreTransform::from_translation(Vec3::new(0.0, 0.0, ARTILLERY_DIM_TURRET_TO_RADAR_Z)),
     );
 
     let revolute_config = components::revolute::RevoluteConfig {
@@ -249,7 +250,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         &register_interface,
         radar_entity,
         "radar_rotation",
-        MODULE_TANK_REVOLUTE_RADAR,
+        MODULE_ARTILLERY_REVOLUTE_RADAR,
         revolute_config,
     );
     let radar_config = components::radar::RadarConfig {
@@ -266,7 +267,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         &register_interface,
         radar_entity,
         "radar",
-        MODULE_TANK_RADAR,
+        MODULE_ARTILLERY_RADAR,
         radar_config,
     );
     world.add_component(radar_entity, display::radar_model::RadarModel::new());
@@ -293,8 +294,8 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
 
     // Add the group, unit and team membership to each of the component.
-    let group = Group::from(&tank_group_entities);
-    for e in tank_group_entities.iter() {
+    let group = Group::from(&artillery_group_entities);
+    for e in artillery_group_entities.iter() {
         world.add_component(*e, group.clone());
         world.add_component(*e, components::unit_member::UnitMember::new(unit_id));
         // This feels a bit like a crux... but it's cheap and easy.
@@ -306,144 +307,3 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     unit_entity
 }
 
-pub fn cannon_function(world: &mut World, cannon_entity: EntityId) {
-    use crate::components::point_projectile::PointProjectile;
-    use crate::components::unit_source::UnitSource;
-    use crate::components::velocity::Velocity;
-
-    let muzzle_pose_raw = components::pose::world_pose(world, cannon_entity);
-    let muzzle_pose = muzzle_pose_raw;
-    // println!("muzzle_pose: {muzzle_pose:?}");
-    let muzzle_world_velocity = components::velocity::world_velocity(world, cannon_entity);
-
-    // Get the unit source of this cannel.
-
-    let muzzle_velocity = TANK_PARAM_MUZZLE_VELOCITY;
-
-    // Get the pose of the cannon in the world coordinates. Then create the pose with the
-    // Orientation in the global frame.
-    let projectile_entity = world.add_entity();
-    world.add_component::<PointProjectile>(projectile_entity, PointProjectile::new());
-    let unit_id = world
-        .component::<components::unit_member::UnitMember>(cannon_entity)
-        .map(|v| v.unit());
-    if let Some(unit_member) = unit_id {
-        world.add_component(projectile_entity, UnitSource::new(unit_member));
-    }
-    world.add_component::<Pose>(
-        projectile_entity,
-        Pose::from_mat4(cgmath::Matrix4::<f32>::from_translation(
-            muzzle_pose.w.truncate(),
-        )),
-    );
-
-    // Calculate the velocity vector in the global frame.
-    let mut muzzle_pose = *muzzle_pose.transform();
-    // zero out the translation components.
-    muzzle_pose.w[0] = 0.0;
-    muzzle_pose.w[1] = 0.0;
-    let v = muzzle_pose * cgmath::Vector4::<f32>::new(muzzle_velocity, 0.0, 0.0, 1.0);
-    let v = v + muzzle_world_velocity.v.extend(0.0);
-    let projectile_velocity =
-        Velocity::from_velocities(v.truncate(), cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0));
-
-    // And add the velocity to the projectile.
-    world.add_component::<Velocity>(projectile_entity, projectile_velocity);
-    // world.add_component(projectile_entity, crate::display::debug_box::DebugBox::from_size(0.2));
-    world.add_component(
-        projectile_entity,
-        crate::display::tank_bullet::TankBullet::new(),
-    );
-
-    // Clearly not the place for this to be... but works for now.
-    world.add_component(
-        projectile_entity,
-        crate::components::acceleration::Acceleration::gravity(),
-    );
-    world.add_component(
-        projectile_entity,
-        components::damage_hit::DamageHit::new(3330.3),
-    );
-
-    world.add_component(
-        projectile_entity,
-        components::hit_effect::HitEffect::new(std::rc::Rc::new(cannon_hit_effect)),
-    );
-
-    let effect_id = components::id_generator::generate_id(world);
-    world.add_component(
-        projectile_entity,
-        crate::display::particle_emitter::ParticleEmitter::bullet_trail(
-            effect_id,
-            0.05,
-            crate::display::Color::WHITE,
-        ),
-    );
-
-    // Create an entity for the muzzle flash
-    let emitter_entity = world.add_entity();
-    let effect_id = components::id_generator::generate_id(world);
-    world.add_component(
-        emitter_entity,
-        crate::display::particle_emitter::ParticleEmitter::muzzle_flash(
-            effect_id,
-            0.03,
-            crate::display::Color::rgb(20, 20, 20),
-        ),
-    );
-    world.add_component(
-        emitter_entity,
-        crate::components::expiry::Expiry::lifetime(15.0),
-    );
-    world.add_component(emitter_entity, muzzle_pose_raw.clone());
-}
-
-fn cannon_hit_effect(
-    world: &mut World,
-    projectile: EntityId,
-    _impact: &components::impact::Impact,
-) {
-    // Create a bullet destructor.
-    let projectile_destructor = world.add_entity();
-
-    /*
-    let mut destructor = crate::display::deconstructor::Deconstructor::new(effect_entity);
-    // destructor.add_impact(impact.position(), 0.005);
-    destructor.add_element::<crate::display::tank_bullet::TankBullet>(projectile, world);
-    world.add_component(projectile_destructor, destructor);
-    */
-    let effect_id = components::id_generator::generate_id(world);
-    let world_pose = crate::components::pose::world_pose(world, projectile);
-    let world_vel = crate::components::velocity::world_velocity(world, projectile).to_twist();
-    world.add_component(
-        projectile_destructor,
-        crate::display::particle_emitter::ParticleEmitter::bullet_impact(
-            effect_id,
-            0.03,
-            crate::display::Color::BLACK,
-            world_vel.v,
-        ),
-    );
-    world.add_component(projectile_destructor, world_pose);
-    world.add_component(
-        projectile_destructor,
-        crate::components::expiry::Expiry::lifetime(10.0),
-    );
-    // Now, we can remove the displayable mesh.
-    world.remove_component::<display::tank_bullet::TankBullet>(projectile);
-
-    // Copy the bullet to a new entity.
-    let emitter_entity = world.add_entity();
-    let emitter =
-        world.remove_component::<crate::display::particle_emitter::ParticleEmitter>(projectile);
-    // Disable the particle emitter.
-    if let Some(mut emitter) = emitter {
-        emitter.emitting = false;
-        world.add_component_boxed(emitter_entity, emitter);
-    }
-
-    world.add_component(
-        emitter_entity,
-        crate::components::expiry::Expiry::lifetime(5.0),
-    );
-}

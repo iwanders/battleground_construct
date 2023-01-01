@@ -1,7 +1,7 @@
 use crate::UnitControlResult;
 use battleground_unit_control::modules::objectives::*;
 use battleground_unit_control::modules::team::*;
-use battleground_unit_control::units::tank;
+use battleground_unit_control::units::common;
 use battleground_unit_control::{Interface, UnitControl};
 
 use crate::diff_drive_util;
@@ -13,31 +13,31 @@ impl UnitControl for DiffDriveCapturable {
         // Determine where a capturable is.
         // While we are not there, drive there.
         let team = interface
-            .get_i32(tank::MODULE_TANK_TEAM, REG_TEAM_TEAMID)
+            .get_i32(common::MODULE_TEAM, REG_TEAM_TEAMID)
             .unwrap();
 
         let count = interface
             .get_i32(
-                tank::MODULE_TANK_OBJECTIVES,
+                common::MODULE_OBJECTIVES,
                 REG_OBJECTIVES_CAPTURE_POINT_COUNT,
             )
             .unwrap();
         for i in 0..count as u32 {
             let x = interface
                 .get_f32(
-                    tank::MODULE_TANK_OBJECTIVES,
+                    common::MODULE_OBJECTIVES,
                     REG_OBJECTIVES_CAPTURE_POINT_COUNT + 1 + (i * 4) + 0,
                 )
                 .unwrap();
             let y = interface
                 .get_f32(
-                    tank::MODULE_TANK_OBJECTIVES,
+                    common::MODULE_OBJECTIVES,
                     REG_OBJECTIVES_CAPTURE_POINT_COUNT + 1 + (i * 4) + 1,
                 )
                 .unwrap();
             let owner = interface
                 .get_i32(
-                    tank::MODULE_TANK_OBJECTIVES,
+                    common::MODULE_OBJECTIVES,
                     REG_OBJECTIVES_CAPTURE_POINT_COUNT + 1 + (i * 4) + 2,
                 )
                 .unwrap();

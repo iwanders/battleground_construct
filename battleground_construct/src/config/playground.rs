@@ -4,6 +4,7 @@ use crate::display;
 use crate::units;
 use unit_control_builtin;
 
+use units::artillery::{spawn_artillery, ArtillerySpawnConfig};
 use units::tank::{spawn_tank, TankSpawnConfig};
 
 // This held the dev playground for the longest time.
@@ -67,8 +68,21 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             x: -2.0,
             y: -3.0,
             yaw: 0.0,
-            // controller: Box::new(control::tank_swivel_shoot::TankSwivelShoot::new()),
+            // controller: Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot::new()),
             controller: Box::new(control::radar_draw::RadarDrawControl {}),
+            ..Default::default()
+        },
+    );
+
+    let _radar_tank = spawn_artillery(
+        world,
+        ArtillerySpawnConfig {
+            x: -6.0,
+            y: -3.0,
+            yaw: 0.0,
+            // controller: Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot::new()),
+            // controller: Box::new(control::radar_draw::RadarDrawControl {}),
+            controller: Box::new(unit_control_builtin::idle::Idle {}),
             ..Default::default()
         },
     );

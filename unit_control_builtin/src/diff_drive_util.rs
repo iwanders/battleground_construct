@@ -1,5 +1,6 @@
 use battleground_unit_control::modules::differential_drive::*;
 use battleground_unit_control::modules::gps::*;
+use battleground_unit_control::units::common;
 use battleground_unit_control::units::tank;
 use battleground_unit_control::Interface;
 
@@ -10,11 +11,9 @@ pub fn angle_diff(a: f32, b: f32) -> f32 {
 
 pub fn drive_to_goal(goal: (f32, f32, f32), interface: &mut dyn Interface) {
     // Get the current position.
-    let x = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_X).unwrap();
-    let y = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_Y).unwrap();
-    let yaw = interface
-        .get_f32(tank::MODULE_TANK_GPS, REG_GPS_YAW)
-        .unwrap();
+    let x = interface.get_f32(common::MODULE_GPS, REG_GPS_X).unwrap();
+    let y = interface.get_f32(common::MODULE_GPS, REG_GPS_Y).unwrap();
+    let yaw = interface.get_f32(common::MODULE_GPS, REG_GPS_YAW).unwrap();
 
     let goal_x = goal.0;
     let goal_y = goal.1;

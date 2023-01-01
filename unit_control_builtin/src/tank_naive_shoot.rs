@@ -8,6 +8,7 @@ use battleground_unit_control::modules::gps::*;
 use battleground_unit_control::modules::radar::*;
 use battleground_unit_control::modules::radio_receiver::*;
 use battleground_unit_control::modules::revolute::*;
+use battleground_unit_control::units::common;
 use battleground_unit_control::units::tank;
 
 use super::diff_drive_util::angle_diff;
@@ -35,25 +36,23 @@ impl UnitControl for TankNaiveShoot {
         // Lay waste to the target.
 
         let elapsed = interface
-            .get_f32(tank::MODULE_TANK_CLOCK, REG_CLOCK_ELAPSED)
+            .get_f32(common::MODULE_CLOCK, REG_CLOCK_ELAPSED)
             .unwrap();
         let tank_team = interface
             .get_i32(
-                tank::MODULE_TANK_TEAM,
+                common::MODULE_TEAM,
                 battleground_unit_control::modules::team::REG_TEAM_TEAMID,
             )
             .unwrap() as u32;
 
-        let tank_x = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_X).unwrap();
-        let tank_y = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_Y).unwrap();
-        let tank_z = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_Z).unwrap();
-        let tank_yaw = interface
-            .get_f32(tank::MODULE_TANK_GPS, REG_GPS_YAW)
-            .unwrap();
+        let tank_x = interface.get_f32(common::MODULE_GPS, REG_GPS_X).unwrap();
+        let tank_y = interface.get_f32(common::MODULE_GPS, REG_GPS_Y).unwrap();
+        let tank_z = interface.get_f32(common::MODULE_GPS, REG_GPS_Z).unwrap();
+        let tank_yaw = interface.get_f32(common::MODULE_GPS, REG_GPS_YAW).unwrap();
 
         // Check the radio for broadcasted friendlies.
         let msg_count = interface
-            .get_i32(tank::MODULE_TANK_RADIO_RECEIVER, REG_RADIO_RX_MSG_COUNT)
+            .get_i32(common::MODULE_RADIO_RECEIVER, REG_RADIO_RX_MSG_COUNT)
             .unwrap();
 
         let mut team_xy = vec![];
@@ -61,7 +60,7 @@ impl UnitControl for TankNaiveShoot {
             let msg_offset = REG_RADIO_RX_MSG_START + i * REG_RADIO_RX_MSG_STRIDE;
             let data_offset = msg_offset + REG_RADIO_RX_MSG_OFFSET_DATA;
             let c = interface
-                .get_bytes_len(tank::MODULE_TANK_RADIO_RECEIVER, data_offset)
+                .get_bytes_len(common::MODULE_RADIO_RECEIVER, data_offset)
                 .unwrap();
             if c != 12 {
                 continue;
@@ -69,7 +68,7 @@ impl UnitControl for TankNaiveShoot {
 
             let mut d = vec![0; c];
             interface
-                .get_bytes(tank::MODULE_TANK_RADIO_RECEIVER, data_offset, &mut d)
+                .get_bytes(common::MODULE_RADIO_RECEIVER, data_offset, &mut d)
                 .unwrap();
             // Now that we have the bytes, we can reconstruct the (team, x, y).
             let team = u32::from_le_bytes([d[0], d[1], d[2], d[3]]);
@@ -79,7 +78,7 @@ impl UnitControl for TankNaiveShoot {
         }
         // Drop all messages now that we have obtained them.
         interface
-            .set_i32(tank::MODULE_TANK_RADIO_RECEIVER, REG_RADIO_RX_MSG_COUNT, 0)
+            .set_i32(common::MODULE_RADIO_RECEIVER, REG_RADIO_RX_MSG_COUNT, 0)
             .unwrap();
 
         // Next, check that radar, calculating expressing things in global pose.

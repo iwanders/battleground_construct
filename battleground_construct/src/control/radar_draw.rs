@@ -8,7 +8,7 @@ use cgmath::vec3;
 
 // this is a private test controller.
 
-use battleground_unit_control::units::tank;
+use battleground_unit_control::units::{common, tank};
 
 pub struct RadarDrawControl {}
 
@@ -20,12 +20,10 @@ use battleground_unit_control::modules::radar::*;
 use battleground_unit_control::modules::revolute::*;
 impl UnitControl for RadarDrawControl {
     fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::Error>> {
-        let x = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_X).unwrap();
-        let y = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_Y).unwrap();
-        let z = interface.get_f32(tank::MODULE_TANK_GPS, REG_GPS_Z).unwrap();
-        let yaw = interface
-            .get_f32(tank::MODULE_TANK_GPS, REG_GPS_YAW)
-            .unwrap();
+        let x = interface.get_f32(common::MODULE_GPS, REG_GPS_X).unwrap();
+        let y = interface.get_f32(common::MODULE_GPS, REG_GPS_Y).unwrap();
+        let z = interface.get_f32(common::MODULE_GPS, REG_GPS_Z).unwrap();
+        let yaw = interface.get_f32(common::MODULE_GPS, REG_GPS_YAW).unwrap();
 
         let body_z = 0.25;
         let turret_z = 0.375 + 0.1 / 2.0;
@@ -148,7 +146,7 @@ impl UnitControl for RadarDrawControl {
         }
         interface
             .set_bytes(
-                tank::MODULE_TANK_DRAW,
+                common::MODULE_DRAW,
                 battleground_unit_control::modules::draw::REG_DRAW_LINES,
                 &draw_instructions,
             )

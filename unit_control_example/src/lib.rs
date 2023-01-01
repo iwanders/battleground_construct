@@ -43,7 +43,7 @@ impl UnitControl for SimpleUnitControl {
             interface.set_i32(tank::MODULE_TANK_CANNON, REG_CANNON_TRIGGER, true as i32);
         write_res.unwrap();
 
-        let clock = interface.get_f32(tank::MODULE_TANK_CLOCK, 0).unwrap();
+        let clock = interface.get_f32(tank::MODULE_CLOCK, 0).unwrap();
         if clock < 0.1 {
             interface
                 .set_f32(

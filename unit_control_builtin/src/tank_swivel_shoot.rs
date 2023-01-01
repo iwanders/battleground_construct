@@ -5,6 +5,7 @@ use battleground_unit_control::{Interface, UnitControl};
 use battleground_unit_control::modules::cannon::*;
 use battleground_unit_control::modules::radar::*;
 use battleground_unit_control::modules::revolute::*;
+use battleground_unit_control::units::common;
 use battleground_unit_control::units::tank;
 
 pub struct TankSwivelShoot {
@@ -45,7 +46,7 @@ impl UnitControl for TankSwivelShoot {
             interface.set_i32(tank::MODULE_TANK_CANNON, REG_CANNON_TRIGGER, true as i32);
         write_res.unwrap();
 
-        let clock = interface.get_f32(tank::MODULE_TANK_CLOCK, 0).unwrap();
+        let clock = interface.get_f32(common::MODULE_CLOCK, 0).unwrap();
         if !self.init_done {
             interface
                 .set_f32(
