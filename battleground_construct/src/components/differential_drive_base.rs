@@ -2,9 +2,12 @@ use engine::prelude::*;
 
 #[derive(Copy, Debug, Clone)]
 pub struct DifferentialDriveBase {
-    pub track_width: f32,
-    pub wheel_velocity_bounds: (f32, f32),
-    pub wheel_velocity: (f32, f32),
+    track_width: f32,
+    wheel_velocity_bounds: (f32, f32),
+    wheel_velocity_cmd: (f32, f32),
+    wheel_velocity_vel: (f32, f32),
+    // Deceleration and acceleration bounds, equal for both wheels.
+    wheel_acceleration_bounds: Option<(f32, f32)>,
 }
 impl Default for DifferentialDriveBase {
     fn default() -> Self {
@@ -17,12 +20,14 @@ impl DifferentialDriveBase {
         DifferentialDriveBase {
             track_width: 1.0,
             wheel_velocity_bounds: (-1.0, 1.0),
-            wheel_velocity: (0.0, 0.0),
+            wheel_velocity_cmd: (0.0, 0.0),
+            wheel_velocity_vel: (0.0, 0.0),
+            wheel_acceleration_bounds: Some((-0.5, 0.5)),
         }
     }
 
     pub fn set_velocities(&mut self, left: f32, right: f32) {
-        self.wheel_velocity = (
+        self.wheel_velocity_cmd = (
             left.clamp(self.wheel_velocity_bounds.0, self.wheel_velocity_bounds.1),
             right.clamp(self.wheel_velocity_bounds.0, self.wheel_velocity_bounds.1),
         );
@@ -33,11 +38,27 @@ impl DifferentialDriveBase {
     }
 
     pub fn wheel_velocities(&self) -> (f32, f32) {
-        self.wheel_velocity
+        self.wheel_velocity_vel
     }
 
     pub fn wheel_velocity_bounds(&mut self) -> (f32, f32) {
         self.wheel_velocity_bounds
+    }
+
+    /// Apply the acceleration limits.
+    pub fn update(&mut self, dt: f32) {
+        if let Some(ref bounds) = self.wheel_acceleration_bounds {
+            // Calculate the desired acceleration.
+            let left_desired_accel = (self.wheel_velocity_cmd.0 - self.wheel_velocity_vel.0) / dt;
+            let right_desired_accel = (self.wheel_velocity_cmd.1 - self.wheel_velocity_vel.1) / dt;
+            // clamp the acceleration based on the lmits, and integrate with time to get the actual
+            // velocity change.
+            self.wheel_velocity_vel.0 += dt * left_desired_accel.clamp(bounds.0, bounds.1);
+            self.wheel_velocity_vel.1 += dt * right_desired_accel.clamp(bounds.0, bounds.1);
+        } else {
+            // no acceleration limits.
+            self.wheel_velocity_vel = self.wheel_velocity_cmd;
+        }
     }
 }
 impl Component for DifferentialDriveBase {}
