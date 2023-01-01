@@ -51,7 +51,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             x: 0.0,
             y: 0.0,
             yaw: 0.0,
-            controller: Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot {}),
+            controller: Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot::new()),
             // controller: control::dynamic_load_control::DynamicLoadControl::new(
             // "../target/release/libvehicle_control_wasm.so",
             // )
@@ -67,7 +67,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             x: -2.0,
             y: -3.0,
             yaw: 0.0,
-            // controller: Box::new(control::tank_swivel_shoot::TankSwivelShoot {}),
+            // controller: Box::new(control::tank_swivel_shoot::TankSwivelShoot::new()),
             controller: Box::new(control::radar_draw::RadarDrawControl {}),
             ..Default::default()
         },
@@ -191,7 +191,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             x: -6.5,
             y: 5.0,
             yaw: 0.0,
-            // controller: Box::new(control::tank_swivel_shoot::TankSwivelShoot {}),
+            // controller: Box::new(control::tank_swivel_shoot::TankSwivelShoot::new()),
             // controller: Box::new(unit_control_builtin::idle::Idle{}),
             controller: Box::new(
                 unit_control_builtin::diff_drive_forwards_backwards::DiffDriveForwardsBackwardsControl {

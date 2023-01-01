@@ -2,11 +2,33 @@ use crate::components::pose::Pose;
 use engine::prelude::*;
 
 #[derive(Copy, Debug, Clone)]
-pub struct Revolute {
+pub struct RevoluteConfig {
     pub velocity_bounds: (f32, f32),
+    pub acceleration_bounds: Option<(f32, f32)>,
     pub velocity: f32,
+    pub velocity_cmd: f32,
     pub position: f32,
     pub axis: cgmath::Vector3<f32>,
+}
+impl Default for RevoluteConfig {
+    fn default() -> Self {
+        Self {
+            velocity: 0.0,
+            velocity_cmd: 0.0,
+            position: 0.0,
+            velocity_bounds: (-1.0, 1.0),
+            acceleration_bounds: None,
+            axis: cgmath::Vector3::<f32>::new(1.0, 0.0, 0.0),
+        }
+    }
+}
+
+#[derive(Copy, Debug, Clone)]
+pub struct Revolute {
+    config: RevoluteConfig,
+    velocity_cmd: f32,
+    velocity: f32,
+    position: f32,
 }
 impl Default for Revolute {
     fn default() -> Self {
@@ -16,27 +38,40 @@ impl Default for Revolute {
 
 impl Revolute {
     pub fn new() -> Self {
-        Self::new_with_axis(cgmath::Vector3::<f32>::new(1.0, 0.0, 0.0))
+        Self::from_config(Default::default())
     }
     pub fn new_with_axis(axis: cgmath::Vector3<f32>) -> Self {
-        Revolute {
-            velocity: 0.0,
-            position: 0.0,
+        Self::from_config(RevoluteConfig {
             axis,
-            velocity_bounds: (-1.0, 1.0),
+            ..Default::default()
+        })
+    }
+    pub fn from_config(config: RevoluteConfig) -> Self {
+        Revolute {
+            velocity: config
+                .velocity
+                .clamp(config.velocity_bounds.0, config.velocity_bounds.1),
+            position: config.position,
+            velocity_cmd: config.velocity_cmd,
+            config,
         }
     }
 
     pub fn set_axis(&mut self, axis: cgmath::Vector3<f32>) {
-        self.axis = axis;
+        self.config.axis = axis;
     }
 
-    pub fn set_velocity(&mut self, velocity: f32) {
-        self.velocity = velocity.clamp(self.velocity_bounds.0, self.velocity_bounds.1);
+    pub fn set_velocity_cmd(&mut self, velocity: f32) {
+        self.velocity_cmd =
+            velocity.clamp(self.config.velocity_bounds.0, self.config.velocity_bounds.1);
     }
 
     pub fn velocity(&self) -> f32 {
         self.velocity
+    }
+
+    pub fn velocity_cmd(&self) -> f32 {
+        self.velocity_cmd
     }
 
     pub fn position(&self) -> f32 {
@@ -48,25 +83,38 @@ impl Revolute {
     }
 
     pub fn velocity_bounds(&self) -> (f32, f32) {
-        self.velocity_bounds
+        self.config.velocity_bounds
+    }
+
+    pub fn acceleration_bounds(&self) -> Option<(f32, f32)> {
+        self.config.acceleration_bounds
     }
 
     pub fn set_velocity_bounds(&mut self, min: f32, max: f32) {
-        self.velocity_bounds = (min, max)
+        self.config.velocity_bounds = (min, max)
     }
 
-    pub fn integrate(&mut self, dt: f32) {
+    pub fn update(&mut self, dt: f32) {
+        if let Some(ref bound) = self.config.acceleration_bounds {
+            // Calculate the desired acceleration.
+            let desired_accel = (self.velocity_cmd - self.velocity) / dt;
+            // clamp the acceleration based on the limits, and integrate with time to get the actual
+            // velocity change.
+            self.velocity += dt * desired_accel.clamp(bound.0, bound.1);
+        } else {
+            self.velocity = self.velocity_cmd;
+        }
         self.position = (self.position + dt * self.velocity).rem_euclid(std::f32::consts::PI * 2.0);
     }
 
     pub fn to_pose(&self) -> Pose {
-        cgmath::Matrix4::<f32>::from_axis_angle(self.axis, cgmath::Rad(self.position)).into()
+        cgmath::Matrix4::<f32>::from_axis_angle(self.config.axis, cgmath::Rad(self.position)).into()
     }
 
     pub fn to_twist(&self) -> crate::util::cgmath::prelude::Twist<f32> {
         crate::util::cgmath::prelude::Twist::<f32>::new(
             cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0),
-            self.axis * self.velocity,
+            self.config.axis * self.velocity,
         )
     }
 }
@@ -109,7 +157,17 @@ impl UnitModule for RevoluteModule {
 
             registers.insert(
                 REG_REVOLUTE_VELOCITY_CMD,
-                Register::new_f32("velocity_cmd", revolute.velocity()),
+                Register::new_f32("velocity_cmd", revolute.velocity_cmd()),
+            );
+
+            let accel_bounds = revolute.acceleration_bounds().unwrap_or((0.0, 0.0));
+            registers.insert(
+                REG_REVOLUTE_ACCELERATION_LOWER,
+                Register::new_f32("acceleration_lower", accel_bounds.0),
+            );
+            registers.insert(
+                REG_REVOLUTE_ACCELERATION_UPPER,
+                Register::new_f32("acceleration_upper", accel_bounds.1),
             );
         }
     }
@@ -121,7 +179,7 @@ impl UnitModule for RevoluteModule {
                 .expect("register doesnt exist")
                 .value_f32()
                 .expect("wrong value type");
-            revolute.set_velocity(vel_cmd);
+            revolute.set_velocity_cmd(vel_cmd);
         }
     }
 }

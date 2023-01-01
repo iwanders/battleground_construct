@@ -1,13 +1,32 @@
 use crate::UnitControlResult;
 use battleground_unit_control::{Interface, UnitControl};
-use std::f32::consts::PI;
+// use std::f32::consts::PI;
 
 use battleground_unit_control::modules::cannon::*;
 use battleground_unit_control::modules::radar::*;
 use battleground_unit_control::modules::revolute::*;
 use battleground_unit_control::units::tank;
 
-pub struct TankSwivelShoot {}
+pub struct TankSwivelShoot {
+    init_done: bool,
+    turret_swivel_interval: f32,
+    turret_flip_last_time: f32,
+    barrel_swivel_interval: f32,
+    barrel_flip_last_time: f32,
+}
+
+impl TankSwivelShoot {
+    pub fn new() -> Self {
+        TankSwivelShoot {
+            init_done: false,
+            turret_swivel_interval: 3.0,
+            turret_flip_last_time: -1.5, // half of interval, for balanced swivel
+            barrel_swivel_interval: 4.0,
+            barrel_flip_last_time: 0.0,
+        }
+    }
+}
+
 impl UnitControl for TankSwivelShoot {
     fn update(&mut self, interface: &mut dyn Interface) -> UnitControlResult {
         if false {
@@ -27,7 +46,7 @@ impl UnitControl for TankSwivelShoot {
         write_res.unwrap();
 
         let clock = interface.get_f32(tank::MODULE_TANK_CLOCK, 0).unwrap();
-        if clock < 0.1 {
+        if !self.init_done {
             interface
                 .set_f32(
                     tank::MODULE_TANK_REVOLUTE_TURRET,
@@ -42,6 +61,7 @@ impl UnitControl for TankSwivelShoot {
                     -0.1,
                 )
                 .unwrap();
+            self.init_done = true;
             return Ok(());
         }
 
@@ -50,13 +70,11 @@ impl UnitControl for TankSwivelShoot {
         // interface.set_f32(0x1000, 2, 1.0).unwrap();
         // interface.set_f32(0x1000, 3, 1.0).unwrap();
 
-        let turret_pos = interface
-            .get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)
-            .unwrap();
+        // let turret_pos = interface
+        // .get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)
+        // .unwrap();
         // println!("turret_pos: {turret_pos}");
-        if (turret_pos > PI && turret_pos < (PI * 2.0 - PI / 8.0))
-            || (turret_pos > PI / 8.0 && turret_pos < PI)
-        {
+        if (clock - self.turret_flip_last_time) > self.turret_swivel_interval {
             interface
                 .set_f32(
                     tank::MODULE_TANK_REVOLUTE_TURRET,
@@ -66,13 +84,14 @@ impl UnitControl for TankSwivelShoot {
                         .unwrap(),
                 )
                 .unwrap();
+            self.turret_flip_last_time = clock;
         }
 
-        let barrel_pos = interface
-            .get_f32(tank::MODULE_TANK_REVOLUTE_BARREL, REG_REVOLUTE_POSITION)
-            .unwrap();
+        // let barrel_pos = interface
+        // .get_f32(tank::MODULE_TANK_REVOLUTE_BARREL, REG_REVOLUTE_POSITION)
+        // .unwrap();
         // println!("barrel_pos: {barrel_pos}");
-        if barrel_pos < (PI * 2.0 - PI / 8.0) || (barrel_pos < PI / 8.0) {
+        if (clock - self.barrel_flip_last_time) > self.barrel_swivel_interval {
             interface
                 .set_f32(
                     tank::MODULE_TANK_REVOLUTE_BARREL,
@@ -82,6 +101,7 @@ impl UnitControl for TankSwivelShoot {
                         .unwrap(),
                 )
                 .unwrap();
+            self.barrel_flip_last_time = clock;
         }
 
         // interface.set_f32(turret, 4, 1.0).unwrap();

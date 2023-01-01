@@ -64,7 +64,7 @@ pub fn setup_scenario(
         ) -> Result<Box<dyn UnitControl>, Box<dyn std::error::Error>> {
             Ok(match controller_type {
                 specification::ControllerType::SwivelShoot => {
-                    Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot {})
+                    Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot::new())
                 }
                 specification::ControllerType::None => {
                     Box::new(unit_control_builtin::idle::Idle {})

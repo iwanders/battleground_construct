@@ -13,7 +13,7 @@ impl System for RevolutePose {
         let dt = clock.step_as_f32();
 
         for (entity, mut rev) in world.component_iter_mut::<Revolute>() {
-            rev.integrate(dt);
+            rev.update(dt);
             // try to see if we can find a velocity for this entity.
             if let Some(mut pose) = world.component_mut::<Pose>(entity) {
                 // Yes, so now integrate it.

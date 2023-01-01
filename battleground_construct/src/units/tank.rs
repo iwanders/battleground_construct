@@ -245,8 +245,13 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         MODULE_TANK_REVOLUTE_TURRET,
         components::revolute::RevoluteModule::new(turret_entity),
     );
-
-    let turret_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
+    let revolute_config = components::revolute::RevoluteConfig {
+        axis: Vec3::new(0.0, 0.0, 1.0),
+        velocity_bounds: (-1.0, 1.0),
+        acceleration_bounds: Some((-1.0, 1.0)),
+        ..Default::default()
+    };
+    let turret_revolute = components::revolute::Revolute::from_config(revolute_config);
     world.add_component(turret_entity, turret_revolute);
     world.add_component(
         turret_entity,
@@ -258,7 +263,13 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(turret_entity, display::tank_turret::TankTurret::new());
 
     // -----   Barrel
-    let barrel_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 1.0, 0.0));
+    let revolute_config = components::revolute::RevoluteConfig {
+        axis: Vec3::new(0.0, 1.0, 0.0),
+        velocity_bounds: (-1.0, 1.0),
+        acceleration_bounds: Some((-2.0, 2.0)),
+        ..Default::default()
+    };
+    let barrel_revolute = components::revolute::Revolute::from_config(revolute_config);
     register_interface.get_mut().add_module(
         "barrel",
         MODULE_TANK_REVOLUTE_BARREL,
@@ -299,10 +310,13 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
 
     // -----   Radar
-    let mut radar_revolute =
-        components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
-    radar_revolute.set_velocity_bounds(-std::f32::consts::PI * 2.0, std::f32::consts::PI * 2.0);
-    radar_revolute.set_velocity(-std::f32::consts::PI);
+    let revolute_config = components::revolute::RevoluteConfig {
+        axis: Vec3::new(0.0, 0.0, 1.0),
+        velocity_bounds: (-std::f32::consts::PI * 2.0, std::f32::consts::PI * 2.0),
+        velocity_cmd: -std::f32::consts::PI,
+        acceleration_bounds: Some((-std::f32::consts::PI, std::f32::consts::PI)),
+        ..Default::default()
+    };
     register_interface.get_mut().add_module(
         "radar_rotation",
         MODULE_TANK_REVOLUTE_RADAR,
@@ -314,7 +328,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         components::radar::RadarModule::new(radar_entity),
     );
 
-    world.add_component(radar_entity, radar_revolute);
+    world.add_component(
+        radar_entity,
+        components::revolute::Revolute::from_config(revolute_config),
+    );
     // world.add_component(radar_entity, display::debug_lines::DebugLines::straight(10.0, 0.01, display::primitives::Color::RED));
     world.add_component(
         radar_entity,

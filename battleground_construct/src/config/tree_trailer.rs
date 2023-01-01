@@ -279,7 +279,7 @@ pub fn populate_tree_trailer(construct: &mut crate::Construct) {
                 let mut d = world
                     .component_mut::<components::revolute::Revolute>(entity)
                     .expect("revolute should be here");
-                d.set_velocity(vel);
+                d.set_velocity_cmd(vel);
             }),
         );
     };

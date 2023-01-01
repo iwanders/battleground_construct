@@ -12,7 +12,7 @@ impl System for RevoluteVelocity {
             .expect("Should have one clock");
         let dt = clock.step_as_f32();
         for (entity, mut rev) in world.component_iter_mut::<Revolute>() {
-            rev.integrate(dt);
+            rev.update(dt);
             if let Some(mut vel) = world.component_mut::<Velocity>(entity) {
                 *vel = rev.to_twist().into();
             }

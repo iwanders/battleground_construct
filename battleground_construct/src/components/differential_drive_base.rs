@@ -77,7 +77,7 @@ impl DifferentialDriveBase {
             // Calculate the desired acceleration.
             let left_desired_accel = (self.wheel_velocity_cmd.0 - self.wheel_velocity_vel.0) / dt;
             let right_desired_accel = (self.wheel_velocity_cmd.1 - self.wheel_velocity_vel.1) / dt;
-            // clamp the acceleration based on the lmits, and integrate with time to get the actual
+            // clamp the acceleration based on the limits, and integrate with time to get the actual
             // velocity change.
             self.wheel_velocity_vel.0 += dt * left_desired_accel.clamp(bounds.0, bounds.1);
             self.wheel_velocity_vel.1 += dt * right_desired_accel.clamp(bounds.0, bounds.1);
