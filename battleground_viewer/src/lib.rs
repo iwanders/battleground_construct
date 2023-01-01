@@ -8,15 +8,17 @@ use construct_render::ConstructRender;
 mod fence_material;
 use fence_material::FenceMaterial;
 
+mod time_provider;
+
 const PRINT_DURATIONS: bool = false;
 
 pub struct Limiter {
     desired_speed: f32,
     real_speed: f32,
     is_paused: bool,
-    last_update_time: std::time::Instant,
+    last_update_time: time_provider::Instant,
     last_construct_time: f32,
-    update_deadline: std::time::Duration,
+    update_deadline: time_provider::Duration,
 }
 
 impl Limiter {
@@ -26,8 +28,8 @@ impl Limiter {
             real_speed: 1.0,
             last_construct_time: 0.0,
             is_paused: false,
-            last_update_time: std::time::Instant::now(),
-            update_deadline: std::time::Duration::from_secs_f64(1.0 / 60.0),
+            last_update_time: time_provider::Instant::now(),
+            update_deadline: time_provider::Duration::from_secs_f64(1.0 / 60.0),
         }
     }
 
@@ -51,12 +53,12 @@ impl Limiter {
 
     pub fn update<F: FnMut() -> f32>(&mut self, mut v: F) {
         if self.is_paused {
-            self.last_update_time = std::time::Instant::now();
+            self.last_update_time = time_provider::Instant::now();
             self.real_speed = 0.0;
             return;
         }
 
-        let start_of_update = std::time::Instant::now();
+        let start_of_update = time_provider::Instant::now();
 
         let time_since_last = (start_of_update - self.last_update_time).as_secs_f32();
         let desired_construct_change = self.desired_speed * time_since_last;
@@ -78,7 +80,7 @@ impl Limiter {
         }
         // Calculate the real speed we achieved.
         self.real_speed = (self.last_construct_time - start_construct_time) / time_since_last;
-        self.last_update_time = std::time::Instant::now();
+        self.last_update_time = time_provider::Instant::now();
     }
 }
 
@@ -179,7 +181,7 @@ impl ConstructViewer {
         let mut viewer_state = ViewerState::default();
 
         self.window.render_loop(move |mut frame_input: FrameInput| {
-            let now = std::time::Instant::now();
+            let now = time_provider::Instant::now();
             // Run the limiter to update the construct.s
             self.limiter.update(|| {
                 self.construct.update();
@@ -334,7 +336,7 @@ impl ConstructViewer {
 
             let screen = frame_input.screen();
 
-            let now = std::time::Instant::now();
+            let now = time_provider::Instant::now();
 
             if let Some((pos, target)) = self
                 .construct_render
@@ -353,7 +355,7 @@ impl ConstructViewer {
                 println!("elements: {}", now.elapsed().as_secs_f64());
             }
 
-            let now = std::time::Instant::now();
+            let now = time_provider::Instant::now();
 
             /* The rendering steps will look something like this:
                 0) Prerender shadow maps
@@ -499,5 +501,29 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // view loop consumes the viewer... :|
     viewer.view_loop();
+    Ok(())
+}
+
+// Entry point for wasm
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(start)]
+pub fn start() -> Result<(), JsValue> {
+    console_log::init_with_level(log::Level::Debug).unwrap();
+
+    use log::info;
+    info!("Logging works!");
+
+    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+
+    let mut construct = Construct::new();
+    battleground_construct::config::playground::populate_dev_world(&mut construct);
+    let viewer = ConstructViewer::new(construct);
+
+    // view loop consumes the viewer... :|
+    viewer.view_loop();
+
     Ok(())
 }

@@ -84,6 +84,7 @@ pub fn setup_scenario(
                 specification::ControllerType::DiffDriveCapturable => {
                     Box::new(unit_control_builtin::diff_drive_capturable::DiffDriveCapturable {})
                 }
+                #[cfg(not(target_arch = "wasm32"))]
                 specification::ControllerType::LibraryLoad { name } => {
                     unit_control_builtin::dynamic_load_control::DynamicLoadControl::new(&name)?
                 }

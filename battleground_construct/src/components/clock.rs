@@ -2,9 +2,8 @@ use engine::prelude::*;
 
 #[derive(Copy, Debug, Clone)]
 pub struct Clock {
-    epoch: std::time::Instant,
-    current: std::time::Instant,
-    step: std::time::Duration,
+    current: f32,
+    step: f32,
 }
 impl Default for Clock {
     fn default() -> Self {
@@ -14,27 +13,19 @@ impl Default for Clock {
 
 impl Clock {
     pub fn new() -> Self {
-        let v = std::time::Instant::now();
         Clock {
-            epoch: v,
-            current: v,
-            step: std::time::Duration::from_secs_f32(0.001),
+            current: 0.0,
+            step: 0.001,
         }
     }
     pub fn step_as_f32(&self) -> f32 {
-        self.step.as_secs_f32()
+        self.step
     }
     pub fn elapsed_as_f32(&self) -> f32 {
-        (self.current - self.epoch).as_secs_f32()
+        self.current
     }
     pub fn tick(&mut self) {
         self.current += self.step;
-    }
-
-    pub fn ratio_of_realtime(&self) -> f32 {
-        let sim = (self.current - self.epoch).as_secs_f32();
-        let realtime = (std::time::Instant::now() - self.epoch).as_secs_f32();
-        sim / realtime
     }
 }
 

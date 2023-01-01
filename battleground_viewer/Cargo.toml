@@ -5,6 +5,13 @@ edition = "2021"
 license = "BSD-3-Clause"
 
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+
 [dependencies]
 engine = { path = "../engine" }
 battleground_construct = { path = "../battleground_construct" }
@@ -18,5 +25,13 @@ three-d = {version = "0.15.0", features=["egui-gui"], git = "https://github.com/
 rand = "0.8.5"
 rand_distr = "0.4.3"
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+log = "0.4"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+console_error_panic_hook = "0.1"
+console_log = "0.2"
+
 [features]
 unit_control_wasm = ["battleground_construct/unit_control_wasm"]
+
