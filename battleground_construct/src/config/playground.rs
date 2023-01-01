@@ -203,5 +203,4 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             ..Default::default()
         },
     );
-
 }
