@@ -35,7 +35,8 @@ void main()
     #endif
 
     ivec2 depthSize = textureSize(depthTexture, 0);
-    vec2 uv = gl_FragCoord.xy / depthSize;
+    vec2 depthSizeFloat = vec2(depthSize);
+    vec2 uv = gl_FragCoord.xy / depthSizeFloat;
 
     // Determine distance between background and fence
     vec3 backgroundPosition = world_pos_from_depth(viewProjectionInverse, texture(depthTexture, uv).x, uv);

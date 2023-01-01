@@ -11,7 +11,7 @@ const float threshold = 0.0001;
 
 void main()
 {
-    vec2 emissive_buffer_size = textureSize(emissive_buffer, 0);
+    vec2 emissive_buffer_size = vec2(textureSize(emissive_buffer, 0));
     // Sample with a kernel around the current fragment
     vec4 accum = vec4(0.0);
     float used_samples = 0.0;
