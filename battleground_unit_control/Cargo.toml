@@ -10,4 +10,5 @@ engine = {path="../engine/", optional=true}
 
 [features]
 default = []
-register_interface = ["engine"]
+register-interface = ["engine"]
+wasm-interface = []

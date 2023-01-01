@@ -11,12 +11,12 @@
 
 // Only for wasm32, load the wasm_interface, it has a bunch of extern "C" methods to create an
 // interface.
-#[cfg(target_arch = "wasm32")]
-//pub mod wasm_interface;
+#[cfg(feature = "wasm-interface")]
+pub mod wasm_interface;
 
 // The register interface is used as the default implementation of the [`Interface`] trait, used by
 // both the wasm control and native control.
-#[cfg(feature = "register_interface")]
+#[cfg(feature = "register-interface")]
 pub mod register_interface;
 
 /// The constants and helpers for modules.

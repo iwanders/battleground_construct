@@ -7,7 +7,7 @@ license = "BSD-3-Clause"
 
 [dependencies]
 engine = { path = "../engine" }
-battleground_unit_control = { path = "../battleground_unit_control", features=["register_interface"]}
+battleground_unit_control = { path = "../battleground_unit_control", features=["register-interface"]}
 unit_control_builtin = { path = "../unit_control_builtin"}
 unit_control_wasm = { path = "../unit_control_wasm", optional=true}
 cgmath = "0.18.0"

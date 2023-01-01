@@ -8,6 +8,10 @@ use construct_render::ConstructRender;
 mod fence_material;
 use fence_material::FenceMaterial;
 
+// This solution is a bit heavy handed, but using the time from the frame input means we have no
+// means of updating the time while we're in the frame calculation and thus can't break the
+// construct simulation steps. So we use this external time provider that's either std::Time or the
+// one provided through webassembly.
 mod time_provider;
 
 const PRINT_DURATIONS: bool = false;

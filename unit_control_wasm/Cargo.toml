@@ -12,4 +12,4 @@ battleground_unit_control = { path = "../battleground_unit_control" }
 wasmtime = "3.0.1"
 
 [features]
-default = ["battleground_unit_control/register_interface"]
+default = ["battleground_unit_control/register-interface"]
