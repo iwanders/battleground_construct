@@ -249,6 +249,10 @@ impl ConstructViewer {
                                                 self.limiter.set_paused(viewer_state.paused);
                                                 ui.close_menu();
                                             }
+                                            if ui.button("x0.1").clicked() {
+                                                self.limiter.set_desired_speed(0.1);
+                                                ui.close_menu();
+                                            }
                                             if ui.button("x0.25").clicked() {
                                                 self.limiter.set_desired_speed(0.25);
                                                 ui.close_menu();

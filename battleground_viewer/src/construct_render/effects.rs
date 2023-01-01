@@ -24,16 +24,27 @@ struct Particle {
     color: Color,
     spawn_time: f32,
     expiry_time: f32,
+    distance: f32,
+    expiry_distance: f32,
 }
 
 impl Particle {
-    pub fn new(pos: Mat4, vel: Vec3, color: Color, spawn_time: f32, expiry_time: f32) -> Self {
+    pub fn new(
+        pos: Mat4,
+        vel: Vec3,
+        color: Color,
+        spawn_time: f32,
+        expiry_time: f32,
+        expiry_distance: f32,
+    ) -> Self {
         Particle {
             pos,
             vel,
             color,
             spawn_time,
             expiry_time,
+            distance: 0.0,
+            expiry_distance,
         }
     }
 
@@ -42,6 +53,11 @@ impl Particle {
     }
 }
 
+/*
+This thing could do with some work... overall it works, but it could be better;
+- functions for how to spawn / emit particles / velocity / duration of spawning etc.
+- functions that affect the behaviour of particles, both for velocity and acceleration.
+*/
 pub struct ParticleEmitter {
     renderable: InstancedEntity<three_d::renderer::material::ColorMaterial>,
 
@@ -62,6 +78,8 @@ pub struct ParticleEmitter {
     lifetime: f32,
     lifetime_jitter: f32, // gaussian
 
+    max_distance: f32,
+
     /// Color of each particle.
     color: three_d::Color,
 
@@ -69,6 +87,8 @@ pub struct ParticleEmitter {
     /// Initial velocity of each particle.
     velocity: Vec3,
     velocity_jitter: Vec3,
+
+    velocity_clamp_x: Option<(f32, f32)>,
 
     reflect_on_floor: bool,
 
@@ -87,7 +107,7 @@ pub struct ParticleEmitter {
 impl ParticleEmitter {
     pub fn new(
         context: &Context,
-        _entity_position: Matrix4<f32>,
+        entity_position: Matrix4<f32>,
         time: f32,
         display: &display::primitives::ParticleType,
     ) -> Self {
@@ -100,7 +120,9 @@ impl ParticleEmitter {
         let mut next_spawn_time = time;
         let mut emit_next_cycle = false;
         let mut reflect_on_floor = false;
+        let mut velocity_clamp_x = None;
         let initial_particles = vec![];
+        let mut max_distance: f32 = 1000000.0; // max distance the particle can travel before fading / expiring.
 
         match display {
             display::primitives::ParticleType::BulletTrail { color, size } => {
@@ -121,6 +143,19 @@ impl ParticleEmitter {
                 velocity_jitter *= 3.0;
                 emit_next_cycle = true;
                 reflect_on_floor = true;
+            }
+            display::primitives::ParticleType::MuzzleFlash { color, size } => {
+                p_color = color.to_color();
+                p_color.a = 255;
+                p_size = *size;
+                initial_particle_velocity += vec3(10.0, 0.0, 0.0);
+                next_spawn_time -= 150.0 * spawn_interval;
+                velocity_jitter = vec3(7.0, 0.5, 0.5);
+                // clamp x to avoid particles going backwards
+                velocity_clamp_x = Some((0.0, 1000.0));
+                emit_next_cycle = true;
+                reflect_on_floor = true;
+                max_distance = 2.5;
             }
         }
         let color = p_color;
@@ -158,9 +193,11 @@ impl ParticleEmitter {
             spawn_jitter: 0.00,
             lifetime,
             lifetime_jitter: 0.0,
+            max_distance,
 
             velocity: initial_particle_velocity,
             velocity_jitter,
+            velocity_clamp_x,
             reflect_on_floor,
 
             fade_alpha_to_lifetime: true,
@@ -218,22 +255,36 @@ impl RenderableEffect for ParticleEmitter {
             let v0: f32 = self.rng.sample(StandardNormal);
             let v1: f32 = self.rng.sample(StandardNormal);
             let v2: f32 = self.rng.sample(StandardNormal);
-            let vel = self.velocity
+            let mut v_initial = self.velocity
                 + vec3(
                     v0 * self.velocity_jitter[0],
                     v1 * self.velocity_jitter[1],
                     v2 * self.velocity_jitter[2],
                 );
+            if let Some(velocity_clamp_x) = self.velocity_clamp_x {
+                v_initial.x = v_initial.x.clamp(velocity_clamp_x.0, velocity_clamp_x.1);
+            }
+            let vel = (entity_position.to_rotation_h() * v_initial.extend(0.0)).truncate();
 
-            self.particles
-                .push(Particle::new(pos, vel, color, spawn_time, expiry_time));
+            self.particles.push(Particle::new(
+                pos,
+                vel,
+                color,
+                spawn_time,
+                expiry_time,
+                self.max_distance,
+            ));
         }
         self.emit_next_cycle = false;
 
         // Update position and alphas
         for particle in self.particles.iter_mut() {
             // Always update position.
+            let before = particle.pos.to_translation();
             particle.pos.w += particle.vel.extend(0.0) * dt;
+            let after = particle.pos.to_translation();
+            let d = after.distance2(before).sqrt();
+            particle.distance += d;
 
             if self.reflect_on_floor {
                 if particle.pos.w.z < 0.0 {
@@ -247,7 +298,9 @@ impl RenderableEffect for ParticleEmitter {
             if self.fade_alpha_to_lifetime {
                 let ratio_of_age =
                     (time - particle.spawn_time) / (particle.expiry_time - particle.spawn_time);
-                let alpha_scaled = (1.0 - ratio_of_age) * (self.color.a as f32);
+                let ratio_of_distance = (particle.distance / particle.expiry_distance).min(1.0);
+                let max_ratio = ratio_of_distance.max(ratio_of_age);
+                let alpha_scaled = (1.0 - max_ratio) * (self.color.a as f32);
                 particle.color.a = alpha_scaled as u8;
             }
 

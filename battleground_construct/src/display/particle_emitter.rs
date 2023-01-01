@@ -27,6 +27,13 @@ impl ParticleEmitter {
             emitting: false,
         }
     }
+    pub fn muzzle_flash(id: u64, size: f32, color: Color) -> Self {
+        ParticleEmitter {
+            id,
+            particle_type: ParticleType::MuzzleFlash { size, color },
+            emitting: false,
+        }
+    }
 }
 impl Component for ParticleEmitter {}
 

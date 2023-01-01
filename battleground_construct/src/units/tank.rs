@@ -396,7 +396,9 @@ pub fn cannon_function(world: &mut World, cannon_entity: EntityId) {
     use crate::components::unit_source::UnitSource;
     use crate::components::velocity::Velocity;
 
-    let muzzle_pose = components::pose::world_pose(world, cannon_entity);
+    let muzzle_pose_raw = components::pose::world_pose(world, cannon_entity);
+    let muzzle_pose = muzzle_pose_raw;
+    // println!("muzzle_pose: {muzzle_pose:?}");
     let muzzle_world_velocity = components::velocity::world_velocity(world, cannon_entity);
 
     // Get the unit source of this cannel.
@@ -462,6 +464,23 @@ pub fn cannon_function(world: &mut World, cannon_entity: EntityId) {
             crate::display::Color::WHITE,
         ),
     );
+
+    // Create an entity for the muzzle flash
+    let emitter_entity = world.add_entity();
+    let effect_id = components::id_generator::generate_id(world);
+    world.add_component(
+        emitter_entity,
+        crate::display::particle_emitter::ParticleEmitter::muzzle_flash(
+            effect_id,
+            0.03,
+            crate::display::Color::rgb(20, 20, 20),
+        ),
+    );
+    world.add_component(
+        emitter_entity,
+        crate::components::expiry::Expiry::lifetime(15.0),
+    );
+    world.add_component(emitter_entity, muzzle_pose_raw.clone());
 }
 
 fn cannon_hit_effect(

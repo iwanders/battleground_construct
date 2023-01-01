@@ -196,6 +196,10 @@ pub enum ParticleType {
         color: Color,
         velocity: Vec3,
     },
+    MuzzleFlash {
+        size: f32,
+        color: Color,
+    },
 }
 impl Eq for ParticleType {}
 
