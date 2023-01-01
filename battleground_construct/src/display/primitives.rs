@@ -44,7 +44,6 @@ impl Eq for Line {}
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Circle {
     pub radius: f32,
-    pub subdivisions: u32,
 }
 impl Eq for Circle {}
 
@@ -161,9 +160,22 @@ impl From<Color> for Material {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct FenceMaterial {
+    pub color: Color,
+}
+
+impl Default for FenceMaterial {
+    fn default() -> Self {
+        FenceMaterial {
+            color: Color::MAGENTA,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Material {
     FlatMaterial(FlatMaterial),
-    TeamMaterial,
+    FenceMaterial(FenceMaterial),
 }
 
 #[derive(Debug, Copy, Clone)]

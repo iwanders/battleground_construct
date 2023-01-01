@@ -5,6 +5,9 @@ use battleground_construct::Construct;
 mod construct_render;
 use construct_render::ConstructRender;
 
+mod fence_material;
+use fence_material::FenceMaterial;
+
 const PRINT_DURATIONS: bool = false;
 
 pub struct Limiter {
@@ -273,6 +276,14 @@ impl ConstructViewer {
 
             for e in frame_input.events.iter() {
                 match *e {
+                    three_d::Event::KeyPress {
+                        kind: Key::Space,
+                        handled: false,
+                        ..
+                    } => {
+                        viewer_state.paused = !viewer_state.paused;
+                        self.limiter.set_paused(viewer_state.paused);
+                    }
                     three_d::Event::MousePress {
                         button,
                         position,
@@ -342,10 +353,11 @@ impl ConstructViewer {
 
             /* The rendering steps will look something like this:
                 0) Prerender shadow maps
-                A) Scene render (targets framebuffer)
+                A1) Scene render (targets framebuffer)
                 B1) Render depth of non-emissives into depth texture
                 B2) Render emissives into color texture (use B1 as depth texture)
-                C) Write B2 into A additively
+                C) Render fence meshes to framebuffer (with bound depth texture)
+                D) Write B2 into A additively
             */
 
             // 0) Prerender shadow maps
@@ -371,7 +383,7 @@ impl ConstructViewer {
                 Wrapping::ClampToEdge,
             );
 
-            let depth_material = DepthMaterial {
+            let write_depth_material = ColorMaterial {
                 render_states: RenderStates {
                     write_mask: WriteMask::DEPTH,
                     ..Default::default()
@@ -382,7 +394,7 @@ impl ConstructViewer {
                 .as_depth_target()
                 .clear(ClearState::default())
                 .render_with_material(
-                    &depth_material,
+                    &write_depth_material,
                     &self.camera,
                     &self.construct_render.non_emissive_meshes(),
                     &[],
@@ -406,7 +418,16 @@ impl ConstructViewer {
             )
             .render(&self.camera, &self.construct_render.emissive_objects(), &[]);
 
-            // C) Write B2 into A additively
+            // C) Render fence meshes to framebuffer (with bound depth texture)
+            let fence_material = FenceMaterial::new(&depth_texture);
+            screen.render_with_material(
+                &fence_material,
+                &self.camera,
+                &self.construct_render.fence_objects(),
+                &[],
+            );
+
+            // D) Write B2 into A additively
             screen
                 .write(|| {
                     apply_effect(

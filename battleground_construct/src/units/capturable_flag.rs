@@ -3,6 +3,7 @@ use crate::display;
 use components::pose::Pose;
 use engine::prelude::*;
 
+#[derive(Copy, Clone, Debug)]
 pub struct CapturableFlagConfig {
     pub x: f32,
     pub y: f32,

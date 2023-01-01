@@ -25,12 +25,7 @@ impl DisplayControlPoint {
         }
     }
     pub fn set_color(&mut self, color: Color) {
-        // self.color = color;
-        // self.color.a = 128;
-        self.color.r = ((color.r as u32 + 128) / 2) as u8;
-        self.color.g = ((color.g as u32 + 128) / 2) as u8;
-        self.color.b = ((color.b as u32 + 128) / 2) as u8;
-        // self.color.a = ((color.a as u32 + 128) / 2) as u8;
+        self.color = color;
     }
 
     pub fn set_radius(&mut self, radius: f32) {
@@ -41,16 +36,16 @@ impl Component for DisplayControlPoint {}
 
 impl Drawable for DisplayControlPoint {
     fn drawables(&self) -> Vec<Element> {
-        let material = Material::FlatMaterial(FlatMaterial {
+        let material = Material::FenceMaterial(FenceMaterial {
             color: self.color,
-            is_transparent: false,
             ..Default::default()
         });
+
         vec![Element {
-            transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.001)),
-            primitive: Primitive::Circle(Circle {
+            transform: Mat4::from_angle_y(cgmath::Deg(-90.0)),
+            primitive: Primitive::Cylinder(Cylinder {
                 radius: self.radius,
-                subdivisions: 30,
+                height: 2.0,
             }),
             material,
         }]
