@@ -107,7 +107,7 @@ pub struct ParticleEmitter {
 impl ParticleEmitter {
     pub fn new(
         context: &Context,
-        entity_position: Matrix4<f32>,
+        _entity_position: Matrix4<f32>,
         time: f32,
         display: &display::primitives::ParticleType,
     ) -> Self {

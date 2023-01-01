@@ -184,6 +184,9 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
     flag_config.initial_owner = Some(team_blue_id);
     flag_config.x += -7.0;
     crate::units::capturable_flag::spawn_capturable_flag(world, flag_config);
+    flag_config.x += -7.0;
+    flag_config.initial_owner = None;
+    crate::units::capturable_flag::spawn_capturable_flag(world, flag_config);
 
     spawn_tank(
         world,
