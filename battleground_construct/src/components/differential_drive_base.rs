@@ -1,13 +1,27 @@
 use engine::prelude::*;
 
 #[derive(Copy, Debug, Clone)]
+pub struct DifferentialDriveConfig {
+    pub track_width: f32,
+    pub wheel_velocity_bounds: (f32, f32),
+    pub wheel_acceleration_bounds: Option<(f32, f32)>,
+}
+
+impl Default for DifferentialDriveConfig {
+    fn default() -> Self {
+        DifferentialDriveConfig {
+            track_width: 1.0,
+            wheel_velocity_bounds: (-1.0, 1.0),
+            wheel_acceleration_bounds: Some((-0.5, 0.5)),
+        }
+    }
+}
+
+#[derive(Copy, Debug, Clone)]
 pub struct DifferentialDriveBase {
-    track_width: f32,
-    wheel_velocity_bounds: (f32, f32),
+    config: DifferentialDriveConfig,
     wheel_velocity_cmd: (f32, f32),
     wheel_velocity_vel: (f32, f32),
-    // Deceleration and acceleration bounds, equal for both wheels.
-    wheel_acceleration_bounds: Option<(f32, f32)>,
 }
 impl Default for DifferentialDriveBase {
     fn default() -> Self {
@@ -17,37 +31,49 @@ impl Default for DifferentialDriveBase {
 
 impl DifferentialDriveBase {
     pub fn new() -> Self {
+        Self::from_config(Default::default())
+    }
+
+    pub fn from_config(config: DifferentialDriveConfig) -> Self {
         DifferentialDriveBase {
-            track_width: 1.0,
-            wheel_velocity_bounds: (-1.0, 1.0),
+            config,
             wheel_velocity_cmd: (0.0, 0.0),
             wheel_velocity_vel: (0.0, 0.0),
-            wheel_acceleration_bounds: Some((-0.5, 0.5)),
         }
     }
 
     pub fn set_velocities(&mut self, left: f32, right: f32) {
         self.wheel_velocity_cmd = (
-            left.clamp(self.wheel_velocity_bounds.0, self.wheel_velocity_bounds.1),
-            right.clamp(self.wheel_velocity_bounds.0, self.wheel_velocity_bounds.1),
+            left.clamp(
+                self.config.wheel_velocity_bounds.0,
+                self.config.wheel_velocity_bounds.1,
+            ),
+            right.clamp(
+                self.config.wheel_velocity_bounds.0,
+                self.config.wheel_velocity_bounds.1,
+            ),
         );
     }
 
     pub fn track_width(&self) -> f32 {
-        self.track_width
+        self.config.track_width
     }
 
     pub fn wheel_velocities(&self) -> (f32, f32) {
         self.wheel_velocity_vel
     }
 
-    pub fn wheel_velocity_bounds(&mut self) -> (f32, f32) {
-        self.wheel_velocity_bounds
+    pub fn wheel_velocity_bounds(self) -> (f32, f32) {
+        self.config.wheel_velocity_bounds
+    }
+
+    pub fn wheel_acceleration_bounds(&self) -> Option<(f32, f32)> {
+        self.config.wheel_acceleration_bounds
     }
 
     /// Apply the acceleration limits.
     pub fn update(&mut self, dt: f32) {
-        if let Some(ref bounds) = self.wheel_acceleration_bounds {
+        if let Some(ref bounds) = self.config.wheel_acceleration_bounds {
             // Calculate the desired acceleration.
             let left_desired_accel = (self.wheel_velocity_cmd.0 - self.wheel_velocity_vel.0) / dt;
             let right_desired_accel = (self.wheel_velocity_cmd.1 - self.wheel_velocity_vel.1) / dt;
@@ -80,6 +106,7 @@ impl UnitModule for DifferentialDriveBaseModule {
         registers.clear();
         if let Some(base) = world.component::<DifferentialDriveBase>(self.entity) {
             let vels = base.wheel_velocities();
+
             registers.insert(
                 REG_DIFF_DRIVE_LEFT_VEL,
                 Register::new_f32("left_wheel_vel", vels.0),
@@ -89,7 +116,6 @@ impl UnitModule for DifferentialDriveBaseModule {
                 Register::new_f32("right_wheel_vel", vels.1),
             );
 
-            // commanded is the same as reported atm.
             registers.insert(
                 REG_DIFF_DRIVE_LEFT_CMD,
                 Register::new_f32("left_wheel_cmd", vels.0),
@@ -97,6 +123,16 @@ impl UnitModule for DifferentialDriveBaseModule {
             registers.insert(
                 REG_DIFF_DRIVE_RIGHT_CMD,
                 Register::new_f32("right_wheel_cmd", vels.1),
+            );
+
+            let accel_bounds = base.wheel_acceleration_bounds().unwrap_or((0.0, 0.0));
+            registers.insert(
+                REG_DIFF_DRIVE_ACCELERATION_LOWER,
+                Register::new_f32("acceleration_lower", accel_bounds.0),
+            );
+            registers.insert(
+                REG_DIFF_DRIVE_ACCELERATION_UPPER,
+                Register::new_f32("acceleration_upper", accel_bounds.1),
             );
 
             registers.insert(

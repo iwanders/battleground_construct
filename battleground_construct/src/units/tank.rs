@@ -150,9 +150,14 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     // -----   Base
     world.add_component(base_entity, Pose::from_se2(config.x, config.y, config.yaw));
     world.add_component(base_entity, components::velocity::Velocity::new());
+    let diff_drive_config = components::differential_drive_base::DifferentialDriveConfig {
+        track_width: 1.0,
+        wheel_velocity_bounds: (-1.0, 1.0),
+        wheel_acceleration_bounds: Some((-0.5, 0.5)),
+    };
     world.add_component(
         base_entity,
-        components::differential_drive_base::DifferentialDriveBase::new(),
+        components::differential_drive_base::DifferentialDriveBase::from_config(diff_drive_config),
     );
     register_interface.get_mut().add_module(
         "diff_drive",

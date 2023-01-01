@@ -12,3 +12,8 @@ pub const REG_DIFF_DRIVE_RIGHT_CMD: u32 = 3;
 
 /// The distance between the left and right wheel/track, float value.
 pub const REG_DIFF_DRIVE_TRACK_WIDTH: u32 = 4;
+
+/// The limit on the acceleration lower bound, float value.
+pub const REG_DIFF_DRIVE_ACCELERATION_LOWER: u32 = 5;
+/// The limit on the acceleration upper bound, float value.
+pub const REG_DIFF_DRIVE_ACCELERATION_UPPER: u32 = 6;
