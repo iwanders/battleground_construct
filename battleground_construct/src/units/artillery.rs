@@ -35,8 +35,11 @@ pub struct UnitArtillery {
     pub unit_entity: EntityId,
     pub control_entity: EntityId,
     pub base_entity: EntityId,
+    pub front_track_entity: EntityId,
+    pub rear_track_entity: EntityId,
     pub body_entity: EntityId,
     pub turret_entity: EntityId,
+    pub radar_joint_entity: EntityId,
     pub radar_entity: EntityId,
     pub flag_entity: EntityId,
     pub barrel_entity: EntityId,
@@ -59,6 +62,8 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
 
         Base Entity:
             - Diff Drive controller
+            -> Front Track
+            -> Rear Track
             -> Body entity
                 - RadarReflector
                 - CaptureMarker
@@ -67,8 +72,10 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
             -> Turret Entity
                 - Revolute
                 -> Barrel Entity
-                    -> Nozzle Entity
-                -> Radar entity
+                    -> Muzzle Entity
+                -> Radar joint
+                    -> Radar entity
+                        - Radar
 
         The Unit and Control entities are 'free'.
         Base to Barrel forms a chain of Parent, all entities are part of the group.
@@ -77,8 +84,11 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     let control_entity = world.add_entity();
 
     let base_entity = world.add_entity();
+    let front_track_entity = world.add_entity();
+    let rear_track_entity = world.add_entity();
     let body_entity = world.add_entity();
     let turret_entity = world.add_entity();
+    let radar_joint_entity = world.add_entity();
     let radar_entity = world.add_entity();
     let flag_entity = world.add_entity();
     let barrel_entity = world.add_entity();
@@ -88,8 +98,11 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         unit_entity,
         control_entity,
         base_entity,
+        front_track_entity,
+        rear_track_entity,
         body_entity,
         turret_entity,
+        radar_joint_entity,
         radar_entity,
         flag_entity,
         barrel_entity,
@@ -99,8 +112,11 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         unit_entity,
         control_entity,
         base_entity,
+        front_track_entity,
+        rear_track_entity,
         body_entity,
         turret_entity,
+        radar_joint_entity,
         radar_entity,
         flag_entity,
         barrel_entity,
@@ -145,20 +161,19 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         height: 0.2,
         track_width: track_width,
     };
-    let front_tracks_entity = world.add_entity();
-    world.add_component(front_tracks_entity, Parent::new(base_entity));
-    world.add_component(front_tracks_entity, PreTransform::from_se2(0.75, 0.0, 0.0));
+
+    world.add_component(front_track_entity, Parent::new(base_entity));
+    world.add_component(front_track_entity, PreTransform::from_se2(0.75, 0.0, 0.0));
     world.add_component(
-        front_tracks_entity,
+        front_track_entity,
         display::tracks_side::TracksSide::from_config(track_config, base_entity),
     );
 
     // Second track set.
-    let rear_tracks_entity = world.add_entity();
-    world.add_component(rear_tracks_entity, Parent::new(base_entity));
-    world.add_component(rear_tracks_entity, PreTransform::from_se2(-0.75, 0.0, 0.0));
+    world.add_component(rear_track_entity, Parent::new(base_entity));
+    world.add_component(rear_track_entity, PreTransform::from_se2(-0.75, 0.0, 0.0));
     world.add_component(
-        rear_tracks_entity,
+        rear_track_entity,
         display::tracks_side::TracksSide::from_config(track_config, base_entity),
     );
 
@@ -216,6 +231,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         axis: Vec3::new(0.0, 1.0, 0.0),
         velocity_bounds: (-1.0, 1.0),
         acceleration_bounds: Some((-2.0, 2.0)),
+        velocity_cmd: 0.3,
         ..Default::default()
     };
     super::common::add_revolute(
@@ -235,13 +251,18 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         barrel_entity,
         display::artillery_barrel::ArtilleryBarrel::new(),
     );
-    world.add_component(
-        barrel_entity,
-        display::debug_lines::DebugLines::straight(10.0, 0.1, display::primitives::Color::BLUE),
-    );
+    // world.add_component(
+    // barrel_entity,
+    // display::debug_lines::DebugLines::straight(10.0, 0.1, display::primitives::Color::BLUE),
+    // );
 
-    // -----   Nozzle
+    // -----   Muzzle
     world.add_component(muzzle_entity, Parent::new(barrel_entity));
+    world.add_component(
+        muzzle_entity,
+        PreTransform::from_translation(Vec3::new(ARTILLERY_DIM_BARREL_TO_MUZZLE_X, 0.0, 0.0)),
+    );
+    world.add_component(muzzle_entity, display::debug_box::DebugBox::cube(0.1));
 
     /*
     let cannon_config = components::cannon::CannonConfig {
@@ -252,11 +273,6 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         muzzle_entity,
         components::cannon::Cannon::new(cannon_config),
     );
-    world.add_component(
-        muzzle_entity,
-        PreTransform::from_translation(Vec3::new(ARTILLERY_DIM_BARREL_TO_MUZZLE_X, 0.0, 0.0)),
-    );
-
     register_interface.get_mut().add_module(
         "cannon",
         MODULE_ARTILLERY_CANNON,
@@ -264,10 +280,10 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     );*/
 
     // -----   Radar
-    world.add_component(radar_entity, Parent::new(turret_entity));
+    world.add_component(radar_joint_entity, Parent::new(turret_entity));
 
     world.add_component(
-        radar_entity,
+        radar_joint_entity,
         PreTransform::from_translation(Vec3::new(0.0, 0.0, ARTILLERY_DIM_TURRET_TO_RADAR_Z)),
     );
 
@@ -281,11 +297,20 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     super::common::add_revolute(
         world,
         &register_interface,
-        radar_entity,
+        radar_joint_entity,
         "radar_rotation",
         MODULE_ARTILLERY_REVOLUTE_RADAR,
         revolute_config,
     );
+
+    world.add_component(radar_entity, Parent::new(radar_joint_entity));
+
+    world.add_component(
+        radar_entity,
+        PreTransform::from_translation(Vec3::new(ARTILLERY_DIM_RADAR_JOINT_TO_RADAR_X, 0.0, 0.0)),
+    );
+    // world.add_component(radar_frame, display::debug_box::DebugBox::cube(1.1));
+
     let radar_config = components::radar::RadarConfig {
         range_max: 30.0,
         detection_angle_yaw: 10.0f32.to_radians(),

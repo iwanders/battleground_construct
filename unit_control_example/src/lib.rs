@@ -3,6 +3,7 @@ use std::f32::consts::PI;
 
 use battleground_unit_control::modules::cannon::*;
 use battleground_unit_control::modules::revolute::*;
+use battleground_unit_control::units::common;
 use battleground_unit_control::units::tank;
 
 #[derive(Default)]
@@ -43,7 +44,7 @@ impl UnitControl for SimpleUnitControl {
             interface.set_i32(tank::MODULE_TANK_CANNON, REG_CANNON_TRIGGER, true as i32);
         write_res.unwrap();
 
-        let clock = interface.get_f32(tank::MODULE_CLOCK, 0).unwrap();
+        let clock = interface.get_f32(common::MODULE_CLOCK, 0).unwrap();
         if clock < 0.1 {
             interface
                 .set_f32(

@@ -12,9 +12,11 @@ pub const ARTILLERY_DIM_FLOOR_TO_TURRET_Z: f32 = 0.375;
 /// Distance between the turret and barrel joint, in local frame.
 pub const ARTILLERY_DIM_TURRET_TO_BARREL_Z: f32 = 0.6;
 /// Distance between the turret and the radar joint.
-pub const ARTILLERY_DIM_TURRET_TO_RADAR_Z: f32 = 0.07;
+pub const ARTILLERY_DIM_TURRET_TO_RADAR_Z: f32 = 0.05;
+/// Distance between the radar rotation and the actual radar
+pub const ARTILLERY_DIM_RADAR_JOINT_TO_RADAR_X: f32 = 0.4;
 /// Distance between the barrel joint and the muzzle (barrel length).
-pub const ARTILLERY_DIM_BARREL_TO_MUZZLE_X: f32 = 1.0;
+pub const ARTILLERY_DIM_BARREL_TO_MUZZLE_X: f32 = 0.4;
 
 /// Velocity at which cannon bullets exit the ARTILLERY's muzzle.
 pub const ARTILLERY_PARAM_MUZZLE_VELOCITY: f32 = 10.0;
