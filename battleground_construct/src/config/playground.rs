@@ -74,7 +74,6 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
         },
     );
 
-
     let _fw_backwards = Box::new(
         unit_control_builtin::diff_drive_forwards_backwards::DiffDriveForwardsBackwardsControl {
             velocities: (1.0, 1.0),

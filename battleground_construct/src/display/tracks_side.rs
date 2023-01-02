@@ -33,7 +33,6 @@ pub struct TracksSide {
     diff_drive_entity: EntityId,
 }
 
-
 impl TracksSide {
     pub fn from_config(config: TracksSideConfig, diff_drive_entity: EntityId) -> Self {
         TracksSide {
@@ -41,7 +40,7 @@ impl TracksSide {
             track_height: config.height / 2.0,
             left_distance: 0.0,
             right_distance: 0.0,
-            diff_drive_entity
+            diff_drive_entity,
         }
     }
 

@@ -143,7 +143,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         height: 0.2,
         track_width: 1.0,
     };
-    world.add_component(base_entity, display::tracks_side::TracksSide::from_config(track_config, base_entity));
+    world.add_component(
+        base_entity,
+        display::tracks_side::TracksSide::from_config(track_config, base_entity),
+    );
 
     // -----   Body
     world.add_component(body_entity, Parent::new(base_entity));

@@ -410,12 +410,16 @@ impl ConstructRender {
         let units = Self::selected_to_units(construct, &selected);
 
         // Iterate through all displayables to collect meshes
-        self.component_to_meshes::<display::tank_body::TankBody>(context, construct);
+        self.component_to_meshes::<display::artillery_turret::ArtilleryTurret>(context, construct);
+        self.component_to_meshes::<display::artillery_barrel::ArtilleryBarrel>(context, construct);
+
         self.component_to_meshes::<display::tracks_side::TracksSide>(context, construct);
 
+        self.component_to_meshes::<display::tank_body::TankBody>(context, construct);
         self.component_to_meshes::<display::tank_turret::TankTurret>(context, construct);
         self.component_to_meshes::<display::tank_barrel::TankBarrel>(context, construct);
         self.component_to_meshes::<display::tank_bullet::TankBullet>(context, construct);
+
         self.component_to_meshes::<display::radar_model::RadarModel>(context, construct);
 
         // We could also pre-calculate all entities that have the correct unit members, and then

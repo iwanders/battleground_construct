@@ -1,3 +1,5 @@
+pub mod artillery_barrel;
+pub mod artillery_turret;
 pub mod debug_box;
 pub mod debug_elements;
 pub mod debug_lines;
