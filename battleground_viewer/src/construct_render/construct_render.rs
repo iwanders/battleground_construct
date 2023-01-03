@@ -190,7 +190,10 @@ impl ConstructRender {
         lines.push(line(upper, lower - 5, upper, upper + 5, t, main_color));
         lines.push(line(lower, lower - 5, lower, upper + 5, t, main_color));
 
-        grid.set_lines(&lines);
+        for (p0, p1, width, c) in lines {
+            grid.add_line(p0, p1, width, c);
+        }
+        grid.update_instances();
 
         let select_boxes = InstancedEntity::new_colored(context, &CpuMesh::cylinder(4));
 
