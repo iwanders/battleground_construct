@@ -19,6 +19,7 @@ pub mod projectile_hit;
 pub mod radar_scan;
 pub mod radio_transmission;
 pub mod revolute_pose;
+pub mod revolute_update;
 pub mod revolute_velocity;
 pub mod team_color_tank;
 pub mod timed_function;

@@ -43,8 +43,11 @@ pub fn add_systems(systems: &mut Systems) {
         systems::acceleration_velocity::AccelerationVelocity {},
     ));
     systems.add_system(Box::new(systems::velocity_pose::VelocityPose {}));
+
+    // Update performs revolute integration, pose and velocity set.
+    systems.add_system(Box::new(systems::revolute_update::RevoluteUpdate {}));
     // systems.add_system(Box::new(systems::revolute_pose::RevolutePose {}));
-    systems.add_system(Box::new(systems::revolute_velocity::RevoluteVelocity {}));
+    // systems.add_system(Box::new(systems::revolute_velocity::RevoluteVelocity {}));
 
     // Projectile system handling, hit calculation, impact processing
     systems.add_system(Box::new(systems::projectile_hit::ProjectileHit {}));

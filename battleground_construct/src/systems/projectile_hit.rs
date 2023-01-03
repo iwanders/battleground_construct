@@ -148,6 +148,7 @@ impl System for ProjectileHit {
         }
 
         for v in projectile_hits {
+            // Run the hit effect before modifying any projectile components.
             let hit_effect = world
                 .component::<HitEffect>(v.projectile)
                 .map(|z| z.effect());
