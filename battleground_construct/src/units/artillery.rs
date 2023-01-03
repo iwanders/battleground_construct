@@ -141,7 +141,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     // -----   Base
 
     world.add_component(base_entity, Pose::from_se2(config.x, config.y, config.yaw));
-    let track_width = 1.5;
+    let track_width = 1.75;
     let diff_drive_config = components::differential_drive_base::DifferentialDriveConfig {
         track_width: track_width,
         wheel_velocity_bounds: (-1.0, 1.0),
@@ -185,7 +185,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         body_entity,
         PreTransform::from_translation(Vec3::new(0.0, 0.0, ARTILLERY_DIM_FLOOR_TO_BODY_Z)),
     );
-    let body = display::tank_body::TankBody::new();
+    let body = display::artillery_body::ArtilleryBody::new();
     let hitbox = body.hitbox();
     world.add_component(body_entity, body);
     world.add_component(

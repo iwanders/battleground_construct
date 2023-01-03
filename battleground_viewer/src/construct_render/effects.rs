@@ -543,7 +543,10 @@ impl Deconstructor {
                         },
                     )
                 }
-                battleground_construct::display::primitives::Primitive::Circle(_) => todo!(),
+                battleground_construct::display::primitives::Primitive::Circle(_) => {
+                    // skip circle for now, they're infinitesimally thin.
+                    vec![]
+                }
             };
 
             for fragment in fragments {

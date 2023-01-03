@@ -412,6 +412,7 @@ impl ConstructRender {
         // Iterate through all displayables to collect meshes
         self.component_to_meshes::<display::artillery_turret::ArtilleryTurret>(context, construct);
         self.component_to_meshes::<display::artillery_barrel::ArtilleryBarrel>(context, construct);
+        self.component_to_meshes::<display::artillery_body::ArtilleryBody>(context, construct);
 
         self.component_to_meshes::<display::tracks_side::TracksSide>(context, construct);
 

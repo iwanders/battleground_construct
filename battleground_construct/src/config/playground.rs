@@ -1,3 +1,5 @@
+#![allow(unused_variables)]
+
 use crate::components;
 use crate::control;
 use crate::display;
@@ -61,8 +63,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
         },
     );
     /**/
-
-    let _radar_tank = spawn_tank(
+    let radar_tank = spawn_tank(
         world,
         TankSpawnConfig {
             x: -2.0,
@@ -74,14 +75,15 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
         },
     );
 
-    let _fw_backwards = Box::new(
+    let fw_backwards = Box::new(
         unit_control_builtin::diff_drive_forwards_backwards::DiffDriveForwardsBackwardsControl {
             velocities: (1.0, 1.0),
             last_flip: -2.5,
             duration: 5.0,
         },
     );
-    let _artillery = spawn_artillery(
+
+    let artillery = spawn_artillery(
         world,
         ArtillerySpawnConfig {
             x: -6.0,
@@ -90,28 +92,32 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             // controller: Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot::new()),
             // controller: Box::new(control::radar_draw::RadarDrawControl {}),
             // controller: Box::new(unit_control_builtin::idle::Idle {}),
-            controller: _fw_backwards,
+            controller: fw_backwards,
             ..Default::default()
         },
     );
 
-    let mut tank_entities = vec![];
+    let mut destroy_entities = vec![];
     {
         let g = world
-            .component::<components::group::Group>(main_tank)
+            .component::<components::group::Group>(artillery)
             .unwrap();
         for part_entity in g.entities().iter().copied() {
-            tank_entities.push(part_entity);
+            destroy_entities.push(part_entity);
         }
     }
 
     let particle_effect_id = components::id_generator::generate_id(world);
     let thingy = world.add_entity();
     let mut destructor = display::deconstructor::Deconstructor::new(particle_effect_id);
-    for e in tank_entities.iter() {
+    for e in destroy_entities.iter() {
         destructor.add_element::<display::tank_body::TankBody>(*e, world);
         destructor.add_element::<display::tank_turret::TankTurret>(*e, world);
         destructor.add_element::<display::tank_barrel::TankBarrel>(*e, world);
+
+        destructor.add_element::<display::artillery_body::ArtilleryBody>(*e, world);
+        destructor.add_element::<display::artillery_turret::ArtilleryTurret>(*e, world);
+        destructor.add_element::<display::artillery_barrel::ArtilleryBarrel>(*e, world);
         // destructor.add_element::<display::flag::Flag>(*e, world);
     }
 
