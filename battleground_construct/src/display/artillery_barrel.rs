@@ -1,8 +1,13 @@
 use super::primitives::*;
+use crate::components::hit_box::HitBox;
 use engine::prelude::*;
 
 #[derive(Copy, Debug, Clone)]
-pub struct ArtilleryBarrel {}
+pub struct ArtilleryBarrel {
+    battery_width: f32,
+    battery_height: f32,
+    battery_length: f32,
+}
 impl Default for ArtilleryBarrel {
     fn default() -> Self {
         ArtilleryBarrel::new()
@@ -11,7 +16,15 @@ impl Default for ArtilleryBarrel {
 
 impl ArtilleryBarrel {
     pub fn new() -> Self {
-        ArtilleryBarrel {}
+        ArtilleryBarrel {
+            battery_width: 0.6,
+            battery_height: 0.6,
+            battery_length: 0.8,
+        }
+    }
+
+    pub fn hitbox(&self) -> HitBox {
+        HitBox::new(self.battery_length, self.battery_width, self.battery_height)
     }
 }
 impl Component for ArtilleryBarrel {}
@@ -25,9 +38,9 @@ impl Drawable for ArtilleryBarrel {
             a: 255,
         }
         .into();
-        let battery_width = 0.6;
-        let battery_height = 0.6;
-        let battery_length = 0.8;
+        let battery_width = self.battery_width;
+        let battery_height = self.battery_height;
+        let battery_length = self.battery_length;
 
         let panel_thickness = 0.01;
         let mut res = vec![];

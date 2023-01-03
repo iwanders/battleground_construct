@@ -143,10 +143,13 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         height: 0.2,
         track_width: 1.0,
     };
+    let tracks = display::tracks_side::TracksSide::from_config(track_config, base_entity);
+    let hitbox = tracks.hitbox();
     world.add_component(
         base_entity,
-        display::tracks_side::TracksSide::from_config(track_config, base_entity),
+        components::select_box::SelectBox::from_hit_box(&hitbox),
     );
+    world.add_component(base_entity, tracks);
 
     // -----   Body
     world.add_component(body_entity, Parent::new(base_entity));
@@ -190,7 +193,14 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         PreTransform::from_translation(Vec3::new(0.0, 0.0, TANK_DIM_FLOOR_TO_TURRET_Z)),
     );
     world.add_component(turret_entity, Parent::new(base_entity));
-    world.add_component(turret_entity, display::tank_turret::TankTurret::new());
+    let tank_turret = display::tank_turret::TankTurret::new();
+    let hitbox = tank_turret.hitbox();
+    world.add_component(turret_entity, hitbox);
+    world.add_component(
+        turret_entity,
+        components::select_box::SelectBox::from_hit_box(&hitbox),
+    );
+    world.add_component(turret_entity, tank_turret);
 
     // -----   Barrel
     let revolute_config = components::revolute::RevoluteConfig {
@@ -212,10 +222,17 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         PreTransform::from_translation(Vec3::new(TANK_DIM_TURRET_TO_BARREL_X, 0.0, 0.0)),
     );
     world.add_component(barrel_entity, Parent::new(turret_entity));
-    world.add_component(barrel_entity, display::tank_barrel::TankBarrel::new());
+    let tank_barrel = display::tank_barrel::TankBarrel::new();
+    let hitbox = tank_barrel.hitbox(); // <- This is wrong by 0.5m because the mesh is shifted.
+    world.add_component(barrel_entity, hitbox);
+    world.add_component(
+        barrel_entity,
+        components::select_box::SelectBox::from_hit_box(&hitbox),
+    );
+    world.add_component(barrel_entity, tank_barrel);
     // world.add_component(barrel_entity, display::debug_lines::DebugLines::straight(10.0, 0.1, display::primitives::Color::BLUE));
 
-    // -----   Nozzle
+    // -----   Muzzle
     world.add_component(muzzle_entity, Parent::new(barrel_entity));
 
     let cannon_config = components::cannon::CannonConfig {
@@ -230,6 +247,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         muzzle_entity,
         PreTransform::from_translation(Vec3::new(TANK_DIM_BARREL_TO_MUZZLE_X, 0.0, 0.0)),
     );
+    // world.add_component(muzzle_entity, display::debug_box::DebugBox::cube(0.1));
 
     register_interface.get_mut().add_module(
         "cannon",

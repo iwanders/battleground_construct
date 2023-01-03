@@ -1,4 +1,5 @@
 use super::primitives::*;
+use crate::components::hit_box::HitBox;
 use engine::prelude::*;
 
 // Tracks are cool... and now feasible for the renderer!
@@ -52,6 +53,14 @@ impl TracksSide {
         let total_length = 2.0 * self.config.length + 2.0 * self.config.height;
         self.left_distance = (self.left_distance + left_delta).rem_euclid(total_length);
         self.right_distance = (self.right_distance + right_delta).rem_euclid(total_length);
+    }
+
+    pub fn hitbox(&self) -> HitBox {
+        HitBox::new(
+            self.config.length,
+            self.config.track_width + self.config.width,
+            2.0 * (self.track_height + self.config.height), // sticks into the floor...
+        )
     }
 }
 impl Component for TracksSide {}

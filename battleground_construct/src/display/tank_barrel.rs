@@ -1,4 +1,5 @@
 use super::primitives::*;
+use crate::components::hit_box::HitBox;
 use engine::prelude::*;
 
 #[derive(Copy, Debug, Clone)]
@@ -20,6 +21,9 @@ impl TankBarrel {
             length: 1.0,
             height: 0.1,
         }
+    }
+    pub fn hitbox(&self) -> HitBox {
+        HitBox::new(self.length, self.width, self.height)
     }
 }
 impl Component for TankBarrel {}
