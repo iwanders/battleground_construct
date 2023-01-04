@@ -60,7 +60,9 @@ impl DrawableKey for battleground_construct::display::primitives::Primitive {
     }
 }
 
-enum BatchProperties {
+#[derive(Debug, Copy, Clone)]
+pub enum BatchProperties {
+    None,
     Basic { is_transparent: bool },
 }
 
@@ -71,8 +73,11 @@ impl DrawableKey for BatchProperties {
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
         let state = &mut hasher;
         match *self {
-            BatchProperties::Basic { is_transparent } => {
+            BatchProperties::None => {
                 1usize.hash(state);
+            }
+            BatchProperties::Basic { is_transparent } => {
+                2usize.hash(state);
                 is_transparent.hash(state);
             }
         }
@@ -80,16 +85,17 @@ impl DrawableKey for BatchProperties {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 struct BatchablePrimitive {
     primitive: Primitive,
     properties: BatchProperties,
 }
 
 impl BatchablePrimitive {
-    fn new_basic(primitive: Primitive, is_transparent: bool) -> Self {
+    fn new(primitive: Primitive, properties: BatchProperties) -> Self {
         Self {
             primitive,
-            properties: BatchProperties::Basic { is_transparent },
+            properties,
         }
     }
 }
@@ -113,45 +119,138 @@ pub trait RenderableGeometry {
     /// Produces the geometries for this render pass.
     fn geometries(&self, pass: RenderPass) -> Option<Vec<&InstancedMesh>>;
 
-    /// Add a primitive to this geometry container.
-    fn add_primitive(
-        &mut self,
-        context: &Context,
-        primitive: display::primitives::Primitive,
-        transform: Mat4,
-        color: Color,
-    );
+    fn prepare_frame(&mut self);
+    fn finish_frame(&mut self);
 }
 
-pub struct SolidGeometry<M: Material> {
-    participates_in_pass: Box<dyn Fn(RenderPass) -> bool>,
-    batch_material: Box<dyn Fn(BatchProperties) -> M>,
+pub trait BatchMaterial {
+    fn new_for_batch(context: &Context, batch_properties: BatchProperties) -> Self
+    where
+        Self: Material;
+}
+
+impl BatchMaterial for PhysicalMaterial {
+    fn new_for_batch(context: &Context, batch_properties: BatchProperties) -> PhysicalMaterial {
+        let material_new = match batch_properties {
+            BatchProperties::None => PhysicalMaterial::new_opaque,
+            BatchProperties::Basic {
+                is_transparent: false,
+            } => PhysicalMaterial::new_opaque,
+            BatchProperties::Basic {
+                is_transparent: true,
+            } => PhysicalMaterial::new_transparent,
+        };
+        material_new(
+            context,
+            &CpuMaterial {
+                albedo: Color {
+                    r: 255,
+                    g: 255,
+                    b: 255,
+                    a: 255,
+                },
+                ..Default::default()
+            },
+        )
+    }
+}
+
+impl BatchMaterial for ColorMaterial {
+    fn new_for_batch(context: &Context, batch_properties: BatchProperties) -> ColorMaterial {
+        let material_new = match batch_properties {
+            BatchProperties::None => ColorMaterial::new_opaque,
+            BatchProperties::Basic {
+                is_transparent: false,
+            } => ColorMaterial::new_opaque,
+            BatchProperties::Basic {
+                is_transparent: true,
+            } => ColorMaterial::new_transparent,
+        };
+        material_new(
+            context,
+            &CpuMaterial {
+                albedo: Color {
+                    r: 255,
+                    g: 255,
+                    b: 255,
+                    a: 255,
+                },
+                ..Default::default()
+            },
+        )
+    }
+}
+
+pub struct MeshGeometry<M: Material + BatchMaterial> {
+    participates_in_pass: fn(RenderPass) -> bool,
+    meshes: Vec<Gm<InstancedMesh, M>>,
+}
+
+impl<M: Material + BatchMaterial> MeshGeometry<M> {
+    pub fn new(participates_in_pass: fn(RenderPass) -> bool) -> Self {
+        Self {
+            participates_in_pass,
+            meshes: Default::default()
+        }
+    }
+
+    fn meshes_for_pass(
+        &self,
+        pass: RenderPass,
+    ) -> Option<impl Iterator<Item = &Gm<InstancedMesh, M>>> {
+        if (self.participates_in_pass)(pass) {
+            Some(self.meshes.iter())
+        } else {
+            None
+        }
+    }
+
+    pub fn add_mesh(&mut self, context: &Context, batch_hints: BatchProperties, mesh: &CpuMesh, transform: Mat4, color: Color) {
+        let instanced = Gm::new(
+            InstancedMesh::new(
+                context,
+                &Instances {
+                    transformations: vec![transform],
+                    colors: Some(vec![color]),
+                    ..Default::default()
+                },
+                mesh,
+            ),
+            M::new_for_batch(context, batch_hints)
+        );
+        self.meshes.push(instanced);
+    }
+}
+
+impl<M: Material + BatchMaterial> RenderableGeometry for MeshGeometry<M> {
+    fn objects(&self, pass: RenderPass) -> Option<Vec<&dyn Object>> {
+        self.meshes_for_pass(pass)
+            .map(|xs| xs.map(|x| x as &dyn Object).collect::<_>())
+    }
+
+    fn geometries(&self, pass: RenderPass) -> Option<Vec<&InstancedMesh>> {
+        self.meshes_for_pass(pass)
+            .map(|xs| xs.map(|x| &x.geometry).collect::<_>())
+    }
+
+    fn prepare_frame(&mut self) {
+    }
+
+    fn finish_frame(&mut self) {
+    }
+}
+
+
+pub struct PrimitiveGeometry<M: Material + BatchMaterial> {
+    participates_in_pass: fn(RenderPass) -> bool,
     /// The meshes in this physical geometry container (keyed on drawable key to batch up geometries that are the same into instanced entities)
     meshes: std::collections::HashMap<u64, InstancedEntity<M>>,
 }
 
-// (if batch_properties.is_transparent {
-//     three_d::renderer::material::PhysicalMaterial::new_opaque
-// } else {
-//     three_d::renderer::material::PhysicalMaterial::new_transparent
-// })(
-//     context,
-//     &CpuMaterial {
-//         albedo: Color {
-//             r: 255,
-//             g: 255,
-//             b: 255,
-//             a: 255,
-//         },
-//         ..Default::default()
-//     },
-// );
-
-impl<M: Material> SolidGeometry<M> {
-    pub fn new(participates_in_pass: impl Fn(RenderPass) -> bool + 'static, batch_material: impl Fn(BatchProperties) -> M + 'static) -> Self {
+impl<M: Material + BatchMaterial> PrimitiveGeometry<M> {
+    pub fn new(participates_in_pass: fn(RenderPass) -> bool) -> Self {
         Self {
-            participates_in_pass: Box::new(participates_in_pass),
-            batch_material: Box::new(batch_material),
+            participates_in_pass,
             meshes: Default::default(),
         }
     }
@@ -168,36 +267,25 @@ impl<M: Material> SolidGeometry<M> {
             None
         }
     }
-}
 
-impl<M: Material> RenderableGeometry for SolidGeometry<M> {
-    fn objects(&self, pass: RenderPass) -> Option<Vec<&dyn Object>> {
-        self.meshes_for_pass(pass)
-            .map(|v| v.map(|x| x.object()).collect::<_>())
-    }
-
-    fn geometries(&self, pass: RenderPass) -> Option<Vec<&InstancedMesh>> {
-        self.meshes_for_pass(pass)
-            .map(|v| v.map(|x| &x.gm().geometry).collect::<_>())
-    }
-
-    fn add_primitive(
+    pub fn add_primitive(
         &mut self,
         context: &Context,
+        batch_hints: BatchProperties,
         primitive: display::primitives::Primitive,
         transform: Mat4,
         color: Color,
     ) {
         // Add the elements to the pbr_meshes
         let is_transparent = color.a < 255;
-        let batch_key = BatchablePrimitive::new_basic(primitive, is_transparent);
+        let batch_key = BatchablePrimitive::new(primitive, batch_hints);
 
         let instanced = &mut self
             .meshes
             .entry(batch_key.to_draw_key())
             .or_insert_with(|| {
                 let primitive_mesh = primitive_to_mesh(&primitive);
-                let material = (self.batch_material)(batch_key.properties);
+                let material = M::new_for_batch(context, batch_hints);
                 InstancedEntity::new(context, &primitive_mesh, material)
             });
 
@@ -214,6 +302,28 @@ impl<M: Material> RenderableGeometry for SolidGeometry<M> {
             }
             _ => instanced.add(transform, color),
         };
+    }
+}
+
+impl<M: Material + BatchMaterial> RenderableGeometry for PrimitiveGeometry<M> {
+    fn objects(&self, pass: RenderPass) -> Option<Vec<&dyn Object>> {
+        self.meshes_for_pass(pass)
+            .map(|xs| xs.map(|x| x.object()).collect::<_>())
+    }
+
+    fn geometries(&self, pass: RenderPass) -> Option<Vec<&InstancedMesh>> {
+        self.meshes_for_pass(pass)
+            .map(|xs| xs.map(|x| &x.gm().geometry).collect::<_>())
+    }
+
+    fn prepare_frame(&mut self) {
+        self.meshes.clear();
+    }
+
+    fn finish_frame(&mut self) {
+        for instance_entity in self.meshes.values_mut() {
+            instance_entity.update_instances();
+        }
     }
 }
 
