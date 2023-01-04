@@ -1,19 +1,16 @@
 use three_d::*;
 
 use super::effects;
-use super::instanced_entity;
 use super::render::{RenderableGeometry, PrimitiveGeometry, MeshGeometry, RenderPass, BatchProperties};
 
 use battleground_construct::components::unit::UnitId;
 use battleground_construct::display;
-use battleground_construct::display::primitives::{Drawable, Primitive};
+use battleground_construct::display::primitives::Drawable;
 use battleground_construct::Construct;
 use engine::prelude::*;
 
 use crate::construct_render::util::ColorConvert;
 use effects::RenderableEffect;
-
-use instanced_entity::InstancedEntity;
 
 use three_d::renderer::material::PhysicalMaterial;
 
@@ -69,6 +66,7 @@ impl ConstructRender {
             _ => false
         });
 
+        // TODO: Move ground plane and grid lines into a per-frame statics builder
         // Ground plane
         static_geometries.add_mesh(context, BatchProperties::Basic{is_transparent: false}, &CpuMesh::square(), Mat4::from_translation(vec3(0.0, 0.0, 0.0)) * Mat4::from_scale(1000.0), Color::new_opaque(128,128,128));
 
@@ -264,7 +262,7 @@ impl ConstructRender {
     //     renderables
     // }
 
-    fn update_instances(&mut self) {
+    fn update_instances(&mut self, context: &Context) {
         // for instance_entity in self.pbr_meshes.values_mut() {
         //     instance_entity.object.update_instances();
         // }
@@ -275,12 +273,12 @@ impl ConstructRender {
         //     instance_entity.object.update_instances();
         // }
         // self.select_boxes.update_instances();
-        self.static_geometries.finish_frame();
-        self.pbr_meshes.finish_frame();
-        self.emissive_meshes.finish_frame();
-        self.fence_meshes.finish_frame();
-        self.select_boxes.finish_frame();
-        self.grid.finish_frame();
+        self.static_geometries.finish_frame(context);
+        self.pbr_meshes.finish_frame(context);
+        self.emissive_meshes.finish_frame(context);
+        self.fence_meshes.finish_frame(context);
+        self.select_boxes.finish_frame(context);
+        self.grid.finish_frame(context);
     }
 
     fn reset_instances(&mut self) {
@@ -292,53 +290,52 @@ impl ConstructRender {
         self.grid.prepare_frame();
     }
 
-    fn draw_select_boxes(&mut self, construct: &Construct, selected: &[EntityId]) {
-        use battleground_construct::util::cgmath::prelude::*;
-        let boxes = &mut self.select_boxes;
-        let d = 0.01;
-        let c = Color::WHITE;
-
-        for e in selected.iter() {
-            if let Some(b) =
-                construct
-                    .world()
-                    .component::<battleground_construct::components::select_box::SelectBox>(*e)
-            {
-                let world_pose = construct.entity_pose(*e);
-                let w = (b.width() + (b.width() * 0.1).min(0.5)) / 2.0;
-                let l = (b.length() + (b.length() * 0.1).min(0.5)) / 2.0;
-                let h = (b.height() + (b.height() * 0.1).min(0.5)) / 2.0;
-                let t = |p: Vec3| (world_pose.transform() * p.to_h()).to_translation();
-                let pt = |x: f32, y: f32, z: f32| t(vec3(x, y, z));
-                let points = [
-                    pt(l, w, h),    // 0
-                    pt(l, w, -h),   // 1
-                    pt(l, -w, -h),  // 2
-                    pt(l, -w, h),   // 3
-                    pt(-l, w, h),   // 4
-                    pt(-l, w, -h),  // 5
-                    pt(-l, -w, -h), // 6
-                    pt(-l, -w, h),  // 7
-                ];
-
-                // TODO:
-                // boxes.add_primitive(points[0], points[1], d, c);
-                // boxes.add_primitive(points[1], points[2], d, c);
-                // boxes.add_primitive(points[2], points[3], d, c);
-                // boxes.add_primitive(points[4], points[0], d, c);
-
-                // boxes.add_primitive(points[0], points[3], d, c);
-                // boxes.add_primitive(points[1], points[5], d, c);
-                // boxes.add_primitive(points[2], points[6], d, c);
-                // boxes.add_primitive(points[3], points[7], d, c);
-
-                // boxes.add_primitive(points[4], points[5], d, c);
-                // boxes.add_primitive(points[5], points[6], d, c);
-                // boxes.add_primitive(points[6], points[7], d, c);
-                // boxes.add_primitive(points[7], points[4], d, c);
-            }
-        }
-    }
+    // fn draw_select_boxes(&mut self, context: &Context, construct: &Construct, selected: &[EntityId]) {
+    //     use battleground_construct::util::cgmath::prelude::*;
+    //     let boxes = &mut self.select_boxes;
+    //     let d = 0.01;
+    //     let c = Color::WHITE;
+    //
+    //     for e in selected.iter() {
+    //         if let Some(b) =
+    //             construct
+    //                 .world()
+    //                 .component::<battleground_construct::components::select_box::SelectBox>(*e)
+    //         {
+    //             let world_pose = construct.entity_pose(*e);
+    //             let w = (b.width() + (b.width() * 0.1).min(0.5)) / 2.0;
+    //             let l = (b.length() + (b.length() * 0.1).min(0.5)) / 2.0;
+    //             let h = (b.height() + (b.height() * 0.1).min(0.5)) / 2.0;
+    //             let t = |p: Vec3| (world_pose.transform() * p.to_h()).to_translation();
+    //             let pt = |x: f32, y: f32, z: f32| t(vec3(x, y, z));
+    //             let points = [
+    //                 pt(l, w, h),    // 0
+    //                 pt(l, w, -h),   // 1
+    //                 pt(l, -w, -h),  // 2
+    //                 pt(l, -w, h),   // 3
+    //                 pt(-l, w, h),   // 4
+    //                 pt(-l, w, -h),  // 5
+    //                 pt(-l, -w, -h), // 6
+    //                 pt(-l, -w, h),  // 7
+    //             ];
+    //
+    //             boxes.add_primitive(points[0], points[1], d, c);
+    //             boxes.add_primitive(points[1], points[2], d, c);
+    //             boxes.add_primitive(points[2], points[3], d, c);
+    //             boxes.add_primitive(points[4], points[0], d, c);
+    //
+    //             boxes.add_primitive(points[0], points[3], d, c);
+    //             boxes.add_primitive(points[1], points[5], d, c);
+    //             boxes.add_primitive(points[2], points[6], d, c);
+    //             boxes.add_primitive(points[3], points[7], d, c);
+    //
+    //             boxes.add_primitive(points[4], points[5], d, c);
+    //             boxes.add_primitive(points[5], points[6], d, c);
+    //             boxes.add_primitive(points[6], points[7], d, c);
+    //             boxes.add_primitive(points[7], points[4], d, c);
+    //         }
+    //     }
+    // }
 
     fn selected_to_units(
         construct: &Construct,
@@ -362,10 +359,12 @@ impl ConstructRender {
         // a new cycle, clear the previous instances.
         self.reset_instances();
 
-        self.draw_select_boxes(
-            construct,
-            &selected.iter().copied().collect::<Vec<EntityId>>(),
-        );
+        // TODO:
+        // self.draw_select_boxes(
+        //     context,
+        //     construct,
+        //     &selected.iter().copied().collect::<Vec<EntityId>>(),
+        // );
 
         let units = Self::selected_to_units(construct, &selected);
 
@@ -439,7 +438,7 @@ impl ConstructRender {
         }
 
         // Update the actual instances
-        self.update_instances();
+        self.update_instances(context);
     }
 
     /// Function to iterate over the components and convert their drawables into elements.
@@ -544,15 +543,18 @@ impl ConstructRender {
         el: &display::primitives::Element,
         entity_transform: &Matrix4<f32>,
     ) {
+        let element_transform = *entity_transform * el.transform;
         match el.material {
             battleground_construct::display::primitives::Material::FlatMaterial(flat_material) => {
-                self.pbr_meshes.add_primitive(context, BatchProperties::Basic{is_transparent: flat_material.is_transparent}, el.primitive, *entity_transform, flat_material.color.to_color());
+                let color = flat_material.color.to_color();
+                let batch_properties = BatchProperties::Basic{is_transparent: flat_material.is_transparent};
+                self.pbr_meshes.add_primitive(context, batch_properties, el.primitive, element_transform, color);
                 if flat_material.is_emissive {
-                    self.emissive_meshes.add_primitive(context, BatchProperties::Basic{is_transparent: flat_material.is_transparent}, el.primitive, *entity_transform, flat_material.color.to_color());
+                    self.emissive_meshes.add_primitive(context, batch_properties, el.primitive, element_transform, color);
                 }
             }
             battleground_construct::display::primitives::Material::FenceMaterial(fence_material) => {
-                self.fence_meshes.add_primitive(context, BatchProperties::None, el.primitive, *entity_transform, fence_material.color.to_color());
+                self.fence_meshes.add_primitive(context, BatchProperties::None, el.primitive, element_transform, fence_material.color.to_color());
             }
         }
     }
