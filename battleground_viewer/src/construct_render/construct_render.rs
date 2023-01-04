@@ -42,7 +42,7 @@ pub struct ConstructRender {
 impl ConstructRender {
     pub fn new(context: &Context) -> Self {
         let mut static_geometries = MeshGeometry::<PhysicalMaterial>::new(|pass| match pass {
-            RenderPass::BaseScene => true,
+            RenderPass::BaseScene | RenderPass::NonEmmisivesDepth => true,
             _ => false
         });
         let mut pbr_meshes = PrimitiveGeometry::<PhysicalMaterial>::new(|pass| match pass {
@@ -175,10 +175,12 @@ impl ConstructRender {
         result.append(&mut self.fence_meshes.objects(pass).unwrap_or_else(|| vec![]));
         result.append(&mut self.select_boxes.objects(pass).unwrap_or_else(|| vec![]));
         result.append(&mut self.grid.objects(pass).unwrap_or_else(|| vec![]));
-        result.extend(self
-                    .effects
-                    .iter()
-                    .filter_map(|v| v.1.object()));
+        if pass ==RenderPass::BaseScene  {
+                result.extend(self
+                            .effects
+                            .iter()
+                            .filter_map(|v| v.1.object()));
+            }
         result
     }
 
