@@ -36,9 +36,10 @@ fn test_tank_body_velocities() {
 
     let mut turret_revolute =
         components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
-    // turret_revolute.set_velocity_bounds(-std::f32::consts::PI * 2.0, std::f32::consts::PI * 2.0);
+    // turret_revolute.set_velocity_cmd_bounds(-std::f32::consts::PI * 2.0, std::f32::consts::PI * 2.0);
     turret_revolute.set_velocity_bounds(-100000.0, 100000.0);
-    turret_revolute.set_velocity(3.3);
+    turret_revolute.set_velocity_cmd(3.3);
+    turret_revolute.set_velocity_to_cmd();
     let turret_vel: components::velocity::Velocity = turret_revolute.to_twist().into();
 
     world.add_component(turret_id, turret_revolute);
@@ -56,7 +57,8 @@ fn test_tank_body_velocities() {
     let mut barrel_revolute =
         components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 1.0, 0.0));
     barrel_revolute.set_velocity_bounds(-100000.0, 100000.0);
-    barrel_revolute.set_velocity(4.4);
+    barrel_revolute.set_velocity_cmd(4.4);
+    barrel_revolute.set_velocity_to_cmd();
     let barrel_vel: components::velocity::Velocity = barrel_revolute.to_twist().into();
     // let barrel_vel: components::velocity::Velocity = turret_revolute.to_twist().into();
 
@@ -94,7 +96,8 @@ fn test_tank_body_velocities() {
         components::revolute::Revolute::new_with_axis(Vec3::new(1.0, 0.0, 0.0));
 
     shell_revolute.set_velocity_bounds(-100000.0, 100000.0);
-    shell_revolute.set_velocity(5.5);
+    shell_revolute.set_velocity_cmd(5.5);
+    shell_revolute.set_velocity_to_cmd();
     let shell_vel: components::velocity::Velocity = shell_revolute.to_twist().into();
 
     world.add_component(shell_id, shell_revolute);

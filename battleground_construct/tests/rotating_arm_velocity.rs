@@ -17,9 +17,9 @@ use components::velocity::Velocity;
 fn revolute_to_velocity() {
     let dt = 0.01;
     let mut revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
-    revolute.set_velocity(std::f32::consts::PI / 2.0);
+    revolute.set_velocity_cmd(std::f32::consts::PI / 2.0);
     let pose_old = revolute.to_pose();
-    revolute.integrate(dt);
+    revolute.update(dt);
     let pose_new = revolute.to_pose();
 
     let pose_new_direct = pose_new;
@@ -76,7 +76,7 @@ fn test_rotating_arm() {
 
     let mut arm_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
     let rotation_vel = 1.0;
-    arm_revolute.set_velocity(1.0);
+    arm_revolute.set_velocity_cmd(1.0);
     world.add_component(arm_rotation, arm_revolute);
     world.add_component(arm_rotation, Pose::new());
     world.add_component(arm_rotation, Velocity::new());

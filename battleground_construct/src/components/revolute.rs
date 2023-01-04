@@ -107,6 +107,11 @@ impl Revolute {
         self.position = (self.position + dt * self.velocity).rem_euclid(std::f32::consts::PI * 2.0);
     }
 
+    /// Copy the velocity cmd to the velocity, bypassing any acceleration bounds.
+    pub fn set_velocity_to_cmd(&mut self) {
+        self.velocity = self.velocity_cmd;
+    }
+
     pub fn to_pose(&self) -> Pose {
         cgmath::Matrix4::<f32>::from_axis_angle(self.config.axis, cgmath::Rad(self.position)).into()
     }
