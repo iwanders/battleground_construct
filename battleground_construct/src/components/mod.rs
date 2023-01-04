@@ -14,6 +14,7 @@ pub mod expiry;
 pub mod function_pose;
 pub mod gps;
 pub mod group;
+pub mod gun_battery;
 pub mod health;
 pub mod hit_box;
 pub mod hit_by;
