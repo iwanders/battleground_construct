@@ -1,7 +1,9 @@
 use three_d::*;
 
 use super::effects;
-use super::render::{RenderableGeometry, PrimitiveGeometry, MeshGeometry, RenderPass, BatchProperties};
+use super::render::{
+    BatchProperties, MeshGeometry, PrimitiveGeometry, RenderPass, RenderableGeometry,
+};
 
 use battleground_construct::components::unit::UnitId;
 use battleground_construct::display;
@@ -13,8 +15,6 @@ use crate::construct_render::util::ColorConvert;
 use effects::RenderableEffect;
 
 use three_d::renderer::material::PhysicalMaterial;
-
-
 
 /// The object used to render a construct.
 pub struct ConstructRender {
@@ -43,32 +43,40 @@ impl ConstructRender {
     pub fn new(context: &Context) -> Self {
         let mut static_geometries = MeshGeometry::<PhysicalMaterial>::new(|pass| match pass {
             RenderPass::BaseScene | RenderPass::NonEmmisivesDepth => true,
-            _ => false
+            _ => false,
         });
         let mut pbr_meshes = PrimitiveGeometry::<PhysicalMaterial>::new(|pass| match pass {
             RenderPass::ShadowMaps | RenderPass::BaseScene | RenderPass::NonEmmisivesDepth => true,
-            _ => false
+            _ => false,
         });
         let mut emissive_meshes = PrimitiveGeometry::<ColorMaterial>::new(|pass| match pass {
             RenderPass::Emmisives => true,
-            _ => false
+            _ => false,
         });
         let mut fence_meshes = PrimitiveGeometry::<ColorMaterial>::new(|pass| match pass {
             RenderPass::Fences => true,
-            _ => false
+            _ => false,
         });
         let mut select_boxes = PrimitiveGeometry::<ColorMaterial>::new(|pass| match pass {
             RenderPass::BaseScene => true,
-            _ => false
+            _ => false,
         });
         let mut grid = PrimitiveGeometry::<ColorMaterial>::new(|pass| match pass {
             RenderPass::BaseScene => true,
-            _ => false
+            _ => false,
         });
 
         // TODO: Move ground plane and grid lines into a per-frame statics builder
         // Ground plane
-        static_geometries.add_mesh(context, BatchProperties::Basic{is_transparent: false}, &CpuMesh::square(), Mat4::from_translation(vec3(0.0, 0.0, 0.0)) * Mat4::from_scale(1000.0), Color::new_opaque(128,128,128));
+        static_geometries.add_mesh(
+            context,
+            BatchProperties::Basic {
+                is_transparent: false,
+            },
+            &CpuMesh::square(),
+            Mat4::from_translation(vec3(0.0, 0.0, 0.0)) * Mat4::from_scale(1000.0),
+            Color::new_opaque(128, 128, 128),
+        );
 
         // // Grid lines
         // let mut grid = InstancedEntity::new_colored(context, &CpuMesh::cylinder(4));
@@ -157,9 +165,19 @@ impl ConstructRender {
 
     pub fn geometries(&self, pass: RenderPass) -> Vec<&impl Geometry> {
         let mut result = vec![];
-        result.append(&mut self.static_geometries.geometries(pass).unwrap_or_else(|| vec![]));
+        result.append(
+            &mut self
+                .static_geometries
+                .geometries(pass)
+                .unwrap_or_else(|| vec![]),
+        );
         result.append(&mut self.pbr_meshes.geometries(pass).unwrap_or_else(|| vec![]));
-        result.append(&mut self.emissive_meshes.geometries(pass).unwrap_or_else(|| vec![]));
+        result.append(
+            &mut self
+                .emissive_meshes
+                .geometries(pass)
+                .unwrap_or_else(|| vec![]),
+        );
         result.append(&mut self.fence_meshes.geometries(pass).unwrap_or_else(|| vec![]));
         result.append(&mut self.select_boxes.geometries(pass).unwrap_or_else(|| vec![]));
         result.append(&mut self.grid.geometries(pass).unwrap_or_else(|| vec![]));
@@ -169,18 +187,20 @@ impl ConstructRender {
 
     pub fn objects(&self, pass: RenderPass) -> Vec<&dyn Object> {
         let mut result = vec![];
-        result.append(&mut self.static_geometries.objects(pass).unwrap_or_else(|| vec![]));
+        result.append(
+            &mut self
+                .static_geometries
+                .objects(pass)
+                .unwrap_or_else(|| vec![]),
+        );
         result.append(&mut self.pbr_meshes.objects(pass).unwrap_or_else(|| vec![]));
         result.append(&mut self.emissive_meshes.objects(pass).unwrap_or_else(|| vec![]));
         result.append(&mut self.fence_meshes.objects(pass).unwrap_or_else(|| vec![]));
         result.append(&mut self.select_boxes.objects(pass).unwrap_or_else(|| vec![]));
         result.append(&mut self.grid.objects(pass).unwrap_or_else(|| vec![]));
-        if pass ==RenderPass::BaseScene  {
-                result.extend(self
-                            .effects
-                            .iter()
-                            .filter_map(|v| v.1.object()));
-            }
+        if pass == RenderPass::BaseScene {
+            result.extend(self.effects.iter().filter_map(|v| v.1.object()));
+        }
         result
     }
 
@@ -549,14 +569,36 @@ impl ConstructRender {
         match el.material {
             battleground_construct::display::primitives::Material::FlatMaterial(flat_material) => {
                 let color = flat_material.color.to_color();
-                let batch_properties = BatchProperties::Basic{is_transparent: flat_material.is_transparent};
-                self.pbr_meshes.add_primitive(context, batch_properties, el.primitive, element_transform, color);
+                let batch_properties = BatchProperties::Basic {
+                    is_transparent: flat_material.is_transparent,
+                };
+                self.pbr_meshes.add_primitive(
+                    context,
+                    batch_properties,
+                    el.primitive,
+                    element_transform,
+                    color,
+                );
                 if flat_material.is_emissive {
-                    self.emissive_meshes.add_primitive(context, batch_properties, el.primitive, element_transform, color);
+                    self.emissive_meshes.add_primitive(
+                        context,
+                        batch_properties,
+                        el.primitive,
+                        element_transform,
+                        color,
+                    );
                 }
             }
-            battleground_construct::display::primitives::Material::FenceMaterial(fence_material) => {
-                self.fence_meshes.add_primitive(context, BatchProperties::None, el.primitive, element_transform, fence_material.color.to_color());
+            battleground_construct::display::primitives::Material::FenceMaterial(
+                fence_material,
+            ) => {
+                self.fence_meshes.add_primitive(
+                    context,
+                    BatchProperties::None,
+                    el.primitive,
+                    element_transform,
+                    fence_material.color.to_color(),
+                );
             }
         }
     }

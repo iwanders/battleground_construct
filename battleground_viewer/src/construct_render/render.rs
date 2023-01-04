@@ -188,7 +188,7 @@ impl<M: Material + BatchMaterial> MeshGeometry<M> {
     pub fn new(participates_in_pass: fn(RenderPass) -> bool) -> Self {
         Self {
             participates_in_pass,
-            meshes: Default::default()
+            meshes: Default::default(),
         }
     }
 
@@ -203,7 +203,14 @@ impl<M: Material + BatchMaterial> MeshGeometry<M> {
         }
     }
 
-    pub fn add_mesh(&mut self, context: &Context, batch_hints: BatchProperties, mesh: &CpuMesh, transform: Mat4, color: Color) {
+    pub fn add_mesh(
+        &mut self,
+        context: &Context,
+        batch_hints: BatchProperties,
+        mesh: &CpuMesh,
+        transform: Mat4,
+        color: Color,
+    ) {
         let instanced = Gm::new(
             InstancedMesh::new(
                 context,
@@ -214,7 +221,7 @@ impl<M: Material + BatchMaterial> MeshGeometry<M> {
                 },
                 mesh,
             ),
-            M::new_for_batch(context, batch_hints)
+            M::new_for_batch(context, batch_hints),
         );
         self.meshes.push(instanced);
     }
@@ -231,13 +238,10 @@ impl<M: Material + BatchMaterial> RenderableGeometry for MeshGeometry<M> {
             .map(|xs| xs.map(|x| &x.geometry).collect::<_>())
     }
 
-    fn prepare_frame(&mut self) {
-    }
+    fn prepare_frame(&mut self) {}
 
-    fn finish_frame(&mut self, context: &Context) {
-    }
+    fn finish_frame(&mut self, context: &Context) {}
 }
-
 
 struct PrimitiveBatch {
     key: PrimitiveBatchKey,
@@ -287,12 +291,10 @@ impl<M: Material + BatchMaterial> PrimitiveGeometry<M> {
         let batch = &mut self
             .batches
             .entry(key.to_draw_key())
-            .or_insert_with(|| {
-                PrimitiveBatch {
-                    key,
-                    transforms: Default::default(),
-                    colors: Default::default(),
-                }
+            .or_insert_with(|| PrimitiveBatch {
+                key,
+                transforms: Default::default(),
+                colors: Default::default(),
             });
 
         batch.transforms.push(match primitive {
@@ -304,12 +306,14 @@ impl<M: Material + BatchMaterial> PrimitiveGeometry<M> {
                 let p0 = (transform * p0_original.to_h()).to_translation();
                 let p1 = (transform * p1_original.to_h()).to_translation();
                 let rotation = Quat::from_arc(vec3(1.0, 0.0, 0.0), (p1 - p0).normalize(), None);
-                let scale = Mat4::from_nonuniform_scale((p0 - p1).magnitude(), l.width / 2.0, l.width / 2.0);
+                let scale = Mat4::from_nonuniform_scale(
+                    (p0 - p1).magnitude(),
+                    l.width / 2.0,
+                    l.width / 2.0,
+                );
                 Mat4::from_translation(p0) * <_ as Into<Mat4>>::into(rotation) * scale
             }
-            _ => {
-                transform
-            }
+            _ => transform,
         });
         batch.colors.push(color);
     }
