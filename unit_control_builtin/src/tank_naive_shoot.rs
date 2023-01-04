@@ -110,7 +110,7 @@ impl UnitControl for TankNaiveShoot {
 
         fn distance(p0: (f32, f32), p1: (f32, f32)) -> f32 {
             let dx = p0.0 - p1.0;
-            let dy = p0.1 - p0.1;
+            let dy = p0.1 - p1.1;
             (dx * dx + dy * dy).sqrt()
         }
 
