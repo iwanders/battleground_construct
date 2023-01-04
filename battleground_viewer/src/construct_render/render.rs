@@ -1,8 +1,5 @@
 use three_d::*;
 
-use super::instanced_entity::InstancedEntity;
-
-use battleground_construct::display;
 use battleground_construct::display::primitives::Primitive;
 
 // Brend: This render pass enumeration omits non-geometry passes (such as the bloom filter application, or the gui render).
@@ -15,11 +12,12 @@ pub enum RenderPass {
     Fences,
 }
 
+// TODO: Rename this (it's a key for looking up batches, not drawbles)
 trait DrawableKey {
     fn to_draw_key(&self) -> u64;
 }
 
-impl DrawableKey for battleground_construct::display::primitives::Primitive {
+impl DrawableKey for Primitive {
     fn to_draw_key(&self) -> u64 {
         use std::hash::Hash;
         use std::hash::Hasher;
@@ -86,12 +84,12 @@ impl DrawableKey for BatchProperties {
 }
 
 #[derive(Debug, Copy, Clone)]
-struct BatchablePrimitive {
+struct PrimitiveBatchKey {
     primitive: Primitive,
     properties: BatchProperties,
 }
 
-impl BatchablePrimitive {
+impl PrimitiveBatchKey {
     fn new(primitive: Primitive, properties: BatchProperties) -> Self {
         Self {
             primitive,
@@ -100,7 +98,7 @@ impl BatchablePrimitive {
     }
 }
 
-impl DrawableKey for BatchablePrimitive {
+impl DrawableKey for PrimitiveBatchKey {
     fn to_draw_key(&self) -> u64 {
         use std::hash::Hash;
         use std::hash::Hasher;
@@ -120,7 +118,7 @@ pub trait RenderableGeometry {
     fn geometries(&self, pass: RenderPass) -> Option<Vec<&InstancedMesh>>;
 
     fn prepare_frame(&mut self);
-    fn finish_frame(&mut self);
+    fn finish_frame(&mut self, context: &Context);
 }
 
 pub trait BatchMaterial {
@@ -236,21 +234,32 @@ impl<M: Material + BatchMaterial> RenderableGeometry for MeshGeometry<M> {
     fn prepare_frame(&mut self) {
     }
 
-    fn finish_frame(&mut self) {
+    fn finish_frame(&mut self, context: &Context) {
     }
 }
 
 
+struct PrimitiveBatch {
+    key: PrimitiveBatchKey,
+    transforms: Vec<Mat4>,
+    colors: Vec<Color>,
+}
+
 pub struct PrimitiveGeometry<M: Material + BatchMaterial> {
     participates_in_pass: fn(RenderPass) -> bool,
-    /// The meshes in this physical geometry container (keyed on drawable key to batch up geometries that are the same into instanced entities)
-    meshes: std::collections::HashMap<u64, InstancedEntity<M>>,
+
+    // TODO: Move InstancedEntity code into here so we can drop InstancedEntity, and build all buffers in one go
+    batches: std::collections::HashMap<u64, PrimitiveBatch>,
+
+    /// The meshes produced from the baches
+    meshes: Vec<Gm<InstancedMesh, M>>,
 }
 
 impl<M: Material + BatchMaterial> PrimitiveGeometry<M> {
     pub fn new(participates_in_pass: fn(RenderPass) -> bool) -> Self {
         Self {
             participates_in_pass,
+            batches: Default::default(),
             meshes: Default::default(),
         }
     }
@@ -258,11 +267,9 @@ impl<M: Material + BatchMaterial> PrimitiveGeometry<M> {
     fn meshes_for_pass(
         &self,
         pass: RenderPass,
-    ) -> Option<impl Iterator<Item = &InstancedEntity<M>>> {
+    ) -> Option<impl Iterator<Item = &Gm<InstancedMesh, M>>> {
         if (self.participates_in_pass)(pass) {
-            Some::<std::collections::hash_map::Values<'_, u64, InstancedEntity<M>>>(
-                self.meshes.values().into(),
-            )
+            Some(self.meshes.iter())
         } else {
             None
         }
@@ -272,64 +279,76 @@ impl<M: Material + BatchMaterial> PrimitiveGeometry<M> {
         &mut self,
         context: &Context,
         batch_hints: BatchProperties,
-        primitive: display::primitives::Primitive,
+        primitive: Primitive,
         transform: Mat4,
         color: Color,
     ) {
-        // Add the elements to the pbr_meshes
-        let is_transparent = color.a < 255;
-        let batch_key = BatchablePrimitive::new(primitive, batch_hints);
-
-        let instanced = &mut self
-            .meshes
-            .entry(batch_key.to_draw_key())
+        let key = PrimitiveBatchKey::new(primitive, batch_hints);
+        let batch = &mut self
+            .batches
+            .entry(key.to_draw_key())
             .or_insert_with(|| {
-                let primitive_mesh = primitive_to_mesh(&primitive);
-                let material = M::new_for_batch(context, batch_hints);
-                InstancedEntity::new(context, &primitive_mesh, material)
+                PrimitiveBatch {
+                    key,
+                    transforms: Default::default(),
+                    colors: Default::default(),
+                }
             });
 
-        // Special handling for lines...
-        match primitive {
-            display::primitives::Primitive::Line(l) => {
+        batch.transforms.push(match primitive {
+            Primitive::Line(l) => {
                 use battleground_construct::util::cgmath::ToHomogenous;
                 use battleground_construct::util::cgmath::ToTranslation;
                 let p0_original = vec3(l.p0.0, l.p0.1, l.p0.2);
                 let p1_original = vec3(l.p1.0, l.p1.1, l.p1.2);
-                let p0_transformed = (transform * p0_original.to_h()).to_translation();
-                let p1_transformed = (transform * p1_original.to_h()).to_translation();
-                instanced.add_line(p0_transformed, p1_transformed, l.width, color);
+                let p0 = (transform * p0_original.to_h()).to_translation();
+                let p1 = (transform * p1_original.to_h()).to_translation();
+                let rotation = Quat::from_arc(vec3(1.0, 0.0, 0.0), (p1 - p0).normalize(), None);
+                let scale = Mat4::from_nonuniform_scale((p0 - p1).magnitude(), l.width / 2.0, l.width / 2.0);
+                Mat4::from_translation(p0) * <_ as Into<Mat4>>::into(rotation) * scale
             }
-            _ => instanced.add(transform, color),
-        };
+            _ => {
+                transform
+            }
+        });
+        batch.colors.push(color);
     }
 }
 
 impl<M: Material + BatchMaterial> RenderableGeometry for PrimitiveGeometry<M> {
     fn objects(&self, pass: RenderPass) -> Option<Vec<&dyn Object>> {
         self.meshes_for_pass(pass)
-            .map(|xs| xs.map(|x| x.object()).collect::<_>())
+            .map(|xs| xs.map(|x| x as &dyn Object).collect::<_>())
     }
 
     fn geometries(&self, pass: RenderPass) -> Option<Vec<&InstancedMesh>> {
         self.meshes_for_pass(pass)
-            .map(|xs| xs.map(|x| &x.gm().geometry).collect::<_>())
+            .map(|xs| xs.map(|x| &x.geometry).collect::<_>())
     }
 
     fn prepare_frame(&mut self) {
+        self.batches.clear();
         self.meshes.clear();
     }
 
-    fn finish_frame(&mut self) {
-        for instance_entity in self.meshes.values_mut() {
-            instance_entity.update_instances();
+    fn finish_frame(&mut self, context: &Context) {
+        for batch in self.batches.values() {
+            let cpu_mesh = primitive_to_mesh(&batch.key.primitive);
+            let material = M::new_for_batch(context, batch.key.properties);
+            let instances = three_d::renderer::geometry::Instances {
+                transformations: batch.transforms.clone(),
+                colors: Some(batch.colors.clone()),
+                ..Default::default()
+            };
+            let gm = Gm::new(InstancedMesh::new(context, &instances, &cpu_mesh), material);
+            self.meshes.push(gm);
         }
     }
 }
 
-fn primitive_to_mesh(primitive: &display::primitives::Primitive) -> CpuMesh {
+fn primitive_to_mesh(primitive: &Primitive) -> CpuMesh {
     match primitive {
-        display::primitives::Primitive::Cuboid(cuboid) => {
+        Primitive::Cuboid(cuboid) => {
             let mut m = CpuMesh::cube();
             // Returns an axis aligned unconnected cube mesh with positions in the range [-1..1] in all axes.
             // So default box is not identity.
@@ -341,12 +360,12 @@ fn primitive_to_mesh(primitive: &display::primitives::Primitive) -> CpuMesh {
             .unwrap();
             m
         }
-        display::primitives::Primitive::Sphere(sphere) => {
+        Primitive::Sphere(sphere) => {
             let mut m = CpuMesh::sphere(32);
             m.transform(&Mat4::from_scale(sphere.radius)).unwrap();
             m
         }
-        display::primitives::Primitive::Cylinder(cylinder) => {
+        Primitive::Cylinder(cylinder) => {
             let mut m = CpuMesh::cylinder(128);
             m.transform(&Mat4::from_nonuniform_scale(
                 cylinder.height,
@@ -356,7 +375,7 @@ fn primitive_to_mesh(primitive: &display::primitives::Primitive) -> CpuMesh {
             .unwrap();
             m
         }
-        display::primitives::Primitive::Cone(cone) => {
+        Primitive::Cone(cone) => {
             let mut m = CpuMesh::cone(128);
             m.transform(&Mat4::from_nonuniform_scale(
                 cone.height,
@@ -366,8 +385,8 @@ fn primitive_to_mesh(primitive: &display::primitives::Primitive) -> CpuMesh {
             .unwrap();
             m
         }
-        display::primitives::Primitive::Line(_line) => CpuMesh::cylinder(4),
-        display::primitives::Primitive::Circle(circle) => {
+        Primitive::Line(_line) => CpuMesh::cylinder(4),
+        Primitive::Circle(circle) => {
             let mut m = CpuMesh::circle(128);
             m.transform(&Mat4::from_scale(circle.radius)).unwrap();
             m
