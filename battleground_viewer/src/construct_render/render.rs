@@ -3,7 +3,7 @@ use three_d::*;
 use battleground_construct::display::primitives::Primitive;
 
 // Brend: This render pass enumeration omits non-geometry passes (such as the bloom filter application, or the gui render).
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum RenderPass {
     ShadowMaps,
     BaseScene,
