@@ -171,6 +171,15 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         components::select_box::SelectBox::from_hit_box(&hitbox),
     );
     world.add_component(front_track_entity, tracks);
+    let hit_collection =
+        components::hit_collection::HitCollection::from_hit_boxes(&tracks.hit_boxes());
+    world.add_component(
+        front_track_entity,
+        display::debug_hit_collection::DebugHitCollection::from_hit_boxes(
+            &hit_collection.hit_boxes(),
+        ),
+    );
+    world.add_component(front_track_entity, hit_collection);
 
     // Second track set.
     world.add_component(rear_track_entity, Parent::new(base_entity));

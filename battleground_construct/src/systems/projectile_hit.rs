@@ -1,4 +1,5 @@
 use super::components::hit_box::HitBox;
+use super::components::hit_collection::HitCollection;
 use super::components::hit_effect::HitEffect;
 use super::components::hit_plane::HitPlane;
 use super::components::hit_sphere::HitSphere;
@@ -137,6 +138,37 @@ impl System for ProjectileHit {
                             projectile: *projectile_entity,
                             impact: Impact::new(
                                 Some(*hitbox_entity),
+                                *projectile_pose.transform(),
+                                *source_id,
+                            ),
+                        };
+                        projectile_hits.push(v);
+                    }
+                }
+            }
+
+            // Next, get all hit collections.
+            let hit_collection_with_pose = {
+                let hitboxes = world.component_iter::<HitCollection>();
+                hitboxes
+                    .map(|(entity, hitbox)| {
+                        let pose = world_pose(world, entity);
+                        (entity, pose, hitbox)
+                    })
+                    .collect::<Vec<_>>()
+            };
+
+            for (projectile_entity, source_id, projectile_pose) in projectile_poses.iter() {
+                for (hitcollection_entity, hitcollection_pose, hitcollection) in
+                    hit_collection_with_pose.iter()
+                {
+                    let inside = hitcollection
+                        .is_inside(**hitcollection_pose, projectile_pose.to_translation());
+                    if inside {
+                        let v = HitState {
+                            projectile: *projectile_entity,
+                            impact: Impact::new(
+                                Some(*hitcollection_entity),
                                 *projectile_pose.transform(),
                                 *source_id,
                             ),

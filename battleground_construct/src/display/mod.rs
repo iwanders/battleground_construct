@@ -3,6 +3,7 @@ pub mod artillery_body;
 pub mod artillery_turret;
 pub mod debug_box;
 pub mod debug_elements;
+pub mod debug_hit_collection;
 pub mod debug_lines;
 pub mod debug_sphere;
 pub mod deconstructor;

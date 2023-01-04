@@ -441,6 +441,9 @@ impl ConstructRender {
         self.component_to_meshes::<display::debug_sphere::DebugSphere>(context, construct);
         self.component_to_meshes::<display::debug_lines::DebugLines>(context, construct);
         self.component_to_meshes::<display::debug_elements::DebugElements>(context, construct);
+        self.component_to_meshes::<display::debug_hit_collection::DebugHitCollection>(
+            context, construct,
+        );
 
         self.component_to_meshes::<display::flag::Flag>(context, construct);
         self.component_to_meshes::<display::display_control_point::DisplayControlPoint>(

@@ -62,6 +62,28 @@ impl TracksSide {
             2.0 * (self.track_height + self.config.height), // sticks into the floor...
         )
     }
+
+    pub fn hit_boxes(&self) -> Vec<(Mat4, HitBox)> {
+        let track = HitBox::new(self.config.length, self.config.width, self.config.height);
+        vec![
+            (
+                Mat4::from_translation(Vec3::new(
+                    0.0,
+                    -self.config.track_width / 2.0,
+                    self.track_height,
+                )),
+                track,
+            ),
+            (
+                Mat4::from_translation(Vec3::new(
+                    0.0,
+                    self.config.track_width / 2.0,
+                    self.track_height,
+                )),
+                track,
+            ),
+        ]
+    }
 }
 impl Component for TracksSide {}
 
@@ -74,31 +96,22 @@ impl Drawable for TracksSide {
             a: 255,
         }
         .into();
-        let track = Primitive::Cuboid(Cuboid {
-            width: self.config.width,
-            height: self.config.height,
-            length: self.config.length,
-        });
-        let mut z = vec![
-            Element {
-                transform: Mat4::from_translation(Vec3::new(
-                    0.0,
-                    -self.config.track_width / 2.0,
-                    self.track_height,
-                )),
+
+        let mut z = vec![];
+
+        for (t, b) in self.hit_boxes() {
+            let track = Primitive::Cuboid(Cuboid {
+                width: b.width(),
+                height: b.height(),
+                length: b.length(),
+            });
+
+            z.push(Element {
+                transform: t,
                 primitive: track,
                 material,
-            },
-            Element {
-                transform: Mat4::from_translation(Vec3::new(
-                    0.0,
-                    self.config.track_width / 2.0,
-                    self.track_height,
-                )),
-                primitive: track,
-                material,
-            },
-        ];
+            });
+        }
 
         if RENDER_TRACKS {
             // Track length;
