@@ -221,19 +221,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     world.add_component(barrel_entity, Parent::new(turret_entity));
     let tank_barrel = display::tank_barrel::TankBarrel::new();
-    // let hitbox = tank_barrel.hitbox(); // <- This is wrong by 0.5m because the mesh is shifted.
-    // world.add_component(barrel_entity, hitbox);
-
     let hit_collection =
         components::hit_collection::HitCollection::from_hit_boxes(&tank_barrel.hit_boxes());
-    world.add_component(
-        barrel_entity,
-        display::debug_hit_collection::DebugHitCollection::from_hit_collection(&hit_collection),
-    );
     world.add_component(barrel_entity, hit_collection);
-
     world.add_component(barrel_entity, tank_barrel);
-    // world.add_component(barrel_entity, display::debug_lines::DebugLines::straight(10.0, 0.1, display::primitives::Color::BLUE));
 
     // -----   Muzzle
     world.add_component(muzzle_entity, Parent::new(barrel_entity));

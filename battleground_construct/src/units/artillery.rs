@@ -265,11 +265,6 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
 
     world.add_component(barrel_entity, artillery_barrel);
 
-    // world.add_component(
-    // barrel_entity,
-    // display::debug_lines::DebugLines::straight(10.0, 0.1, display::primitives::Color::BLUE),
-    // );
-
     // -----   Muzzle
     world.add_component(muzzle_entity, Parent::new(barrel_entity));
     world.add_component(
@@ -323,7 +318,6 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         radar_entity,
         PreTransform::from_translation(Vec3::new(ARTILLERY_DIM_RADAR_JOINT_TO_RADAR_X, 0.0, 0.0)),
     );
-    // world.add_component(radar_frame, display::debug_box::DebugBox::cube(1.1));
 
     let radar_config = components::radar::RadarConfig {
         range_max: 30.0,
