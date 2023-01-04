@@ -24,6 +24,12 @@ impl DebugHitCollection {
                 .collect(),
         }
     }
+
+    pub fn from_hit_collection(
+        hit_collection: &crate::components::hit_collection::HitCollection,
+    ) -> Self {
+        DebugHitCollection::from_hit_boxes(hit_collection.hit_boxes())
+    }
 }
 impl Component for DebugHitCollection {}
 

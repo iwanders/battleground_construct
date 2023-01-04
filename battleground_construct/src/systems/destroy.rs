@@ -54,6 +54,12 @@ impl System for Destroy {
                 destructor.add_element::<crate::display::tank_barrel::TankBarrel>(*e, world);
                 destructor.add_element::<crate::display::tracks_side::TracksSide>(*e, world);
                 destructor.add_element::<crate::display::radar_model::RadarModel>(*e, world);
+
+                destructor.add_element::<crate::display::artillery_body::ArtilleryBody>(*e, world);
+                destructor
+                    .add_element::<crate::display::artillery_turret::ArtilleryTurret>(*e, world);
+                destructor
+                    .add_element::<crate::display::artillery_barrel::ArtilleryBarrel>(*e, world);
             }
             world.add_component(thingy, destructor);
             world.add_component(thingy, crate::components::expiry::Expiry::lifetime(50.0));

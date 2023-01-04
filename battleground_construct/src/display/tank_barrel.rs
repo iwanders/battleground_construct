@@ -22,28 +22,34 @@ impl TankBarrel {
             height: 0.1,
         }
     }
-    pub fn hitbox(&self) -> HitBox {
-        HitBox::new(self.length, self.width, self.height)
+    pub fn hit_boxes(&self) -> Vec<(Mat4, HitBox)> {
+        vec![(
+            Mat4::from_translation(Vec3::new(self.length / 2.0, 0.0, 0.0)),
+            HitBox::new(self.length, self.width, self.height),
+        )]
     }
 }
 impl Component for TankBarrel {}
 
 impl Drawable for TankBarrel {
     fn drawables(&self) -> Vec<Element> {
-        vec![Element {
-            transform: Mat4::from_translation(Vec3::new(self.length / 2.0, 0.0, 0.0)),
-            primitive: Primitive::Cuboid(Cuboid {
-                width: self.width,
-                height: self.height,
-                length: self.length,
-            }),
-            material: Color {
-                r: 200,
-                g: 100,
-                b: 0,
-                a: 255,
-            }
-            .into(),
-        }]
+        self.hit_boxes()
+            .iter()
+            .map(|(t, b)| Element {
+                transform: *t,
+                primitive: Primitive::Cuboid(Cuboid {
+                    width: b.width(),
+                    height: b.height(),
+                    length: b.length(),
+                }),
+                material: Color {
+                    r: 200,
+                    g: 100,
+                    b: 0,
+                    a: 255,
+                }
+                .into(),
+            })
+            .collect()
     }
 }

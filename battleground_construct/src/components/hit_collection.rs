@@ -20,15 +20,12 @@ impl HitCollection {
             hit_boxes: hit_boxes.iter().map(|(t, b)| (*t, *b)).collect(),
         }
     }
-
-    // pub fn add_hitbox(&mut self, hitbox: HitBox) {
-    // use cgmath::SquareMatrix;
-    // self.hit_boxes.push((Mat4::identity(), hitbox))
-    // }
-
-    // pub fn add_transformed_hitbox(&mut self, transform_relative_to_entity: Mat4, hitbox: HitBox) {
-    // self.hit_boxes.push((transform_relative_to_entity, hitbox))
-    // }
+    pub fn from_hit_box(hit_box: HitBox) -> Self {
+        use cgmath::SquareMatrix;
+        HitCollection {
+            hit_boxes: vec![(Mat4::identity(), hit_box)],
+        }
+    }
 
     pub fn is_inside(&self, collection_transform: Mat4, point: Vec3) -> bool {
         // convert the projectile pose into the hitbox's local frame.

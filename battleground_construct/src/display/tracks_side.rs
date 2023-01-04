@@ -55,14 +55,6 @@ impl TracksSide {
         self.right_distance = (self.right_distance + right_delta).rem_euclid(total_length);
     }
 
-    pub fn hitbox(&self) -> HitBox {
-        HitBox::new(
-            self.config.length,
-            self.config.track_width + self.config.width,
-            2.0 * (self.track_height + self.config.height), // sticks into the floor...
-        )
-    }
-
     pub fn hit_boxes(&self) -> Vec<(Mat4, HitBox)> {
         let track = HitBox::new(self.config.length, self.config.width, self.config.height);
         vec![

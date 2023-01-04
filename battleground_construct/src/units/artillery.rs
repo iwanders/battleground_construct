@@ -165,32 +165,19 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     world.add_component(front_track_entity, Parent::new(base_entity));
     world.add_component(front_track_entity, PreTransform::from_se2(0.75, 0.0, 0.0));
     let tracks = display::tracks_side::TracksSide::from_config(track_config, base_entity);
-    let hitbox = tracks.hitbox();
-    world.add_component(
-        front_track_entity,
-        components::select_box::SelectBox::from_hit_box(&hitbox),
-    );
     world.add_component(front_track_entity, tracks);
     let hit_collection =
         components::hit_collection::HitCollection::from_hit_boxes(&tracks.hit_boxes());
-    world.add_component(
-        front_track_entity,
-        display::debug_hit_collection::DebugHitCollection::from_hit_boxes(
-            &hit_collection.hit_boxes(),
-        ),
-    );
     world.add_component(front_track_entity, hit_collection);
 
     // Second track set.
     world.add_component(rear_track_entity, Parent::new(base_entity));
     world.add_component(rear_track_entity, PreTransform::from_se2(-0.75, 0.0, 0.0));
     let tracks = display::tracks_side::TracksSide::from_config(track_config, base_entity);
-    let hitbox = tracks.hitbox();
-    world.add_component(
-        rear_track_entity,
-        components::select_box::SelectBox::from_hit_box(&hitbox),
-    );
     world.add_component(rear_track_entity, tracks);
+    let hit_collection =
+        components::hit_collection::HitCollection::from_hit_boxes(&tracks.hit_boxes());
+    world.add_component(rear_track_entity, hit_collection);
 
     // world.add_component(base_entity, display::artillery_tracks::ArtilleryTracks::new());
 
@@ -201,13 +188,16 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         PreTransform::from_translation(Vec3::new(0.0, 0.0, ARTILLERY_DIM_FLOOR_TO_BODY_Z)),
     );
     let body = display::artillery_body::ArtilleryBody::new();
+
     let hitbox = body.hitbox();
     world.add_component(body_entity, body);
     world.add_component(
         body_entity,
         components::select_box::SelectBox::from_hit_box(&hitbox),
     );
-    world.add_component(body_entity, hitbox);
+    let hit_collection = components::hit_collection::HitCollection::from_hit_box(hitbox);
+    world.add_component(body_entity, hit_collection);
+
     super::common::add_radio_receiver_transmitter(
         world,
         &register_interface,
@@ -268,6 +258,8 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         barrel_entity,
         components::select_box::SelectBox::from_hit_box(&hitbox),
     );
+    let hit_collection = components::hit_collection::HitCollection::from_hit_box(hitbox);
+    world.add_component(body_entity, hit_collection);
 
     world.add_component(barrel_entity, Parent::new(turret_entity));
 
