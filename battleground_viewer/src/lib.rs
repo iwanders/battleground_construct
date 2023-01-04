@@ -373,8 +373,10 @@ impl ConstructViewer {
 
             // 0) Prerender shadow maps
             // Skip the ground plane in the shadow map, otherwise we get no resolution.
-            self.directional_light
-                .generate_shadow_map(2048, self.construct_render.geometries(RenderPass::ShadowMaps));
+            self.directional_light.generate_shadow_map(
+                2048,
+                self.construct_render.geometries(RenderPass::ShadowMaps),
+            );
 
             // A) Render normal scene
             screen
@@ -427,7 +429,11 @@ impl ConstructViewer {
                 emissive_texture.as_color_target(None),
                 depth_texture.as_depth_target(),
             )
-            .render(&self.camera, &self.construct_render.objects(RenderPass::Emmisives), &[]);
+            .render(
+                &self.camera,
+                &self.construct_render.objects(RenderPass::Emmisives),
+                &[],
+            );
 
             // C) Render fence meshes to framebuffer (with bound depth texture)
             let fence_material = FenceMaterial::new(&depth_texture);
