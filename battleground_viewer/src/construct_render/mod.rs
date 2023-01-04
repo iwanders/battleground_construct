@@ -5,5 +5,6 @@ mod instanced_entity;
 mod render;
 
 pub use construct_render::ConstructRender;
+pub use render::RenderPass;
 
 pub mod util;

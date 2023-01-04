@@ -4,6 +4,7 @@ use battleground_construct::Construct;
 
 mod construct_render;
 use construct_render::ConstructRender;
+use construct_render::RenderPass;
 
 mod fence_material;
 use fence_material::FenceMaterial;
@@ -373,14 +374,14 @@ impl ConstructViewer {
             // 0) Prerender shadow maps
             // Skip the ground plane in the shadow map, otherwise we get no resolution.
             self.directional_light
-                .generate_shadow_map(2048, self.construct_render.shadow_meshes());
+                .generate_shadow_map(2048, self.construct_render.geometries(RenderPass::ShadowMaps));
 
             // A) Render normal scene
             screen
                 .clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0))
                 .render(
                     &self.camera,
-                    &self.construct_render.objects(),
+                    &self.construct_render.objects(RenderPass::BaseScene),
                     &[&self.ambient_light, &self.directional_light],
                 );
 
@@ -406,7 +407,7 @@ impl ConstructViewer {
                 .render_with_material(
                     &write_depth_material,
                     &self.camera,
-                    &self.construct_render.non_emissive_meshes(),
+                    &self.construct_render.objects(RenderPass::NonEmmisivesDepth),
                     &[],
                 );
 
@@ -426,14 +427,14 @@ impl ConstructViewer {
                 emissive_texture.as_color_target(None),
                 depth_texture.as_depth_target(),
             )
-            .render(&self.camera, &self.construct_render.emissive_objects(), &[]);
+            .render(&self.camera, &self.construct_render.objects(RenderPass::Emmisives), &[]);
 
             // C) Render fence meshes to framebuffer (with bound depth texture)
             let fence_material = FenceMaterial::new(&depth_texture);
             screen.render_with_material(
                 &fence_material,
                 &self.camera,
-                &self.construct_render.fence_objects(),
+                &self.construct_render.objects(RenderPass::Fences),
                 &[],
             );
 
