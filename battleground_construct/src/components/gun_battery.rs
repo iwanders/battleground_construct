@@ -3,7 +3,7 @@ use engine::prelude::*;
 
 // This must be an Rc, as we need to be able to copy it to allow a mutable world, we cannot borrow
 // it out of the cannon.
-pub type GunBatteryFireEffect = std::rc::Rc<dyn for<'a> Fn(&'a mut World, EntityId)>;
+pub type GunBatteryFireEffect = std::rc::Rc<dyn for<'a> Fn(&'a mut World, EntityId, Mat4)>;
 
 /*
     Usually called an artillery battery, but 'gun' has a more generic term to it, and we need it to
@@ -31,8 +31,8 @@ pub struct GunBatteryConfig {
     /// can be fired after the battery finishes, which cannot be guaranteed by gun_reload. Both
     /// gun_reload and battery_reload must have elapsed before firing can commence.
     pub battery_reload: f32,
-    /// Offsets for each individual gun.
-    pub offsets: Vec<Mat4>,
+    /// Pose for each individual gun.
+    pub poses: Vec<Mat4>,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -62,7 +62,7 @@ impl GunBattery {
                 is_ready: true,
                 // is_triggered: false,
             };
-            config.offsets.len()
+            config.poses.len()
         ];
         Self {
             current_index: 0,
@@ -104,16 +104,19 @@ impl GunBattery {
         self.is_ready = battery_reload_done && at_least_one_gun_loaded && gun_interval_done;
     }
 
-    pub fn fired(&mut self, current_time: f32) {
+    pub fn fired(&mut self, current_time: f32) -> Mat4 {
         // Modify this gun.
         self.status[self.current_index].is_ready = false;
         self.status[self.current_index].last_fire_time = current_time;
         self.last_gun_fire_time = current_time;
 
+        let fire_pose = self.config.poses[self.current_index];
+
         // Increment the gun index.
         if self.current_index + 1 >= self.status.len() {
             // Wrap around, set the last gun fire time.
             self.last_in_battery_fire_time = current_time;
+
             self.current_index = 0;
         } else {
             self.current_index += 1;
@@ -121,6 +124,7 @@ impl GunBattery {
 
         // Always update, the is_ready flag needs to update immediately.
         self.update(current_time);
+        fire_pose
     }
 
     pub fn gun_index(&self) -> usize {
@@ -144,7 +148,7 @@ mod test {
             let gun_reload = 2.0;
             let battery_reload = 3.0;
             let config = GunBatteryConfig {
-                fire_effect: std::rc::Rc::new(|_, _| {}),
+                fire_effect: std::rc::Rc::new(|_, _, _| {}),
                 inter_gun_duration,
                 gun_reload,
                 battery_reload,
@@ -195,7 +199,7 @@ mod test {
             let gun_reload = 2.0;
             let battery_reload = 3.0;
             let config = GunBatteryConfig {
-                fire_effect: std::rc::Rc::new(|_, _| {}),
+                fire_effect: std::rc::Rc::new(|_, _, _| {}),
                 inter_gun_duration,
                 gun_reload,
                 battery_reload,

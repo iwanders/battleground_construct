@@ -91,4 +91,5 @@ pub fn add_systems(systems: &mut Systems) {
 
     // Shoot any cannons
     systems.add_system(Box::new(systems::cannon_trigger::CannonTrigger {}));
+    systems.add_system(Box::new(systems::gun_battery_trigger::GunBatteryTrigger {}));
 }

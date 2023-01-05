@@ -86,13 +86,14 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
     let artillery = spawn_artillery(
         world,
         ArtillerySpawnConfig {
-            x: 6.0,
-            y: -0.0,
-            yaw: std::f32::consts::PI / 2.0,
+            x: 0.0,
+            y: 3.0,
+            // yaw: std::f32::consts::PI / 2.0,
+            yaw: 0.0,
             // controller: Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot::new()),
             // controller: Box::new(control::radar_draw::RadarDrawControl {}),
-            // controller: Box::new(unit_control_builtin::idle::Idle {}),
-            controller: fw_backwards,
+            controller: Box::new(unit_control_builtin::idle::Idle {}),
+            // controller: fw_backwards,
             ..Default::default()
         },
     );
@@ -185,6 +186,34 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             },
         ),
     );
+
+    // Add a artillery gun battery emitter.
+    let static_artillery = world.add_entity();
+    world.add_component(
+        static_artillery,
+        components::pose::Pose::from_xyz(2.0, 6.0, 1.0).rotated_angle_y(Deg(-45.0)),
+    );
+    let inter_gun_duration = 1.0;
+    let gun_reload = 2.0;
+    let battery_reload = 3.0;
+    use crate::display::primitives::Mat4;
+    use crate::display::primitives::Vec3;
+    let gun_battery_config = components::gun_battery::GunBatteryConfig {
+        fire_effect: std::rc::Rc::new(crate::units::artillery::artillery_fire_function),
+        inter_gun_duration,
+        gun_reload,
+        battery_reload,
+        poses: vec![
+            Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+            Mat4::from_translation(Vec3::new(0.0, 1.0, 0.0)),
+            Mat4::from_translation(Vec3::new(0.0, 2.0, 0.0)),
+            Mat4::from_translation(Vec3::new(0.0, 3.0, 0.0)),
+        ],
+    };
+    let mut gun_battery = components::gun_battery::GunBattery::new(gun_battery_config);
+    gun_battery.set_trigger(true);
+    world.add_component(static_artillery, gun_battery);
+    world.add_component(static_artillery, display::debug_box::DebugBox::cube(0.1));
 
     // Spawn two teams.
     let team_red_entity = world.add_entity();
