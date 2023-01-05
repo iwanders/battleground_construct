@@ -237,6 +237,9 @@ impl ConstructRender {
         self.glow_primitives.finish_frame(context);
         self.fence_primitives.finish_frame(context);
         self.overlay_primitives.finish_frame(context);
+        for e in self.effects.values_mut() {
+            e.finish_frame(context);
+        }
     }
 
     fn reset_instances(&mut self) {
@@ -246,6 +249,9 @@ impl ConstructRender {
         self.glow_primitives.prepare_frame();
         self.fence_primitives.prepare_frame();
         self.overlay_primitives.prepare_frame();
+        for e in self.effects.values_mut() {
+            e.prepare_frame();
+        }
     }
 
     fn add_select_boxes(&mut self, construct: &Construct, selected: &[EntityId]) {
