@@ -230,7 +230,7 @@ impl ConstructRender {
         result
     }
 
-    fn update_instances(&mut self, context: &Context) {
+    fn finish_frame(&mut self, context: &Context) {
         self.static_meshes.finish_frame(context);
         self.base_primitives.finish_frame(context);
         self.emissive_primitives.finish_frame(context);
@@ -242,7 +242,7 @@ impl ConstructRender {
         }
     }
 
-    fn reset_instances(&mut self) {
+    fn prepare_frame(&mut self) {
         self.static_meshes.prepare_frame();
         self.base_primitives.prepare_frame();
         self.emissive_primitives.prepare_frame();
@@ -334,7 +334,7 @@ impl ConstructRender {
         selected: &std::collections::HashSet<EntityId>,
     ) {
         // a new cycle, clear the previous instances.
-        self.reset_instances();
+        self.prepare_frame();
 
         // World geometry
         self.add_static_meshes();
@@ -412,7 +412,7 @@ impl ConstructRender {
         }
 
         // Update the actual instances
-        self.update_instances(context);
+        self.finish_frame(context);
     }
 
     /// Function to iterate over the components and convert their drawables into elements.
