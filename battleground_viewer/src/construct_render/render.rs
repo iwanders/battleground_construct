@@ -283,7 +283,6 @@ impl<M: Material + BatchMaterial> PrimitiveGeometry<M> {
 
     pub fn add_primitive(
         &mut self,
-        context: &Context,
         batch_hints: BatchProperties,
         primitive: Primitive,
         transform: Mat4,
