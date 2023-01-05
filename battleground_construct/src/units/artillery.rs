@@ -384,6 +384,7 @@ pub fn artillery_battery_config() -> components::gun_battery::GunBatteryConfig {
     components::gun_battery::GunBatteryConfig {
         fire_effect: std::rc::Rc::new(artillery_fire_function),
         inter_gun_duration: 0.3,
+        // inter_gun_duration: 0.0,
         gun_reload: 0.0, // governed by fire rate and battery reload.
         battery_reload: 5.0,
         poses,
