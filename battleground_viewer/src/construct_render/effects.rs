@@ -19,6 +19,26 @@ pub trait RetainedEffect: RenderableGeometry {
     fn as_renderable(&self) -> &dyn RenderableGeometry;
 }
 
+
+impl RenderableGeometry for Box<dyn RetainedEffect> {
+    fn objects(&self, pass: RenderPass) -> Option<Vec<&dyn Object>> {
+        (**self).objects(pass)
+    }
+
+    fn geometries(&self, pass: RenderPass) -> Option<Vec<&InstancedMesh>> {
+        (**self).geometries(pass)
+    }
+
+    fn prepare_frame(&mut self) {
+        (**self).prepare_frame();
+    }
+
+    fn finish_frame(&mut self, context: &Context) {
+        (**self).finish_frame(context);
+    }
+}
+
+
 #[derive(Debug, Copy, Clone)]
 struct Particle {
     pos: Mat4,

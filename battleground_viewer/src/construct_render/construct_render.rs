@@ -90,7 +90,7 @@ impl ConstructRender {
         f(&self.fence_primitives);
         f(&self.overlay_primitives);
         for effect in self.effects.values() {
-            f(effect.as_renderable());
+            f(effect);
         }
     }
 
