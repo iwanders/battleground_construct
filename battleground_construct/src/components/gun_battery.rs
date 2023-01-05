@@ -139,54 +139,92 @@ mod test {
     use crate::display::primitives::Vec3;
     #[test]
     fn test_gun_battery() {
-        let inter_gun_duration = 1.0;
-        let gun_reload = 2.0;
-        let battery_reload = 3.0;
-        let config = GunBatteryConfig {
-            fire_effect: std::rc::Rc::new(|_, _| {}),
-            inter_gun_duration,
-            gun_reload,
-            battery_reload,
-            offsets: vec![
-                Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
-                Mat4::from_translation(Vec3::new(0.0, 1.0, 0.0)),
-                Mat4::from_translation(Vec3::new(0.0, 2.0, 0.0)),
-                Mat4::from_translation(Vec3::new(0.0, 3.0, 0.0)),
-            ],
-        };
+        {
+            let inter_gun_duration = 1.0;
+            let gun_reload = 2.0;
+            let battery_reload = 3.0;
+            let config = GunBatteryConfig {
+                fire_effect: std::rc::Rc::new(|_, _| {}),
+                inter_gun_duration,
+                gun_reload,
+                battery_reload,
+                offsets: vec![
+                    Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+                    Mat4::from_translation(Vec3::new(0.0, 1.0, 0.0)),
+                    Mat4::from_translation(Vec3::new(0.0, 2.0, 0.0)),
+                    Mat4::from_translation(Vec3::new(0.0, 3.0, 0.0)),
+                ],
+            };
 
-        let mut battery = GunBattery::new(config);
-        let mut t = 0.0;
+            let mut battery = GunBattery::new(config);
+            let mut t = 0.0;
 
-        assert!(battery.is_ready());
-        battery.update(t);
-        assert!(battery.is_ready());
-        battery.fired(t);
-        assert_eq!(battery.is_ready(), false); // not ready right now, in between the inter gun
-        t += inter_gun_duration;
-        battery.update(t);
-        assert!(battery.is_ready());
-        battery.fired(t);
-        t += inter_gun_duration;
-        t += inter_gun_duration;
-        battery.update(t);
-        battery.fired(t);
-        battery.update(t);
-        assert_eq!(battery.is_ready(), false);
+            assert!(battery.is_ready());
+            battery.update(t);
+            assert!(battery.is_ready());
+            battery.fired(t);
+            assert_eq!(battery.is_ready(), false); // not ready right now, in between the inter gun
+            t += inter_gun_duration;
+            battery.update(t);
+            assert!(battery.is_ready());
+            battery.fired(t);
+            t += inter_gun_duration;
+            t += inter_gun_duration;
+            battery.update(t);
+            battery.fired(t);
+            battery.update(t);
+            assert_eq!(battery.is_ready(), false);
 
-        // Next shot is the last in the gun battery.
-        battery.fired(t);
-        assert_eq!(battery.is_ready(), false);
-        t += inter_gun_duration;
-        battery.update(t);
-        assert_eq!(battery.is_ready(), false);
-        t += inter_gun_duration;
-        battery.update(t);
-        assert_eq!(battery.is_ready(), false);
-        t += inter_gun_duration;
-        battery.update(t);
-        assert_eq!(battery.is_ready(), true); // at start again.
-        assert_eq!(battery.gun_index(), 0); // at start again.
+            // Next shot is the last in the gun battery.
+            battery.fired(t);
+            assert_eq!(battery.is_ready(), false);
+            t += inter_gun_duration;
+            battery.update(t);
+            assert_eq!(battery.is_ready(), false);
+            t += inter_gun_duration;
+            battery.update(t);
+            assert_eq!(battery.is_ready(), false);
+            t += inter_gun_duration;
+            battery.update(t);
+            assert_eq!(battery.is_ready(), true); // at start again.
+            assert_eq!(battery.gun_index(), 0); // at start again.
+        }
+
+        {
+            let inter_gun_duration = 0.0;
+            let gun_reload = 2.0;
+            let battery_reload = 3.0;
+            let config = GunBatteryConfig {
+                fire_effect: std::rc::Rc::new(|_, _| {}),
+                inter_gun_duration,
+                gun_reload,
+                battery_reload,
+                offsets: vec![
+                    Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+                    Mat4::from_translation(Vec3::new(0.0, 1.0, 0.0)),
+                    Mat4::from_translation(Vec3::new(0.0, 2.0, 0.0)),
+                ],
+            };
+
+            let mut battery = GunBattery::new(config);
+            let mut t = 0.0;
+
+            assert!(battery.is_ready());
+            battery.update(t);
+            assert!(battery.is_ready());
+            battery.fired(t);
+            assert!(battery.is_ready()); // no inter gun delay.
+            battery.fired(t);
+            assert!(battery.is_ready());
+
+            // Next shot is the last in the gun battery.
+            battery.fired(t);
+            assert_eq!(battery.is_ready(), false);
+            t += battery_reload;
+            battery.update(t);
+            assert_eq!(battery.is_ready(), true); // at start again.
+            assert_eq!(battery.gun_index(), 0); // at start again.
+        }
     }
 }
 
