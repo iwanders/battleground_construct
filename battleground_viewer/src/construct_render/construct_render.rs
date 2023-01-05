@@ -7,7 +7,7 @@ use super::render::{
 
 use battleground_construct::components::unit::UnitId;
 use battleground_construct::display;
-use battleground_construct::display::primitives::Drawable;
+use battleground_construct::display::primitives::{Drawable, Primitive};
 use battleground_construct::Construct;
 use engine::prelude::*;
 
@@ -23,7 +23,7 @@ pub struct ConstructRender {
     /// All meshes that are rendered with a physical material (both opaque and translucent)
     base_primitives: PrimitiveGeometry<PhysicalMaterial>,
 
-    /// All meshes that do not block glow effects
+    /// The 'core' of glowing primitives
     emissive_primitives: PrimitiveGeometry<ColorMaterial>,
 
     /// All meshes that are used to produce glows
@@ -92,50 +92,48 @@ impl ConstructRender {
 
     fn add_grid(&mut self, context: &Context) {
         // Grid goes into overlay for now...
+        let lower = -10isize;
+        let upper = 10;
+        let main = 5;
+        let t = 0.01;
+        let sub_color = Color::new_opaque(150, 150, 150);
+        let main_color = Color::new_opaque(255, 255, 255);
+        let batch_hints = BatchProperties::Basic{ is_transparent: false };
+        let no_transform = Matrix4::one();
 
-        // Grid lines
-        // let mut grid = InstancedEntity::new_colored(context, &CpuMesh::cylinder(4));
-        // let mut lines = vec![];
-        // let lower = -10isize;
-        // let upper = 10;
-        // let main = 5;
-        // let t = 0.01;
-        // let sub_color = Color::new_opaque(150, 150, 150);
-        // let main_color = Color::new_opaque(255, 255, 255);
-        // fn line(
-        //     x0: isize,
-        //     y0: isize,
-        //     x1: isize,
-        //     y1: isize,
-        //     width: f32,
-        //     color: Color,
-        // ) -> (Vec3, Vec3, f32, Color) {
-        //     (
-        //         vec3(x0 as f32, y0 as f32, 0.0),
-        //         vec3(x1 as f32, y1 as f32, 0.0),
-        //         width,
-        //         color,
-        //     )
-        // }
-        // for x in lower + 1..upper {
-        //     let color = if x.rem_euclid(main) == 0 {
-        //         main_color
-        //     } else {
-        //         sub_color
-        //     };
-        //     lines.push(line(x, upper, x, lower, t, color));
-        //     lines.push(line(lower, x, upper, x, t, color));
-        // }
-        // lines.push(line(lower - 5, upper, upper + 5, upper, t, main_color));
-        // lines.push(line(lower - 5, lower, upper + 5, lower, t, main_color));
-        //
-        // lines.push(line(upper, lower - 5, upper, upper + 5, t, main_color));
-        // lines.push(line(lower, lower - 5, lower, upper + 5, t, main_color));
-        //
-        // for (p0, p1, width, c) in lines {
-        //     grid.add_line(p0, p1, width, c);
-        // }
-        // self.grid.add_primitive()
+        fn line(
+            x0: isize,
+            y0: isize,
+            x1: isize,
+            y1: isize,
+            width: f32,
+        ) -> Primitive {
+            Primitive::Line(battleground_construct::display::primitives::Line {
+                p0: (x0 as f32, y0 as f32, 0.0),
+                p1: (x1 as f32, y1 as f32, 0.0),
+                width,
+            })
+        }
+
+        let mut lines = vec![];
+        for x in lower + 1..upper {
+            let color = if x.rem_euclid(main) == 0 {
+                main_color
+            } else {
+                sub_color
+            };
+            lines.push((line(x, upper, x, lower, t), color));
+            lines.push((line(lower, x, upper, x, t), color));
+        }
+        lines.push((line(lower - 5, upper, upper + 5, upper, t), main_color));
+        lines.push((line(lower - 5, lower, upper + 5, lower, t), main_color));
+
+        lines.push((line(upper, lower - 5, upper, upper + 5, t), main_color));
+        lines.push((line(lower, lower - 5, lower, upper + 5, t), main_color));
+
+        for (line, color) in lines {
+            self.overlay_primitives.add_primitive(context, batch_hints, line, no_transform, color);
+        }
     }
 
     pub fn camera_view(&self, camera: &Camera, construct: &Construct) -> Option<(Vec3, Vec3)> {
