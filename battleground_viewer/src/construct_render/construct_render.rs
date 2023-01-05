@@ -255,7 +255,6 @@ impl ConstructRender {
     }
 
     fn add_select_boxes(&mut self, construct: &Construct, selected: &[EntityId]) {
-        use battleground_construct::util::cgmath::prelude::*;
         let boxes = &mut self.overlay_primitives;
         let width = 0.01;
         let color = Color::WHITE;
