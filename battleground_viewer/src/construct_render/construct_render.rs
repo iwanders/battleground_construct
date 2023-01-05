@@ -90,7 +90,7 @@ impl ConstructRender {
         );
     }
 
-    fn add_grid(&mut self, context: &Context) {
+    fn add_grid(&mut self) {
         // Grid goes into overlay for now...
         let lower = -10isize;
         let upper = 10;
@@ -132,7 +132,7 @@ impl ConstructRender {
         lines.push((line(lower, lower - 5, lower, upper + 5, t), main_color));
 
         for (line, color) in lines {
-            self.overlay_primitives.add_primitive(context, batch_hints, line, no_transform, color);
+            self.overlay_primitives.add_primitive(batch_hints, line, no_transform, color);
         }
     }
 
@@ -294,7 +294,7 @@ impl ConstructRender {
 
         // World geometry
         self.add_static_meshes(context);
-        self.add_grid(context);
+        self.add_grid();
 
         // TODO:
         // self.draw_select_boxes(
@@ -304,24 +304,23 @@ impl ConstructRender {
         // );
 
         // Iterate through all displayables to collect meshes
-        self.component_to_meshes::<display::artillery_turret::ArtilleryTurret>(context, construct);
-        self.component_to_meshes::<display::artillery_barrel::ArtilleryBarrel>(context, construct);
-        self.component_to_meshes::<display::artillery_body::ArtilleryBody>(context, construct);
+        self.component_to_meshes::<display::artillery_turret::ArtilleryTurret>(construct);
+        self.component_to_meshes::<display::artillery_barrel::ArtilleryBarrel>(construct);
+        self.component_to_meshes::<display::artillery_body::ArtilleryBody>(construct);
 
-        self.component_to_meshes::<display::tracks_side::TracksSide>(context, construct);
+        self.component_to_meshes::<display::tracks_side::TracksSide>(construct);
 
-        self.component_to_meshes::<display::tank_body::TankBody>(context, construct);
-        self.component_to_meshes::<display::tank_turret::TankTurret>(context, construct);
-        self.component_to_meshes::<display::tank_barrel::TankBarrel>(context, construct);
-        self.component_to_meshes::<display::tank_bullet::TankBullet>(context, construct);
+        self.component_to_meshes::<display::tank_body::TankBody>(construct);
+        self.component_to_meshes::<display::tank_turret::TankTurret>(construct);
+        self.component_to_meshes::<display::tank_barrel::TankBarrel>(construct);
+        self.component_to_meshes::<display::tank_bullet::TankBullet>(construct);
 
-        self.component_to_meshes::<display::radar_model::RadarModel>(context, construct);
+        self.component_to_meshes::<display::radar_model::RadarModel>(construct);
 
         // We could also pre-calculate all entities that have the correct unit members, and then
         // filter based on that...
         let units = Self::selected_to_units(construct, &selected);
         self.component_to_meshes_filtered::<display::draw_module::DrawComponent, _>(
-            context,
             construct,
             |e| {
                 construct
@@ -332,15 +331,13 @@ impl ConstructRender {
             },
         );
 
-        self.component_to_meshes::<display::debug_box::DebugBox>(context, construct);
-        self.component_to_meshes::<display::debug_sphere::DebugSphere>(context, construct);
-        self.component_to_meshes::<display::debug_lines::DebugLines>(context, construct);
-        self.component_to_meshes::<display::debug_elements::DebugElements>(context, construct);
+        self.component_to_meshes::<display::debug_box::DebugBox>(construct);
+        self.component_to_meshes::<display::debug_sphere::DebugSphere>(construct);
+        self.component_to_meshes::<display::debug_lines::DebugLines>(construct);
+        self.component_to_meshes::<display::debug_elements::DebugElements>(construct);
 
-        self.component_to_meshes::<display::flag::Flag>(context, construct);
-        self.component_to_meshes::<display::display_control_point::DisplayControlPoint>(
-            context, construct,
-        );
+        self.component_to_meshes::<display::flag::Flag>(construct);
+        self.component_to_meshes::<display::display_control_point::DisplayControlPoint>(construct);
 
         // Get the current effect keys.
         let mut start_keys = self
@@ -377,7 +374,6 @@ impl ConstructRender {
     /// Function to iterate over the components and convert their drawables into elements.
     fn component_to_meshes_filtered<C: Component + Drawable + 'static, F: Fn(EntityId) -> bool>(
         &mut self,
-        context: &Context,
         construct: &Construct,
         filter_function: F,
     ) {
@@ -388,7 +384,7 @@ impl ConstructRender {
             // Get the world pose for this entity, to add draw transform local to this component.
             let world_pose = construct.entity_pose(element_id);
             for el in component_with_drawables.drawables() {
-                self.add_primitive_element(context, &el, world_pose.transform())
+                self.add_primitive_element(&el, world_pose.transform())
             }
         }
     }
@@ -396,10 +392,9 @@ impl ConstructRender {
     /// Function to iterate over the components and convert their drawables into elements.
     fn component_to_meshes<C: Component + Drawable + 'static>(
         &mut self,
-        context: &Context,
         construct: &Construct,
     ) {
-        self.component_to_meshes_filtered::<C, _>(context, construct, |_| true);
+        self.component_to_meshes_filtered::<C, _>(construct, |_| true);
     }
 
     /// Function to iterate over the components and convert their drawables into elements.
@@ -472,7 +467,6 @@ impl ConstructRender {
     /// Add elements to the instances.
     fn add_primitive_element(
         &mut self,
-        context: &Context,
         el: &display::primitives::Element,
         entity_transform: &Matrix4<f32>,
     ) {
@@ -484,14 +478,12 @@ impl ConstructRender {
                 };
                 if flat_material.is_emissive {
                     self.emissive_primitives.add_primitive(
-                        context,
                         batch_properties,
                         el.primitive,
                         element_transform,
                         flat_material.color.to_color(),
                     );
                     self.glow_primitives.add_primitive(
-                        context,
                         batch_properties,
                         el.primitive,
                         element_transform,
@@ -499,7 +491,6 @@ impl ConstructRender {
                     );
                 } else {
                     self.base_primitives.add_primitive(
-                        context,
                         batch_properties,
                         el.primitive,
                         element_transform,
@@ -511,7 +502,6 @@ impl ConstructRender {
                 fence_material,
             ) => {
                 self.fence_primitives.add_primitive(
-                    context,
                     BatchProperties::None,
                     el.primitive,
                     element_transform,
