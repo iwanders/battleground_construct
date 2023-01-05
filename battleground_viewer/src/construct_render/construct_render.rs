@@ -66,9 +66,20 @@ impl ConstructRender {
             _ => false,
         });
 
-        // TODO: Move ground plane and grid lines into a per-frame statics builder
+        ConstructRender {
+            static_geometries,
+            pbr_meshes,
+            emissive_meshes,
+            fence_meshes,
+            select_boxes,
+            grid,
+            effects: Default::default(),
+        }
+    }
+
+    fn add_static_geometry(&mut self, context: &Context) {
         // Ground plane
-        static_geometries.add_mesh(
+        self.static_geometries.add_mesh(
             context,
             BatchProperties::Basic {
                 is_transparent: false,
@@ -123,16 +134,6 @@ impl ConstructRender {
         // grid.update_instances();
         //
         // let select_boxes = InstancedEntity::new_colored(context, &CpuMesh::cylinder(4));
-
-        ConstructRender {
-            static_geometries,
-            pbr_meshes,
-            emissive_meshes,
-            fence_meshes,
-            select_boxes,
-            grid,
-            effects: Default::default(),
-        }
     }
 
     pub fn camera_view(&self, camera: &Camera, construct: &Construct) -> Option<(Vec3, Vec3)> {
@@ -380,6 +381,9 @@ impl ConstructRender {
     ) {
         // a new cycle, clear the previous instances.
         self.reset_instances();
+
+        // World geometry
+        self.add_static_geometry(context);
 
         // TODO:
         // self.draw_select_boxes(

@@ -238,7 +238,9 @@ impl<M: Material + BatchMaterial> RenderableGeometry for MeshGeometry<M> {
             .map(|xs| xs.map(|x| &x.geometry).collect::<_>())
     }
 
-    fn prepare_frame(&mut self) {}
+    fn prepare_frame(&mut self) {
+        self.meshes.clear();
+    }
 
     fn finish_frame(&mut self, context: &Context) {}
 }
