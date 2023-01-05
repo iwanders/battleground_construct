@@ -399,12 +399,10 @@ pub fn artillery_fire_function(world: &mut World, gun_battery_entity: EntityId, 
     let muzzle_pose_raw = components::pose::world_pose(world, gun_battery_entity) * gun_pose.into();
     let muzzle_pose = muzzle_pose_raw;
 
-    // println!("muzzle_pose: {muzzle_pose:?}");
     let muzzle_world_velocity = components::velocity::world_velocity(world, gun_battery_entity);
     let gun_pose_velocity = velocity_on_body(muzzle_world_velocity, gun_pose);
 
-    // Get the unit source of this cannel.
-
+    // Need to pick a velocity.
     let muzzle_velocity = 10.0;
 
     // Get the pose of the cannon in the world coordinates. Then create the pose with the
@@ -447,6 +445,8 @@ pub fn artillery_fire_function(world: &mut World, gun_battery_entity: EntityId, 
         projectile_entity,
         crate::components::acceleration::Acceleration::gravity(),
     );
+
+    // Need to pick a damage, implement DamageSplash
     world.add_component(
         projectile_entity,
         components::damage_hit::DamageHit::new(3330.3),
