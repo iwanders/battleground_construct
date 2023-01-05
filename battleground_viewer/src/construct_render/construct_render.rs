@@ -94,16 +94,12 @@ impl ConstructRender {
         let t = 0.01;
         let sub_color = Color::new_opaque(150, 150, 150);
         let main_color = Color::new_opaque(255, 255, 255);
-        let batch_hints = BatchProperties::Basic{ is_transparent: false };
+        let batch_hints = BatchProperties::Basic {
+            is_transparent: false,
+        };
         let no_transform = Matrix4::one();
 
-        fn line(
-            x0: isize,
-            y0: isize,
-            x1: isize,
-            y1: isize,
-            width: f32,
-        ) -> Primitive {
+        fn line(x0: isize, y0: isize, x1: isize, y1: isize, width: f32) -> Primitive {
             Primitive::Line(battleground_construct::display::primitives::Line {
                 p0: (x0 as f32, y0 as f32, 0.0),
                 p1: (x1 as f32, y1 as f32, 0.0),
@@ -128,7 +124,8 @@ impl ConstructRender {
         lines.push((line(lower, lower - 5, lower, upper + 5, t), main_color));
 
         for (line, color) in lines {
-            self.overlay_primitives.add_primitive(batch_hints, line, no_transform, color);
+            self.overlay_primitives
+                .add_primitive(batch_hints, line, no_transform, color);
         }
     }
 
@@ -168,33 +165,63 @@ impl ConstructRender {
                 .geometries(pass)
                 .unwrap_or_else(|| vec![]),
         );
-        result.append(&mut self.base_primitives.geometries(pass).unwrap_or_else(|| vec![]));
-        result.append(&mut self.emissive_primitives.geometries(pass).unwrap_or_else(|| vec![]));
+        result.append(
+            &mut self
+                .base_primitives
+                .geometries(pass)
+                .unwrap_or_else(|| vec![]),
+        );
+        result.append(
+            &mut self
+                .emissive_primitives
+                .geometries(pass)
+                .unwrap_or_else(|| vec![]),
+        );
         result.append(
             &mut self
                 .glow_primitives
                 .geometries(pass)
                 .unwrap_or_else(|| vec![]),
         );
-        result.append(&mut self.fence_primitives.geometries(pass).unwrap_or_else(|| vec![]));
-        result.append(&mut self.overlay_primitives.geometries(pass).unwrap_or_else(|| vec![]));
+        result.append(
+            &mut self
+                .fence_primitives
+                .geometries(pass)
+                .unwrap_or_else(|| vec![]),
+        );
+        result.append(
+            &mut self
+                .overlay_primitives
+                .geometries(pass)
+                .unwrap_or_else(|| vec![]),
+        );
         // TODO: Effects...
         result
     }
 
     pub fn objects(&self, pass: RenderPass) -> Vec<&dyn Object> {
         let mut result = vec![];
+        result.append(&mut self.static_meshes.objects(pass).unwrap_or_else(|| vec![]));
+        result.append(&mut self.base_primitives.objects(pass).unwrap_or_else(|| vec![]));
         result.append(
             &mut self
-                .static_meshes
+                .emissive_primitives
                 .objects(pass)
                 .unwrap_or_else(|| vec![]),
         );
-        result.append(&mut self.base_primitives.objects(pass).unwrap_or_else(|| vec![]));
-        result.append(&mut self.emissive_primitives.objects(pass).unwrap_or_else(|| vec![]));
         result.append(&mut self.glow_primitives.objects(pass).unwrap_or_else(|| vec![]));
-        result.append(&mut self.fence_primitives.objects(pass).unwrap_or_else(|| vec![]));
-        result.append(&mut self.overlay_primitives.objects(pass).unwrap_or_else(|| vec![]));
+        result.append(
+            &mut self
+                .fence_primitives
+                .objects(pass)
+                .unwrap_or_else(|| vec![]),
+        );
+        result.append(
+            &mut self
+                .overlay_primitives
+                .objects(pass)
+                .unwrap_or_else(|| vec![]),
+        );
         if pass == RenderPass::BaseScene {
             result.extend(self.effects.iter().filter_map(|v| v.1.object()));
         }
@@ -224,7 +251,9 @@ impl ConstructRender {
         let boxes = &mut self.overlay_primitives;
         let width = 0.01;
         let color = Color::WHITE;
-        let batch_hints = BatchProperties::Basic{ is_transparent: false };
+        let batch_hints = BatchProperties::Basic {
+            is_transparent: false,
+        };
         for e in selected.iter() {
             if let Some(b) =
                 construct
@@ -245,14 +274,33 @@ impl ConstructRender {
                     (-l, -w, -h), // 6
                     (-l, -w, h),  // 7
                 ];
-                let lines = [(0,1), (1,2), (2,3), (4,0), (0,3), (1,5), (2,6), (3,7), (4,5), (5,6), (6,7), (7,4)];
+                let lines = [
+                    (0, 1),
+                    (1, 2),
+                    (2, 3),
+                    (4, 0),
+                    (0, 3),
+                    (1, 5),
+                    (2, 6),
+                    (3, 7),
+                    (4, 5),
+                    (5, 6),
+                    (6, 7),
+                    (7, 4),
+                ];
                 for (ip0, ip1) in lines {
-                    let primtitive = Primitive::Line(battleground_construct::display::primitives::Line {
-                        p0: points[ip0],
-                        p1: points[ip1],
-                        width,
-                    });
-                    self.overlay_primitives.add_primitive(batch_hints, primtitive, *transform, color);
+                    let primtitive =
+                        Primitive::Line(battleground_construct::display::primitives::Line {
+                            p0: points[ip0],
+                            p1: points[ip1],
+                            width,
+                        });
+                    self.overlay_primitives.add_primitive(
+                        batch_hints,
+                        primtitive,
+                        *transform,
+                        color,
+                    );
                 }
             }
         }
@@ -378,10 +426,7 @@ impl ConstructRender {
     }
 
     /// Function to iterate over the components and convert their drawables into elements.
-    fn component_to_meshes<C: Component + Drawable + 'static>(
-        &mut self,
-        construct: &Construct,
-    ) {
+    fn component_to_meshes<C: Component + Drawable + 'static>(&mut self, construct: &Construct) {
         self.component_to_meshes_filtered::<C, _>(construct, |_| true);
     }
 
