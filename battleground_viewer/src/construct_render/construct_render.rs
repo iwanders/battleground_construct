@@ -219,52 +219,44 @@ impl ConstructRender {
         self.overlay_primitives.prepare_frame();
     }
 
-    // fn draw_select_boxes(&mut self, context: &Context, construct: &Construct, selected: &[EntityId]) {
-    //     use battleground_construct::util::cgmath::prelude::*;
-    //     let boxes = &mut self.overlay_primitives;
-    //     let d = 0.01;
-    //     let c = Color::WHITE;
-    //
-    //     for e in selected.iter() {
-    //         if let Some(b) =
-    //             construct
-    //                 .world()
-    //                 .component::<battleground_construct::components::select_box::SelectBox>(*e)
-    //         {
-    //             let world_pose = construct.entity_pose(*e);
-    //             let w = (b.width() + (b.width() * 0.1).min(0.5)) / 2.0;
-    //             let l = (b.length() + (b.length() * 0.1).min(0.5)) / 2.0;
-    //             let h = (b.height() + (b.height() * 0.1).min(0.5)) / 2.0;
-    //             let t = |p: Vec3| (world_pose.transform() * p.to_h()).to_translation();
-    //             let pt = |x: f32, y: f32, z: f32| t(vec3(x, y, z));
-    //             let points = [
-    //                 pt(l, w, h),    // 0
-    //                 pt(l, w, -h),   // 1
-    //                 pt(l, -w, -h),  // 2
-    //                 pt(l, -w, h),   // 3
-    //                 pt(-l, w, h),   // 4
-    //                 pt(-l, w, -h),  // 5
-    //                 pt(-l, -w, -h), // 6
-    //                 pt(-l, -w, h),  // 7
-    //             ];
-    //
-    //             boxes.add_primitive(points[0], points[1], d, c);
-    //             boxes.add_primitive(points[1], points[2], d, c);
-    //             boxes.add_primitive(points[2], points[3], d, c);
-    //             boxes.add_primitive(points[4], points[0], d, c);
-    //
-    //             boxes.add_primitive(points[0], points[3], d, c);
-    //             boxes.add_primitive(points[1], points[5], d, c);
-    //             boxes.add_primitive(points[2], points[6], d, c);
-    //             boxes.add_primitive(points[3], points[7], d, c);
-    //
-    //             boxes.add_primitive(points[4], points[5], d, c);
-    //             boxes.add_primitive(points[5], points[6], d, c);
-    //             boxes.add_primitive(points[6], points[7], d, c);
-    //             boxes.add_primitive(points[7], points[4], d, c);
-    //         }
-    //     }
-    // }
+    fn add_select_boxes(&mut self, construct: &Construct, selected: &[EntityId]) {
+        use battleground_construct::util::cgmath::prelude::*;
+        let boxes = &mut self.overlay_primitives;
+        let width = 0.01;
+        let color = Color::WHITE;
+        let batch_hints = BatchProperties::Basic{ is_transparent: false };
+        for e in selected.iter() {
+            if let Some(b) =
+                construct
+                    .world()
+                    .component::<battleground_construct::components::select_box::SelectBox>(*e)
+            {
+                let transform = construct.entity_pose(*e);
+                let w = (b.width() + (b.width() * 0.1).min(0.5)) / 2.0;
+                let l = (b.length() + (b.length() * 0.1).min(0.5)) / 2.0;
+                let h = (b.height() + (b.height() * 0.1).min(0.5)) / 2.0;
+                let points = [
+                    (l, w, h),    // 0
+                    (l, w, -h),   // 1
+                    (l, -w, -h),  // 2
+                    (l, -w, h),   // 3
+                    (-l, w, h),   // 4
+                    (-l, w, -h),  // 5
+                    (-l, -w, -h), // 6
+                    (-l, -w, h),  // 7
+                ];
+                let lines = [(0,1), (1,2), (2,3), (4,0), (0,3), (1,5), (2,6), (3,7), (4,5), (5,6), (6,7), (7,4)];
+                for (ip0, ip1) in lines {
+                    let primtitive = Primitive::Line(battleground_construct::display::primitives::Line {
+                        p0: points[ip0],
+                        p1: points[ip1],
+                        width,
+                    });
+                    self.overlay_primitives.add_primitive(batch_hints, primtitive, *transform, color);
+                }
+            }
+        }
+    }
 
     fn selected_to_units(
         construct: &Construct,
@@ -290,14 +282,13 @@ impl ConstructRender {
 
         // World geometry
         self.add_static_meshes();
-        self.add_grid();
 
-        // TODO:
-        // self.draw_select_boxes(
-        //     context,
-        //     construct,
-        //     &selected.iter().copied().collect::<Vec<EntityId>>(),
-        // );
+        // Overlays
+        self.add_grid();
+        self.add_select_boxes(
+            construct,
+            &selected.iter().copied().collect::<Vec<EntityId>>(),
+        );
 
         // Iterate through all displayables to collect meshes
         self.component_to_meshes::<display::artillery_turret::ArtilleryTurret>(construct);
