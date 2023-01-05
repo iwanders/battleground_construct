@@ -117,7 +117,10 @@ pub trait RenderableGeometry {
     /// Produces the geometries for this render pass.
     fn geometries(&self, pass: RenderPass) -> Option<Vec<&InstancedMesh>>;
 
+    /// Prepares internals for a new frame.
     fn prepare_frame(&mut self);
+
+    /// Finishes up the frame, and performs necessary bookkeeping.
     fn finish_frame(&mut self, context: &Context);
 }
 

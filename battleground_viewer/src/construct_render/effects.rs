@@ -1,13 +1,13 @@
 use crate::construct_render::instanced_entity::InstancedEntity;
 use crate::construct_render::util::ColorConvert;
+use crate::construct_render::render::{RenderPass, RenderableGeometry};
 use battleground_construct::display;
 use battleground_construct::util::cgmath::prelude::*;
 use rand::rngs::ThreadRng;
 use rand::Rng;
 use three_d::*;
 
-pub trait RenderableEffect {
-    fn object(&self) -> Option<&dyn Object>;
+pub trait RetainedEffect: RenderableGeometry {
     fn update(
         &mut self,
         effect_type: &display::primitives::EffectType,
@@ -59,6 +59,7 @@ This thing could do with some work... overall it works, but it could be better;
 - functions that affect the behaviour of particles, both for velocity and acceleration.
 */
 pub struct ParticleEmitter {
+    participates_in_pass: fn(RenderPass) -> bool,
     renderable: InstancedEntity<three_d::renderer::material::ColorMaterial>,
 
     /// Keep track of the last update time, to integrate velocity.
@@ -184,6 +185,7 @@ impl ParticleEmitter {
         let renderable = InstancedEntity::new(context, &square, material);
 
         Self {
+            participates_in_pass: |pass| pass == RenderPass::BaseScene,
             last_time: time,
             renderable,
 
@@ -211,11 +213,7 @@ impl ParticleEmitter {
     }
 }
 
-impl RenderableEffect for ParticleEmitter {
-    fn object(&self) -> Option<&dyn Object> {
-        Some(self.renderable.object())
-    }
-
+impl RetainedEffect for ParticleEmitter {
     fn update(
         &mut self,
         effect_type: &display::primitives::EffectType,
@@ -328,6 +326,29 @@ impl RenderableEffect for ParticleEmitter {
     }
 }
 
+impl RenderableGeometry for ParticleEmitter {
+    fn objects(&self, pass: RenderPass) -> Option<Vec<&dyn Object>> {
+        if (self.participates_in_pass)(pass) {
+            Some(vec![self.renderable.object()])
+        } else {
+            None
+        }
+    }
+
+    fn geometries(&self, pass: RenderPass) -> Option<Vec<&InstancedMesh>> {
+        if (self.participates_in_pass)(pass) {
+            Some(vec![&self.renderable.gm().geometry])
+        } else {
+            None
+        }
+    }
+
+    fn prepare_frame(&mut self) {}
+
+    fn finish_frame(&mut self, context: &Context) {}
+}
+
+
 // use battleground_construct::util::cgmath::InvertHomogeneous;
 use battleground_construct::util::cgmath::ToHomogenous;
 // use battleground_construct::util::cgmath::ToQuaternion;
@@ -341,6 +362,7 @@ struct DestructorParticle {
 }
 
 pub struct Deconstructor {
+    participates_in_pass: fn(RenderPass) -> bool,
     renderable: InstancedEntity<three_d::renderer::material::PhysicalMaterial>,
     particles: Vec<DestructorParticle>,
 
@@ -610,6 +632,7 @@ impl Deconstructor {
         // let particles = vec![particles.pop().unwrap()];
 
         Deconstructor {
+            participates_in_pass: |pass| pass == RenderPass::BaseScene,
             last_time: time,
             renderable,
             particles,
@@ -618,11 +641,7 @@ impl Deconstructor {
     }
 }
 
-impl RenderableEffect for Deconstructor {
-    fn object(&self) -> Option<&dyn Object> {
-        Some(self.renderable.object())
-    }
-
+impl RetainedEffect for Deconstructor {
     fn update(
         &mut self,
         _effect_type: &display::primitives::EffectType,
@@ -678,4 +697,26 @@ impl RenderableEffect for Deconstructor {
         self.renderable.set_instances(&p);
         self.last_time = time;
     }
+}
+
+impl RenderableGeometry for Deconstructor {
+    fn objects(&self, pass: RenderPass) -> Option<Vec<&dyn Object>> {
+        if (self.participates_in_pass)(pass) {
+            Some(vec![self.renderable.object()])
+        } else {
+            None
+        }
+    }
+
+    fn geometries(&self, pass: RenderPass) -> Option<Vec<&InstancedMesh>> {
+        if (self.participates_in_pass)(pass) {
+            Some(vec![&self.renderable.gm().geometry])
+        } else {
+            None
+        }
+    }
+
+    fn prepare_frame(&mut self) {}
+
+    fn finish_frame(&mut self, context: &Context) {}
 }
