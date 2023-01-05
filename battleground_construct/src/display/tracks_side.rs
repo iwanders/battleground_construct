@@ -130,7 +130,7 @@ impl Drawable for TracksSide {
                             -self.config.height / 2.0,
                         ))
                     }
-                    _ if length < v && v < (length + height) => {
+                    _ if length <= v && v < (length + height) => {
                         // front section.
                         Mat4::from_translation(Vec3::new(
                             self.config.length / 2.0,
@@ -138,7 +138,7 @@ impl Drawable for TracksSide {
                             (v - length) - self.config.height / 2.0,
                         ))
                     }
-                    _ if (length + height) < v && v < (length + height + length) => {
+                    _ if (length + height) <= v && v < (length + height + length) => {
                         // top section.
                         Mat4::from_translation(Vec3::new(
                             self.config.length / 2.0 - (v - (length + height)),
@@ -146,8 +146,8 @@ impl Drawable for TracksSide {
                             self.config.height / 2.0,
                         ))
                     }
-                    _ if (length + height + length) < v
-                        && v < (length + height + length + height) =>
+                    _ if (length + height + length) <= v
+                        && v <= (length + height + length + height) =>
                     {
                         // rear section.
                         Mat4::from_translation(Vec3::new(
