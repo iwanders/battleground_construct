@@ -14,11 +14,18 @@ impl Default for ArtilleryBarrel {
     }
 }
 
+pub const BARREL_WIDTH: f32 = 0.6;
+pub const BARREL_HORIZONTAL_SLOTS: u32 = 4;
+pub const BARREL_HORIZONTAL_OFFSET: f32 = BARREL_WIDTH / BARREL_HORIZONTAL_SLOTS as f32;
+pub const BARREL_HEIGHT: f32 = 0.6;
+pub const BARREL_VERTICAL_SLOTS: u32 = 4;
+pub const BARREL_VERTICAL_OFFSET: f32 = BARREL_HEIGHT / BARREL_VERTICAL_SLOTS as f32;
+
 impl ArtilleryBarrel {
     pub fn new() -> Self {
         ArtilleryBarrel {
-            battery_width: 0.6,
-            battery_height: 0.6,
+            battery_width: BARREL_WIDTH,
+            battery_height: BARREL_HEIGHT,
             battery_length: 0.8,
         }
     }
@@ -44,7 +51,8 @@ impl Drawable for ArtilleryBarrel {
 
         let panel_thickness = 0.01;
         let mut res = vec![];
-        for y in -2..=2 {
+        let ylower = (BARREL_HORIZONTAL_SLOTS / 2) as i32;
+        for y in -ylower..=ylower {
             let y_pos = (y as f32) * battery_width / 4.0;
             res.push(Element {
                 transform: Mat4::from_translation(Vec3::new(0.0, y_pos, 0.0)),
@@ -61,7 +69,8 @@ impl Drawable for ArtilleryBarrel {
                 material,
             })
         }
-        for z in -2..=2 {
+        let zlower = (BARREL_VERTICAL_SLOTS / 2) as i32;
+        for z in -zlower..=zlower {
             let z_pos = (z as f32) * battery_width / 4.0;
             res.push(Element {
                 transform: Mat4::from_translation(Vec3::new(0.0, 0.0, z_pos)),

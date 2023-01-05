@@ -1,5 +1,6 @@
 use crate::construct_render::instanced_entity::InstancedEntity;
 use crate::construct_render::util::ColorConvert;
+use battleground_construct::components::velocity::velocity_on_body;
 use battleground_construct::display;
 use battleground_construct::util::cgmath::prelude::*;
 use rand::rngs::ThreadRng;
@@ -556,24 +557,8 @@ impl Deconstructor {
                 // Start velocity calculation, initialise with zero.
                 let mut vel = vec3(0.0, 0.0, 0.0);
 
-                {
-                    // linear component;
-                    let lvel = entity_twist.v;
-                    // angular component;
-                    // v_p = v_0 + w x (p - p0)
-                    // p0 is the entity position, p is the fragment position.
-                    let distance_on_entity = (fragment_world_pos - (entity_pose)).to_translation();
-                    let lvel = lvel + entity_twist.w.to_cross() * distance_on_entity;
-                    assert_eq!(
-                        lvel,
-                        battleground_construct::components::velocity::velocity_on_body(
-                            (*entity_twist).into(),
-                            fragment_world_pos - (entity_pose)
-                        )
-                        .v
-                    );
-                    vel += lvel;
-                }
+                // Add the velocity on this body.
+                vel += velocity_on_body((*entity_twist).into(), fragment_world_pos - entity_pose).v;
 
                 // Add outward from the body center.
                 let cube_world = fragment_world_pos;

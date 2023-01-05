@@ -1,4 +1,5 @@
 use crate::components;
+use crate::components::velocity::velocity_on_body;
 use crate::display;
 use crate::display::primitives::{Mat4, Vec3};
 use components::group::Group;
@@ -236,7 +237,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         axis: Vec3::new(0.0, 1.0, 0.0),
         velocity_bounds: (-1.0, 1.0),
         acceleration_bounds: Some((-2.0, 2.0)),
-        velocity_cmd: 0.3,
+        position: -0.3,
         ..Default::default()
     };
     super::common::add_revolute(
@@ -272,25 +273,9 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         PreTransform::from_translation(Vec3::new(ARTILLERY_DIM_BARREL_TO_MUZZLE_X, 0.0, 0.0)),
     );
     // world.add_component(muzzle_entity, display::debug_box::DebugBox::cube(0.1));
-
-    let inter_gun_duration = 1.0;
-    let gun_reload = 2.0;
-    let battery_reload = 3.0;
-    let gun_battery_config = components::gun_battery::GunBatteryConfig {
-        fire_effect: std::rc::Rc::new(artillery_fire_function),
-        inter_gun_duration,
-        gun_reload,
-        battery_reload,
-        poses: vec![
-            Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
-            Mat4::from_translation(Vec3::new(0.0, 1.0, 0.0)),
-            Mat4::from_translation(Vec3::new(0.0, 2.0, 0.0)),
-            Mat4::from_translation(Vec3::new(0.0, 3.0, 0.0)),
-        ],
-    };
     world.add_component(
         muzzle_entity,
-        components::gun_battery::GunBattery::new(gun_battery_config),
+        components::gun_battery::GunBattery::new(artillery_battery_config()),
     );
     // register_interface.get_mut().add_module(
     // "cannon",
@@ -384,15 +369,38 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     unit_entity
 }
 
+pub fn artillery_battery_config() -> components::gun_battery::GunBatteryConfig {
+    let mut poses = vec![];
+
+    use crate::display::artillery_barrel::BARREL_HORIZONTAL_OFFSET as V;
+    use crate::display::artillery_barrel::BARREL_VERTICAL_OFFSET as H;
+
+    // Order top left to bottom right.
+    for z in [1.5 * V, 0.5 * V, -0.5 * V, -1.5 * V] {
+        for y in [-1.5 * H, -0.5 * H, 0.5 * H, 1.5 * H] {
+            poses.push(Mat4::from_translation(Vec3::new(0.0, y, z)))
+        }
+    }
+    components::gun_battery::GunBatteryConfig {
+        fire_effect: std::rc::Rc::new(artillery_fire_function),
+        inter_gun_duration: 0.3,
+        gun_reload: 0.0, // governed by fire rate and battery reload.
+        battery_reload: 5.0,
+        poses,
+    }
+}
+
 pub fn artillery_fire_function(world: &mut World, gun_battery_entity: EntityId, gun_pose: Mat4) {
     use crate::components::point_projectile::PointProjectile;
     use crate::components::unit_source::UnitSource;
     use crate::components::velocity::Velocity;
 
-    let muzzle_pose_raw = components::pose::world_pose(world, gun_battery_entity);
+    let muzzle_pose_raw = components::pose::world_pose(world, gun_battery_entity) * gun_pose.into();
     let muzzle_pose = muzzle_pose_raw;
+
     // println!("muzzle_pose: {muzzle_pose:?}");
     let muzzle_world_velocity = components::velocity::world_velocity(world, gun_battery_entity);
+    let gun_pose_velocity = velocity_on_body(muzzle_world_velocity, gun_pose);
 
     // Get the unit source of this cannel.
 
@@ -421,7 +429,7 @@ pub fn artillery_fire_function(world: &mut World, gun_battery_entity: EntityId, 
     muzzle_pose.w[0] = 0.0;
     muzzle_pose.w[1] = 0.0;
     let v = muzzle_pose * cgmath::Vector4::<f32>::new(muzzle_velocity, 0.0, 0.0, 1.0);
-    let v = v + muzzle_world_velocity.v.extend(0.0);
+    let v = v + gun_pose_velocity.v.extend(0.0);
     let projectile_velocity =
         Velocity::from_velocities(v.truncate(), cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0));
 
@@ -454,7 +462,7 @@ pub fn artillery_fire_function(world: &mut World, gun_battery_entity: EntityId, 
         crate::display::particle_emitter::ParticleEmitter::bullet_trail(
             effect_id,
             0.05,
-            crate::display::Color::WHITE,
+            crate::display::Color::rgb(196, 128, 0),
         ),
     );
 

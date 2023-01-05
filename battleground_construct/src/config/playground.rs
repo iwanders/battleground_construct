@@ -1,10 +1,14 @@
 #![allow(unused_variables)]
+#![allow(unused_imports)]
 
 use crate::components;
 use crate::control;
 use crate::display;
 use crate::units;
 use unit_control_builtin;
+
+use crate::util::cgmath::prelude::*;
+use crate::util::cgmath::{Mat4, Vec3};
 
 use units::artillery::{spawn_artillery, ArtillerySpawnConfig};
 use units::tank::{spawn_tank, TankSpawnConfig};
@@ -189,31 +193,31 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
 
     // Add a artillery gun battery emitter.
     let static_artillery = world.add_entity();
-    world.add_component(
-        static_artillery,
-        components::pose::Pose::from_xyz(2.0, 6.0, 1.0).rotated_angle_y(Deg(-45.0)),
-    );
-    let inter_gun_duration = 1.0;
-    let gun_reload = 2.0;
-    let battery_reload = 3.0;
-    use crate::display::primitives::Mat4;
-    use crate::display::primitives::Vec3;
-    let gun_battery_config = components::gun_battery::GunBatteryConfig {
-        fire_effect: std::rc::Rc::new(crate::units::artillery::artillery_fire_function),
-        inter_gun_duration,
-        gun_reload,
-        battery_reload,
-        poses: vec![
-            Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
-            Mat4::from_translation(Vec3::new(0.0, 1.0, 0.0)),
-            Mat4::from_translation(Vec3::new(0.0, 2.0, 0.0)),
-            Mat4::from_translation(Vec3::new(0.0, 3.0, 0.0)),
-        ],
-    };
+    let artillery_pose =
+        components::pose::Pose::from_xyz(2.0, 6.0, 1.0).rotated_angle_y(Deg(-45.0));
+    world.add_component(static_artillery, artillery_pose);
+    world.add_component(static_artillery, display::debug_box::DebugBox::cube(0.1));
+    let gun_battery_config = crate::units::artillery::artillery_battery_config();
     let mut gun_battery = components::gun_battery::GunBattery::new(gun_battery_config);
     gun_battery.set_trigger(true);
     world.add_component(static_artillery, gun_battery);
     world.add_component(static_artillery, display::debug_box::DebugBox::cube(0.1));
+    let artillery_model_entity = world.add_entity();
+    use battleground_unit_control::units::artillery::ARTILLERY_DIM_BARREL_TO_MUZZLE_X as MODEL_OFFSET;
+    let pos = artillery_pose.to_rotation_h().to_inv_h()
+        * crate::util::cgmath::Vec3::new(-MODEL_OFFSET, 0.0, 0.0).extend(0.0);
+    world.add_component(
+        static_artillery,
+        crate::components::pose::PreTransform::from_translation(pos.truncate()),
+    );
+    world.add_component(
+        artillery_model_entity,
+        crate::components::parent::Parent::new(static_artillery),
+    );
+    world.add_component(
+        artillery_model_entity,
+        display::artillery_barrel::ArtilleryBarrel::new(),
+    );
 
     // Spawn two teams.
     let team_red_entity = world.add_entity();
