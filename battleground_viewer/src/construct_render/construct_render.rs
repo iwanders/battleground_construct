@@ -12,7 +12,7 @@ use battleground_construct::Construct;
 use engine::prelude::*;
 
 use crate::construct_render::util::ColorConvert;
-use effects::RenderableEffect;
+use effects::RetainedEffect;
 
 use three_d::renderer::material::PhysicalMaterial;
 
@@ -36,7 +36,7 @@ pub struct ConstructRender {
     overlay_primitives: PrimitiveGeometry<ColorMaterial>,
 
     /// Tracked effects that are carried over to the next frame.
-    effects: std::collections::HashMap<u64, Box<dyn RenderableEffect>>,
+    effects: std::collections::HashMap<u64, Box<dyn RetainedEffect>>,
 }
 
 impl ConstructRender {
@@ -195,7 +195,9 @@ impl ConstructRender {
                 .geometries(pass)
                 .unwrap_or_else(|| vec![]),
         );
-        // TODO: Effects...
+        for renderable_effect in self.effects.values() {
+            result.append(&mut renderable_effect.geometries(pass).unwrap_or_else(|| vec![]));
+        }
         result
     }
 
@@ -222,8 +224,8 @@ impl ConstructRender {
                 .objects(pass)
                 .unwrap_or_else(|| vec![]),
         );
-        if pass == RenderPass::BaseScene {
-            result.extend(self.effects.iter().filter_map(|v| v.1.object()));
+        for renderable_effect in self.effects.values() {
+            result.append(&mut renderable_effect.objects(pass).unwrap_or_else(|| vec![]));
         }
         result
     }
