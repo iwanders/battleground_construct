@@ -1,5 +1,4 @@
-pub type Mat4 = cgmath::Matrix4<f32>;
-pub type Vec3 = cgmath::Vector3<f32>;
+pub use crate::util::cgmath::{Mat4, Vec3};
 pub type Twist = crate::util::cgmath::Twist<f32>;
 
 #[derive(Debug, Copy, Clone, PartialEq)]

@@ -223,6 +223,21 @@ pub fn world_velocity(world: &World, entity: EntityId) -> Velocity {
     current_velocity.into()
 }
 
+pub fn velocity_on_body(
+    entity_twist: Velocity,
+    offset_in_body: crate::util::cgmath::Mat4,
+) -> Velocity {
+    use crate::util::cgmath::prelude::*;
+    // linear component;
+    let vel = entity_twist.v;
+    // angular component;
+    // v_p = v_0 + w x (p - p0)
+    // p0 is the entity position, p is the fragment position.
+    let distance_on_entity = offset_in_body.to_translation();
+    let vel = vel + entity_twist.w.to_cross() * distance_on_entity;
+    Velocity::from_velocities(vel, entity_twist.w)
+}
+
 #[cfg(test)]
 mod test {
     use super::super::pose::Pose;

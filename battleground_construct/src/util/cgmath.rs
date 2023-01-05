@@ -1,4 +1,7 @@
 use cgmath::{BaseFloat, Matrix3, Matrix4};
+pub type Mat4 = cgmath::Matrix4<f32>;
+pub type Vec3 = cgmath::Vector3<f32>;
+pub use cgmath::vec3;
 
 pub mod prelude {
     pub use super::Adjoint;
