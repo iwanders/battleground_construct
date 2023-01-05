@@ -148,7 +148,7 @@ impl ConstructViewer {
         let directional_light =
             DirectionalLight::new(&context, 1.5, Color::WHITE, &vec3(0.0, 0.2, -1.0));
 
-        let construct_render: ConstructRender = ConstructRender::new(&context);
+        let construct_render: ConstructRender = ConstructRender::new();
 
         ConstructViewer {
             camera,

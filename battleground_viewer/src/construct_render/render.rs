@@ -181,6 +181,7 @@ impl BatchMaterial for ColorMaterial {
 
 pub struct MeshGeometry<M: Material + BatchMaterial> {
     participates_in_pass: fn(RenderPass) -> bool,
+    buffer: Vec<(CpuMesh, Mat4, Color)>,
     meshes: Vec<Gm<InstancedMesh, M>>,
 }
 
@@ -188,6 +189,7 @@ impl<M: Material + BatchMaterial> MeshGeometry<M> {
     pub fn new(participates_in_pass: fn(RenderPass) -> bool) -> Self {
         Self {
             participates_in_pass,
+            buffer: Default::default(),
             meshes: Default::default(),
         }
     }
@@ -203,27 +205,8 @@ impl<M: Material + BatchMaterial> MeshGeometry<M> {
         }
     }
 
-    pub fn add_mesh(
-        &mut self,
-        context: &Context,
-        batch_hints: BatchProperties,
-        mesh: &CpuMesh,
-        transform: Mat4,
-        color: Color,
-    ) {
-        let instanced = Gm::new(
-            InstancedMesh::new(
-                context,
-                &Instances {
-                    transformations: vec![transform],
-                    colors: Some(vec![color]),
-                    ..Default::default()
-                },
-                mesh,
-            ),
-            M::new_for_batch(context, batch_hints),
-        );
-        self.meshes.push(instanced);
+    pub fn add_mesh(&mut self, mesh: &CpuMesh, transform: Mat4, color: Color) {
+        self.buffer.push((mesh.clone(), transform, color));
     }
 }
 
@@ -239,10 +222,33 @@ impl<M: Material + BatchMaterial> RenderableGeometry for MeshGeometry<M> {
     }
 
     fn prepare_frame(&mut self) {
+        self.buffer.clear();
         self.meshes.clear();
     }
 
-    fn finish_frame(&mut self, context: &Context) {}
+    fn finish_frame(&mut self, context: &Context) {
+        for (mesh, transform, color) in &self.buffer {
+            let instanced = Gm::new(
+                InstancedMesh::new(
+                    context,
+                    &Instances {
+                        transformations: vec![*transform],
+                        colors: Some(vec![*color]),
+                        ..Default::default()
+                    },
+                    mesh,
+                ),
+                M::new_for_batch(
+                    context,
+                    BatchProperties::Basic {
+                        // We can do this, because the material is not retained over frames
+                        is_transparent: color.a < 255,
+                    },
+                ),
+            );
+            self.meshes.push(instanced);
+        }
+    }
 }
 
 struct PrimitiveBatch {

@@ -40,7 +40,7 @@ pub struct ConstructRender {
 }
 
 impl ConstructRender {
-    pub fn new(context: &Context) -> Self {
+    pub fn new() -> Self {
         let mut static_meshes = MeshGeometry::new(|pass| match pass {
             RenderPass::BaseScene | RenderPass::NonEmmisivesDepth => true,
             _ => false,
@@ -77,13 +77,9 @@ impl ConstructRender {
         }
     }
 
-    fn add_static_meshes(&mut self, context: &Context) {
+    fn add_static_meshes(&mut self) {
         // Ground plane
         self.static_meshes.add_mesh(
-            context,
-            BatchProperties::Basic {
-                is_transparent: false,
-            },
             &CpuMesh::square(),
             Mat4::from_translation(vec3(0.0, 0.0, 0.0)) * Mat4::from_scale(1000.0),
             Color::new_opaque(128, 128, 128),
@@ -293,7 +289,7 @@ impl ConstructRender {
         self.reset_instances();
 
         // World geometry
-        self.add_static_meshes(context);
+        self.add_static_meshes();
         self.add_grid();
 
         // TODO:
