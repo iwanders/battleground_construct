@@ -77,6 +77,23 @@ impl ConstructRender {
         }
     }
 
+    // The idea is to use this method to simplify `prepare_frame`, `finish_frame`, `objects` and
+    // `geometries` by having them all invoke here `self.do_for_renderables(|r| { ... })`... The
+    // reason for the closure is that it is impossible to return a Vec of references (or at least,
+    // when I do I get hit by the borrow checker because I'm returning unowned values, which makes
+    // sense.)
+    fn do_for_renderables(&self, f: impl Fn(&dyn RenderableGeometry) -> ()) {
+        f(&self.static_meshes);
+        f(&self.base_primitives);
+        f(&self.emissive_primitives);
+        f(&self.glow_primitives);
+        f(&self.fence_primitives);
+        f(&self.overlay_primitives);
+        for effect in self.effects.values() {
+            f(effect.as_renderable());
+        }
+    }
+
     fn add_static_meshes(&mut self) {
         // Ground plane
         self.static_meshes.add_mesh(

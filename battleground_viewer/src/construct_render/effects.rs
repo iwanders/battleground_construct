@@ -15,6 +15,8 @@ pub trait RetainedEffect: RenderableGeometry {
         entity_position: Matrix4<f32>,
         time: f32,
     );
+
+    fn as_renderable(&self) -> &dyn RenderableGeometry;
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -214,6 +216,9 @@ impl ParticleEmitter {
 }
 
 impl RetainedEffect for ParticleEmitter {
+    fn as_renderable(&self) -> &dyn RenderableGeometry {
+        self as &dyn RenderableGeometry
+    }
     fn update(
         &mut self,
         effect_type: &display::primitives::EffectType,
@@ -641,6 +646,9 @@ impl Deconstructor {
 }
 
 impl RetainedEffect for Deconstructor {
+    fn as_renderable(&self) -> &dyn RenderableGeometry {
+        self as &dyn RenderableGeometry
+    }
     fn update(
         &mut self,
         _effect_type: &display::primitives::EffectType,
