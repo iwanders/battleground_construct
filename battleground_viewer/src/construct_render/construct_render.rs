@@ -77,6 +77,36 @@ impl ConstructRender {
         }
     }
 
+    fn renderables(&self) -> Vec<&dyn RenderableGeometry> {
+        let mut result = vec![
+            &self.static_meshes as &dyn RenderableGeometry,
+            &self.base_primitives as &dyn RenderableGeometry,
+            &self.emissive_primitives as &dyn RenderableGeometry,
+            &self.glow_primitives as &dyn RenderableGeometry,
+            &self.fence_primitives as &dyn RenderableGeometry,
+            &self.overlay_primitives as &dyn RenderableGeometry,
+        ];
+        for effect in self.effects.values() {
+            result.push(effect.as_renderable_geometry());
+        }
+        result
+    }
+
+    fn renderables_mut(&mut self) -> Vec<&mut dyn RenderableGeometry> {
+        let mut result = vec![
+            &mut self.static_meshes as &mut dyn RenderableGeometry,
+            &mut self.base_primitives as &mut dyn RenderableGeometry,
+            &mut self.emissive_primitives as &mut dyn RenderableGeometry,
+            &mut self.glow_primitives as &mut dyn RenderableGeometry,
+            &mut self.fence_primitives as &mut dyn RenderableGeometry,
+            &mut self.overlay_primitives as &mut dyn RenderableGeometry,
+        ];
+        for effect in self.effects.values_mut() {
+            result.push(effect.as_renderable_geometry_mut());
+        }
+        result
+    }
+
     fn add_static_meshes(&mut self) {
         // Ground plane
         self.static_meshes.add_mesh(
@@ -159,103 +189,33 @@ impl ConstructRender {
 
     pub fn geometries(&self, pass: RenderPass) -> Vec<&impl Geometry> {
         let mut result = vec![];
-        result.append(
-            &mut self
-                .static_meshes
-                .geometries(pass)
-                .unwrap_or_else(|| vec![]),
-        );
-        result.append(
-            &mut self
-                .base_primitives
-                .geometries(pass)
-                .unwrap_or_else(|| vec![]),
-        );
-        result.append(
-            &mut self
-                .emissive_primitives
-                .geometries(pass)
-                .unwrap_or_else(|| vec![]),
-        );
-        result.append(
-            &mut self
-                .glow_primitives
-                .geometries(pass)
-                .unwrap_or_else(|| vec![]),
-        );
-        result.append(
-            &mut self
-                .fence_primitives
-                .geometries(pass)
-                .unwrap_or_else(|| vec![]),
-        );
-        result.append(
-            &mut self
-                .overlay_primitives
-                .geometries(pass)
-                .unwrap_or_else(|| vec![]),
-        );
-        for renderable_effect in self.effects.values() {
-            result.append(&mut renderable_effect.geometries(pass).unwrap_or_else(|| vec![]));
+        for r in self.renderables() {
+            result.extend(r.geometries(pass).unwrap_or_else(|| vec![]));
         }
         result
     }
 
     pub fn objects(&self, pass: RenderPass) -> Vec<&dyn Object> {
         let mut result = vec![];
-        result.append(&mut self.static_meshes.objects(pass).unwrap_or_else(|| vec![]));
-        result.append(&mut self.base_primitives.objects(pass).unwrap_or_else(|| vec![]));
-        result.append(
-            &mut self
-                .emissive_primitives
-                .objects(pass)
-                .unwrap_or_else(|| vec![]),
-        );
-        result.append(&mut self.glow_primitives.objects(pass).unwrap_or_else(|| vec![]));
-        result.append(
-            &mut self
-                .fence_primitives
-                .objects(pass)
-                .unwrap_or_else(|| vec![]),
-        );
-        result.append(
-            &mut self
-                .overlay_primitives
-                .objects(pass)
-                .unwrap_or_else(|| vec![]),
-        );
-        for renderable_effect in self.effects.values() {
-            result.append(&mut renderable_effect.objects(pass).unwrap_or_else(|| vec![]));
+        for r in self.renderables() {
+            result.extend(r.objects(pass).unwrap_or_else(|| vec![]))
         }
         result
     }
 
     fn finish_frame(&mut self, context: &Context) {
-        self.static_meshes.finish_frame(context);
-        self.base_primitives.finish_frame(context);
-        self.emissive_primitives.finish_frame(context);
-        self.glow_primitives.finish_frame(context);
-        self.fence_primitives.finish_frame(context);
-        self.overlay_primitives.finish_frame(context);
-        for e in self.effects.values_mut() {
-            e.finish_frame(context);
+        for r in self.renderables_mut() {
+            r.finish_frame(context);
         }
     }
 
     fn prepare_frame(&mut self) {
-        self.static_meshes.prepare_frame();
-        self.base_primitives.prepare_frame();
-        self.emissive_primitives.prepare_frame();
-        self.glow_primitives.prepare_frame();
-        self.fence_primitives.prepare_frame();
-        self.overlay_primitives.prepare_frame();
-        for e in self.effects.values_mut() {
-            e.prepare_frame();
+        for r in self.renderables_mut() {
+            r.prepare_frame();
         }
     }
 
     fn add_select_boxes(&mut self, construct: &Construct, selected: &[EntityId]) {
-        let boxes = &mut self.overlay_primitives;
         let width = 0.01;
         let color = Color::WHITE;
         let batch_hints = BatchProperties::Basic {
