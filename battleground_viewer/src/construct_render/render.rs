@@ -12,13 +12,12 @@ pub enum RenderPass {
     Fences,
 }
 
-// TODO: Rename this (it's a key for looking up batches, not drawbles)
-trait DrawableKey {
-    fn to_draw_key(&self) -> u64;
+trait BatchKey {
+    fn to_batch_key(&self) -> u64;
 }
 
-impl DrawableKey for Primitive {
-    fn to_draw_key(&self) -> u64 {
+impl BatchKey for Primitive {
+    fn to_batch_key(&self) -> u64 {
         use std::hash::Hash;
         use std::hash::Hasher;
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -64,8 +63,8 @@ pub enum BatchProperties {
     Basic { is_transparent: bool },
 }
 
-impl DrawableKey for BatchProperties {
-    fn to_draw_key(&self) -> u64 {
+impl BatchKey for BatchProperties {
+    fn to_batch_key(&self) -> u64 {
         use std::hash::Hash;
         use std::hash::Hasher;
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -98,14 +97,14 @@ impl PrimitiveBatchKey {
     }
 }
 
-impl DrawableKey for PrimitiveBatchKey {
-    fn to_draw_key(&self) -> u64 {
+impl BatchKey for PrimitiveBatchKey {
+    fn to_batch_key(&self) -> u64 {
         use std::hash::Hash;
         use std::hash::Hasher;
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
         let state = &mut hasher;
-        self.primitive.to_draw_key().hash(state);
-        self.properties.to_draw_key().hash(state);
+        self.primitive.to_batch_key().hash(state);
+        self.properties.to_batch_key().hash(state);
         hasher.finish()
     }
 }
@@ -300,7 +299,7 @@ impl<M: Material + BatchMaterial> PrimitiveGeometry<M> {
         let key = PrimitiveBatchKey::new(primitive, batch_hints);
         let batch = &mut self
             .batches
-            .entry(key.to_draw_key())
+            .entry(key.to_batch_key())
             .or_insert_with(|| PrimitiveBatch {
                 key,
                 transforms: Default::default(),
