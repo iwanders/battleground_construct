@@ -20,19 +20,19 @@ use three_d::renderer::material::PhysicalMaterial;
 pub struct ConstructRender {
     static_meshes: MeshGeometry<PhysicalMaterial>,
 
-    /// All meshes that are rendered with a physical material (both opaque and translucent)
+    /// Meshes that are rendered with a physical material (both opaque and translucent)
     base_primitives: PrimitiveGeometry<PhysicalMaterial>,
 
-    /// The 'core' of glowing primitives
+    /// The 'solid core' of glowing primitives
     emissive_primitives: PrimitiveGeometry<ColorMaterial>,
 
-    /// All meshes that are used to produce glows
+    /// Meshes that are used to produce glows
     glow_primitives: PrimitiveGeometry<ColorMaterial>,
 
-    /// All meshes that will be rendered with a fence material
+    /// Meshes that will be rendered with the fence material
     fence_primitives: PrimitiveGeometry<ColorMaterial>,
 
-    /// element to draw the selection boxes without any shading on the lines.
+    /// Meshes drawn as 'visual augmentation' for selection boxes, grids, etc., without any shading
     overlay_primitives: PrimitiveGeometry<ColorMaterial>,
 
     /// Tracked effects that are carried over to the next frame.
