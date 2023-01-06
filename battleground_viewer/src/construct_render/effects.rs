@@ -1,8 +1,7 @@
 use crate::construct_render::instanced_entity::InstancedEntity;
-use crate::construct_render::util::ColorConvert;
-use battleground_construct::components::velocity::velocity_on_body;
 use crate::construct_render::render::{RenderPass, RenderableGeometry};
 use crate::construct_render::util::ColorConvert;
+use battleground_construct::components::velocity::velocity_on_body;
 use battleground_construct::display;
 use battleground_construct::util::cgmath::prelude::*;
 use rand::rngs::ThreadRng;

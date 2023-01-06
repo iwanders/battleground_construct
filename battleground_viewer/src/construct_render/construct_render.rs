@@ -107,13 +107,16 @@ impl ConstructRender {
         result
     }
 
-    fn do_for_renderables<'a> (&'a self, mut f: impl FnMut(&'a dyn RenderableGeometry) -> ()) {
+    fn do_for_renderables<'a>(&'a self, mut f: impl FnMut(&'a dyn RenderableGeometry) -> ()) {
         for r in self.renderables() {
             f(r);
         }
     }
 
-    fn do_for_renderables_mut<'a> (&'a mut self, mut f: impl FnMut(&'a mut dyn RenderableGeometry) -> ()) {
+    fn do_for_renderables_mut<'a>(
+        &'a mut self,
+        mut f: impl FnMut(&'a mut dyn RenderableGeometry) -> (),
+    ) {
         for r in self.renderables_mut() {
             f(r);
         }
