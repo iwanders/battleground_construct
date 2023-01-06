@@ -41,27 +41,27 @@ pub struct ConstructRender {
 
 impl ConstructRender {
     pub fn new() -> Self {
-        let mut static_meshes = MeshGeometry::new(|pass| match pass {
+        let static_meshes = MeshGeometry::new(|pass| match pass {
             RenderPass::BaseScene | RenderPass::NonEmmisivesDepth => true,
             _ => false,
         });
-        let mut base_primitives = PrimitiveGeometry::new(|pass| match pass {
+        let base_primitives = PrimitiveGeometry::new(|pass| match pass {
             RenderPass::ShadowMaps | RenderPass::BaseScene | RenderPass::NonEmmisivesDepth => true,
             _ => false,
         });
-        let mut emissive_primitives = PrimitiveGeometry::new(|pass| match pass {
+        let emissive_primitives = PrimitiveGeometry::new(|pass| match pass {
             RenderPass::ShadowMaps | RenderPass::BaseScene => true,
             _ => false,
         });
-        let mut glow_primitives = PrimitiveGeometry::new(|pass| match pass {
+        let glow_primitives = PrimitiveGeometry::new(|pass| match pass {
             RenderPass::Emmisives => true,
             _ => false,
         });
-        let mut fence_primitives = PrimitiveGeometry::new(|pass| match pass {
+        let fence_primitives = PrimitiveGeometry::new(|pass| match pass {
             RenderPass::Fences => true,
             _ => false,
         });
-        let mut overlay_primitives = PrimitiveGeometry::new(|pass| match pass {
+        let overlay_primitives = PrimitiveGeometry::new(|pass| match pass {
             RenderPass::BaseScene => true,
             _ => false,
         });
