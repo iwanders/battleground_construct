@@ -90,6 +90,7 @@ pub struct ParticleEmitter {
     velocity_jitter: Vec3,
 
     velocity_clamp_x: Option<(f32, f32)>,
+    velocity_clamp_z: Option<(f32, f32)>,
 
     reflect_on_floor: bool,
 
@@ -108,11 +109,11 @@ pub struct ParticleEmitter {
 impl ParticleEmitter {
     pub fn new(
         context: &Context,
-        _entity_position: Matrix4<f32>,
+        entity_position: Matrix4<f32>,
         time: f32,
         display: &display::primitives::ParticleType,
     ) -> Self {
-        let mut p_color: Color;
+        let mut p_color: Color = Color::default();
         let p_size: f32;
         let lifetime = 0.4;
         let spawn_interval = 0.01;
@@ -122,8 +123,10 @@ impl ParticleEmitter {
         let mut emit_next_cycle = false;
         let mut reflect_on_floor = false;
         let mut velocity_clamp_x = None;
-        let initial_particles = vec![];
+        let velocity_clamp_z = None;
+        let mut initial_particles = vec![];
         let mut max_distance: f32 = 1000000.0; // max distance the particle can travel before fading / expiring.
+        let mut rng = rand::thread_rng();
 
         match display {
             display::primitives::ParticleType::BulletTrail { color, size } => {
@@ -157,6 +160,72 @@ impl ParticleEmitter {
                 emit_next_cycle = true;
                 reflect_on_floor = true;
                 max_distance = 2.5;
+            }
+
+            display::primitives::ParticleType::Explosion { radius } => {
+                p_size = 0.03;
+                let color_yellow = (0.75, 0.5, 0.0, 0.5); // pretty yellow.
+                let color_red = (1.0, 0.3, 0.0, 0.5); // More red
+                let c_interp = |p: f32, c1: (f32, f32, f32, f32), c2: (f32, f32, f32, f32)| {
+                    let r = ((c1.0 * p + c2.0 * (1.0 - p)) * 255.0) as u8;
+                    let g = ((c1.1 * p + c2.1 * (1.0 - p)) * 255.0) as u8;
+                    let b = ((c1.2 * p + c2.2 * (1.0 - p)) * 255.0) as u8;
+                    let a = ((c1.3 * p + c2.3 * (1.0 - p)) * 255.0) as u8;
+                    Color { r, g, b, a }
+                };
+                let lifetime_jitter = 0.3;
+                let lifetime = 0.4;
+                let velocity_jitter = vec3(5.0, 3.0, 3.0);
+                for _i in 0..1500 {
+                    use rand_distr::StandardNormal;
+                    // let spawn_val: f32 = rng.sample(StandardNormal);
+                    let color_val: f32 = rng.gen();
+                    // spawn particle.
+                    let pos = entity_position;
+                    let mut color = c_interp(color_val, color_yellow, color_red);
+                    color.a /= 2;
+                    let lifetime_val: f32 = rng.sample(StandardNormal);
+                    let expiry_time = time + lifetime + lifetime_jitter * lifetime_val;
+
+                    let v0: f32 = rng.sample(StandardNormal);
+                    let v1: f32 = rng.sample(StandardNormal);
+                    let v2: f32 = rng.sample(StandardNormal);
+                    let vel = vec3(
+                        v0 * velocity_jitter[0],
+                        v1 * velocity_jitter[1],
+                        (v2 * velocity_jitter[2]).abs(),
+                    );
+
+                    initial_particles.push(Particle::new(
+                        pos,
+                        vel,
+                        color,
+                        time,
+                        expiry_time,
+                        *radius,
+                    ));
+                }
+                for _i in 0..1000 {
+                    let color_val: f32 = rng.gen();
+                    let pos = entity_position;
+                    let color = c_interp(color_val, color_yellow, color_red);
+                    let expiry_time = time + 10.0;
+
+                    let direction: f32 = rng.gen();
+                    let pvel: f32 = rng.gen();
+                    let pvel = pvel * 5.0 + 0.75;
+                    let direction = direction * std::f32::consts::PI * 2.0;
+                    let vel = vec3(direction.cos() * pvel, direction.sin() * pvel, 0.0);
+
+                    initial_particles.push(Particle::new(
+                        pos,
+                        vel,
+                        color,
+                        time,
+                        expiry_time,
+                        *radius,
+                    ));
+                }
             }
         }
         let color = p_color;
@@ -199,6 +268,7 @@ impl ParticleEmitter {
             velocity: initial_particle_velocity,
             velocity_jitter,
             velocity_clamp_x,
+            velocity_clamp_z,
             reflect_on_floor,
 
             fade_alpha_to_lifetime: true,
@@ -207,7 +277,7 @@ impl ParticleEmitter {
             particles: initial_particles,
             color,
 
-            rng: rand::thread_rng(),
+            rng,
         }
     }
 }
@@ -264,6 +334,9 @@ impl RenderableEffect for ParticleEmitter {
                 );
             if let Some(velocity_clamp_x) = self.velocity_clamp_x {
                 v_initial.x = v_initial.x.clamp(velocity_clamp_x.0, velocity_clamp_x.1);
+            }
+            if let Some(velocity_clamp_z) = self.velocity_clamp_z {
+                v_initial.z = v_initial.z.clamp(velocity_clamp_z.0, velocity_clamp_z.1);
             }
             let vel = (entity_position.to_rotation_h() * v_initial.extend(0.0)).truncate();
 

@@ -34,6 +34,13 @@ impl ParticleEmitter {
             emitting: false,
         }
     }
+    pub fn explosion(id: u64, radius: f32) -> Self {
+        ParticleEmitter {
+            id,
+            particle_type: ParticleType::Explosion { radius },
+            emitting: false,
+        }
+    }
 }
 impl Component for ParticleEmitter {}
 

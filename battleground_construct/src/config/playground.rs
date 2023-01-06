@@ -126,6 +126,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
         // destructor.add_element::<display::flag::Flag>(*e, world);
     }
 
+    /*
     // Add a sphere to the initial destructor.
     let sphere = world.add_entity();
     world.add_component(sphere, display::debug_sphere::DebugSphere::new());
@@ -136,6 +137,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
     // world.add_component(thingy, Pose::from_xyz(0.0, 0.0, 0.0));
     world.add_component(thingy, destructor);
     world.add_component(thingy, components::expiry::Expiry::lifetime(50.0));
+    */
 
     for x in 1..5 {
         for y in -2..2 {

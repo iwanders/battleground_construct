@@ -384,6 +384,7 @@ pub fn artillery_battery_config() -> components::gun_battery::GunBatteryConfig {
     components::gun_battery::GunBatteryConfig {
         fire_effect: std::rc::Rc::new(artillery_fire_function),
         inter_gun_duration: 0.3,
+        // inter_gun_duration: 2.0,
         // inter_gun_duration: 0.0,
         gun_reload: 0.0, // governed by fire rate and battery reload.
         battery_reload: 5.0,
@@ -501,15 +502,10 @@ fn artillery_hit_effect(
     */
     let effect_id = components::id_generator::generate_id(world);
     let world_pose = crate::components::pose::world_pose(world, projectile);
-    let world_vel = crate::components::velocity::world_velocity(world, projectile).to_twist();
+    // let world_vel = crate::components::velocity::world_velocity(world, projectile).to_twist();
     world.add_component(
         projectile_destructor,
-        crate::display::particle_emitter::ParticleEmitter::bullet_impact(
-            effect_id,
-            0.03,
-            crate::display::Color::BLACK,
-            world_vel.v,
-        ),
+        crate::display::particle_emitter::ParticleEmitter::explosion(effect_id, 2.0),
     );
     world.add_component(projectile_destructor, world_pose);
     world.add_component(

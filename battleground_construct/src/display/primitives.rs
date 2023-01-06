@@ -195,6 +195,10 @@ pub enum ParticleType {
         color: Color,
         velocity: Vec3,
     },
+    Explosion {
+        /// Radius of the explosion, not of particles.
+        radius: f32,
+    },
     MuzzleFlash {
         size: f32,
         color: Color,
