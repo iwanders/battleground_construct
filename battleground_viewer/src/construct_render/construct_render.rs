@@ -483,40 +483,46 @@ impl ConstructRender {
     ) {
         let element_transform = *entity_transform * el.transform;
         match el.material {
-            battleground_construct::display::primitives::Material::FlatMaterial(flat_material) => {
+            battleground_construct::display::primitives::Material::FlatMaterial(material) => {
                 let batch_properties = BatchProperties::Basic {
-                    is_transparent: flat_material.is_transparent,
+                    is_transparent: material.is_transparent,
                 };
-                if flat_material.is_emissive {
+                if material.is_emissive {
                     self.emissive_primitives.add_primitive(
                         batch_properties,
                         el.primitive,
                         element_transform,
-                        flat_material.color.to_color(),
+                        material.color.to_color(),
                     );
                     self.glow_primitives.add_primitive(
                         batch_properties,
                         el.primitive,
                         element_transform,
-                        flat_material.emissive.to_color(),
+                        material.emissive.to_color(),
                     );
                 } else {
                     self.base_primitives.add_primitive(
                         batch_properties,
                         el.primitive,
                         element_transform,
-                        flat_material.color.to_color(),
+                        material.color.to_color(),
                     );
                 }
             }
-            battleground_construct::display::primitives::Material::FenceMaterial(
-                fence_material,
-            ) => {
+            battleground_construct::display::primitives::Material::FenceMaterial(material) => {
                 self.fence_primitives.add_primitive(
                     BatchProperties::None,
                     el.primitive,
                     element_transform,
-                    fence_material.color.to_color(),
+                    material.color.to_color(),
+                );
+            }
+            battleground_construct::display::primitives::Material::OverlayMaterial(material) => {
+                self.overlay_primitives.add_primitive(
+                    BatchProperties::None,
+                    el.primitive,
+                    element_transform,
+                    material.color.to_color(),
                 );
             }
         }

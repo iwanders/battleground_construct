@@ -27,13 +27,12 @@ impl Drawable for DrawComponent {
                     p1: (l.p1[0], l.p1[1], l.p1[2]),
                     width: l.width,
                 }),
-                material: Color {
+                material: Material::OverlayMaterial(Color {
                     r: l.color[0],
                     g: l.color[1],
                     b: l.color[2],
                     a: l.color[3],
-                }
-                .into(),
+                }.into()),
             })
             .collect()
     }
