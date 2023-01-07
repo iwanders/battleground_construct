@@ -186,6 +186,7 @@ impl BatchMaterial for ColorMaterial {
     }
 }
 
+/// A geometry buffer for that accepts arbitrary meshes
 pub struct MeshGeometry<M: Material + BatchMaterial> {
     participates_in_pass: fn(RenderPass) -> bool,
     buffer: Vec<(CpuMesh, Mat4, Color)>,
@@ -259,6 +260,7 @@ struct PrimitiveBatch {
     colors: Vec<Color>,
 }
 
+/// A geometry buffer that accepts `Primitive`s
 pub struct PrimitiveGeometry<M: Material + BatchMaterial> {
     participates_in_pass: fn(RenderPass) -> bool,
 
