@@ -127,7 +127,7 @@ impl ConstructRender {
         let batch_hints = BatchProperties::Basic {
             is_transparent: false,
         };
-        let no_transform = Matrix4::one();
+        let no_transform = Matrix4::identity();
 
         fn line(x0: isize, y0: isize, x1: isize, y1: isize, width: f32) -> Primitive {
             Primitive::Line(battleground_construct::display::primitives::Line {
