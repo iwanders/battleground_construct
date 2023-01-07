@@ -508,7 +508,9 @@ impl ConstructRender {
             }
             battleground_construct::display::primitives::Material::OverlayMaterial(material) => {
                 self.overlay_primitives.add_primitive(
-                    BatchProperties::None,
+                    BatchProperties::Basic {
+                        is_transparent: material.color.a != 255,
+                    },
                     el.primitive,
                     element_transform,
                     material.color.to_color(),
