@@ -169,6 +169,16 @@ fn primitive_to_mesh(primitive: &Primitive) -> CpuMesh {
             m.transform(&Mat4::from_scale(circle.radius)).unwrap();
             m
         }
+        Primitive::ExtrudedRectangle(_extruded_rectangle) => {
+            let mut m = CpuMesh::cube();
+            m.transform(&Mat4::from_nonuniform_scale(
+                1.0 / 2.0,
+                1.0 / 2.0,
+                1.0 / 2.0,
+            ))
+            .unwrap();
+            m
+        }
     }
 }
 
@@ -186,6 +196,15 @@ fn primitive_transform(primitive: &Primitive, transform: &Mat4) -> Mat4 {
             let scale =
                 Mat4::from_nonuniform_scale((p0 - p1).magnitude(), l.width / 2.0, l.width / 2.0);
             Mat4::from_translation(p0) * <_ as Into<Mat4>>::into(rotation) * scale
+        }
+        Primitive::ExtrudedRectangle(extruded_rectangle) => {
+            let local_offset = vec3(extruded_rectangle.length / 2.0, 0.0, 0.0);
+            let scale = Mat4::from_nonuniform_scale(
+                extruded_rectangle.length,
+                extruded_rectangle.width,
+                extruded_rectangle.height,
+            );
+            transform * Mat4::from_translation(local_offset) * scale
         }
         _ => *transform,
     }

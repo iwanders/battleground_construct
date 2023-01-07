@@ -41,6 +41,10 @@ impl BatchKey for Primitive {
                 5usize.hash(state);
                 circle.radius.to_bits().hash(state);
             }
+            Primitive::ExtrudedRectangle(_extruded_rectangle) => {
+                // All extruded rectangles hash the same.
+                6usize.hash(state);
+            }
         }
         // val
         hasher.finish()

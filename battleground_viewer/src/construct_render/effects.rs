@@ -655,6 +655,10 @@ impl Deconstructor {
                     // skip circle for now, they're infinitesimally thin.
                     vec![]
                 }
+                battleground_construct::display::primitives::Primitive::ExtrudedRectangle(_) => {
+                    // Skip for now, will do later if this feels necessary
+                    vec![]
+                }
             };
 
             for fragment in fragments {

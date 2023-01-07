@@ -38,6 +38,7 @@ pub struct UnitTank {
     pub body_entity: EntityId,
     pub turret_entity: EntityId,
     pub radar_entity: EntityId,
+    pub health_bar_entity: EntityId,
     pub flag_entity: EntityId,
     pub barrel_entity: EntityId,
     pub muzzle_entity: EntityId,
@@ -64,6 +65,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
                 - CaptureMarker
                 - Radio's
             -> Flag entity
+            -> Health Bar entity
             -> Turret Entity
                 - Revolute
                 -> Barrel Entity
@@ -81,6 +83,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let turret_entity = world.add_entity();
     let radar_entity = world.add_entity();
     let flag_entity = world.add_entity();
+    let health_bar_entity = world.add_entity();
     let barrel_entity = world.add_entity();
     let muzzle_entity = world.add_entity();
 
@@ -92,6 +95,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         turret_entity,
         radar_entity,
         flag_entity,
+        health_bar_entity,
         barrel_entity,
         muzzle_entity,
     ];
@@ -103,6 +107,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         turret_entity,
         radar_entity,
         flag_entity,
+        health_bar_entity,
         barrel_entity,
         muzzle_entity,
     };
@@ -302,6 +307,17 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     world.add_component(flag_entity, Parent::new(base_entity));
 
+    // -----   Health Bar
+    world.add_component(
+        health_bar_entity,
+        Pose::from_xyz(-0.8, 0.0, 0.40).rotated_angle_z(cgmath::Deg(90.0)),
+    );
+    world.add_component(
+        health_bar_entity,
+        display::health_bar::HealthBar::new(unit_entity, 0.6),
+    );
+    world.add_component(health_bar_entity, Parent::new(base_entity));
+
     // -----   Control
     world.add_component(control_entity, register_interface);
 
@@ -382,7 +398,7 @@ pub fn cannon_function(world: &mut World, cannon_entity: EntityId) {
     );
     world.add_component(
         projectile_entity,
-        components::damage_hit::DamageHit::new(3330.3),
+        components::damage_hit::DamageHit::new(0.3),
     );
 
     world.add_component(

@@ -10,6 +10,7 @@ pub mod deconstructor;
 pub mod display_control_point;
 pub mod draw_module;
 pub mod flag;
+pub mod health_bar;
 pub mod particle_emitter;
 pub mod primitives;
 pub mod radar_model;

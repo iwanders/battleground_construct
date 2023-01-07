@@ -306,17 +306,21 @@ impl ConstructRender {
         );
 
         // Iterate through all displayables to collect meshes
+
+        // Specific to artillery
         self.component_to_meshes::<display::artillery_turret::ArtilleryTurret>(construct);
         self.component_to_meshes::<display::artillery_barrel::ArtilleryBarrel>(construct);
         self.component_to_meshes::<display::artillery_body::ArtilleryBody>(construct);
 
-        self.component_to_meshes::<display::tracks_side::TracksSide>(construct);
-
+        // Tank
         self.component_to_meshes::<display::tank_body::TankBody>(construct);
         self.component_to_meshes::<display::tank_turret::TankTurret>(construct);
         self.component_to_meshes::<display::tank_barrel::TankBarrel>(construct);
-        self.component_to_meshes::<display::tank_bullet::TankBullet>(construct);
 
+        // Common
+        self.component_to_meshes::<display::tank_bullet::TankBullet>(construct);
+        self.component_to_meshes::<display::tracks_side::TracksSide>(construct);
+        self.component_to_meshes::<display::health_bar::HealthBar>(construct);
         self.component_to_meshes::<display::radar_model::RadarModel>(construct);
 
         // We could also pre-calculate all entities that have the correct unit members, and then

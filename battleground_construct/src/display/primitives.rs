@@ -4,9 +4,9 @@ pub type Twist = crate::util::cgmath::Twist<f32>;
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Cuboid {
     // Direction in x.
-    pub width: f32,
-    // Direction in y.
     pub length: f32,
+    // Direction in y.
+    pub width: f32,
     // Direction in z.
     pub height: f32,
 }
@@ -46,6 +46,18 @@ pub struct Circle {
 }
 impl Eq for Circle {}
 
+/// This type grows the cube from one side.
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct ExtrudedRectangle {
+    // Length of the extrusion
+    pub length: f32,
+    // Width in y.
+    pub width: f32,
+    // Height in z.
+    pub height: f32,
+}
+impl Eq for ExtrudedRectangle {}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Primitive {
     Cuboid(Cuboid),
@@ -54,6 +66,7 @@ pub enum Primitive {
     Cylinder(Cylinder),
     Line(Line),
     Cone(Cone),
+    ExtrudedRectangle(ExtrudedRectangle),
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -149,12 +162,18 @@ impl Default for FlatMaterial {
     }
 }
 
-impl From<Color> for Material {
-    fn from(color: Color) -> Material {
-        Material::FlatMaterial(FlatMaterial {
+impl From<Color> for FlatMaterial {
+    fn from(color: Color) -> FlatMaterial {
+        FlatMaterial {
             color,
             ..Default::default()
-        })
+        }
+    }
+}
+
+impl From<Color> for Material {
+    fn from(color: Color) -> Material {
+        Material::FlatMaterial(color.into())
     }
 }
 
