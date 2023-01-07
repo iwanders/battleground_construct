@@ -72,13 +72,15 @@ impl BatchKey for BatchProperties {
     }
 }
 
-/// Produces material values based on batch property
+/// Produces materials based on batch property
 pub trait BatchMaterial
 where
     Self: Material,
 {
+    /// Produce a material for the given batch properties with unbiased color
     fn new_for_batch(context: &Context, batch_properties: BatchProperties) -> Self;
 
+    /// Produce a material for the given batch properties for biased for the given color
     fn new_for_batch_colored(
         context: &Context,
         batch_properties: BatchProperties,
@@ -88,16 +90,7 @@ where
 
 impl BatchMaterial for PhysicalMaterial {
     fn new_for_batch(context: &Context, batch_properties: BatchProperties) -> PhysicalMaterial {
-        Self::new_for_batch_colored(
-            context,
-            batch_properties,
-            Color {
-                r: 255,
-                g: 255,
-                b: 255,
-                a: 255,
-            },
-        )
+        Self::new_for_batch_colored(context, batch_properties, Color::WHITE)
     }
 
     fn new_for_batch_colored(
@@ -126,16 +119,7 @@ impl BatchMaterial for PhysicalMaterial {
 
 impl BatchMaterial for ColorMaterial {
     fn new_for_batch(context: &Context, batch_properties: BatchProperties) -> ColorMaterial {
-        Self::new_for_batch_colored(
-            context,
-            batch_properties,
-            Color {
-                r: 255,
-                g: 255,
-                b: 255,
-                a: 255,
-            },
-        )
+        Self::new_for_batch_colored(context, batch_properties, Color::WHITE)
     }
 
     fn new_for_batch_colored(

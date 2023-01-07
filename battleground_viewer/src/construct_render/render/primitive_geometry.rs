@@ -6,7 +6,7 @@ use super::*;
 use battleground_construct::display::primitives::Primitive;
 
 #[derive(Debug, Copy, Clone)]
-pub struct PrimitiveBatchKey {
+struct PrimitiveBatchKey {
     primitive: Primitive,
     properties: BatchProperties,
 }
@@ -42,6 +42,7 @@ struct PrimitiveBatch {
 pub struct PrimitiveGeometry<M: Material + BatchMaterial> {
     participates_in_pass: fn(RenderPass) -> bool,
 
+    /// Batches of primitives with the same properties
     batches: std::collections::HashMap<u64, PrimitiveBatch>,
 
     /// The meshes produced from the baches
@@ -74,24 +75,10 @@ impl<M: Material + BatchMaterial> PrimitiveGeometry<M> {
                 colors: Default::default(),
             });
 
-        batch.transforms.push(match primitive {
-            Primitive::Line(l) => {
-                use battleground_construct::util::cgmath::ToHomogenous;
-                use battleground_construct::util::cgmath::ToTranslation;
-                let p0_original = vec3(l.p0.0, l.p0.1, l.p0.2);
-                let p1_original = vec3(l.p1.0, l.p1.1, l.p1.2);
-                let p0 = (transform * p0_original.to_h()).to_translation();
-                let p1 = (transform * p1_original.to_h()).to_translation();
-                let rotation = Quat::from_arc(vec3(1.0, 0.0, 0.0), (p1 - p0).normalize(), None);
-                let scale = Mat4::from_nonuniform_scale(
-                    (p0 - p1).magnitude(),
-                    l.width / 2.0,
-                    l.width / 2.0,
-                );
-                Mat4::from_translation(p0) * <_ as Into<Mat4>>::into(rotation) * scale
-            }
-            _ => transform,
-        });
+        // Some primitives have special transform handling
+        batch
+            .transforms
+            .push(primitive_transform(&primitive, &transform));
         batch.colors.push(color);
     }
 }
@@ -136,6 +123,7 @@ impl<M: Material + BatchMaterial> RenderableGeometry for PrimitiveGeometry<M> {
     }
 }
 
+/// Produce meshes for primitives
 fn primitive_to_mesh(primitive: &Primitive) -> CpuMesh {
     match primitive {
         Primitive::Cuboid(cuboid) => {
@@ -181,5 +169,24 @@ fn primitive_to_mesh(primitive: &Primitive) -> CpuMesh {
             m.transform(&Mat4::from_scale(circle.radius)).unwrap();
             m
         }
+    }
+}
+
+/// Special transform handling for primitives that need it
+fn primitive_transform(primitive: &Primitive, transform: &Mat4) -> Mat4 {
+    match primitive {
+        Primitive::Line(l) => {
+            use battleground_construct::util::cgmath::ToHomogenous;
+            use battleground_construct::util::cgmath::ToTranslation;
+            let p0_original = vec3(l.p0.0, l.p0.1, l.p0.2);
+            let p1_original = vec3(l.p1.0, l.p1.1, l.p1.2);
+            let p0 = (transform * p0_original.to_h()).to_translation();
+            let p1 = (transform * p1_original.to_h()).to_translation();
+            let rotation = Quat::from_arc(vec3(1.0, 0.0, 0.0), (p1 - p0).normalize(), None);
+            let scale =
+                Mat4::from_nonuniform_scale((p0 - p1).magnitude(), l.width / 2.0, l.width / 2.0);
+            Mat4::from_translation(p0) * <_ as Into<Mat4>>::into(rotation) * scale
+        }
+        _ => *transform,
     }
 }

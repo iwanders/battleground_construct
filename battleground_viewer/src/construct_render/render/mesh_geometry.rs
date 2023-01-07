@@ -3,7 +3,8 @@ use three_d::*;
 use super::batching::*;
 use super::*;
 
-/// A geometry buffer for that accepts arbitrary meshes
+/// A geometry buffer for that accepts arbitrary meshes. If you have a collection of
+// ready-to-go `Primitive`s, use `PrimitiveGeometry`.
 pub struct MeshGeometry<M: Material + BatchMaterial> {
     participates_in_pass: fn(RenderPass) -> bool,
     buffer: Vec<(CpuMesh, Mat4, Color)>,

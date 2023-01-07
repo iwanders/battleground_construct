@@ -15,6 +15,8 @@ pub enum RenderPass {
     Fences,
 }
 
+/// Anything that is RenderableGeometry can articipate in the renderinepipeline by providing
+/// renderable objects and geometry used for the different render passes
 pub trait RenderableGeometry {
     /// Produces the objects to render for this render pass
     fn objects(&self, pass: RenderPass) -> Vec<&dyn Object>;
@@ -29,6 +31,7 @@ pub trait RenderableGeometry {
     fn finish_scene(&mut self, _context: &Context) {}
 }
 
+/// Work-around for three-d light's `generate_shadow_map` method signature
 pub enum GeometryRef<'a> {
     InstancedMesh(&'a InstancedMesh),
     Mesh(&'a Mesh),
