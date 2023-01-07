@@ -2,13 +2,18 @@ use three_d::*;
 
 use battleground_construct::display::primitives::Primitive;
 
-// Brend: This render pass enumeration omits non-geometry passes (such as the bloom filter application, or the gui render).
 #[derive(Debug, Copy, Clone, PartialEq)]
+/// Renderpasses that involve geometry in some way
 pub enum RenderPass {
+    /// Render out shadow casters to shadow maps for all relevant lights
     ShadowMaps,
+    /// All normal geometry that is present in the scene and
     BaseScene,
-    NonEmmisivesDepth,
-    Emmisives,
+    /// A depth buffer render for all non-emissives, so emissive glow is blocked by things in front of it
+    NonGlowDepths,
+    /// Geometry used to produce emissive glows
+    GlowSources,
+    /// Geometry that acts as a fence, indicating when intersects with it
     Fences,
 }
 

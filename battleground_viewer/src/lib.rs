@@ -409,7 +409,7 @@ impl ConstructViewer {
                 .render_with_material(
                     &write_depth_material,
                     &self.camera,
-                    &self.construct_render.objects(RenderPass::NonEmmisivesDepth),
+                    &self.construct_render.objects(RenderPass::NonGlowDepths),
                     &[],
                 );
 
@@ -431,7 +431,7 @@ impl ConstructViewer {
             )
             .render(
                 &self.camera,
-                &self.construct_render.objects(RenderPass::Emmisives),
+                &self.construct_render.objects(RenderPass::GlowSources),
                 &[],
             );
 

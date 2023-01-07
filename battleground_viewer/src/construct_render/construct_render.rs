@@ -42,11 +42,11 @@ pub struct ConstructRender {
 impl ConstructRender {
     pub fn new() -> Self {
         let static_meshes = MeshGeometry::new(|pass| match pass {
-            RenderPass::BaseScene | RenderPass::NonEmmisivesDepth => true,
+            RenderPass::BaseScene | RenderPass::NonGlowDepths => true,
             _ => false,
         });
         let base_primitives = PrimitiveGeometry::new(|pass| match pass {
-            RenderPass::ShadowMaps | RenderPass::BaseScene | RenderPass::NonEmmisivesDepth => true,
+            RenderPass::ShadowMaps | RenderPass::BaseScene | RenderPass::NonGlowDepths => true,
             _ => false,
         });
         let emissive_primitives = PrimitiveGeometry::new(|pass| match pass {
@@ -54,7 +54,7 @@ impl ConstructRender {
             _ => false,
         });
         let glow_primitives = PrimitiveGeometry::new(|pass| match pass {
-            RenderPass::Emmisives => true,
+            RenderPass::GlowSources => true,
             _ => false,
         });
         let fence_primitives = PrimitiveGeometry::new(|pass| match pass {
@@ -62,7 +62,7 @@ impl ConstructRender {
             _ => false,
         });
         let overlay_primitives = PrimitiveGeometry::new(|pass| match pass {
-            RenderPass::BaseScene | RenderPass::NonEmmisivesDepth => true,
+            RenderPass::BaseScene | RenderPass::NonGlowDepths => true,
             _ => false,
         });
 
