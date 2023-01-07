@@ -262,7 +262,6 @@ struct PrimitiveBatch {
 pub struct PrimitiveGeometry<M: Material + BatchMaterial> {
     participates_in_pass: fn(RenderPass) -> bool,
 
-    // TODO: Move InstancedEntity code into here so we can drop InstancedEntity, and build all buffers in one go
     batches: std::collections::HashMap<u64, PrimitiveBatch>,
 
     /// The meshes produced from the baches
