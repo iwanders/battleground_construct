@@ -2,7 +2,7 @@ use three_d::*;
 
 use super::effects;
 use super::render::{
-    BatchProperties, MeshGeometry, PrimitiveGeometry, RenderPass, RenderableGeometry,
+    BatchProperties, GeometryRef, MeshGeometry, PrimitiveGeometry, RenderPass, RenderableGeometry,
 };
 
 use battleground_construct::components::unit::UnitId;
@@ -187,7 +187,7 @@ impl ConstructRender {
         }
     }
 
-    pub fn geometries(&self, pass: RenderPass) -> Vec<&impl Geometry> {
+    pub fn geometries(&self, pass: RenderPass) -> Vec<GeometryRef> {
         self.renderables()
             .into_iter()
             .map(|r| r.geometries(pass))
