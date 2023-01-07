@@ -1,4 +1,4 @@
-use crate::construct_render::instanced_entity::InstancedEntity;
+use crate::construct_render::render::{RenderPass, RenderableGeometry};
 use crate::construct_render::util::ColorConvert;
 use battleground_construct::components::velocity::velocity_on_body;
 use battleground_construct::display;
@@ -7,8 +7,7 @@ use rand::rngs::ThreadRng;
 use rand::Rng;
 use three_d::*;
 
-pub trait RenderableEffect {
-    fn object(&self) -> Option<&dyn Object>;
+pub trait RetainedEffect: RenderableGeometry {
     fn update(
         &mut self,
         effect_type: &display::primitives::EffectType,
@@ -16,6 +15,9 @@ pub trait RenderableEffect {
         entity_position: Matrix4<f32>,
         time: f32,
     );
+
+    fn as_renderable_geometry(&self) -> &dyn RenderableGeometry;
+    fn as_renderable_geometry_mut(&mut self) -> &mut dyn RenderableGeometry;
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -60,7 +62,8 @@ This thing could do with some work... overall it works, but it could be better;
 - functions that affect the behaviour of particles, both for velocity and acceleration.
 */
 pub struct ParticleEmitter {
-    renderable: InstancedEntity<three_d::renderer::material::ColorMaterial>,
+    participates_in_pass: fn(RenderPass) -> bool,
+    renderable: Gm<InstancedMesh, ColorMaterial>,
 
     /// Keep track of the last update time, to integrate velocity.
     last_time: f32,
@@ -251,9 +254,11 @@ impl ParticleEmitter {
             },
         );
 
-        let renderable = InstancedEntity::new(context, &square, material);
+        let instances: three_d::renderer::geometry::Instances = Default::default();
+        let renderable = Gm::new(InstancedMesh::new(context, &instances, &square), material);
 
         Self {
+            participates_in_pass: |pass| pass == RenderPass::BaseScene,
             last_time: time,
             renderable,
 
@@ -282,9 +287,13 @@ impl ParticleEmitter {
     }
 }
 
-impl RenderableEffect for ParticleEmitter {
-    fn object(&self) -> Option<&dyn Object> {
-        Some(self.renderable.object())
+impl RetainedEffect for ParticleEmitter {
+    fn as_renderable_geometry(&self) -> &dyn RenderableGeometry {
+        self as &dyn RenderableGeometry
+    }
+
+    fn as_renderable_geometry_mut(&mut self) -> &mut dyn RenderableGeometry {
+        self as &mut dyn RenderableGeometry
     }
 
     fn update(
@@ -391,14 +400,38 @@ impl RenderableEffect for ParticleEmitter {
             }
         }
 
-        let p = self
-            .particles
-            .iter()
-            .map(|p| (&p.pos, &p.color))
-            .collect::<Vec<_>>();
+        let mut transforms = Vec::with_capacity(self.particles.len());
+        let mut colors = Vec::with_capacity(self.particles.len());
+        for p in &self.particles {
+            transforms.push(p.pos);
+            colors.push(p.color);
+        }
 
-        self.renderable.set_instances(&p[..]);
+        let instances = three_d::renderer::geometry::Instances {
+            transformations: transforms,
+            colors: Some(colors),
+            ..Default::default()
+        };
+        self.renderable.geometry.set_instances(&instances);
         self.last_time = time;
+    }
+}
+
+impl RenderableGeometry for ParticleEmitter {
+    fn objects(&self, pass: RenderPass) -> Vec<&dyn Object> {
+        if (self.participates_in_pass)(pass) {
+            vec![&self.renderable]
+        } else {
+            vec![]
+        }
+    }
+
+    fn geometries(&self, pass: RenderPass) -> Vec<&InstancedMesh> {
+        if (self.participates_in_pass)(pass) {
+            vec![&self.renderable.geometry]
+        } else {
+            vec![]
+        }
     }
 }
 
@@ -415,7 +448,8 @@ struct DestructorParticle {
 }
 
 pub struct Deconstructor {
-    renderable: InstancedEntity<three_d::renderer::material::PhysicalMaterial>,
+    participates_in_pass: fn(RenderPass) -> bool,
+    renderable: Gm<InstancedMesh, PhysicalMaterial>,
     particles: Vec<DestructorParticle>,
 
     /// Keep track of the last update time, to integrate velocity.
@@ -437,12 +471,6 @@ impl Deconstructor {
         let edge_y = edge_x;
         let edge_z = edge_x;
         // let edge_z = 1.0;
-        let mut renderable =
-            InstancedEntity::<three_d::renderer::material::PhysicalMaterial>::new_physical(
-                context,
-                &CpuMesh::cube(),
-            );
-
         let material = three_d::renderer::material::PhysicalMaterial::new_transparent(
             context,
             &CpuMaterial {
@@ -455,7 +483,13 @@ impl Deconstructor {
                 ..Default::default()
             },
         );
-        renderable.gm_mut().material = material;
+
+        let instances: three_d::renderer::geometry::Instances = Default::default();
+        let renderable = Gm::new(
+            InstancedMesh::new(context, &instances, &CpuMesh::cube()),
+            material,
+        );
+
         let mut particles = vec![];
 
         let mut rng = rand::thread_rng();
@@ -679,6 +713,7 @@ impl Deconstructor {
         // let particles = vec![particles.pop().unwrap()];
 
         Deconstructor {
+            participates_in_pass: |pass| pass == RenderPass::BaseScene,
             last_time: time,
             renderable,
             particles,
@@ -687,9 +722,13 @@ impl Deconstructor {
     }
 }
 
-impl RenderableEffect for Deconstructor {
-    fn object(&self) -> Option<&dyn Object> {
-        Some(self.renderable.object())
+impl RetainedEffect for Deconstructor {
+    fn as_renderable_geometry(&self) -> &dyn RenderableGeometry {
+        self as &dyn RenderableGeometry
+    }
+
+    fn as_renderable_geometry_mut(&mut self) -> &mut dyn RenderableGeometry {
+        self as &mut dyn RenderableGeometry
     }
 
     fn update(
@@ -740,11 +779,37 @@ impl RenderableEffect for Deconstructor {
             .collect();
         // println!("scaled_pos pose: {:?}", scaled_pos);
 
-        let p = (0..self.particles.len())
-            .map(|i| (&scaled_pos[i], &self.particles[i].color))
-            .collect::<Vec<_>>();
+        let mut transforms = Vec::with_capacity(self.particles.len());
+        let mut colors = Vec::with_capacity(self.particles.len());
+        for i in 0..self.particles.len() {
+            transforms.push(scaled_pos[i]);
+            colors.push(self.particles[i].color);
+        }
 
-        self.renderable.set_instances(&p);
+        let instances = three_d::renderer::geometry::Instances {
+            transformations: transforms,
+            colors: Some(colors),
+            ..Default::default()
+        };
+        self.renderable.geometry.set_instances(&instances);
         self.last_time = time;
+    }
+}
+
+impl RenderableGeometry for Deconstructor {
+    fn objects(&self, pass: RenderPass) -> Vec<&dyn Object> {
+        if (self.participates_in_pass)(pass) {
+            vec![&self.renderable]
+        } else {
+            vec![]
+        }
+    }
+
+    fn geometries(&self, pass: RenderPass) -> Vec<&InstancedMesh> {
+        if (self.participates_in_pass)(pass) {
+            vec![&self.renderable.geometry]
+        } else {
+            vec![]
+        }
     }
 }

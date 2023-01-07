@@ -171,10 +171,34 @@ impl Default for FenceMaterial {
     }
 }
 
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct OverlayMaterial {
+    pub color: Color,
+}
+
+impl Default for OverlayMaterial {
+    fn default() -> Self {
+        OverlayMaterial {
+            color: Color::MAGENTA,
+        }
+    }
+}
+
+impl From<Color> for OverlayMaterial {
+    fn from(color: Color) -> OverlayMaterial {
+        OverlayMaterial {
+            color
+        }
+    }
+}
+
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Material {
     FlatMaterial(FlatMaterial),
     FenceMaterial(FenceMaterial),
+    OverlayMaterial(OverlayMaterial),
 }
 
 #[derive(Debug, Copy, Clone)]
