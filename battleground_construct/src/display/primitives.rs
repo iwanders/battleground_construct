@@ -171,7 +171,6 @@ impl Default for FenceMaterial {
     }
 }
 
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct OverlayMaterial {
     pub color: Color,
@@ -187,12 +186,9 @@ impl Default for OverlayMaterial {
 
 impl From<Color> for OverlayMaterial {
     fn from(color: Color) -> OverlayMaterial {
-        OverlayMaterial {
-            color
-        }
+        OverlayMaterial { color }
     }
 }
-
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Material {

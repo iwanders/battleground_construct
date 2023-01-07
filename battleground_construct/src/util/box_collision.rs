@@ -21,6 +21,27 @@ impl<S: BaseNum + std::fmt::Display> AxisAlignedBox<S> {
         }
     }
 
+    // Use a < b, NOT a <= b, the latter doesn't optimise to a single instruction.
+    fn min(a: S, b: S) -> S {
+        if a < b {
+            a
+        } else {
+            b
+        }
+    }
+
+    fn max(a: S, b: S) -> S {
+        if a > b {
+            a
+        } else {
+            b
+        }
+    }
+
+    fn clamp(v: S, lower: S, upper: S) -> S {
+        Self::max(Self::min(v, upper), lower)
+    }
+
     #[inline]
     pub fn min_point(&self) -> Vector3<S> {
         let zero = S::zero();
@@ -31,6 +52,17 @@ impl<S: BaseNum + std::fmt::Display> AxisAlignedBox<S> {
     pub fn max_point(&self) -> Vector3<S> {
         let one = S::one();
         self.parametrized_point(one, one, one)
+    }
+
+    /// Clamp the provided point to be within the axis aligned box.
+    pub fn clamp_point(&self, point: Vector3<S>) -> Vector3<S> {
+        let min = self.min_point();
+        let max = self.max_point();
+        Vector3::<S>::new(
+            Self::clamp(point.x, min.x, max.x),
+            Self::clamp(point.y, min.y, max.y),
+            Self::clamp(point.z, min.z, max.z),
+        )
     }
 
     fn parametrized_point(&self, u: S, v: S, w: S) -> Vector3<S> {
@@ -90,22 +122,6 @@ impl<S: BaseNum + std::fmt::Display> AxisAlignedBox<S> {
 
         // All three constraints satisfied?
         dim1 && dim2 && dim3
-    }
-
-    // Use a < b, NOT a <= b, the latter doesn't optimise to a single instruction.
-    fn min(a: S, b: S) -> S {
-        if a < b {
-            a
-        } else {
-            b
-        }
-    }
-    fn max(a: S, b: S) -> S {
-        if a > b {
-            a
-        } else {
-            b
-        }
     }
 
     // https://github.com/tavianator/tavianator.com/blob/main/src/2015/ray_box_nan.md

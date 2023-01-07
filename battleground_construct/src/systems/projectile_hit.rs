@@ -76,6 +76,7 @@ impl System for ProjectileHit {
                             ),
                         };
                         projectile_hits.push(v);
+                        break; // projectile can only hit one thing.
                     }
                 }
             }
@@ -108,6 +109,7 @@ impl System for ProjectileHit {
                             ),
                         };
                         projectile_hits.push(v);
+                        break; // projectile can only hit one thing.
                     }
                 }
             }
@@ -143,6 +145,7 @@ impl System for ProjectileHit {
                             ),
                         };
                         projectile_hits.push(v);
+                        break; // projectile can only hit one thing.
                     }
                 }
             }
@@ -174,6 +177,7 @@ impl System for ProjectileHit {
                             ),
                         };
                         projectile_hits.push(v);
+                        break; // projectile can only hit one thing.
                     }
                 }
             }

@@ -7,6 +7,7 @@ pub mod capture_marker;
 pub mod capture_point;
 pub mod clock;
 pub mod damage_hit;
+pub mod damage_splash;
 pub mod destroyed;
 pub mod differential_drive_base;
 pub mod eternal;

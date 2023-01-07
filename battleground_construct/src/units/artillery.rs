@@ -369,6 +369,9 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     unit_entity
 }
 
+const ARTILLERY_SPLASH_DAMAGE: f32 = 0.3;
+const ARTILLERY_SPLASH_RADIUS: f32 = 2.0;
+
 pub fn artillery_battery_config() -> components::gun_battery::GunBatteryConfig {
     let mut poses = vec![];
 
@@ -447,10 +450,12 @@ pub fn artillery_fire_function(world: &mut World, gun_battery_entity: EntityId, 
         crate::components::acceleration::Acceleration::gravity(),
     );
 
-    // Need to pick a damage, implement DamageSplash
     world.add_component(
         projectile_entity,
-        components::damage_hit::DamageHit::new(3330.3),
+        components::damage_splash::DamageSplash::new(
+            ARTILLERY_SPLASH_DAMAGE,
+            ARTILLERY_SPLASH_RADIUS,
+        ),
     );
 
     world.add_component(
@@ -505,7 +510,10 @@ fn artillery_hit_effect(
     // let world_vel = crate::components::velocity::world_velocity(world, projectile).to_twist();
     world.add_component(
         projectile_destructor,
-        crate::display::particle_emitter::ParticleEmitter::explosion(effect_id, 2.0),
+        crate::display::particle_emitter::ParticleEmitter::explosion(
+            effect_id,
+            ARTILLERY_SPLASH_RADIUS,
+        ),
     );
     world.add_component(projectile_destructor, world_pose);
     world.add_component(

@@ -230,6 +230,23 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
         display::debug_box::DebugBox::cube(0.1),
     );
 
+    let artillery_target = spawn_artillery(
+        world,
+        ArtillerySpawnConfig {
+            x: 15.0,
+            y: 6.0,
+            yaw: std::f32::consts::PI / 2.0,
+            controller: Box::new(
+                unit_control_builtin::diff_drive_forwards_backwards::DiffDriveForwardsBackwardsControl {
+                    velocities: (1.0, 1.0),
+                    last_flip: 0.0,
+                    duration: 5.0,
+                },
+            ),
+            ..Default::default()
+        },
+    );
+
     // Spawn two teams.
     let team_red_entity = world.add_entity();
     let red_team_id = components::id_generator::generate_id(world);

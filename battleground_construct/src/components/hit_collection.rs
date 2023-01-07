@@ -45,6 +45,27 @@ impl HitCollection {
         false
     }
 
+    pub fn distance_to(&self, collection_transform: Mat4, point: Vec3) -> f32 {
+        let mut distance = f32::MAX;
+        let projectile_pose = Mat4::from_translation(point);
+        for (hitbox_transform, hitbox) in self.hit_boxes.iter() {
+            let hitbox_pose = collection_transform * hitbox_transform;
+            // Express the impact pose into the hitbox frame.
+            let point_in_hitbox_frame = hitbox_pose.to_inv_h() * projectile_pose;
+            let b = AxisAlignedBox::new(hitbox.length(), hitbox.width(), hitbox.height());
+
+            // Clamp the impact pose to be within the box.
+            let clamped_point = b.clamp_point(point_in_hitbox_frame.to_translation());
+
+            // Now, the distance between the clamped and point is the distance from the
+            // impact to the nearest point inside the hitbox.
+            distance = (clamped_point - point_in_hitbox_frame.to_translation())
+                .euclid_norm()
+                .min(distance);
+        }
+        distance
+    }
+
     pub fn hit_boxes(&self) -> &[(Mat4, HitBox)] {
         &self.hit_boxes[..]
     }
