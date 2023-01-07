@@ -433,10 +433,6 @@ impl RenderableGeometry for ParticleEmitter {
             vec![]
         }
     }
-
-    fn prepare_frame(&mut self) {}
-
-    fn finish_frame(&mut self, context: &Context) {}
 }
 
 // use battleground_construct::util::cgmath::InvertHomogeneous;
@@ -816,8 +812,4 @@ impl RenderableGeometry for Deconstructor {
             vec![]
         }
     }
-
-    fn prepare_frame(&mut self) {}
-
-    fn finish_frame(&mut self, context: &Context) {}
 }

@@ -203,15 +203,15 @@ impl ConstructRender {
             .collect()
     }
 
-    fn finish_frame(&mut self, context: &Context) {
+    fn finish_scene(&mut self, context: &Context) {
         for r in self.renderables_mut() {
-            r.finish_frame(context);
+            r.finish_scene(context);
         }
     }
 
-    fn prepare_frame(&mut self) {
+    fn prepare_scene(&mut self, context: &Context) {
         for r in self.renderables_mut() {
-            r.prepare_frame();
+            r.prepare_scene(context);
         }
     }
 
@@ -293,7 +293,7 @@ impl ConstructRender {
         selected: &std::collections::HashSet<EntityId>,
     ) {
         // a new cycle, clear the previous instances.
-        self.prepare_frame();
+        self.prepare_scene(context);
 
         // World geometry
         self.add_static_meshes();
@@ -371,7 +371,7 @@ impl ConstructRender {
         }
 
         // Update the actual instances
-        self.finish_frame(context);
+        self.finish_scene(context);
     }
 
     /// Function to iterate over the components and convert their drawables into elements.

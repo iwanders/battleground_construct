@@ -122,10 +122,10 @@ pub trait RenderableGeometry {
     fn geometries(&self, pass: RenderPass) -> Vec<&InstancedMesh>;
 
     /// Prepares internals for a new frame.
-    fn prepare_frame(&mut self);
+    fn prepare_scene(&mut self, context: &Context) {}
 
     /// Finishes up the frame, and performs necessary bookkeeping.
-    fn finish_frame(&mut self, context: &Context);
+    fn finish_scene(&mut self, context: &Context) {}
 }
 
 pub trait BatchMaterial {
@@ -223,12 +223,12 @@ impl<M: Material + BatchMaterial> RenderableGeometry for MeshGeometry<M> {
         }
     }
 
-    fn prepare_frame(&mut self) {
+    fn prepare_scene(&mut self, _context: &Context) {
         self.buffer.clear();
         self.meshes.clear();
     }
 
-    fn finish_frame(&mut self, context: &Context) {
+    fn finish_scene(&mut self, context: &Context) {
         for (mesh, transform, color) in &self.buffer {
             let instanced = Gm::new(
                 InstancedMesh::new(
@@ -333,12 +333,12 @@ impl<M: Material + BatchMaterial> RenderableGeometry for PrimitiveGeometry<M> {
         }
     }
 
-    fn prepare_frame(&mut self) {
+    fn prepare_scene(&mut self, _context: &Context) {
         self.batches.clear();
         self.meshes.clear();
     }
 
-    fn finish_frame(&mut self, context: &Context) {
+    fn finish_scene(&mut self, context: &Context) {
         for batch in self.batches.values() {
             let cpu_mesh = primitive_to_mesh(&batch.key.primitive);
             let material = M::new_for_batch(context, batch.key.properties);
