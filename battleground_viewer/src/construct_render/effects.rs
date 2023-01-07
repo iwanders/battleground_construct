@@ -400,8 +400,8 @@ impl RetainedEffect for ParticleEmitter {
             }
         }
 
-        let mut transforms = vec![];
-        let mut colors = vec![];
+        let mut transforms = Vec::with_capacity(self.particles.len());
+        let mut colors = Vec::with_capacity(self.particles.len());
         for p in &self.particles {
             transforms.push(p.pos);
             colors.push(p.color);
@@ -783,8 +783,8 @@ impl RetainedEffect for Deconstructor {
             .collect();
         // println!("scaled_pos pose: {:?}", scaled_pos);
 
-        let mut transforms = vec![];
-        let mut colors = vec![];
+        let mut transforms = Vec::with_capacity(self.particles.len());
+        let mut colors = Vec::with_capacity(self.particles.len());
         for i in 0..self.particles.len() {
             transforms.push(scaled_pos[i]);
             colors.push(self.particles[i].color);
