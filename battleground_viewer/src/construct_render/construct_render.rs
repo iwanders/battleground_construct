@@ -62,7 +62,7 @@ impl ConstructRender {
             _ => false,
         });
         let overlay_primitives = PrimitiveGeometry::new(|pass| match pass {
-            RenderPass::BaseScene => true,
+            RenderPass::BaseScene | RenderPass::NonEmmisivesDepth => true,
             _ => false,
         });
 
