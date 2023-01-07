@@ -122,10 +122,10 @@ pub trait RenderableGeometry {
     fn geometries(&self, pass: RenderPass) -> Vec<&InstancedMesh>;
 
     /// Prepares internals for a new frame.
-    fn prepare_scene(&mut self, context: &Context) {}
+    fn prepare_scene(&mut self, _context: &Context) {}
 
     /// Finishes up the frame, and performs necessary bookkeeping.
-    fn finish_scene(&mut self, context: &Context) {}
+    fn finish_scene(&mut self, _context: &Context) {}
 }
 
 pub trait BatchMaterial {
