@@ -375,7 +375,7 @@ impl ConstructViewer {
             // Skip the ground plane in the shadow map, otherwise we get no resolution.
             self.directional_light.generate_shadow_map(
                 2048,
-                self.construct_render.geometries(RenderPass::ShadowMaps),
+                &self.construct_render.geometries(RenderPass::ShadowMaps),
             );
 
             // A) Render normal scene

@@ -1,4 +1,4 @@
-use crate::construct_render::render::{RenderPass, RenderableGeometry};
+use crate::construct_render::render::{GeometryRef, RenderPass, RenderableGeometry};
 use crate::construct_render::util::ColorConvert;
 use battleground_construct::components::velocity::velocity_on_body;
 use battleground_construct::display;
@@ -426,9 +426,9 @@ impl RenderableGeometry for ParticleEmitter {
         }
     }
 
-    fn geometries(&self, pass: RenderPass) -> Vec<&InstancedMesh> {
+    fn geometries(&self, pass: RenderPass) -> Vec<GeometryRef> {
         if (self.participates_in_pass)(pass) {
-            vec![&self.renderable.geometry]
+            vec![GeometryRef::InstancedMesh(&self.renderable.geometry)]
         } else {
             vec![]
         }
@@ -805,9 +805,9 @@ impl RenderableGeometry for Deconstructor {
         }
     }
 
-    fn geometries(&self, pass: RenderPass) -> Vec<&InstancedMesh> {
+    fn geometries(&self, pass: RenderPass) -> Vec<GeometryRef> {
         if (self.participates_in_pass)(pass) {
-            vec![&self.renderable.geometry]
+            vec![GeometryRef::InstancedMesh(&self.renderable.geometry)]
         } else {
             vec![]
         }

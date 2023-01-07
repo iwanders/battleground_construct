@@ -73,14 +73,38 @@ impl BatchKey for BatchProperties {
 }
 
 /// Produces material values based on batch property
-pub trait BatchMaterial {
-    fn new_for_batch(context: &Context, batch_properties: BatchProperties) -> Self
-    where
-        Self: Material;
+pub trait BatchMaterial
+where
+    Self: Material,
+{
+    fn new_for_batch(context: &Context, batch_properties: BatchProperties) -> Self;
+
+    fn new_for_batch_colored(
+        context: &Context,
+        batch_properties: BatchProperties,
+        color: Color,
+    ) -> Self;
 }
 
 impl BatchMaterial for PhysicalMaterial {
     fn new_for_batch(context: &Context, batch_properties: BatchProperties) -> PhysicalMaterial {
+        Self::new_for_batch_colored(
+            context,
+            batch_properties,
+            Color {
+                r: 255,
+                g: 255,
+                b: 255,
+                a: 255,
+            },
+        )
+    }
+
+    fn new_for_batch_colored(
+        context: &Context,
+        batch_properties: BatchProperties,
+        color: Color,
+    ) -> PhysicalMaterial {
         let material_new = match batch_properties {
             BatchProperties::None => PhysicalMaterial::new_opaque,
             BatchProperties::Basic {
@@ -93,12 +117,7 @@ impl BatchMaterial for PhysicalMaterial {
         material_new(
             context,
             &CpuMaterial {
-                albedo: Color {
-                    r: 255,
-                    g: 255,
-                    b: 255,
-                    a: 255,
-                },
+                albedo: color,
                 ..Default::default()
             },
         )
@@ -107,6 +126,23 @@ impl BatchMaterial for PhysicalMaterial {
 
 impl BatchMaterial for ColorMaterial {
     fn new_for_batch(context: &Context, batch_properties: BatchProperties) -> ColorMaterial {
+        Self::new_for_batch_colored(
+            context,
+            batch_properties,
+            Color {
+                r: 255,
+                g: 255,
+                b: 255,
+                a: 255,
+            },
+        )
+    }
+
+    fn new_for_batch_colored(
+        context: &Context,
+        batch_properties: BatchProperties,
+        color: Color,
+    ) -> ColorMaterial {
         let material_new = match batch_properties {
             BatchProperties::None => ColorMaterial::new_opaque,
             BatchProperties::Basic {
@@ -119,12 +155,7 @@ impl BatchMaterial for ColorMaterial {
         material_new(
             context,
             &CpuMaterial {
-                albedo: Color {
-                    r: 255,
-                    g: 255,
-                    b: 255,
-                    a: 255,
-                },
+                albedo: color,
                 ..Default::default()
             },
         )

@@ -105,9 +105,12 @@ impl<M: Material + BatchMaterial> RenderableGeometry for PrimitiveGeometry<M> {
         }
     }
 
-    fn geometries(&self, pass: RenderPass) -> Vec<&InstancedMesh> {
+    fn geometries(&self, pass: RenderPass) -> Vec<GeometryRef> {
         if (self.participates_in_pass)(pass) {
-            self.meshes.iter().map(|x| &x.geometry).collect()
+            self.meshes
+                .iter()
+                .map(|x| GeometryRef::InstancedMesh(&x.geometry))
+                .collect()
         } else {
             vec![]
         }

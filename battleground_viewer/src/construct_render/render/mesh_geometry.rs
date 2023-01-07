@@ -7,7 +7,7 @@ use super::*;
 pub struct MeshGeometry<M: Material + BatchMaterial> {
     participates_in_pass: fn(RenderPass) -> bool,
     buffer: Vec<(CpuMesh, Mat4, Color)>,
-    meshes: Vec<Gm<InstancedMesh, M>>,
+    meshes: Vec<Gm<Mesh, M>>,
 }
 
 impl<M: Material + BatchMaterial> MeshGeometry<M> {
@@ -33,9 +33,12 @@ impl<M: Material + BatchMaterial> RenderableGeometry for MeshGeometry<M> {
         }
     }
 
-    fn geometries(&self, pass: RenderPass) -> Vec<&InstancedMesh> {
+    fn geometries(&self, pass: RenderPass) -> Vec<GeometryRef> {
         if (self.participates_in_pass)(pass) {
-            self.meshes.iter().map(|x| &x.geometry).collect()
+            self.meshes
+                .iter()
+                .map(|x| GeometryRef::Mesh(&x.geometry))
+                .collect()
         } else {
             vec![]
         }
@@ -47,26 +50,21 @@ impl<M: Material + BatchMaterial> RenderableGeometry for MeshGeometry<M> {
     }
 
     fn finish_scene(&mut self, context: &Context) {
-        for (mesh, transform, color) in &self.buffer {
-            let instanced = Gm::new(
-                InstancedMesh::new(
-                    context,
-                    &Instances {
-                        transformations: vec![*transform],
-                        colors: Some(vec![*color]),
-                        ..Default::default()
-                    },
-                    mesh,
-                ),
-                M::new_for_batch(
+        for (cpu_mesh, transform, color) in &self.buffer {
+            let mut mesh = Mesh::new(context, cpu_mesh);
+            mesh.set_transformation(*transform);
+            let gm = Gm::new(
+                mesh,
+                M::new_for_batch_colored(
                     context,
                     BatchProperties::Basic {
                         // We can do this, because the material is not retained over frames
                         is_transparent: color.a < 255,
                     },
+                    *color,
                 ),
             );
-            self.meshes.push(instanced);
+            self.meshes.push(gm);
         }
     }
 }
