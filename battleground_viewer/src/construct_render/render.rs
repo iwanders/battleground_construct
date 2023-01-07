@@ -111,10 +111,10 @@ impl BatchKey for PrimitiveBatchKey {
 
 pub trait RenderableGeometry {
     /// Produces the objects to render for this render pass
-    fn objects(&self, pass: RenderPass) -> Option<Vec<&dyn Object>>;
+    fn objects(&self, pass: RenderPass) -> Vec<&dyn Object>;
 
     /// Produces the geometries for this render pass.
-    fn geometries(&self, pass: RenderPass) -> Option<Vec<&InstancedMesh>>;
+    fn geometries(&self, pass: RenderPass) -> Vec<&InstancedMesh>;
 
     /// Prepares internals for a new frame.
     fn prepare_frame(&mut self);
@@ -196,31 +196,26 @@ impl<M: Material + BatchMaterial> MeshGeometry<M> {
         }
     }
 
-    fn meshes_for_pass(
-        &self,
-        pass: RenderPass,
-    ) -> Option<impl Iterator<Item = &Gm<InstancedMesh, M>>> {
-        if (self.participates_in_pass)(pass) {
-            Some(self.meshes.iter())
-        } else {
-            None
-        }
-    }
-
     pub fn add_mesh(&mut self, mesh: &CpuMesh, transform: Mat4, color: Color) {
         self.buffer.push((mesh.clone(), transform, color));
     }
 }
 
 impl<M: Material + BatchMaterial> RenderableGeometry for MeshGeometry<M> {
-    fn objects(&self, pass: RenderPass) -> Option<Vec<&dyn Object>> {
-        self.meshes_for_pass(pass)
-            .map(|xs| xs.map(|x| x as &dyn Object).collect::<_>())
+    fn objects(&self, pass: RenderPass) -> Vec<&dyn Object> {
+        if (self.participates_in_pass)(pass) {
+            self.meshes.iter().map(|x| x as &dyn Object).collect()
+        } else {
+            vec![]
+        }
     }
 
-    fn geometries(&self, pass: RenderPass) -> Option<Vec<&InstancedMesh>> {
-        self.meshes_for_pass(pass)
-            .map(|xs| xs.map(|x| &x.geometry).collect::<_>())
+    fn geometries(&self, pass: RenderPass) -> Vec<&InstancedMesh> {
+        if (self.participates_in_pass)(pass) {
+            self.meshes.iter().map(|x| &x.geometry).collect()
+        } else {
+            vec![]
+        }
     }
 
     fn prepare_frame(&mut self) {
@@ -278,17 +273,6 @@ impl<M: Material + BatchMaterial> PrimitiveGeometry<M> {
         }
     }
 
-    fn meshes_for_pass(
-        &self,
-        pass: RenderPass,
-    ) -> Option<impl Iterator<Item = &Gm<InstancedMesh, M>>> {
-        if (self.participates_in_pass)(pass) {
-            Some(self.meshes.iter())
-        } else {
-            None
-        }
-    }
-
     pub fn add_primitive(
         &mut self,
         batch_hints: BatchProperties,
@@ -329,14 +313,20 @@ impl<M: Material + BatchMaterial> PrimitiveGeometry<M> {
 }
 
 impl<M: Material + BatchMaterial> RenderableGeometry for PrimitiveGeometry<M> {
-    fn objects(&self, pass: RenderPass) -> Option<Vec<&dyn Object>> {
-        self.meshes_for_pass(pass)
-            .map(|xs| xs.map(|x| x as &dyn Object).collect::<_>())
+    fn objects(&self, pass: RenderPass) -> Vec<&dyn Object> {
+        if (self.participates_in_pass)(pass) {
+            self.meshes.iter().map(|x| x as &dyn Object).collect()
+        } else {
+            vec![]
+        }
     }
 
-    fn geometries(&self, pass: RenderPass) -> Option<Vec<&InstancedMesh>> {
-        self.meshes_for_pass(pass)
-            .map(|xs| xs.map(|x| &x.geometry).collect::<_>())
+    fn geometries(&self, pass: RenderPass) -> Vec<&InstancedMesh> {
+        if (self.participates_in_pass)(pass) {
+            self.meshes.iter().map(|x| &x.geometry).collect()
+        } else {
+            vec![]
+        }
     }
 
     fn prepare_frame(&mut self) {

@@ -418,19 +418,19 @@ impl RetainedEffect for ParticleEmitter {
 }
 
 impl RenderableGeometry for ParticleEmitter {
-    fn objects(&self, pass: RenderPass) -> Option<Vec<&dyn Object>> {
+    fn objects(&self, pass: RenderPass) -> Vec<&dyn Object> {
         if (self.participates_in_pass)(pass) {
-            Some(vec![&self.renderable])
+            vec![&self.renderable]
         } else {
-            None
+            vec![]
         }
     }
 
-    fn geometries(&self, pass: RenderPass) -> Option<Vec<&InstancedMesh>> {
+    fn geometries(&self, pass: RenderPass) -> Vec<&InstancedMesh> {
         if (self.participates_in_pass)(pass) {
-            Some(vec![&self.renderable.geometry])
+            vec![&self.renderable.geometry]
         } else {
-            None
+            vec![]
         }
     }
 
@@ -801,19 +801,19 @@ impl RetainedEffect for Deconstructor {
 }
 
 impl RenderableGeometry for Deconstructor {
-    fn objects(&self, pass: RenderPass) -> Option<Vec<&dyn Object>> {
+    fn objects(&self, pass: RenderPass) -> Vec<&dyn Object> {
         if (self.participates_in_pass)(pass) {
-            Some(vec![&self.renderable])
+            vec![&self.renderable]
         } else {
-            None
+            vec![]
         }
     }
 
-    fn geometries(&self, pass: RenderPass) -> Option<Vec<&InstancedMesh>> {
+    fn geometries(&self, pass: RenderPass) -> Vec<&InstancedMesh> {
         if (self.participates_in_pass)(pass) {
-            Some(vec![&self.renderable.geometry])
+            vec![&self.renderable.geometry]
         } else {
-            None
+            vec![]
         }
     }
 

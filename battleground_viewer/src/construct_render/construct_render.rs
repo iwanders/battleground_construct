@@ -107,21 +107,6 @@ impl ConstructRender {
         result
     }
 
-    fn do_for_renderables<'a>(&'a self, mut f: impl FnMut(&'a dyn RenderableGeometry) -> ()) {
-        for r in self.renderables() {
-            f(r);
-        }
-    }
-
-    fn do_for_renderables_mut<'a>(
-        &'a mut self,
-        mut f: impl FnMut(&'a mut dyn RenderableGeometry) -> (),
-    ) {
-        for r in self.renderables_mut() {
-            f(r);
-        }
-    }
-
     fn add_static_meshes(&mut self) {
         // Ground plane
         self.static_meshes.add_mesh(
@@ -203,27 +188,31 @@ impl ConstructRender {
     }
 
     pub fn geometries(&self, pass: RenderPass) -> Vec<&impl Geometry> {
-        let mut result = vec![];
-        self.do_for_renderables(|r| {
-            result.extend(r.geometries(pass).unwrap_or_else(|| vec![]));
-        });
-        result
+        self.renderables()
+            .into_iter()
+            .map(|r| r.geometries(pass))
+            .flatten()
+            .collect()
     }
 
     pub fn objects(&self, pass: RenderPass) -> Vec<&dyn Object> {
-        let mut result = vec![];
-        self.do_for_renderables(|r| {
-            result.extend(r.objects(pass).unwrap_or_else(|| vec![]));
-        });
-        result
+        self.renderables()
+            .into_iter()
+            .map(|r| r.objects(pass))
+            .flatten()
+            .collect()
     }
 
     fn finish_frame(&mut self, context: &Context) {
-        self.do_for_renderables_mut(|r| r.finish_frame(context));
+        for r in self.renderables_mut() {
+            r.finish_frame(context);
+        }
     }
 
     fn prepare_frame(&mut self) {
-        self.do_for_renderables_mut(|r| r.prepare_frame());
+        for r in self.renderables_mut() {
+            r.prepare_frame();
+        }
     }
 
     fn add_select_boxes(&mut self, construct: &Construct, selected: &[EntityId]) {
