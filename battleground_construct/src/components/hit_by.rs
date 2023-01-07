@@ -18,6 +18,12 @@ impl HitRecord {
     pub fn source(&self) -> Option<UnitId> {
         self.source
     }
+    pub fn time(&self) -> f32 {
+        self.time
+    }
+    pub fn damage(&self) -> f32 {
+        self.damage
+    }
 }
 
 #[derive(Debug, Clone, Default)]

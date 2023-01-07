@@ -5,6 +5,13 @@ use engine::prelude::*;
 pub struct Destroy {}
 impl System for Destroy {
     fn update(&mut self, world: &mut World) {
+        let t = world
+            .component_iter_mut::<components::clock::Clock>()
+            .next()
+            .expect("Should have one clock")
+            .1
+            .elapsed_as_f32();
+
         let destroyed = world.component_entities::<components::destroyed::Destroyed>();
         let destroyed_entity_and_root: Vec<(EntityId, EntityId)> = world
             .component_iter::<components::group::Group>()
@@ -44,7 +51,9 @@ impl System for Destroy {
                 world.component::<components::hit_by::HitByHistory>(*root_entity)
             {
                 for v in hit_history.hits() {
-                    destructor.add_impact(v.impact().position(), 0.2);
+                    if (t - v.time()) < 0.5 {
+                        destructor.add_impact(v.impact().position(), v.damage());
+                    }
                 }
             }
 

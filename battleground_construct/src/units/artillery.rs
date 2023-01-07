@@ -43,6 +43,7 @@ pub struct UnitArtillery {
     pub radar_joint_entity: EntityId,
     pub radar_entity: EntityId,
     pub flag_entity: EntityId,
+    pub health_bar_entity: EntityId,
     pub barrel_entity: EntityId,
     pub muzzle_entity: EntityId,
 }
@@ -70,6 +71,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
                 - CaptureMarker
                 - Radio's
             -> Flag entity
+            -> Health bar entity
             -> Turret Entity
                 - Revolute
                 -> Barrel Entity
@@ -92,6 +94,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     let radar_joint_entity = world.add_entity();
     let radar_entity = world.add_entity();
     let flag_entity = world.add_entity();
+    let health_bar_entity = world.add_entity();
     let barrel_entity = world.add_entity();
     let muzzle_entity = world.add_entity();
 
@@ -106,6 +109,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         radar_joint_entity,
         radar_entity,
         flag_entity,
+        health_bar_entity,
         barrel_entity,
         muzzle_entity,
     ];
@@ -119,6 +123,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         turret_entity,
         radar_joint_entity,
         radar_entity,
+        health_bar_entity,
         flag_entity,
         barrel_entity,
         muzzle_entity,
@@ -337,13 +342,24 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     // -----   Flag
     world.add_component(
         flag_entity,
-        Pose::from_xyz(-0.8, -0.4, 0.3).rotated_angle_z(cgmath::Deg(180.0)),
+        Pose::from_xyz(-0.8, -0.4 - 0.125, 0.3).rotated_angle_z(cgmath::Deg(180.0)),
     );
     world.add_component(
         flag_entity,
         display::flag::Flag::from_scale_color(0.5, display::Color::RED),
     );
     world.add_component(flag_entity, Parent::new(base_entity));
+
+    // -----   Health Bar
+    world.add_component(
+        health_bar_entity,
+        Pose::from_xyz(-0.8, 0.0, 0.40).rotated_angle_z(cgmath::Deg(90.0)),
+    );
+    world.add_component(
+        health_bar_entity,
+        display::health_bar::HealthBar::new(unit_entity, 0.8),
+    );
+    world.add_component(health_bar_entity, Parent::new(base_entity));
 
     // -----   Control
     world.add_component(control_entity, register_interface);

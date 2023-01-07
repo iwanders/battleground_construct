@@ -44,7 +44,7 @@ impl System for ProcessHitBy {
             if let Some(ref mut health) = world.component_mut::<Health>(root_entity) {
                 for (damage, _impact) in hit_by.hits() {
                     health.subtract(damage);
-                    println!("New health for {root_entity:?} is {health:?}");
+                    // println!("New health for {root_entity:?} is {health:?}");
                 }
             }
 

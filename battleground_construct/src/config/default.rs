@@ -64,7 +64,7 @@ pub fn add_systems(systems: &mut Systems) {
     // Coloring / display systems, they don't really matter when they go.
     // systems.add_system(Box::new(systems::health_tank_body::HealthTankBody {}));
     systems.add_system(Box::new(systems::team_color_tank::TeamColorTank {}));
-    systems.add_system(Box::new(systems::health_bar_update::HealthBarUpdate{}));
+    systems.add_system(Box::new(systems::health_bar_update::HealthBarUpdate {}));
     systems.add_system(Box::new(systems::display_tank_tracks::DisplayTankTracks {}));
     systems.add_system(Box::new(
         systems::display_capture_flag::DisplayCaptureFlag {},

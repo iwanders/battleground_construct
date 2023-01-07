@@ -234,7 +234,7 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
         world,
         ArtillerySpawnConfig {
             x: 15.0,
-            y: 6.0,
+            y: 6.5,
             yaw: std::f32::consts::PI / 2.0,
             controller: Box::new(
                 unit_control_builtin::diff_drive_forwards_backwards::DiffDriveForwardsBackwardsControl {
