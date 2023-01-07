@@ -20,6 +20,7 @@ pub mod process_impact;
 pub mod projectile_hit;
 pub mod radar_scan;
 pub mod radio_transmission;
+pub mod record;
 pub mod revolute_pose;
 pub mod revolute_update;
 pub mod revolute_velocity;

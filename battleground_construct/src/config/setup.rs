@@ -30,6 +30,11 @@ pub fn setup_scenario(
     default::add_components(world);
     default::add_systems(systems);
 
+    // add the recorder.
+    let recorder_entity = world.add_entity();
+    world.add_component(recorder_entity, components::recorder::Recorder::new());
+
+    // Add teams
     let mut team_set = std::collections::HashSet::<String>::new();
     let mut teams = vec![];
     for team in config.spawn_config.teams {
@@ -48,6 +53,7 @@ pub fn setup_scenario(
         world.add_component(team_entity, team_component);
     }
 
+    // Spawn units
     for spawn in config.spawn_config.spawns {
         let optional_team_component = if let Some(team_index) = spawn.team {
             let team_entity = teams
@@ -133,6 +139,7 @@ pub fn setup_scenario(
         }
     }
 
+    // Setup match.
     match config.match_config.mode {
         specification::MatchType::None => {}
         specification::MatchType::DeathMatch => {}
@@ -169,6 +176,7 @@ pub fn setup_scenario(
         }
     }
 
+    // Configure time limit
     if let Some(time_limit) = config.match_config.time_limit {
         let entity = world.add_entity();
         world.add_component(

@@ -20,6 +20,7 @@ pub fn add_components(world: &mut World) {
 pub fn add_systems(systems: &mut Systems) {
     // First, let the clock tick such that the time advances
     systems.add_system(Box::new(systems::clock::ClockSystem {}));
+    systems.add_system(Box::new(systems::record::Record {}));
     // Expire as many things as possible first, possible lightening work.
     systems.add_system(Box::new(systems::expiry_check::ExpiryCheck {}));
 
