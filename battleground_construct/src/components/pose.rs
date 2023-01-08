@@ -1,12 +1,12 @@
 use engine::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Copy, Debug, Clone)]
+#[derive(Serialize, Deserialize, Copy, Debug, Clone, PartialEq)]
 pub struct Pose {
     pub h: cgmath::Matrix4<f32>,
 }
 
-#[derive(Serialize, Deserialize, Copy, Debug, Clone)]
+#[derive(Serialize, Deserialize, Copy, Debug, Clone, PartialEq)]
 pub struct PreTransform {
     pub h: cgmath::Matrix4<f32>,
 }

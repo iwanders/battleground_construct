@@ -79,7 +79,11 @@ pub fn wrap_up_scenario(
 
     // Now, check if according to the scenario we have to do anything with the report, like writing it.
     if let Some(path) = wrap_up.write_recording {
-        if let Some(recording) = construct.world().component_iter::<components::recorder::Recorder>().next(){
+        if let Some(recording) = construct
+            .world()
+            .component_iter::<components::recorder::Recorder>()
+            .next()
+        {
             let recording = recording.1.recording();
             let data = bincode::serialize(&*recording)?;
             use std::io::Write;

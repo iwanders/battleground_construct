@@ -54,11 +54,13 @@ pub fn parse_wrap_up_args() -> Result<WrapUpConfig, Box<dyn std::error::Error>> 
     let write_wrap_up = match args.command {
         Commands::Scenario(ref scenario) => &scenario.report,
         // _ => None
-    }.clone();
+    }
+    .clone();
     let write_recording = match args.command {
         Commands::Scenario(ref scenario) => &scenario.record,
         // _ => None
-    }.clone();
+    }
+    .clone();
     Ok(WrapUpConfig {
         scenario,
         write_wrap_up,

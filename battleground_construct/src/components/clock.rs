@@ -1,7 +1,7 @@
 use engine::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Copy, Debug, Clone)]
+#[derive(Deserialize, Serialize, Copy, Debug, Clone, PartialEq)]
 pub struct Clock {
     current: f32,
     step: f32,
