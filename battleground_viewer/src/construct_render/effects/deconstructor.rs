@@ -134,19 +134,17 @@ impl Deconstructor {
                     for x in -chunks_x..chunks_x {
                         for y in -chunks_y..chunks_y {
                             for z in -chunks_z..chunks_z {
-                                let x_start =
-                                    (x as f32 * edge_x).max(-half_length).min(half_length);
+                                let x_start = (x as f32 * edge_x).clamp(-half_length, half_length);
                                 let x_end =
-                                    ((x + 1) as f32 * edge_x).max(-half_length).min(half_length);
+                                    ((x + 1) as f32 * edge_x).clamp(-half_length, half_length);
 
-                                let y_start = (y as f32 * edge_y).max(-half_width).min(half_width);
+                                let y_start = (y as f32 * edge_y).clamp(-half_width, half_width);
                                 let y_end =
-                                    ((y + 1) as f32 * edge_y).max(-half_width).min(half_width);
+                                    ((y + 1) as f32 * edge_y).clamp(-half_width, half_width);
 
-                                let z_start =
-                                    (z as f32 * edge_z).max(-half_height).min(half_height);
+                                let z_start = (z as f32 * edge_z).clamp(-half_height, half_height);
                                 let z_end =
-                                    ((z + 1) as f32 * edge_z).max(-half_height).min(half_height);
+                                    ((z + 1) as f32 * edge_z).clamp(-half_height, half_height);
 
                                 if x_start == x_end || y_start == y_end || z_start == z_end {
                                     continue;
