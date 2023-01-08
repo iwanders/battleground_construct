@@ -80,6 +80,12 @@ impl<S: BaseFloat> ToRotation<S> for Matrix4<S> {
     }
 }
 
+impl<S: BaseFloat> ToRotation<S> for cgmath::Quaternion<S> {
+    fn to_rotation(&self) -> cgmath::Matrix3<S> {
+        cgmath::Matrix3::<S>::from(*self)
+    }
+}
+
 pub trait ToHomogenous<S: BaseFloat> {
     fn to_h(&self) -> Matrix4<S>;
 }
@@ -91,6 +97,16 @@ impl<S: BaseFloat> ToHomogenous<S> for cgmath::Vector3<S> {
             cgmath::Vector4::<S>::new(S::zero(), S::one(), S::zero(), S::zero()),
             cgmath::Vector4::<S>::new(S::zero(), S::zero(), S::one(), S::zero()),
             cgmath::Vector4::<S>::new(self.x, self.y, self.z, S::one()),
+        )
+    }
+}
+impl<S: BaseFloat> ToHomogenous<S> for cgmath::Matrix3<S> {
+    fn to_h(&self) -> cgmath::Matrix4<S> {
+        cgmath::Matrix4::<S>::from_cols(
+            self.x.extend(S::zero()),
+            self.y.extend(S::zero()),
+            self.z.extend(S::zero()),
+            cgmath::Vector4::<S>::new(S::zero(), S::zero(), S::zero(), S::one()),
         )
     }
 }

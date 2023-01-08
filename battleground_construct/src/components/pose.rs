@@ -1,9 +1,41 @@
 use engine::prelude::*;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-#[derive(Serialize, Deserialize, Copy, Debug, Clone, PartialEq)]
+#[derive(Copy, Deserialize, Serialize, Debug, Clone, PartialEq)]
 pub struct Pose {
+    #[serde(serialize_with = "serialize_matrix4")]
+    #[serde(deserialize_with = "deserialize_matrix4")]
     pub h: cgmath::Matrix4<f32>,
+}
+
+#[derive(Copy, Deserialize, Serialize, Debug, Clone, PartialEq)]
+struct PoseMinimal {
+    quat: cgmath::Quaternion<f32>,
+    pos: cgmath::Vector3<f32>,
+}
+
+fn deserialize_matrix4<'de, D>(deserializer: D) -> Result<cgmath::Matrix4<f32>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    use crate::util::cgmath::prelude::*;
+    let buf = PoseMinimal::deserialize(deserializer)?;
+    let rot = buf.quat.to_rotation();
+    let mut h = rot.to_h();
+    h.w = buf.pos.extend(1.0);
+    Ok(h)
+}
+fn serialize_matrix4<S>(h: &cgmath::Matrix4<f32>, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    use crate::util::cgmath::prelude::*;
+    let p = PoseMinimal {
+        quat: h.to_rotation().into(),
+        pos: h.w.truncate(),
+    };
+    // s.serialize(&p)
+    p.serialize(s)
 }
 
 #[derive(Serialize, Deserialize, Copy, Debug, Clone, PartialEq)]

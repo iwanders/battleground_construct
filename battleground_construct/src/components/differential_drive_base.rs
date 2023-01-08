@@ -4,7 +4,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Copy, Debug, Clone)]
 pub struct DifferentialDriveConfig {
     pub track_width: f32,
+    #[serde(skip)]
     pub wheel_velocity_bounds: (f32, f32),
+    #[serde(skip)]
     pub wheel_acceleration_bounds: Option<(f32, f32)>,
 }
 
@@ -21,6 +23,7 @@ impl Default for DifferentialDriveConfig {
 #[derive(Deserialize, Serialize, Copy, Debug, Clone)]
 pub struct DifferentialDriveBase {
     config: DifferentialDriveConfig,
+    #[serde(skip)]
     wheel_velocity_cmd: (f32, f32),
     wheel_velocity_vel: (f32, f32),
 }
