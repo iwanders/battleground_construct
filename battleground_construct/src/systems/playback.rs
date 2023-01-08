@@ -8,8 +8,14 @@ impl System for Playback {
             .component_iter::<components::recorder::Recorder>()
             .next()
             .map(|v| v.1.recording());
-        if let Some(recording) = recording {
-            recording.borrow_mut().step(world)
+        let finished = world
+            .component_iter::<components::recorder::PlaybackFinishedMarker>()
+            .next()
+            .is_some();
+        if !finished {
+            if let Some(recording) = recording {
+                recording.borrow_mut().step(world)
+            }
         }
     }
 }

@@ -15,6 +15,14 @@ impl Construct {
         Construct { world, systems }
     }
 
+    pub fn can_update(&self) -> bool {
+        !self
+            .world
+            .component_iter::<components::recorder::PlaybackFinishedMarker>()
+            .next()
+            .is_some()
+    }
+
     pub fn update(&mut self) {
         self.systems.update(&mut self.world);
     }

@@ -146,6 +146,7 @@ dependencies = [
  "cgmath",
  "clap",
  "engine",
+ "miniz_oxide",
  "rand",
  "rand_chacha",
  "serde",

@@ -8,6 +8,13 @@ pub struct Pose {
     pub h: cgmath::Matrix4<f32>,
 }
 
+#[derive(Serialize, Deserialize, Copy, Debug, Clone, PartialEq)]
+pub struct PreTransform {
+    #[serde(serialize_with = "serialize_matrix4")]
+    #[serde(deserialize_with = "deserialize_matrix4")]
+    pub h: cgmath::Matrix4<f32>,
+}
+
 #[derive(Copy, Deserialize, Serialize, Debug, Clone, PartialEq)]
 struct PoseMinimal {
     quat: cgmath::Quaternion<f32>,
@@ -36,11 +43,6 @@ where
     };
     // s.serialize(&p)
     p.serialize(s)
-}
-
-#[derive(Serialize, Deserialize, Copy, Debug, Clone, PartialEq)]
-pub struct PreTransform {
-    pub h: cgmath::Matrix4<f32>,
 }
 
 macro_rules! create_transform_component {

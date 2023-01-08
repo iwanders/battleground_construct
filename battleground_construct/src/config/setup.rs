@@ -41,6 +41,7 @@ pub fn setup_playback(path: &str) -> Result<Construct, Box<dyn std::error::Error
 
     systems.add_system(Box::new(systems::playback::Playback {}));
     systems.add_system(Box::new(systems::playback_units::PlaybackUnits {}));
+    systems.add_system(Box::new(systems::playback_finished::PlaybackFinished {}));
 
     systems.add_system(Box::new(systems::team_color_tank::TeamColorTank {}));
     systems.add_system(Box::new(systems::health_bar_update::HealthBarUpdate {}));

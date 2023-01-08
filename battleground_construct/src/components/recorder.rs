@@ -3,10 +3,17 @@ use crate::display;
 use engine::prelude::*;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
+use miniz_oxide::deflate::compress_to_vec;
+use miniz_oxide::inflate::decompress_to_vec;
+
 pub struct PlaybackUnitCreatedMarker;
 impl Component for PlaybackUnitCreatedMarker {}
+
 pub struct PlaybackUnitDestroyedMarker;
 impl Component for PlaybackUnitDestroyedMarker {}
+
+pub struct PlaybackFinishedMarker;
+impl Component for PlaybackFinishedMarker {}
 
 pub type RecordingStorage = std::rc::Rc<std::cell::RefCell<Recording>>;
 
@@ -172,12 +179,22 @@ impl DeltaState {
             delta.apply::<T>(world);
         }
     }
+
+    fn compressed(&self) -> Vec<u8> {
+        let bytes = bincode::serialize(self).unwrap();
+        compress_to_vec(&bytes, 6)
+    }
+    fn uncompress(bytes: &[u8]) -> DeltaState {
+        let decompressed = decompress_to_vec(bytes).expect("Failed to decompress!");
+        bincode::deserialize(&decompressed).unwrap()
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 enum Capture {
     WorldState(WorldState),
     DeltaState(DeltaState),
+    ZippedDeltaState(Vec<u8>),
 }
 
 type RecordFunction = Box<dyn Fn(&mut WorldState, &World)>;
@@ -281,7 +298,9 @@ impl Recording {
         let delta = DeltaState::new(&self.previous_state, &new_world_state);
 
         // Store the delta
-        self.states.push(Capture::DeltaState(delta));
+        // self.states.push(Capture::DeltaState(delta));
+        self.states
+            .push(Capture::ZippedDeltaState(delta.compressed()));
 
         // Store previous full snap shot for next delta calculation.
         self.previous_state = new_world_state;
@@ -298,10 +317,33 @@ impl Recording {
                         play_fun(delta, world);
                     }
                 }
+                Capture::ZippedDeltaState(zipped_delta) => {
+                    let delta = DeltaState::uncompress(&zipped_delta);
+                    for (_, (_, play_fun)) in self.helpers.iter() {
+                        play_fun(&delta, world);
+                    }
+                }
             }
             self.playback_index += 1;
+        } else {
+            // Ehh? Advance the clock manually...?
+            if world
+                .component_iter::<PlaybackFinishedMarker>()
+                .next()
+                .is_some()
+            {
+                return; // match is already finished.
+            } else {
+                // We can't create an entity, as the engine doesn't have an entity counter that's
+                // in sync. Lets just add this marker to the clock entity.
+                let clock_entity = world
+                    .component_iter::<components::clock::Clock>()
+                    .next()
+                    .expect("Should have one clock")
+                    .0;
+                world.add_component(clock_entity, PlaybackFinishedMarker);
+            }
         }
-        // Ehh? Advance the clock manually...?
     }
 }
 

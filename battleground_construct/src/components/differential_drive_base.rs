@@ -67,6 +67,10 @@ impl DifferentialDriveBase {
         self.wheel_velocity_vel
     }
 
+    pub fn wheel_velocities_mut(&mut self) -> &mut (f32, f32) {
+        &mut self.wheel_velocity_vel
+    }
+
     pub fn wheel_velocity_bounds(self) -> (f32, f32) {
         self.config.wheel_velocity_bounds
     }

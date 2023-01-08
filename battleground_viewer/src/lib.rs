@@ -62,7 +62,7 @@ impl Limiter {
         self.real_speed
     }
 
-    pub fn update<F: FnMut() -> f32>(&mut self, mut v: F) {
+    pub fn update<F: FnMut() -> Option<f32>>(&mut self, mut v: F) {
         if self.is_paused {
             self.last_update_time = time_provider::Instant::now();
             self.real_speed = 0.0;
@@ -83,8 +83,12 @@ impl Limiter {
                     // println!("Didn't meet rate");
                     break;
                 }
-                self.last_construct_time = v();
-                if self.last_construct_time >= desired_construct_finish_time {
+                if let Some(new_time) = v() {
+                    self.last_construct_time = new_time;
+                    if self.last_construct_time >= desired_construct_finish_time {
+                        break;
+                    }
+                } else {
                     break;
                 }
             }
@@ -194,10 +198,16 @@ impl ConstructViewer {
         self.window.render_loop(move |mut frame_input: FrameInput| {
             let now = time_provider::Instant::now();
             // Run the limiter to update the construct.s
-            self.limiter.update(|| {
-                self.construct.update();
-                self.construct.elapsed_as_f32()
-            });
+            if self.construct.can_update() {
+                self.limiter.update(|| {
+                    self.construct.update();
+                    if self.construct.can_update() {
+                        Some(self.construct.elapsed_as_f32())
+                    } else {
+                        None
+                    }
+                });
+            }
 
             // This... should probably also not be here, but it's nice if the gui does something
             // more elegant with this at some point.
