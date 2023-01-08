@@ -1,7 +1,8 @@
 use super::unit::UnitId;
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Impact {
     impact_on: Option<EntityId>,
     source: Option<UnitId>,

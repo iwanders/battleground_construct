@@ -1,6 +1,7 @@
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Copy, Debug, Clone)]
+#[derive(Deserialize, Serialize, Copy, Debug, Clone)]
 pub struct DifferentialDriveConfig {
     pub track_width: f32,
     pub wheel_velocity_bounds: (f32, f32),
@@ -17,7 +18,7 @@ impl Default for DifferentialDriveConfig {
     }
 }
 
-#[derive(Copy, Debug, Clone)]
+#[derive(Deserialize, Serialize, Copy, Debug, Clone)]
 pub struct DifferentialDriveBase {
     config: DifferentialDriveConfig,
     wheel_velocity_cmd: (f32, f32),

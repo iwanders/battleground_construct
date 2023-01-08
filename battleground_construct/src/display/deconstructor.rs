@@ -1,7 +1,8 @@
 use super::primitives::*;
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Deconstructor {
     pub id: u64,
     pub elements: Vec<(Element, Twist, Mat4)>,

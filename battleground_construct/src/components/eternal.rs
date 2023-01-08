@@ -1,6 +1,7 @@
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Eternal {}
 
 impl Default for Eternal {

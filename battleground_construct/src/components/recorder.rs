@@ -3,6 +3,11 @@ use crate::display;
 use engine::prelude::*;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
+pub struct PlaybackUnitCreatedMarker;
+impl Component for PlaybackUnitCreatedMarker {}
+pub struct PlaybackUnitDestroyedMarker;
+impl Component for PlaybackUnitDestroyedMarker {}
+
 pub type RecordingStorage = std::rc::Rc<std::cell::RefCell<Recording>>;
 
 pub type ComponentType = usize;
@@ -209,8 +214,42 @@ impl Recording {
 
     fn setup(&mut self) {
         self.register_type::<components::clock::Clock>("clock");
+
+        // To calculate the pose of actual members
         self.register_type::<components::pose::Pose>("pose");
+        self.register_type::<components::pose::PreTransform>("pre_transform");
+        self.register_type::<components::parent::Parent>("parent");
+
+        // Possibly for particle emitters;
+        self.register_type::<components::velocity::Velocity>("velocity");
+
+        // self.register_type::<components::group::Group>("group");
+        // self.register_type::<components::eternal::Eternal>("eternal");
+
+        // To properly display & move tracks.
+        self.register_type::<components::differential_drive_base::DifferentialDriveBase>(
+            "diff_drive_base",
+        );
+
+        // Projectile visualisation.
+        self.register_type::<display::tank_bullet::TankBullet>("tank_bullet");
+
+        // Visualisation emitters that are not trivially recreated like meshes.
         self.register_type::<display::particle_emitter::ParticleEmitter>("particle_emitter");
+        self.register_type::<display::deconstructor::Deconstructor>("deconstructor");
+
+        // History of hits.
+        self.register_type::<components::hit_by::HitByHistory>("hit_by_history");
+
+        // For units, we use the unit, and the health component to track whether they should have
+        // bodies.
+        self.register_type::<components::health::Health>("health");
+        self.register_type::<crate::units::tank::UnitTank>("unit_tank");
+
+        // Team information, to color vehicles.
+        self.register_type::<components::team::Team>("team");
+        self.register_type::<components::team_member::TeamMember>("team_member");
+
         self.previous_state.ensure_components(&self.component_map);
     }
 

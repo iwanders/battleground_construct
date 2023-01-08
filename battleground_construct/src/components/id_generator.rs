@@ -1,6 +1,7 @@
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct IdGenerator {
     id: u64,
 }

@@ -16,7 +16,7 @@ pub fn make_team_id(v: u64) -> TeamId {
     TeamId(v)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Team {
     id: TeamId,
     name: String,

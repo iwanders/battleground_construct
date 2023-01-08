@@ -1,7 +1,8 @@
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// Velocity expressed in body frame in most cases.
-#[derive(Copy, Debug, Clone)]
+#[derive(Deserialize, Serialize, Copy, Debug, Clone)]
 pub struct Velocity {
     /// Translation component.
     pub v: cgmath::Vector3<f32>,

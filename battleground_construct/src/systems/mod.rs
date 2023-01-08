@@ -16,6 +16,7 @@ pub mod match_logic_finished;
 pub mod match_logic_king_of_the_hill;
 pub mod match_logic_time_limit;
 pub mod playback;
+pub mod playback_units;
 pub mod process_hit_by;
 pub mod process_impact;
 pub mod projectile_hit;

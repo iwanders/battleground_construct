@@ -30,6 +30,7 @@ pub fn setup(config: Setup) -> Result<Construct, Box<dyn std::error::Error>> {
 }
 
 pub fn setup_playback(path: &str) -> Result<Construct, Box<dyn std::error::Error>> {
+    use crate::systems;
     let mut construct = Construct::new();
     let world = &mut construct.world;
     let systems = &mut construct.systems;
@@ -38,7 +39,16 @@ pub fn setup_playback(path: &str) -> Result<Construct, Box<dyn std::error::Error
     let recorder_entity = world.add_entity();
     world.add_component(recorder_entity, components::recorder::Recorder::load(path)?);
 
-    systems.add_system(Box::new(crate::systems::playback::Playback {}));
+    systems.add_system(Box::new(systems::playback::Playback {}));
+    systems.add_system(Box::new(systems::playback_units::PlaybackUnits {}));
+
+    systems.add_system(Box::new(systems::team_color_tank::TeamColorTank {}));
+    systems.add_system(Box::new(systems::health_bar_update::HealthBarUpdate {}));
+    systems.add_system(Box::new(systems::display_tank_tracks::DisplayTankTracks {}));
+    systems.add_system(Box::new(
+        systems::display_capture_flag::DisplayCaptureFlag {},
+    ));
+    systems.add_system(Box::new(systems::team_color_tank::TeamColorTank {}));
 
     // One update cycle to ensure the clock is spawned.
     construct.update();

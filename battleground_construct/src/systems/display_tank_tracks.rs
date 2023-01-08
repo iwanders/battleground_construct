@@ -15,9 +15,11 @@ impl System for DisplayTankTracks {
         let dt = clock.step_as_f32();
 
         for (_entity, mut tracks) in world.component_iter_mut::<TracksSide>() {
+            // println!("Setting tracks for {_entity:?}");
             let diff_drive_entity = tracks.diff_drive_entity();
             if let Some(base) = world.component::<DifferentialDriveBase>(diff_drive_entity) {
                 let (left, right) = base.wheel_velocities();
+                // println!("   {left} {right} {dt}");
                 tracks.add_track_distance(dt * left, dt * right)
             }
         }

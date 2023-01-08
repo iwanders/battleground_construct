@@ -1,3 +1,4 @@
+use super::Unit;
 use crate::components;
 use crate::display;
 use crate::display::primitives::Vec3;
@@ -5,6 +6,7 @@ use components::group::Group;
 use components::parent::Parent;
 use components::pose::{Pose, PreTransform};
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use battleground_unit_control::units::tank::*;
 
@@ -30,7 +32,7 @@ impl Default for TankSpawnConfig {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 pub struct UnitTank {
     pub unit_entity: EntityId,
     pub control_entity: EntityId,
@@ -44,6 +46,22 @@ pub struct UnitTank {
     pub muzzle_entity: EntityId,
 }
 impl Component for UnitTank {}
+
+impl Unit for UnitTank {
+    fn children(&self) -> Vec<EntityId> {
+        vec![
+            self.control_entity,
+            self.base_entity,
+            self.body_entity,
+            self.turret_entity,
+            self.radar_entity,
+            self.health_bar_entity,
+            self.flag_entity,
+            self.barrel_entity,
+            self.muzzle_entity,
+        ]
+    }
+}
 
 /// Spawn a tank, returning the unit entity.
 pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
@@ -87,18 +105,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let barrel_entity = world.add_entity();
     let muzzle_entity = world.add_entity();
 
-    let tank_group_entities: Vec<EntityId> = vec![
-        unit_entity,
-        control_entity,
-        base_entity,
-        body_entity,
-        turret_entity,
-        radar_entity,
-        flag_entity,
-        health_bar_entity,
-        barrel_entity,
-        muzzle_entity,
-    ];
     let unit_tank = UnitTank {
         unit_entity,
         control_entity,
@@ -111,12 +117,17 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         barrel_entity,
         muzzle_entity,
     };
+    // Unit must be first in the group!
+    let mut tank_group_entities: Vec<EntityId> = vec![unit_entity];
+    tank_group_entities.append(&mut unit_tank.children());
 
     // Create the register interface, we'll add modules throughout this function.
     let register_interface = components::unit_interface::RegisterInterfaceContainer::new(
         components::unit_interface::RegisterInterface::new(),
     );
     super::common::add_common_global(&register_interface);
+
+    world.add_component(unit_entity, unit_tank);
 
     let unit_id = super::common::add_common_unit(
         world,
@@ -125,10 +136,9 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         battleground_unit_control::units::UnitType::Tank,
     );
 
-    world.add_component(unit_entity, unit_tank);
+    add_tank_passive(world, &unit_tank);
 
     // -----   Base
-
     world.add_component(base_entity, Pose::from_se2(config.x, config.y, config.yaw));
     let diff_drive_config = components::differential_drive_base::DifferentialDriveConfig {
         track_width: 1.0,
@@ -142,17 +152,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         diff_drive_config,
         MODULE_TANK_DIFF_DRIVE,
     );
-    let track_config = display::tracks_side::TracksSideConfig {
-        width: 0.4,
-        length: 1.4,
-        height: 0.2,
-        track_width: 1.0,
-    };
-    let tracks = display::tracks_side::TracksSide::from_config(track_config, base_entity);
-    let hit_collection =
-        components::hit_collection::HitCollection::from_hit_boxes(&tracks.hit_boxes());
-    world.add_component(base_entity, tracks);
-    world.add_component(base_entity, hit_collection);
 
     // -----   Body
     world.add_component(body_entity, Parent::new(base_entity));
@@ -160,14 +159,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         body_entity,
         PreTransform::from_translation(Vec3::new(0.0, 0.0, TANK_DIM_FLOOR_TO_BODY_Z)),
     );
-    let body = display::tank_body::TankBody::new();
-    let hitbox = body.hitbox();
-    world.add_component(body_entity, body);
-    world.add_component(
-        body_entity,
-        components::select_box::SelectBox::from_hit_box(&hitbox),
-    );
-    world.add_component(body_entity, hitbox);
+
     super::common::add_radio_receiver_transmitter(
         world,
         &register_interface,
@@ -196,14 +188,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         PreTransform::from_translation(Vec3::new(0.0, 0.0, TANK_DIM_FLOOR_TO_TURRET_Z)),
     );
     world.add_component(turret_entity, Parent::new(base_entity));
-    let tank_turret = display::tank_turret::TankTurret::new();
-    let hitbox = tank_turret.hitbox();
-    world.add_component(turret_entity, hitbox);
-    world.add_component(
-        turret_entity,
-        components::select_box::SelectBox::from_hit_box(&hitbox),
-    );
-    world.add_component(turret_entity, tank_turret);
 
     // -----   Barrel
     let revolute_config = components::revolute::RevoluteConfig {
@@ -225,11 +209,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         PreTransform::from_translation(Vec3::new(TANK_DIM_TURRET_TO_BARREL_X, 0.0, 0.0)),
     );
     world.add_component(barrel_entity, Parent::new(turret_entity));
-    let tank_barrel = display::tank_barrel::TankBarrel::new();
-    let hit_collection =
-        components::hit_collection::HitCollection::from_hit_boxes(&tank_barrel.hit_boxes());
-    world.add_component(barrel_entity, hit_collection);
-    world.add_component(barrel_entity, tank_barrel);
 
     // -----   Muzzle
     world.add_component(muzzle_entity, Parent::new(barrel_entity));
@@ -294,29 +273,6 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         MODULE_TANK_RADAR,
         radar_config,
     );
-    world.add_component(radar_entity, display::radar_model::RadarModel::new());
-
-    // -----   Flag
-    world.add_component(
-        flag_entity,
-        Pose::from_xyz(-0.8, -0.4, 0.3).rotated_angle_z(cgmath::Deg(180.0)),
-    );
-    world.add_component(
-        flag_entity,
-        display::flag::Flag::from_scale_color(0.5, display::Color::RED),
-    );
-    world.add_component(flag_entity, Parent::new(base_entity));
-
-    // -----   Health Bar
-    world.add_component(
-        health_bar_entity,
-        Pose::from_xyz(-0.8, 0.0, 0.40).rotated_angle_z(cgmath::Deg(90.0)),
-    );
-    world.add_component(
-        health_bar_entity,
-        display::health_bar::HealthBar::new(unit_entity, 0.6),
-    );
-    world.add_component(health_bar_entity, Parent::new(base_entity));
 
     // -----   Control
     world.add_component(control_entity, register_interface);
@@ -329,6 +285,10 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
 
     // Add the group, unit and team membership to each of the component.
+    // Unit must be first in the group!
+    let mut tank_group_entities: Vec<EntityId> = vec![unit_entity];
+    tank_group_entities.append(&mut unit_tank.children());
+
     let group = Group::from(&tank_group_entities);
     for e in tank_group_entities.iter() {
         world.add_component(*e, group.clone());
@@ -340,6 +300,73 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     }
 
     unit_entity
+}
+
+pub fn add_tank_passive(world: &mut World, unit: &UnitTank) {
+    // -----   Body
+    let body = display::tank_body::TankBody::new();
+    let hitbox = body.hitbox();
+    world.add_component(unit.body_entity, body);
+    world.add_component(
+        unit.body_entity,
+        components::select_box::SelectBox::from_hit_box(&hitbox),
+    );
+    world.add_component(unit.body_entity, hitbox);
+
+    // -----   Turrent
+    let tank_turret = display::tank_turret::TankTurret::new();
+    let hitbox = tank_turret.hitbox();
+    world.add_component(unit.turret_entity, hitbox);
+    world.add_component(
+        unit.turret_entity,
+        components::select_box::SelectBox::from_hit_box(&hitbox),
+    );
+    world.add_component(unit.turret_entity, tank_turret);
+
+    // -----   Tracks
+    let track_config = display::tracks_side::TracksSideConfig {
+        width: 0.4,
+        length: 1.4,
+        height: 0.2,
+        track_width: 1.0,
+    };
+    let tracks = display::tracks_side::TracksSide::from_config(track_config, unit.base_entity);
+    let hit_collection =
+        components::hit_collection::HitCollection::from_hit_boxes(&tracks.hit_boxes());
+    world.add_component(unit.base_entity, tracks);
+    world.add_component(unit.base_entity, hit_collection);
+
+    // -----   Barrel
+    let tank_barrel = display::tank_barrel::TankBarrel::new();
+    let hit_collection =
+        components::hit_collection::HitCollection::from_hit_boxes(&tank_barrel.hit_boxes());
+    world.add_component(unit.barrel_entity, hit_collection);
+    world.add_component(unit.barrel_entity, tank_barrel);
+
+    // -----   Radar
+    world.add_component(unit.radar_entity, display::radar_model::RadarModel::new());
+
+    // -----   Flag
+    world.add_component(
+        unit.flag_entity,
+        display::flag::Flag::from_scale_color(0.5, display::Color::RED),
+    );
+    world.add_component(
+        unit.flag_entity,
+        Pose::from_xyz(-0.8, -0.4, 0.3).rotated_angle_z(cgmath::Deg(180.0)),
+    );
+    world.add_component(unit.flag_entity, Parent::new(unit.base_entity));
+
+    // -----   Health Bar
+    world.add_component(
+        unit.health_bar_entity,
+        Pose::from_xyz(-0.8, 0.0, 0.40).rotated_angle_z(cgmath::Deg(90.0)),
+    );
+    world.add_component(
+        unit.health_bar_entity,
+        display::health_bar::HealthBar::new(unit.unit_entity, 0.6),
+    );
+    world.add_component(unit.health_bar_entity, Parent::new(unit.base_entity));
 }
 
 pub fn cannon_function(world: &mut World, cannon_entity: EntityId) {

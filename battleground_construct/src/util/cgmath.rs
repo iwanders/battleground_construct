@@ -2,6 +2,7 @@ use cgmath::{BaseFloat, Matrix3, Matrix4};
 pub type Mat4 = cgmath::Matrix4<f32>;
 pub type Vec3 = cgmath::Vector3<f32>;
 pub use cgmath::vec3;
+use serde::{Deserialize, Serialize};
 
 pub mod prelude {
     pub use super::Adjoint;
@@ -153,7 +154,7 @@ impl<S: BaseFloat> ToCross<S> for cgmath::Vector3<S> {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Deserialize, Serialize, Debug, Copy, Clone)]
 pub struct Twist<S: BaseFloat> {
     pub v: cgmath::Vector3<S>,
     pub w: cgmath::Vector3<S>,
@@ -165,7 +166,7 @@ impl<S: BaseFloat> Twist<S> {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, Copy, Clone, PartialEq)]
 pub struct Adjoint<S: BaseFloat> {
     pub r: cgmath::Matrix3<S>,
     pub p_r: cgmath::Matrix3<S>,

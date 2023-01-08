@@ -1,8 +1,9 @@
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::components::team::TeamId;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 pub struct TeamMember {
     team: TeamId,
 }

@@ -1,6 +1,7 @@
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
 /// First entity is always the 'master' entity in the group, this can be used to find the common
 /// components
 pub struct Group {

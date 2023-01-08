@@ -118,7 +118,7 @@ impl World {
     /// Add a new entity to the entity list, return its new id.
     pub fn add_entity(&mut self) -> EntityId {
         let new_id = self.make_entity_id();
-        self.entities.insert(new_id);
+        // self.entities.insert(new_id);
         new_id
     }
 
@@ -133,6 +133,7 @@ impl World {
         entity: EntityId,
         component: Box<C>,
     ) {
+        self.entities.insert(entity);
         let mut v = self.components.get_mut(&TypeId::of::<C>());
         if v.is_none() {
             self.components

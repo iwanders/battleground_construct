@@ -1,9 +1,10 @@
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use super::unit::UnitId;
 use crate::components::impact::Impact;
 
-#[derive(Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct HitRecord {
     pub damage: f32,
     pub impact: Impact,
@@ -56,7 +57,7 @@ impl Component for HitBy {}
 
 // ---------------------------------------------------
 
-#[derive(Debug, Clone, Default)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct HitByHistory {
     hits: Vec<HitRecord>,
 }
