@@ -8,6 +8,12 @@ pub use as_any::AsAny;
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
 pub struct EntityId(usize);
 
+impl From<EntityId> for usize {
+    fn from(v: EntityId) -> usize {
+        v.0
+    }
+}
+
 /// Entities have a component.
 pub trait Component: AsAny {}
 

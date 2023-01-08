@@ -1,7 +1,8 @@
 use super::primitives::*;
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Copy, Debug, Clone)]
+#[derive(Deserialize, Serialize, Copy, Debug, Clone)]
 pub struct ParticleEmitter {
     pub id: u64,
     pub particle_type: ParticleType,

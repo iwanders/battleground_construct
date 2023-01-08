@@ -1,5 +1,6 @@
 pub use crate::util::cgmath::{Mat4, Vec3};
 pub type Twist = crate::util::cgmath::Twist<f32>;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Cuboid {
@@ -69,7 +70,7 @@ pub enum Primitive {
     ExtrudedRectangle(ExtrudedRectangle),
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Color {
     pub r: u8,
     pub g: u8,
@@ -223,7 +224,7 @@ pub struct Element {
     pub material: Material,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, Copy, Clone, PartialEq)]
 pub enum ParticleType {
     BulletTrail {
         size: f32,
