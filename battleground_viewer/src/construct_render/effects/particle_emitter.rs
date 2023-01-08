@@ -386,19 +386,6 @@ impl RetainedEffect for ParticleEmitter {
             }
         }
 
-        let mut transforms = Vec::with_capacity(self.particles.len());
-        let mut colors = Vec::with_capacity(self.particles.len());
-        for p in &self.particles {
-            transforms.push(p.pos);
-            colors.push(p.color);
-        }
-
-        let instances = three_d::renderer::geometry::Instances {
-            transformations: transforms,
-            colors: Some(colors),
-            ..Default::default()
-        };
-        self.renderable.geometry.set_instances(&instances);
         self.last_time = time;
     }
 }
@@ -418,5 +405,21 @@ impl RenderableGeometry for ParticleEmitter {
         } else {
             vec![]
         }
+    }
+
+    fn finish_scene(&mut self, _context: &Context) {
+        let mut transforms = Vec::with_capacity(self.particles.len());
+        let mut colors = Vec::with_capacity(self.particles.len());
+        for p in &self.particles {
+            transforms.push(p.pos);
+            colors.push(p.color);
+        }
+
+        let instances = three_d::renderer::geometry::Instances {
+            transformations: transforms,
+            colors: Some(colors),
+            ..Default::default()
+        };
+        self.renderable.geometry.set_instances(&instances);
     }
 }

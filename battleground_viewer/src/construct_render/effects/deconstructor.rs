@@ -347,6 +347,28 @@ impl RetainedEffect for Deconstructor {
             .filter(|p| p.color.a != 0)
             .collect::<_>();
 
+        self.last_time = time;
+    }
+}
+
+impl RenderableGeometry for Deconstructor {
+    fn objects(&self, pass: RenderPass) -> Vec<&dyn Object> {
+        if (self.participates_in_pass)(pass) {
+            vec![&self.renderable]
+        } else {
+            vec![]
+        }
+    }
+
+    fn geometries(&self, pass: RenderPass) -> Vec<GeometryRef> {
+        if (self.participates_in_pass)(pass) {
+            vec![GeometryRef::InstancedMesh(&self.renderable.geometry)]
+        } else {
+            vec![]
+        }
+    }
+
+    fn finish_scene(&mut self, _context: &Context) {
         // Apply the scale to the transforms.
         let scaled_pos: Vec<Mat4> = self
             .particles
@@ -368,24 +390,5 @@ impl RetainedEffect for Deconstructor {
             ..Default::default()
         };
         self.renderable.geometry.set_instances(&instances);
-        self.last_time = time;
-    }
-}
-
-impl RenderableGeometry for Deconstructor {
-    fn objects(&self, pass: RenderPass) -> Vec<&dyn Object> {
-        if (self.participates_in_pass)(pass) {
-            vec![&self.renderable]
-        } else {
-            vec![]
-        }
-    }
-
-    fn geometries(&self, pass: RenderPass) -> Vec<GeometryRef> {
-        if (self.participates_in_pass)(pass) {
-            vec![GeometryRef::InstancedMesh(&self.renderable.geometry)]
-        } else {
-            vec![]
-        }
     }
 }
