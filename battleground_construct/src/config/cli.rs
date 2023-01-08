@@ -120,6 +120,10 @@ pub fn parse_setup_args() -> Result<Setup, Box<dyn std::error::Error>> {
                 specification.match_config.time_limit = Some(new_limit);
             }
 
+            if scenario.record.is_some() {
+                specification.recording = true;
+            }
+
             #[cfg(not(feature = "unit_control_wasm"))]
             let extra_config: Vec<String> = vec![];
 

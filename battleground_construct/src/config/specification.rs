@@ -132,6 +132,9 @@ pub struct ScenarioConfig {
     #[serde(default)]
     pub pre_setup: String,
 
+    #[serde(default)]
+    pub recording: bool,
+
     /// Denotes the match specification.
     #[serde(default)]
     pub match_config: MatchConfig,

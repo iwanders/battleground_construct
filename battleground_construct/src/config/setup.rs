@@ -2,6 +2,7 @@ use super::cli::Setup;
 use super::default;
 use super::specification;
 use crate::components;
+use crate::systems;
 use crate::units;
 use crate::Construct;
 use battleground_unit_control::UnitControl;
@@ -30,7 +31,6 @@ pub fn setup(config: Setup) -> Result<Construct, Box<dyn std::error::Error>> {
 }
 
 pub fn setup_playback(path: &str) -> Result<Construct, Box<dyn std::error::Error>> {
-    use crate::systems;
     let mut construct = Construct::new();
     let world = &mut construct.world;
     let systems = &mut construct.systems;
@@ -74,6 +74,10 @@ pub fn setup_scenario(
     // Add the default systems.
     default::add_components(&mut construct.world);
     default::add_systems(&mut construct.systems);
+
+    if config.recording {
+        construct.systems.add_system(Box::new(systems::record::Record {}));
+    }
 
     match config.pre_setup.as_str() {
         "" => {}
