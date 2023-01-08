@@ -77,5 +77,16 @@ pub fn wrap_up_scenario(
         file.write_all(serde_yaml::to_string(&full_report)?.as_bytes())?;
     }
 
+    // Now, check if according to the scenario we have to do anything with the report, like writing it.
+    if let Some(path) = wrap_up.write_recording {
+        if let Some(recording) = construct.world().component_iter::<components::recorder::Recorder>().next(){
+            let recording = recording.1.recording();
+            let data = bincode::serialize(&*recording)?;
+            use std::io::Write;
+            let mut file = std::fs::File::create(path)?;
+            file.write_all(&data)?;
+        }
+    }
+
     Ok(full_report)
 }

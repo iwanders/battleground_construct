@@ -2,7 +2,7 @@ use crate::components;
 use crate::display;
 use engine::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::any::TypeId;
+// use std::any::TypeId;
 
 // use ciborium::{cbor, de::from_reader, ser::into_writer};
 // use postcard::{from_bytes, to_vec};
@@ -27,7 +27,8 @@ impl WorldState {
                     // let mut encoded = Vec::with_capacity(std::mem::size_of::<T>());
                     // into_writer(&*c, &mut encoded).unwrap();
                     // encoded
-                    postcard::to_vec::<_, 100>(&*c).unwrap().iter().copied().collect()
+                    // postcard::to_vec::<_, 100>(&*c).unwrap().iter().copied().collect()
+                    bincode::serialize(&*c).unwrap()
                     // v
                 })
             })
@@ -40,7 +41,7 @@ impl WorldState {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct Recording {
     states: Vec<WorldState>,
 }

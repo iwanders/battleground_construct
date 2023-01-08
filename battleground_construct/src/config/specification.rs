@@ -141,6 +141,9 @@ pub struct WrapUpConfig {
     /// Write the wrap up report to this file if a path is specified.
     pub write_wrap_up: Option<String>,
 
+    /// Write the recording file to this path if specified.
+    pub write_recording: Option<String>,
+
     /// The original scenario as setup.
     pub scenario: ScenarioConfig,
 }

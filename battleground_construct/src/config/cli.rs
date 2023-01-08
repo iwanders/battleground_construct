@@ -40,6 +40,10 @@ struct Scenario {
     /// After the match concludes, write a report yaml file to this path.
     #[arg(short, long)]
     report: Option<String>,
+
+    /// Record the match to this path.
+    #[arg(short, long)]
+    record: Option<String>,
 }
 
 /// This creates a config struct handled by the wrap up functionality
@@ -48,12 +52,17 @@ pub fn parse_wrap_up_args() -> Result<WrapUpConfig, Box<dyn std::error::Error>> 
     let args = Cli::parse();
 
     let write_wrap_up = match args.command {
-        Commands::Scenario(scenario) => scenario.report,
+        Commands::Scenario(ref scenario) => &scenario.report,
         // _ => None
-    };
+    }.clone();
+    let write_recording = match args.command {
+        Commands::Scenario(ref scenario) => &scenario.record,
+        // _ => None
+    }.clone();
     Ok(WrapUpConfig {
         scenario,
         write_wrap_up,
+        write_recording,
     })
 }
 
