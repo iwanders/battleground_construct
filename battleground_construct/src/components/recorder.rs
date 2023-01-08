@@ -1,7 +1,7 @@
 use crate::components;
 use crate::display;
 use engine::prelude::*;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 pub type RecordingStorage = std::rc::Rc<std::cell::RefCell<Recording>>;
 
@@ -34,6 +34,26 @@ impl ComponentMap {
 struct ComponentDelta {
     change: ComponentStates,
     removed: Vec<EntityId>,
+}
+
+impl ComponentDelta {
+    fn apply<T: Component + DeserializeOwned + 'static>(&self, world: &mut World) {
+        for to_be_removed in self.removed.iter() {
+            world.remove_component::<T>(*to_be_removed);
+        }
+        for (entity, data) in self.change.states() {
+            let in_place_update =
+                if let Some(mut current_component) = world.component_mut::<T>(*entity) {
+                    *current_component = bincode::deserialize::<T>(&data[..]).unwrap();
+                    true
+                } else {
+                    false
+                };
+            if !in_place_update {
+                world.add_component(*entity, bincode::deserialize::<T>(&data[..]).unwrap());
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -81,6 +101,10 @@ impl ComponentStates {
             }
         }
         delta
+    }
+
+    pub fn states(&self) -> &[(EntityId, Vec<u8>)] {
+        &self.states[..]
     }
 }
 
@@ -141,6 +165,16 @@ impl DeltaState {
             self.delta.insert(*component, component_delta);
         }
     }
+
+    fn apply<T: Component + DeserializeOwned + 'static>(
+        &self,
+        component: ComponentType,
+        world: &mut World,
+    ) {
+        if let Some(delta) = self.delta.get(&component) {
+            delta.apply::<T>(world);
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -155,6 +189,8 @@ pub struct Recording {
     states: Vec<Capture>,
     #[serde(skip)]
     previous_state: WorldState,
+    #[serde(skip)]
+    playback_index: usize,
 }
 impl Recording {
     pub fn new() -> Self {
@@ -205,6 +241,38 @@ impl Recording {
         self.states.push(Capture::DeltaState(delta));
         self.previous_state = new_world_state;
     }
+
+    fn delta_helper<T: Component + DeserializeOwned + 'static>(
+        &self,
+        name: &str,
+        delta_state: &DeltaState,
+        world: &mut World,
+    ) {
+        let component_type = self
+            .component_map
+            .get(name)
+            .expect("component should exist");
+        delta_state.apply::<T>(component_type, world)
+    }
+
+    pub fn step(&mut self, world: &mut World) {
+        if self.playback_index < self.states.len() {
+            match &self.states[self.playback_index] {
+                Capture::WorldState(_full_state) => {}
+                Capture::DeltaState(delta) => {
+                    self.delta_helper::<components::clock::Clock>("clock", &delta, world);
+                    self.delta_helper::<components::pose::Pose>("pose", &delta, world);
+                    self.delta_helper::<display::particle_emitter::ParticleEmitter>(
+                        "particle_emitter",
+                        &delta,
+                        world,
+                    );
+                }
+            }
+            self.playback_index += 1;
+        }
+        // Ehh? Advance the clock manually...?
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -221,6 +289,19 @@ impl Recorder {
 
     pub fn recording(&self) -> RecordingStorage {
         self.recording.clone()
+    }
+
+    pub fn load(path: &str) -> Result<Recorder, Box<dyn std::error::Error>> {
+        use std::io::Read;
+        let mut recorder = Self::new();
+        let mut recording = recorder.recording();
+        // let file = std::fs::File::open(path)?;
+
+        let mut file = std::fs::File::open(path)?;
+        let mut data = Vec::new();
+        file.read_to_end(&mut data)?;
+        *recording.borrow_mut() = bincode::deserialize(&data[..])?;
+        Ok(recorder)
     }
 }
 impl Component for Recorder {}

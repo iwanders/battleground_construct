@@ -510,7 +510,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         construct
     } else {
         let config = battleground_construct::config::cli::parse_setup_args()?;
-        battleground_construct::config::setup::setup_scenario(config)?
+        battleground_construct::config::setup::setup(config)?
     };
 
     let viewer = ConstructViewer::new(construct);

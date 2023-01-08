@@ -12,6 +12,16 @@ enum Commands {
     /// Specify the scenario to run.
     #[command(arg_required_else_help = true)]
     Scenario(Scenario),
+    #[command(arg_required_else_help = true)]
+    Play(Play),
+}
+
+/// Play subcommand
+#[derive(Debug, Args)]
+struct Play {
+    /// Path to play from
+    #[arg(value_hint = clap::ValueHint::FilePath)]
+    file: String,
 }
 
 /// Scenario subcommand
@@ -48,19 +58,25 @@ struct Scenario {
 
 /// This creates a config struct handled by the wrap up functionality
 pub fn parse_wrap_up_args() -> Result<WrapUpConfig, Box<dyn std::error::Error>> {
-    let scenario = parse_setup_args()?;
+    let setup = parse_setup_args()?;
     let args = Cli::parse();
 
     let write_wrap_up = match args.command {
         Commands::Scenario(ref scenario) => &scenario.report,
-        // _ => None
+        _ => &None,
     }
     .clone();
     let write_recording = match args.command {
         Commands::Scenario(ref scenario) => &scenario.record,
-        // _ => None
+        _ => &None,
     }
     .clone();
+
+    let scenario = match setup {
+        Setup::Scenario(config) => Some(config),
+        _ => None,
+    };
+
     Ok(WrapUpConfig {
         scenario,
         write_wrap_up,
@@ -68,7 +84,12 @@ pub fn parse_wrap_up_args() -> Result<WrapUpConfig, Box<dyn std::error::Error>> 
     })
 }
 
-pub fn parse_setup_args() -> Result<ScenarioConfig, Box<dyn std::error::Error>> {
+pub enum Setup {
+    Scenario(ScenarioConfig),
+    Play(String),
+}
+
+pub fn parse_setup_args() -> Result<Setup, Box<dyn std::error::Error>> {
     let args = Cli::parse();
     match args.command {
         Commands::Scenario(scenario) => {
@@ -119,7 +140,11 @@ pub fn parse_setup_args() -> Result<ScenarioConfig, Box<dyn std::error::Error>> 
                 .chain(extra_config.iter())
                 .map(|v| v.as_str())
                 .collect();
-            apply_config(&config_strs, specification)
+            apply_config(&config_strs, specification).map(Setup::Scenario)
+        }
+        Commands::Play(play) => Ok(Setup::Play(play.file)),
+        _ => {
+            todo!();
         }
     }
 }

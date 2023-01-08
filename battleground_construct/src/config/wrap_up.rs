@@ -67,7 +67,9 @@ pub fn wrap_up_scenario(
 ) -> Result<FullMatchReport, Box<dyn std::error::Error>> {
     let full_report = FullMatchReport {
         wrap_up: create_wrap_up_report(construct.world()),
-        scenario: wrap_up.scenario,
+        scenario: wrap_up
+            .scenario
+            .expect("can only wrap up scenario if it is a scenario"),
     };
 
     // Now, check if according to the scenario we have to do anything with the report, like writing it.

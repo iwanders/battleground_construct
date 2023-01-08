@@ -145,5 +145,5 @@ pub struct WrapUpConfig {
     pub write_recording: Option<String>,
 
     /// The original scenario as setup.
-    pub scenario: ScenarioConfig,
+    pub scenario: Option<ScenarioConfig>,
 }

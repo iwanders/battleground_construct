@@ -1,3 +1,4 @@
+use super::cli::Setup;
 use super::default;
 use super::specification;
 use crate::components;
@@ -21,18 +22,45 @@ impl std::fmt::Display for SetupError {
     }
 }
 
+pub fn setup(config: Setup) -> Result<Construct, Box<dyn std::error::Error>> {
+    match config {
+        Setup::Scenario(scenario) => setup_scenario(scenario),
+        Setup::Play(path) => setup_playback(&path),
+    }
+}
+
+pub fn setup_playback(path: &str) -> Result<Construct, Box<dyn std::error::Error>> {
+    let mut construct = Construct::new();
+    let world = &mut construct.world;
+    let systems = &mut construct.systems;
+
+    // create the record component. then add that.
+    let recorder_entity = world.add_entity();
+    world.add_component(recorder_entity, components::recorder::Recorder::load(path)?);
+
+    systems.add_system(Box::new(crate::systems::playback::Playback {}));
+
+    // One update cycle to ensure the clock is spawned.
+    construct.update();
+
+    Ok(construct)
+}
+
 pub fn setup_scenario(
     config: super::specification::ScenarioConfig,
 ) -> Result<Construct, Box<dyn std::error::Error>> {
     let mut construct = Construct::new();
+
     let world = &mut construct.world;
     let systems = &mut construct.systems;
-    default::add_components(world);
-    default::add_systems(systems);
 
-    // add the recorder.
+    // Add the recorder first, such that on replay its entity id can never collide.
     let recorder_entity = world.add_entity();
     world.add_component(recorder_entity, components::recorder::Recorder::new());
+
+    // Add the default systems.
+    default::add_components(world);
+    default::add_systems(systems);
 
     // Add teams
     let mut team_set = std::collections::HashSet::<String>::new();
