@@ -408,18 +408,11 @@ impl RenderableGeometry for ParticleEmitter {
     }
 
     fn finish_scene(&mut self, _context: &Context) {
-        let mut transforms = Vec::with_capacity(self.particles.len());
-        let mut colors = Vec::with_capacity(self.particles.len());
-        for p in &self.particles {
-            transforms.push(p.pos);
-            colors.push(p.color);
-        }
-
-        let instances = three_d::renderer::geometry::Instances {
+        let (transforms, colors) = self.particles.iter().map(|p| (p.pos, p.color)).unzip();
+        self.renderable.geometry.set_instances(&Instances {
             transformations: transforms,
             colors: Some(colors),
             ..Default::default()
-        };
-        self.renderable.geometry.set_instances(&instances);
+        });
     }
 }

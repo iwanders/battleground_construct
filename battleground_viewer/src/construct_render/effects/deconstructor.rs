@@ -369,26 +369,20 @@ impl RenderableGeometry for Deconstructor {
     }
 
     fn finish_scene(&mut self, _context: &Context) {
-        // Apply the scale to the transforms.
-        let scaled_pos: Vec<Mat4> = self
+        let (transforms, colors) = self
             .particles
             .iter()
-            .map(|p| p.pos * Mat4::from_nonuniform_scale(p.scale.x, p.scale.y, p.scale.z))
-            .collect();
-        // println!("scaled_pos pose: {:?}", scaled_pos);
-
-        let mut transforms = Vec::with_capacity(self.particles.len());
-        let mut colors = Vec::with_capacity(self.particles.len());
-        for (i, particle) in self.particles.iter().enumerate() {
-            transforms.push(scaled_pos[i]);
-            colors.push(particle.color);
-        }
-
-        let instances = three_d::renderer::geometry::Instances {
+            .map(|p| {
+                (
+                    p.pos * Mat4::from_nonuniform_scale(p.scale.x, p.scale.y, p.scale.z),
+                    p.color,
+                )
+            })
+            .unzip();
+        self.renderable.geometry.set_instances(&Instances {
             transformations: transforms,
             colors: Some(colors),
             ..Default::default()
-        };
-        self.renderable.geometry.set_instances(&instances);
+        });
     }
 }
