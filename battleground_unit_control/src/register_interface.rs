@@ -324,19 +324,12 @@ impl RegisterInterface {
 use crate::interface::InterfaceError;
 impl crate::interface::Interface for RegisterInterface {
     fn modules(&self) -> Result<Vec<u32>, BoxedError> {
-        Ok(self
-            .modules
-            .iter()
-            .map(|(module_index, _module)| *module_index)
-            .collect::<_>())
+        Ok(self.modules.keys().copied().collect())
     }
 
     fn registers(&self, module: u32) -> Result<Vec<u32>, BoxedError> {
         let m = self.get_module(module)?;
-        Ok(m.registers
-            .iter()
-            .map(|(register_index, _register)| *register_index)
-            .collect::<_>())
+        Ok(m.registers.keys().copied().collect())
     }
 
     /// Retrieve the name of a particular module.
