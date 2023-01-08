@@ -90,6 +90,7 @@ pub struct ParticleEmitter {
 
     /// Make particles always face the camera
     face_camera: bool,
+    view_matrix: Mat4,
 
     /// Actual container of particles.
     particles: Vec<Particle>,
@@ -266,6 +267,7 @@ impl ParticleEmitter {
 
             fade_alpha_to_lifetime: true,
             face_camera: true,
+            view_matrix: Mat4::identity(),
 
             particles: initial_particles,
             color,
@@ -372,20 +374,11 @@ impl RetainedEffect for ParticleEmitter {
                 let alpha_scaled = (1.0 - max_ratio) * (self.color.a as f32);
                 particle.color.a = alpha_scaled as u8;
             }
-
-            if self.face_camera {
-                particle.pos = Mat4::from_translation(particle.pos.w.truncate())
-                    * Mat4::from_cols(
-                        camera.view().x,
-                        camera.view().y,
-                        camera.view().z,
-                        vec4(0.0, 0.0, 0.0, 1.0),
-                    )
-                    .invert()
-                    .unwrap();
-            }
         }
 
+        if self.face_camera {
+            self.view_matrix = *camera.view();
+        }
         self.last_time = time;
     }
 }
@@ -408,7 +401,27 @@ impl RenderableGeometry for ParticleEmitter {
     }
 
     fn finish_scene(&mut self, _context: &Context) {
-        let (transforms, colors) = self.particles.iter().map(|p| (p.pos, p.color)).unzip();
+        let (transforms, colors) = if self.face_camera {
+            let inv_view_matrix = Mat4::from_cols(
+                self.view_matrix.x,
+                self.view_matrix.y,
+                self.view_matrix.z,
+                vec4(0.0, 0.0, 0.0, 1.0),
+            )
+            .invert()
+            .unwrap();
+            self.particles
+                .iter()
+                .map(|p| {
+                    (
+                        Mat4::from_translation(p.pos.w.truncate()) * inv_view_matrix,
+                        p.color,
+                    )
+                })
+                .unzip()
+        } else {
+            self.particles.iter().map(|p| (p.pos, p.color)).unzip()
+        };
         self.renderable.geometry.set_instances(&Instances {
             transformations: transforms,
             colors: Some(colors),
