@@ -13,16 +13,13 @@ struct ComponentMap {
     component_map: std::collections::HashMap<String, ComponentType>,
 }
 impl ComponentMap {
-    pub fn get(&self, name: &str) -> Option<ComponentType> {
-        self.component_map.get(name).copied()
-    }
-
-    pub fn insert(&mut self, name: &str) {
+    pub fn insert(&mut self, name: &str) -> ComponentType {
         let c = self.component_map.len();
         let v = self.component_map.get_mut(name);
         if v.is_none() {
             self.component_map.insert(name.to_owned(), c);
         }
+        *self.component_map.get(name).unwrap()
     }
 
     pub fn components(&self) -> Vec<ComponentType> {
@@ -116,14 +113,9 @@ struct WorldState {
 impl WorldState {
     fn add_component<T: Component + Serialize + 'static>(
         &mut self,
-        component_map: &ComponentMap,
-        name: &str,
+        index: ComponentType,
         world: &World,
     ) {
-        // println!("{component_map:?}");
-        let index = component_map
-            .get(name)
-            .expect(&format!("storing type {} not in map", name)); //.get_or_insert(&c);
         self.states
             .insert(index, ComponentStates::capture::<T>(world));
     }
@@ -183,7 +175,10 @@ enum Capture {
     DeltaState(DeltaState),
 }
 
-#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+type RecordFunction = Box<dyn Fn(&mut WorldState, &World)>;
+type PlayFunction = Box<dyn Fn(&DeltaState, &mut World)>;
+
+#[derive(Default, Deserialize, Serialize)]
 pub struct Recording {
     component_map: ComponentMap,
     states: Vec<Capture>,
@@ -191,6 +186,8 @@ pub struct Recording {
     previous_state: WorldState,
     #[serde(skip)]
     playback_index: usize,
+    #[serde(skip)]
+    helpers: std::collections::HashMap<ComponentType, (RecordFunction, PlayFunction)>,
 }
 impl Recording {
     pub fn new() -> Self {
@@ -199,74 +196,53 @@ impl Recording {
         v
     }
 
+    fn register_type<T: Component + Serialize + DeserializeOwned + 'static>(&mut self, name: &str) {
+        let component_type = self.component_map.insert(name);
+        let record = Box::new(move |world_state: &mut WorldState, world: &World| {
+            world_state.add_component::<T>(component_type, world);
+        });
+        let play = Box::new(move |delta_state: &DeltaState, world: &mut World| {
+            delta_state.apply::<T>(component_type, world)
+        });
+        self.helpers.insert(component_type, (record, play));
+    }
+
     fn setup(&mut self) {
-        self.component_map.insert("clock");
-        self.component_map.insert("pose");
-        self.component_map.insert("particle_emitter");
+        self.register_type::<components::clock::Clock>("clock");
+        self.register_type::<components::pose::Pose>("pose");
+        self.register_type::<display::particle_emitter::ParticleEmitter>("particle_emitter");
         self.previous_state.ensure_components(&self.component_map);
-        // println!("{:?}", self.component_map);
     }
 
     pub fn record(&mut self, world: &World) {
-        // return;
-        // println!("yay");
-        // What do we actually need to record?
-        // time
-        // game status
-        // poses
-        // joint status
-        // units, technically we can 'apply' the displays as an afterthought.
-        // health
-        // damage histories.
-
-        // lets start simple.
-        // Pose
-        // Particle emitter.
-
-        // and then see if this goes anywhere.
+        // Create a new empty world state.
         let mut new_world_state = WorldState::default();
-        // let clock_states = Self::capture_state::<components::clock::Clock>(world);
-        new_world_state.add_component::<components::clock::Clock>(
-            &self.component_map,
-            "clock",
-            world,
-        );
-        new_world_state.add_component::<components::pose::Pose>(&self.component_map, "pose", world);
-        new_world_state.add_component::<display::particle_emitter::ParticleEmitter>(
-            &self.component_map,
-            "particle_emitter",
-            world,
-        );
-        let delta = DeltaState::new(&self.previous_state, &new_world_state);
-        self.states.push(Capture::DeltaState(delta));
-        self.previous_state = new_world_state;
-    }
 
-    fn delta_helper<T: Component + DeserializeOwned + 'static>(
-        &self,
-        name: &str,
-        delta_state: &DeltaState,
-        world: &mut World,
-    ) {
-        let component_type = self
-            .component_map
-            .get(name)
-            .expect("component should exist");
-        delta_state.apply::<T>(component_type, world)
+        // Capture the state
+        for (_, (record_fun, _)) in self.helpers.iter() {
+            record_fun(&mut new_world_state, world);
+        }
+
+        // Determine the delta
+        let delta = DeltaState::new(&self.previous_state, &new_world_state);
+
+        // Store the delta
+        self.states.push(Capture::DeltaState(delta));
+
+        // Store previous full snap shot for next delta calculation.
+        self.previous_state = new_world_state;
     }
 
     pub fn step(&mut self, world: &mut World) {
         if self.playback_index < self.states.len() {
             match &self.states[self.playback_index] {
-                Capture::WorldState(_full_state) => {}
+                Capture::WorldState(_full_state) => {
+                    todo!()
+                }
                 Capture::DeltaState(delta) => {
-                    self.delta_helper::<components::clock::Clock>("clock", &delta, world);
-                    self.delta_helper::<components::pose::Pose>("pose", &delta, world);
-                    self.delta_helper::<display::particle_emitter::ParticleEmitter>(
-                        "particle_emitter",
-                        &delta,
-                        world,
-                    );
+                    for (_, (_, play_fun)) in self.helpers.iter() {
+                        play_fun(delta, world);
+                    }
                 }
             }
             self.playback_index += 1;
@@ -275,7 +251,6 @@ impl Recording {
     }
 }
 
-#[derive(Debug, Clone)]
 pub struct Recorder {
     recording: RecordingStorage,
 }
@@ -293,14 +268,15 @@ impl Recorder {
 
     pub fn load(path: &str) -> Result<Recorder, Box<dyn std::error::Error>> {
         use std::io::Read;
-        let mut recorder = Self::new();
-        let mut recording = recorder.recording();
+        let recorder = Self::new();
+        let recording = recorder.recording();
         // let file = std::fs::File::open(path)?;
 
         let mut file = std::fs::File::open(path)?;
         let mut data = Vec::new();
         file.read_to_end(&mut data)?;
         *recording.borrow_mut() = bincode::deserialize(&data[..])?;
+        recording.borrow_mut().setup();
         Ok(recorder)
     }
 }

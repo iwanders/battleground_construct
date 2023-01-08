@@ -143,9 +143,6 @@ pub fn parse_setup_args() -> Result<Setup, Box<dyn std::error::Error>> {
             apply_config(&config_strs, specification).map(Setup::Scenario)
         }
         Commands::Play(play) => Ok(Setup::Play(play.file)),
-        _ => {
-            todo!();
-        }
     }
 }
 
