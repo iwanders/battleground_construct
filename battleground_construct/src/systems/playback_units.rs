@@ -75,5 +75,20 @@ impl System for PlaybackUnits {
                 );
             }
         }
+
+        for entity in world.component_entities::<units::capturable_flag::UnitCapturableFlag>() {
+            let needs_spawn = !world
+                .component::<components::recorder::PlaybackUnitCreatedMarker>(entity)
+                .is_some();
+
+            if needs_spawn {
+                let unit = world
+                    .component::<units::capturable_flag::UnitCapturableFlag>(entity)
+                    .unwrap()
+                    .clone();
+                units::capturable_flag::add_capturable_passives(world, &unit);
+                world.add_component(entity, components::recorder::PlaybackUnitCreatedMarker);
+            }
+        }
     }
 }

@@ -1,7 +1,8 @@
 use crate::components::team::TeamId;
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Copy, Debug, Clone, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Copy, Debug, Clone, PartialEq, Eq)]
 pub enum CaptureType {
     /// Domination allows owner to change based on the strongest contender.
     Domination,
@@ -11,7 +12,7 @@ pub enum CaptureType {
 
 /// Only a single team can have a capture point, another team must first fully reduce the current
 /// owner's strength, before ownership flips and the new owner can start increasing its strength.
-#[derive(Copy, Debug, Clone)]
+#[derive(Deserialize, Serialize, Copy, Debug, Clone)]
 pub struct Capturable {
     /// Which team currently owns this capture point, empty if no team owns it.
     owner: Option<TeamId>,

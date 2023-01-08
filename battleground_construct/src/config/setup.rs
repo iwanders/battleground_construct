@@ -48,6 +48,9 @@ pub fn setup_playback(path: &str) -> Result<Construct, Box<dyn std::error::Error
     systems.add_system(Box::new(
         systems::display_capture_flag::DisplayCaptureFlag {},
     ));
+    systems.add_system(Box::new(
+        systems::display_capture_flag::DisplayCaptureFlag {},
+    ));
     systems.add_system(Box::new(systems::team_color_tank::TeamColorTank {}));
 
     // One update cycle to ensure the clock is spawned.

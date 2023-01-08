@@ -246,10 +246,17 @@ impl Recording {
         self.register_type::<components::health::Health>("health");
         self.register_type::<crate::units::tank::UnitTank>("unit_tank");
         self.register_type::<crate::units::artillery::UnitArtillery>("unit_artillery");
+        self.register_type::<crate::units::capturable_flag::UnitCapturableFlag>(
+            "unit_capturable_flag",
+        );
 
         // Team information, to color vehicles.
         self.register_type::<components::team::Team>("team");
         self.register_type::<components::team_member::TeamMember>("team_member");
+
+        // Capturables
+        self.register_type::<components::capturable::Capturable>("capturable");
+        self.register_type::<components::capture_point::CapturePoint>("capture_point");
 
         self.previous_state.ensure_components(&self.component_map);
     }

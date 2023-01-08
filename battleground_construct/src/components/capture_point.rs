@@ -1,6 +1,7 @@
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Copy, Debug, Clone)]
+#[derive(Deserialize, Serialize, Copy, Debug, Clone)]
 pub struct CapturePoint {
     radius: f32,
     capture_speed: f32,
