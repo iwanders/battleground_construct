@@ -19,7 +19,7 @@ impl MatchKingOfTheHillReport {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MatchKingOfTheHill {
     points: std::collections::HashMap<TeamId, f32>,
     point_limit: Option<f32>,

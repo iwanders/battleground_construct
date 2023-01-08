@@ -33,7 +33,7 @@ pub struct MatchReport {
     pub duration: f32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MatchFinished {
     report: Option<MatchReport>,
 }

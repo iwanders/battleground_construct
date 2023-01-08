@@ -258,6 +258,13 @@ impl Recording {
         self.register_type::<components::capturable::Capturable>("capturable");
         self.register_type::<components::capture_point::CapturePoint>("capture_point");
 
+        // Match info.
+        self.register_type::<components::match_finished::MatchFinished>("match_finished");
+        self.register_type::<components::match_king_of_the_hill::MatchKingOfTheHill>(
+            "match_king_of_the_hill",
+        );
+        self.register_type::<components::match_time_limit::MatchTimeLimit>("match_time_limit");
+
         self.previous_state.ensure_components(&self.component_map);
     }
 

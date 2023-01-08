@@ -1,6 +1,7 @@
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MatchTimeLimit {
     time_limit: f32,
     current_time: f32,
