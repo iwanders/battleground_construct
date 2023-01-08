@@ -1,3 +1,4 @@
+use super::Unit;
 use crate::components;
 use crate::components::velocity::velocity_on_body;
 use crate::display;
@@ -6,6 +7,7 @@ use components::group::Group;
 use components::parent::Parent;
 use components::pose::{Pose, PreTransform};
 use engine::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use battleground_unit_control::units::artillery::*;
 
@@ -31,7 +33,7 @@ impl Default for ArtillerySpawnConfig {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 pub struct UnitArtillery {
     pub unit_entity: EntityId,
     pub control_entity: EntityId,
@@ -48,6 +50,25 @@ pub struct UnitArtillery {
     pub muzzle_entity: EntityId,
 }
 impl Component for UnitArtillery {}
+
+impl Unit for UnitArtillery {
+    fn children(&self) -> Vec<EntityId> {
+        vec![
+            self.control_entity,
+            self.base_entity,
+            self.front_track_entity,
+            self.rear_track_entity,
+            self.body_entity,
+            self.turret_entity,
+            self.radar_joint_entity,
+            self.radar_entity,
+            self.flag_entity,
+            self.health_bar_entity,
+            self.barrel_entity,
+            self.muzzle_entity,
+        ]
+    }
+}
 
 /// Spawn a artillery, returning the unit entity.
 pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> EntityId {
@@ -98,21 +119,6 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     let barrel_entity = world.add_entity();
     let muzzle_entity = world.add_entity();
 
-    let artillery_group_entities: Vec<EntityId> = vec![
-        unit_entity,
-        control_entity,
-        base_entity,
-        front_track_entity,
-        rear_track_entity,
-        body_entity,
-        turret_entity,
-        radar_joint_entity,
-        radar_entity,
-        flag_entity,
-        health_bar_entity,
-        barrel_entity,
-        muzzle_entity,
-    ];
     let unit_artillery = UnitArtillery {
         unit_entity,
         control_entity,
@@ -129,6 +135,9 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         muzzle_entity,
     };
 
+    let mut artillery_group_entities: Vec<EntityId> = vec![unit_entity];
+    artillery_group_entities.append(&mut unit_artillery.children());
+
     // Create the register interface, we'll add modules throughout this function.
     let register_interface = components::unit_interface::RegisterInterfaceContainer::new(
         components::unit_interface::RegisterInterface::new(),
@@ -144,12 +153,13 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
 
     world.add_component(unit_entity, unit_artillery);
 
+    add_artillery_passive(world, &unit_artillery);
+
     // -----   Base
 
     world.add_component(base_entity, Pose::from_se2(config.x, config.y, config.yaw));
-    let track_width = 1.75;
     let diff_drive_config = components::differential_drive_base::DifferentialDriveConfig {
-        track_width,
+        track_width: ARTILLERY_TRACK_WIDTH,
         wheel_velocity_bounds: (-1.0, 1.0),
         wheel_acceleration_bounds: Some((-0.5, 0.5)),
     };
@@ -161,30 +171,6 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         MODULE_ARTILLERY_DIFF_DRIVE,
     );
 
-    let track_config = display::tracks_side::TracksSideConfig {
-        width: 0.2,
-        length: 1.0,
-        height: 0.2,
-        track_width,
-    };
-
-    world.add_component(front_track_entity, Parent::new(base_entity));
-    world.add_component(front_track_entity, PreTransform::from_se2(0.75, 0.0, 0.0));
-    let tracks = display::tracks_side::TracksSide::from_config(track_config, base_entity);
-    world.add_component(front_track_entity, tracks);
-    let hit_collection =
-        components::hit_collection::HitCollection::from_hit_boxes(&tracks.hit_boxes());
-    world.add_component(front_track_entity, hit_collection);
-
-    // Second track set.
-    world.add_component(rear_track_entity, Parent::new(base_entity));
-    world.add_component(rear_track_entity, PreTransform::from_se2(-0.75, 0.0, 0.0));
-    let tracks = display::tracks_side::TracksSide::from_config(track_config, base_entity);
-    world.add_component(rear_track_entity, tracks);
-    let hit_collection =
-        components::hit_collection::HitCollection::from_hit_boxes(&tracks.hit_boxes());
-    world.add_component(rear_track_entity, hit_collection);
-
     // world.add_component(base_entity, display::artillery_tracks::ArtilleryTracks::new());
 
     // -----   Body
@@ -193,16 +179,6 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         body_entity,
         PreTransform::from_translation(Vec3::new(0.0, 0.0, ARTILLERY_DIM_FLOOR_TO_BODY_Z)),
     );
-    let body = display::artillery_body::ArtilleryBody::new();
-
-    let hitbox = body.hitbox();
-    world.add_component(body_entity, body);
-    world.add_component(
-        body_entity,
-        components::select_box::SelectBox::from_hit_box(&hitbox),
-    );
-    let hit_collection = components::hit_collection::HitCollection::from_hit_box(hitbox);
-    world.add_component(body_entity, hit_collection);
 
     super::common::add_radio_receiver_transmitter(
         world,
@@ -232,10 +208,6 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         PreTransform::from_translation(Vec3::new(0.0, 0.0, ARTILLERY_DIM_FLOOR_TO_TURRET_Z)),
     );
     world.add_component(turret_entity, Parent::new(base_entity));
-    world.add_component(
-        turret_entity,
-        display::artillery_turret::ArtilleryTurret::new(),
-    );
 
     // -----   Barrel
     let revolute_config = components::revolute::RevoluteConfig {
@@ -257,19 +229,8 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         barrel_entity,
         PreTransform::from_translation(Vec3::new(0.0, 0.0, ARTILLERY_DIM_TURRET_TO_BARREL_Z)),
     );
-    let artillery_barrel = display::artillery_barrel::ArtilleryBarrel::new();
-
-    let hitbox = artillery_barrel.hitbox();
-    world.add_component(
-        barrel_entity,
-        components::select_box::SelectBox::from_hit_box(&hitbox),
-    );
-    let hit_collection = components::hit_collection::HitCollection::from_hit_box(hitbox);
-    world.add_component(body_entity, hit_collection);
 
     world.add_component(barrel_entity, Parent::new(turret_entity));
-
-    world.add_component(barrel_entity, artillery_barrel);
 
     // -----   Muzzle
     world.add_component(muzzle_entity, Parent::new(barrel_entity));
@@ -337,29 +298,6 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         MODULE_ARTILLERY_RADAR,
         radar_config,
     );
-    world.add_component(radar_entity, display::radar_model::RadarModel::new());
-
-    // -----   Flag
-    world.add_component(
-        flag_entity,
-        Pose::from_xyz(-0.8, -0.4 - 0.125, 0.3).rotated_angle_z(cgmath::Deg(180.0)),
-    );
-    world.add_component(
-        flag_entity,
-        display::flag::Flag::from_scale_color(0.5, display::Color::RED),
-    );
-    world.add_component(flag_entity, Parent::new(base_entity));
-
-    // -----   Health Bar
-    world.add_component(
-        health_bar_entity,
-        Pose::from_xyz(-0.8, 0.0, 0.40).rotated_angle_z(cgmath::Deg(90.0)),
-    );
-    world.add_component(
-        health_bar_entity,
-        display::health_bar::HealthBar::new(unit_entity, 0.8),
-    );
-    world.add_component(health_bar_entity, Parent::new(base_entity));
 
     // -----   Control
     world.add_component(control_entity, register_interface);
@@ -385,8 +323,97 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     unit_entity
 }
 
+pub fn add_artillery_passive(world: &mut World, unit: &UnitArtillery) {
+    // -----   Body
+    let body = display::artillery_body::ArtilleryBody::new();
+
+    let hitbox = body.hitbox();
+    world.add_component(unit.body_entity, body);
+    world.add_component(
+        unit.body_entity,
+        components::select_box::SelectBox::from_hit_box(&hitbox),
+    );
+    let hit_collection = components::hit_collection::HitCollection::from_hit_box(hitbox);
+    world.add_component(unit.body_entity, hit_collection);
+
+    // -----   Tracks
+    let track_config = display::tracks_side::TracksSideConfig {
+        width: 0.2,
+        length: 1.0,
+        height: 0.2,
+        track_width: ARTILLERY_TRACK_WIDTH,
+    };
+
+    world.add_component(unit.front_track_entity, Parent::new(unit.base_entity));
+    world.add_component(
+        unit.front_track_entity,
+        PreTransform::from_se2(0.75, 0.0, 0.0),
+    );
+    let tracks = display::tracks_side::TracksSide::from_config(track_config, unit.base_entity);
+    world.add_component(unit.front_track_entity, tracks);
+    let hit_collection =
+        components::hit_collection::HitCollection::from_hit_boxes(&tracks.hit_boxes());
+    world.add_component(unit.front_track_entity, hit_collection);
+
+    // Second track set.
+    world.add_component(unit.rear_track_entity, Parent::new(unit.base_entity));
+    world.add_component(
+        unit.rear_track_entity,
+        PreTransform::from_se2(-0.75, 0.0, 0.0),
+    );
+    let tracks = display::tracks_side::TracksSide::from_config(track_config, unit.base_entity);
+    world.add_component(unit.rear_track_entity, tracks);
+    let hit_collection =
+        components::hit_collection::HitCollection::from_hit_boxes(&tracks.hit_boxes());
+    world.add_component(unit.rear_track_entity, hit_collection);
+
+    // -----   Turret
+    world.add_component(
+        unit.turret_entity,
+        display::artillery_turret::ArtilleryTurret::new(),
+    );
+
+    // -----   Barrel
+    let artillery_barrel = display::artillery_barrel::ArtilleryBarrel::new();
+
+    let hitbox = artillery_barrel.hitbox();
+    world.add_component(
+        unit.barrel_entity,
+        components::select_box::SelectBox::from_hit_box(&hitbox),
+    );
+    let hit_collection = components::hit_collection::HitCollection::from_hit_box(hitbox);
+    world.add_component(unit.body_entity, hit_collection);
+    world.add_component(unit.barrel_entity, artillery_barrel);
+
+    // -----   Radar
+    world.add_component(unit.radar_entity, display::radar_model::RadarModel::new());
+
+    // -----   Flag
+    world.add_component(
+        unit.flag_entity,
+        Pose::from_xyz(-0.8, -0.4 - 0.125, 0.3).rotated_angle_z(cgmath::Deg(180.0)),
+    );
+    world.add_component(
+        unit.flag_entity,
+        display::flag::Flag::from_scale_color(0.5, display::Color::RED),
+    );
+    world.add_component(unit.flag_entity, Parent::new(unit.base_entity));
+
+    // -----   Health Bar
+    world.add_component(
+        unit.health_bar_entity,
+        Pose::from_xyz(-0.8, 0.0, 0.40).rotated_angle_z(cgmath::Deg(90.0)),
+    );
+    world.add_component(
+        unit.health_bar_entity,
+        display::health_bar::HealthBar::new(unit.unit_entity, 0.8),
+    );
+    world.add_component(unit.health_bar_entity, Parent::new(unit.base_entity));
+}
+
 const ARTILLERY_SPLASH_DAMAGE: f32 = 0.3;
 const ARTILLERY_SPLASH_RADIUS: f32 = 2.0;
+const ARTILLERY_TRACK_WIDTH: f32 = 1.75;
 
 pub fn artillery_battery_config() -> components::gun_battery::GunBatteryConfig {
     let mut poses = vec![];

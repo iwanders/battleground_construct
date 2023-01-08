@@ -494,17 +494,10 @@ impl ConstructViewer {
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = std::env::args().collect::<Vec<String>>();
 
-    // Preserve the dev playground.
-    let playground = args.len() >= 2 && args.get(1).unwrap() == "--playground";
-
     // Preserve the trailer...
     let tree_trailer = args.len() >= 2 && args.get(1).unwrap() == "--tree-trailer";
 
-    let construct = if playground {
-        let mut construct = Construct::new();
-        battleground_construct::config::playground::populate_dev_world(&mut construct);
-        construct
-    } else if tree_trailer {
+    let construct = if tree_trailer {
         let mut construct = Construct::new();
         battleground_construct::config::tree_trailer::populate_tree_trailer(&mut construct);
         construct

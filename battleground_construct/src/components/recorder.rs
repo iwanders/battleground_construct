@@ -245,6 +245,7 @@ impl Recording {
         // bodies.
         self.register_type::<components::health::Health>("health");
         self.register_type::<crate::units::tank::UnitTank>("unit_tank");
+        self.register_type::<crate::units::artillery::UnitArtillery>("unit_artillery");
 
         // Team information, to color vehicles.
         self.register_type::<components::team::Team>("team");
