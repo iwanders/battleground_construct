@@ -6,6 +6,7 @@ pub use as_any::AsAny;
 
 /// An entity is represented by this id.
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct EntityId(usize);
 
 impl From<EntityId> for usize {

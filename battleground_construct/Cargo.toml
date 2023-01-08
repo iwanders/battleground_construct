@@ -6,7 +6,7 @@ license = "BSD-3-Clause"
 
 
 [dependencies]
-engine = { path = "../engine" }
+engine = { path = "../engine", features=["serde"] }
 battleground_unit_control = { path = "../battleground_unit_control", features=["register-interface"]}
 unit_control_builtin = { path = "../unit_control_builtin"}
 unit_control_wasm = { path = "../unit_control_wasm", optional=true}

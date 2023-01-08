@@ -826,6 +826,9 @@ dependencies = [
 [[package]]
 name = "engine"
 version = "0.1.0"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "env_logger"
