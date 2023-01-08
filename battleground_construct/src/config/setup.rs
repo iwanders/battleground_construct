@@ -61,16 +61,27 @@ pub fn setup_scenario(
 ) -> Result<Construct, Box<dyn std::error::Error>> {
     let mut construct = Construct::new();
 
-    let world = &mut construct.world;
-    let systems = &mut construct.systems;
-
     // Add the recorder first, such that on replay its entity id can never collide.
-    let recorder_entity = world.add_entity();
-    world.add_component(recorder_entity, components::recorder::Recorder::new());
+    let recorder_entity = construct.world.add_entity();
+    construct
+        .world
+        .add_component(recorder_entity, components::recorder::Recorder::new());
 
     // Add the default systems.
-    default::add_components(world);
-    default::add_systems(systems);
+    default::add_components(&mut construct.world);
+    default::add_systems(&mut construct.systems);
+
+    match config.pre_setup.as_str() {
+        "" => {}
+        "playground" => {
+            super::playground::populate_dev_world(&mut construct);
+        }
+        v => {
+            return Err(format!("pre_setup of {} is not supported", v).into());
+        }
+    }
+
+    let world = &mut construct.world;
 
     // Add teams
     let mut team_set = std::collections::HashSet::<String>::new();

@@ -29,14 +29,20 @@ fn load_yaml_config(
 }
 
 static SCENARIO_TEST: &[u8] = include_bytes!("scenario/test.yaml");
+static SCENARIO_PLAYGROUND: &[u8] = b"pre_setup: playground\n";
 static NAME_TEST: &str = "test";
-static BUILTINS: [&str; 1] = [NAME_TEST];
+pub static NAME_PLAYGROUND: &str = "playground";
+static BUILTINS: [&str; 2] = [NAME_TEST, NAME_PLAYGROUND];
 
 pub fn get_builtin_scenario(
     name: &str,
 ) -> Result<super::specification::ScenarioConfig, Box<dyn std::error::Error>> {
     if name == NAME_TEST {
         let v = std::str::from_utf8(SCENARIO_TEST).unwrap();
+        return load_yaml_config(v);
+    }
+    if name == NAME_PLAYGROUND {
+        let v = std::str::from_utf8(SCENARIO_PLAYGROUND).unwrap();
         return load_yaml_config(v);
     }
     Err(Box::<dyn std::error::Error>::from(format!(

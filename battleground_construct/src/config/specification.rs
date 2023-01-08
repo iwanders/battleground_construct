@@ -128,11 +128,16 @@ pub struct SpawnConfig {
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct ScenarioConfig {
+    /// String used to invoke special setup.
+    #[serde(default)]
+    pub pre_setup: String,
+
     /// Denotes the match specification.
     #[serde(default)]
     pub match_config: MatchConfig,
 
     /// Spawn of vehicles.
+    #[serde(default)]
     pub spawn_config: SpawnConfig,
 }
 

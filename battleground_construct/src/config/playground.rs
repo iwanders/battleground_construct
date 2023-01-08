@@ -18,8 +18,8 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
     let world = &mut construct.world;
     let systems = &mut construct.systems;
 
-    super::default::add_components(world);
-    super::default::add_systems(systems);
+    // super::default::add_components(world);
+    // super::default::add_systems(systems);
 
     use components::function_pose::FunctionPose;
     use components::pose::Pose;

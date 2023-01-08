@@ -52,8 +52,12 @@ struct Scenario {
     report: Option<String>,
 
     /// Record the match to this path.
-    #[arg(short, long)]
+    #[arg(short = 'w', long)]
     record: Option<String>,
+
+    /// Overwrite or apply the time limit.
+    #[arg(short, long)]
+    time_limit: Option<f32>,
 }
 
 /// This creates a config struct handled by the wrap up functionality
@@ -103,7 +107,7 @@ pub fn parse_setup_args() -> Result<Setup, Box<dyn std::error::Error>> {
             }
 
             // Check if it is a built in scenario
-            let specification =
+            let mut specification =
                 if super::reader::builtin_scenarios().contains(&scenario.scenario.as_str()) {
                     super::reader::get_builtin_scenario(&scenario.scenario)?
                 } else {
@@ -111,6 +115,10 @@ pub fn parse_setup_args() -> Result<Setup, Box<dyn std::error::Error>> {
                     let p = std::path::PathBuf::from(&scenario.scenario);
                     super::reader::read_scenario_config(&p)?
                 };
+
+            if let Some(new_limit) = scenario.time_limit {
+                specification.match_config.time_limit = Some(new_limit);
+            }
 
             #[cfg(not(feature = "unit_control_wasm"))]
             let extra_config: Vec<String> = vec![];
