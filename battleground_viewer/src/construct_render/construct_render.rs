@@ -429,7 +429,7 @@ impl ConstructRender {
         entity_transform: &Matrix4<f32>,
         timestamp: f32,
     ) {
-        self.effects.entry(effect.id).or_insert_with(|| {
+        let effect_renderable = &mut self.effects.entry(effect.id).or_insert_with(|| {
             // add this effect.
             match effect.effect {
                 display::primitives::EffectType::ParticleEmitter { particle_type, .. } => {
@@ -453,10 +453,6 @@ impl ConstructRender {
                 )),
             }
         });
-        let effect_renderable = self
-            .effects
-            .get_mut(&effect.id)
-            .expect("just checked it, will be there");
         effect_renderable.update(&effect.effect, camera, *entity_transform, timestamp);
     }
 
