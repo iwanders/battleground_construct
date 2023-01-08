@@ -525,24 +525,99 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Entry point for wasm
 #[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
-
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(start)]
-pub fn start() -> Result<(), JsValue> {
-    console_log::init_with_level(log::Level::Debug).unwrap();
-
+mod wasm32 {
+    use wasm_bindgen::prelude::*;
     use log::info;
-    info!("Logging works!");
+    use wasm_bindgen::prelude::*;
+    use wasm_bindgen::JsCast;
+    use wasm_bindgen_futures::JsFuture;
+    use js_sys::{ArrayBuffer, Uint8Array};
+    use web_sys::{Blob, FileReader};
 
-    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+    //https://github.com/rustwasm/wasm-bindgen/issues/1292
 
-    let mut construct = Construct::new();
-    battleground_construct::config::playground::populate_dev_world(&mut construct);
-    let viewer = ConstructViewer::new(construct);
+    async fn get_data() -> Result<JsValue, JsValue> {
+        use web_sys::{Request, RequestInit, RequestMode, Response};
 
-    // view loop consumes the viewer... :|
-    viewer.view_loop();
 
-    Ok(())
+
+        fn get_window () -> Result<web_sys::Window, JsValue> {
+            web_sys::window().ok_or(JsValue::from_str("couldn't get window"))
+        }
+        // Fetch the recording.
+        let mut opts = RequestInit::new();
+        opts.method("GET");
+        opts.mode(RequestMode::Cors);
+
+        let location_origin = get_window()?.location().origin()?;
+        // info!("{}", location_origin);
+        let url = format!("/pkg/recording.bin");
+
+        let request = Request::new_with_str_and_init(&url, &opts)?;
+
+        request
+            .headers()
+            .set("Accept", "application/octet-stream")?;
+
+        let window = web_sys::window().unwrap();
+        let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;
+
+        // `resp_value` is a `Response` object.
+        assert!(resp_value.is_instance_of::<Response>());
+        let resp: Response = resp_value.dyn_into().unwrap();
+
+        // Convert this other `Promise` into a rust `Future`.
+        let blob = JsFuture::from(resp.blob()?).await?;
+        // Ok(vec![])
+        Ok(blob)
+    }
+
+    #[wasm_bindgen(start)]
+    pub async fn start() -> Result<(), JsValue> {
+
+        console_log::init_with_level(log::Level::Debug).unwrap();
+
+        use log::info;
+        info!("Logging works!");
+
+        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+
+        let blob = Blob::from(get_data().await?);
+        info!("Blob size {}", blob.size());  // looks good!
+
+        // read_as_array_buffer(&self, blob: &Blob) -> Result<(), JsValue>
+        // let file_reader = FileReader::new()?;
+        // file_reader.read_as_array_buffer(&blob)?;
+
+        let arr = JsFuture::from(blob.array_buffer()).await?;
+        info!("{:?}", arr);
+        let array : ArrayBuffer = arr.into();
+        info!("{:?}", array);
+
+
+        // let array = ArrayBuffer::from(file_reader.result()?);
+        let array = Uint8Array::new(&array);
+        info!("array as uin8tarray {:?}", array);
+        
+        let mut as_vec = Vec::with_capacity(array.byte_length() as usize );
+        as_vec.resize(array.byte_length() as usize , 0);
+        array.copy_to(&mut as_vec[..]);
+        info!("THINGS!?? {:?}", &as_vec[0..20]);
+        info!("THINGS!",);
+        /*
+        */
+
+        /*
+        */
+        let mut construct = battleground_construct::Construct::new();
+        battleground_construct::config::default::add_components(&mut construct.world);
+        battleground_construct::config::default::add_systems(&mut construct.systems);
+        battleground_construct::config::playground::populate_dev_world(&mut construct);
+        let viewer = super::ConstructViewer::new(construct);
+
+        // view loop consumes the viewer... :|
+        viewer.view_loop();
+
+        Ok(())
+    }
 }

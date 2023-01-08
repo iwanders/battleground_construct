@@ -171,12 +171,14 @@ dependencies = [
  "console_error_panic_hook",
  "console_log",
  "engine",
+ "js-sys",
  "log",
  "rand",
  "rand_distr",
  "three-d",
  "wasm-bindgen",
  "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
