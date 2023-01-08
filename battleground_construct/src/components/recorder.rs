@@ -4,7 +4,8 @@ use engine::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::any::TypeId;
 
-use ciborium::{cbor, de::from_reader, ser::into_writer};
+// use ciborium::{cbor, de::from_reader, ser::into_writer};
+// use postcard::{from_bytes, to_vec};
 
 pub type RecordingStorage = std::rc::Rc<std::cell::RefCell<Recording>>;
 
@@ -18,13 +19,16 @@ struct WorldState {
 
 impl WorldState {
     fn capture_state<T: Component + Serialize + 'static>(world: &World) -> ComponentState {
+        // const SIZE: usize = std::mem::size_of::<T>();
         world
             .component_iter::<T>()
             .map(|(e, c)| {
                 (e.into(), {
-                    let mut encoded = Vec::with_capacity(std::mem::size_of::<T>());
-                    into_writer(&*c, &mut encoded).unwrap();
-                    encoded
+                    // let mut encoded = Vec::with_capacity(std::mem::size_of::<T>());
+                    // into_writer(&*c, &mut encoded).unwrap();
+                    // encoded
+                    postcard::to_vec::<_, 100>(&*c).unwrap().iter().copied().collect()
+                    // v
                 })
             })
             .collect()

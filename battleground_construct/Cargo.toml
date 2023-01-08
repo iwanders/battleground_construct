@@ -13,7 +13,8 @@ unit_control_wasm = { path = "../unit_control_wasm", optional=true}
 cgmath = {version = "0.18.0", features = ["serde"]}
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
-ciborium = "0.2.0"
+#ciborium = "0.2.0"
+postcard = "1.0.2"
 
 # Used by the cli component, reused by the viewer.
 clap = {version = "4.0.32", features=["derive"]}
