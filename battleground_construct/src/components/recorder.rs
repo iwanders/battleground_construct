@@ -362,15 +362,19 @@ impl Recorder {
         self.recording.clone()
     }
 
-    pub fn load(path: &str) -> Result<Recorder, Box<dyn std::error::Error>> {
+    pub fn load_file(path: &str) -> Result<Recorder, Box<dyn std::error::Error>> {
         use std::io::Read;
-        let recorder = Self::new();
-        let recording = recorder.recording();
         // let file = std::fs::File::open(path)?;
 
         let mut file = std::fs::File::open(path)?;
         let mut data = Vec::new();
         file.read_to_end(&mut data)?;
+        Self::load_slice(&data)
+    }
+
+    pub fn load_slice(data: &[u8]) -> Result<Recorder, Box<dyn std::error::Error>> {
+        let recorder = Self::new();
+        let recording = recorder.recording();
         *recording.borrow_mut() = bincode::deserialize(&data[..])?;
         recording.borrow_mut().setup();
         Ok(recorder)

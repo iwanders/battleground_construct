@@ -26,18 +26,28 @@ impl std::fmt::Display for SetupError {
 pub fn setup(config: Setup) -> Result<Construct, Box<dyn std::error::Error>> {
     match config {
         Setup::Scenario(scenario) => setup_scenario(scenario),
-        Setup::Play(path) => setup_playback(&path),
+        Setup::Play(path) => setup_playback_path(&path),
     }
 }
 
-pub fn setup_playback(path: &str) -> Result<Construct, Box<dyn std::error::Error>> {
+pub fn setup_playback_slice(data: &[u8]) -> Result<Construct, Box<dyn std::error::Error>> {
+    setup_playback_common(components::recorder::Recorder::load_slice(data)?)
+}
+
+pub fn setup_playback_path(path: &str) -> Result<Construct, Box<dyn std::error::Error>> {
+    setup_playback_common(components::recorder::Recorder::load_file(path)?)
+}
+
+fn setup_playback_common(
+    recorder: components::recorder::Recorder,
+) -> Result<Construct, Box<dyn std::error::Error>> {
     let mut construct = Construct::new();
     let world = &mut construct.world;
     let systems = &mut construct.systems;
 
     // create the record component. then add that.
     let recorder_entity = world.add_entity();
-    world.add_component(recorder_entity, components::recorder::Recorder::load(path)?);
+    world.add_component(recorder_entity, recorder);
 
     systems.add_system(Box::new(systems::playback::Playback {}));
     systems.add_system(Box::new(systems::playback_units::PlaybackUnits {}));
@@ -76,7 +86,9 @@ pub fn setup_scenario(
     default::add_systems(&mut construct.systems);
 
     if config.recording {
-        construct.systems.add_system(Box::new(systems::record::Record {}));
+        construct
+            .systems
+            .add_system(Box::new(systems::record::Record {}));
     }
 
     match config.pre_setup.as_str() {
