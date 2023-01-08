@@ -13,7 +13,7 @@ impl MatchKingOfTheHillReport {
     pub fn get_leader(&self) -> Option<TeamId> {
         self.points
             .iter()
-            .max_by(|a, b| a.1.total_cmp(&b.1))
+            .max_by(|a, b| a.1.total_cmp(b.1))
             .map(|(k, _v)| k)
             .copied()
     }
@@ -53,7 +53,7 @@ impl MatchKingOfTheHill {
     pub fn report(&self) -> MatchKingOfTheHillReport {
         MatchKingOfTheHillReport {
             points: self.points.clone(),
-            point_limit: self.point_limit.clone(),
+            point_limit: self.point_limit,
         }
     }
 }

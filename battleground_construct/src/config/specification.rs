@@ -57,7 +57,7 @@ pub struct Team {
     pub color: (u8, u8, u8),
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct WasmControlConfig {
     pub path: String,
     #[serde(default)]

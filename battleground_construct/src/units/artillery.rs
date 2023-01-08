@@ -149,7 +149,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     world.add_component(base_entity, Pose::from_se2(config.x, config.y, config.yaw));
     let track_width = 1.75;
     let diff_drive_config = components::differential_drive_base::DifferentialDriveConfig {
-        track_width: track_width,
+        track_width,
         wheel_velocity_bounds: (-1.0, 1.0),
         wheel_acceleration_bounds: Some((-0.5, 0.5)),
     };
@@ -165,7 +165,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         width: 0.2,
         length: 1.0,
         height: 0.2,
-        track_width: track_width,
+        track_width,
     };
 
     world.add_component(front_track_entity, Parent::new(base_entity));
@@ -504,7 +504,7 @@ pub fn artillery_fire_function(world: &mut World, gun_battery_entity: EntityId, 
         emitter_entity,
         crate::components::expiry::Expiry::lifetime(15.0),
     );
-    world.add_component(emitter_entity, muzzle_pose_raw.clone());
+    world.add_component(emitter_entity, muzzle_pose_raw);
 }
 
 fn artillery_hit_effect(

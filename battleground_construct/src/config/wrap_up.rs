@@ -24,8 +24,7 @@ pub fn create_wrap_up_report(world: &World) -> WrapUpReport {
     let match_report = world
         .component_iter::<components::match_finished::MatchFinished>()
         .next()
-        .map(|(_e, m)| m.report().map(|z| z.clone()))
-        .flatten();
+        .and_then(|(_e, m)| m.report().cloned());
 
     // Collect all teams.
     let mut teams = std::collections::HashMap::<TeamId, specification::Team>::new();
@@ -43,18 +42,15 @@ pub fn create_wrap_up_report(world: &World) -> WrapUpReport {
     }
 
     // determine the winning taem.
-    let winning_team = match_report
-        .as_ref()
-        .map(|rp| {
-            rp.winner
-                .map(|t| teams.get(&t).expect("team must exist").clone())
-        })
-        .flatten();
+    let winning_team = match_report.as_ref().and_then(|rp| {
+        rp.winner
+            .map(|t| teams.get(&t).expect("team must exist").clone())
+    });
 
     // Cool, now we can construct the wrap up report.
     WrapUpReport {
-        winning_team: winning_team,
-        match_report: match_report,
+        winning_team,
+        match_report,
         teams,
     }
 }

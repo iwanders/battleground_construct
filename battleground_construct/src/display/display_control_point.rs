@@ -36,10 +36,7 @@ impl Component for DisplayControlPoint {}
 
 impl Drawable for DisplayControlPoint {
     fn drawables(&self) -> Vec<Element> {
-        let material = Material::FenceMaterial(FenceMaterial {
-            color: self.color,
-            ..Default::default()
-        });
+        let material = Material::FenceMaterial(FenceMaterial { color: self.color });
 
         vec![Element {
             transform: Mat4::from_angle_y(cgmath::Deg(-90.0)),

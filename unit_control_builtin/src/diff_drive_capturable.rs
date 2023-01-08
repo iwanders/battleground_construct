@@ -26,7 +26,7 @@ impl UnitControl for DiffDriveCapturable {
             let x = interface
                 .get_f32(
                     common::MODULE_OBJECTIVES,
-                    REG_OBJECTIVES_CAPTURE_POINT_COUNT + 1 + (i * 4) + 0,
+                    REG_OBJECTIVES_CAPTURE_POINT_COUNT + 1 + (i * 4),
                 )
                 .unwrap();
             let y = interface

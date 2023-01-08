@@ -18,6 +18,12 @@ pub struct TankNaiveShoot {
     last_seen: f32,
 }
 
+impl Default for TankNaiveShoot {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TankNaiveShoot {
     pub fn new() -> Self {
         TankNaiveShoot {
@@ -157,10 +163,8 @@ impl UnitControl for TankNaiveShoot {
         }
 
         // Assign a target.
-        if self.shoot_at.is_none() {
-            if !enemies.is_empty() {
-                self.shoot_at = Some(enemies[0]);
-            }
+        if self.shoot_at.is_none() && !enemies.is_empty() {
+            self.shoot_at = Some(enemies[0]);
         }
 
         // Calculate firing solution.

@@ -369,13 +369,11 @@ impl RetainedEffect for ParticleEmitter {
             let d = after.distance2(before).sqrt();
             particle.distance += d;
 
-            if self.reflect_on_floor {
-                if particle.pos.w.z < 0.0 {
-                    if particle.vel.z < 0.0 {
-                        particle.vel.z = particle.vel.z.abs();
-                    }
-                    particle.pos.w.z = 0.0;
+            if self.reflect_on_floor && particle.pos.w.z < 0.0 {
+                if particle.vel.z < 0.0 {
+                    particle.vel.z = particle.vel.z.abs();
                 }
+                particle.pos.w.z = 0.0;
             }
 
             if self.fade_alpha_to_lifetime {
@@ -785,9 +783,9 @@ impl RetainedEffect for Deconstructor {
 
         let mut transforms = Vec::with_capacity(self.particles.len());
         let mut colors = Vec::with_capacity(self.particles.len());
-        for i in 0..self.particles.len() {
+        for (i, particle) in self.particles.iter().enumerate() {
             transforms.push(scaled_pos[i]);
-            colors.push(self.particles[i].color);
+            colors.push(particle.color);
         }
 
         let instances = three_d::renderer::geometry::Instances {

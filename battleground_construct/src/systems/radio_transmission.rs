@@ -34,7 +34,7 @@ impl System for RadioTransmission {
                 let pose = world_pose(world, entity);
                 pending_transmissions
                     .entry(channel)
-                    .or_insert(vec![])
+                    .or_default()
                     .push(Transmission {
                         entity,
                         msgs,

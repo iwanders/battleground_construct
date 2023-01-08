@@ -41,29 +41,23 @@ pub struct ConstructRender {
 
 impl ConstructRender {
     pub fn new() -> Self {
-        let static_meshes = MeshGeometry::new(|pass| match pass {
-            RenderPass::BaseScene | RenderPass::NonGlowDepths => true,
-            _ => false,
+        let static_meshes = MeshGeometry::new(|pass| {
+            matches!(pass, RenderPass::BaseScene | RenderPass::NonGlowDepths)
         });
-        let base_primitives = PrimitiveGeometry::new(|pass| match pass {
-            RenderPass::ShadowMaps | RenderPass::BaseScene | RenderPass::NonGlowDepths => true,
-            _ => false,
+        let base_primitives = PrimitiveGeometry::new(|pass| {
+            matches!(
+                pass,
+                RenderPass::ShadowMaps | RenderPass::BaseScene | RenderPass::NonGlowDepths
+            )
         });
-        let emissive_primitives = PrimitiveGeometry::new(|pass| match pass {
-            RenderPass::ShadowMaps | RenderPass::BaseScene => true,
-            _ => false,
+        let emissive_primitives = PrimitiveGeometry::new(|pass| {
+            matches!(pass, RenderPass::ShadowMaps | RenderPass::BaseScene)
         });
-        let glow_primitives = PrimitiveGeometry::new(|pass| match pass {
-            RenderPass::GlowSources => true,
-            _ => false,
-        });
-        let fence_primitives = PrimitiveGeometry::new(|pass| match pass {
-            RenderPass::Fences => true,
-            _ => false,
-        });
-        let overlay_primitives = PrimitiveGeometry::new(|pass| match pass {
-            RenderPass::BaseScene | RenderPass::NonGlowDepths => true,
-            _ => false,
+        let glow_primitives =
+            PrimitiveGeometry::new(|pass| matches!(pass, RenderPass::GlowSources));
+        let fence_primitives = PrimitiveGeometry::new(|pass| matches!(pass, RenderPass::Fences));
+        let overlay_primitives = PrimitiveGeometry::new(|pass| {
+            matches!(pass, RenderPass::BaseScene | RenderPass::NonGlowDepths)
         });
 
         ConstructRender {
@@ -190,16 +184,14 @@ impl ConstructRender {
     pub fn geometries(&self, pass: RenderPass) -> Vec<GeometryRef> {
         self.renderables()
             .into_iter()
-            .map(|r| r.geometries(pass))
-            .flatten()
+            .flat_map(|r| r.geometries(pass))
             .collect()
     }
 
     pub fn objects(&self, pass: RenderPass) -> Vec<&dyn Object> {
         self.renderables()
             .into_iter()
-            .map(|r| r.objects(pass))
-            .flatten()
+            .flat_map(|r| r.objects(pass))
             .collect()
     }
 
@@ -325,7 +317,7 @@ impl ConstructRender {
 
         // We could also pre-calculate all entities that have the correct unit members, and then
         // filter based on that...
-        let units = Self::selected_to_units(construct, &selected);
+        let units = Self::selected_to_units(construct, selected);
         self.component_to_meshes_filtered::<display::draw_module::DrawComponent, _>(
             construct,
             |e| {

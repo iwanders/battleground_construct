@@ -15,6 +15,11 @@ pub struct TankSwivelShoot {
     barrel_swivel_interval: f32,
     barrel_flip_last_time: f32,
 }
+impl Default for TankSwivelShoot {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl TankSwivelShoot {
     pub fn new() -> Self {

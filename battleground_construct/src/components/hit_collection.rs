@@ -10,6 +10,12 @@ pub struct HitCollection {
     hit_boxes: Vec<(Mat4, HitBox)>,
 }
 
+impl Default for HitCollection {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl HitCollection {
     pub fn new() -> Self {
         HitCollection { hit_boxes: vec![] }

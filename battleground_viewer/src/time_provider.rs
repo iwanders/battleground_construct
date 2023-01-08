@@ -24,10 +24,10 @@ impl Instant {
         self.0.elapsed()
     }
     pub fn checked_add(&self, duration: Duration) -> Option<Self> {
-        self.0.checked_add(duration).map(|i| Self(i))
+        self.0.checked_add(duration).map(Self)
     }
     pub fn checked_sub(&self, duration: Duration) -> Option<Self> {
-        self.0.checked_sub(duration).map(|i| Self(i))
+        self.0.checked_sub(duration).map(Self)
     }
 }
 

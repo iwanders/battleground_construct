@@ -129,12 +129,12 @@ impl UnitModule for RadioReceiverModule {
                 Register::new_i32("message_count", messages.len() as i32),
             );
 
-            for i in 0..messages.len() {
+            for (i, msg) in messages.iter().enumerate() {
                 registers.insert(
                     REG_RADIO_RX_MSG_START
                         + (REG_RADIO_RX_MSG_STRIDE * i as u32)
                         + REG_RADIO_RX_MSG_OFFSET_STRENGTH,
-                    Register::new_f32("message_strength", messages[i].strength),
+                    Register::new_f32("message_strength", msg.strength),
                 );
                 let v = registers
                     .entry(
@@ -142,8 +142,8 @@ impl UnitModule for RadioReceiverModule {
                             + (REG_RADIO_RX_MSG_STRIDE * i as u32)
                             + REG_RADIO_RX_MSG_OFFSET_DATA,
                     )
-                    .or_insert(Register::new_bytes("message_data"));
-                *v.value_bytes_mut().unwrap() = messages[i].message.clone();
+                    .or_insert_with(|| Register::new_bytes("message_data"));
+                *v.value_bytes_mut().unwrap() = msg.message.clone();
             }
         }
     }

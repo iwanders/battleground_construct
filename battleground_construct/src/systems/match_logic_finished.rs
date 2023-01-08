@@ -9,7 +9,7 @@ use engine::prelude::*;
 pub struct MatchLogicFinished {}
 impl System for MatchLogicFinished {
     fn update(&mut self, world: &mut World) {
-        if let Some(_) = world.component_iter::<MatchFinished>().next() {
+        if world.component_iter::<MatchFinished>().next().is_some() {
             return; // match is already finished.
         }
 
@@ -59,7 +59,7 @@ impl System for MatchLogicFinished {
             }
             // Now, we can create the match report.
             let report = MatchReport {
-                winner: leaders.iter().next().copied().flatten(),
+                winner: leaders.first().copied().flatten(),
                 conclusion: conclusion.unwrap(),
                 reports,
                 duration,

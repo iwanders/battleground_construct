@@ -168,10 +168,12 @@ impl UnitModule for RadioTransmitterModule {
             for i in 0..radio_transmitter.config.message_count_limit {
                 let v = registers
                     .entry(REG_RADIO_TX_MSG_START + (i as u32))
-                    .or_insert(Register::new_bytes_max(
-                        "message",
-                        radio_transmitter.config.message_size_limit,
-                    ));
+                    .or_insert_with(|| {
+                        Register::new_bytes_max(
+                            "message",
+                            radio_transmitter.config.message_size_limit,
+                        )
+                    });
                 let value = if i < messages.len() {
                     messages[i].clone()
                 } else {

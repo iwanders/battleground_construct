@@ -431,7 +431,7 @@ pub fn cannon_function(world: &mut World, cannon_entity: EntityId) {
         emitter_entity,
         crate::components::expiry::Expiry::lifetime(15.0),
     );
-    world.add_component(emitter_entity, muzzle_pose_raw.clone());
+    world.add_component(emitter_entity, muzzle_pose_raw);
 }
 
 fn cannon_hit_effect(

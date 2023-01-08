@@ -26,6 +26,12 @@ pub struct Limiter {
     update_deadline: time_provider::Duration,
 }
 
+impl Default for Limiter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Limiter {
     pub fn new() -> Self {
         Limiter {
@@ -197,7 +203,7 @@ impl ConstructViewer {
             // more elegant with this at some point.
             if self.construct.is_match_finished() && !self.printed_match_result {
                 let report = battleground_construct::config::wrap_up::create_wrap_up_report(
-                    &self.construct.world(),
+                    self.construct.world(),
                 );
                 println!("{report:#?}");
                 self.printed_match_result = true;
@@ -455,7 +461,6 @@ impl ConstructViewer {
                             blend: Blend::ADD,
                             cull: Cull::Back,
                             depth_test: DepthTest::Always,
-                            ..Default::default()
                         },
                         self.camera.viewport(),
                         |program| {

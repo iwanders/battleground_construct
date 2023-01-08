@@ -14,6 +14,11 @@ impl ObjectivesModule {
         ObjectivesModule {}
     }
 }
+impl Default for ObjectivesModule {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 use battleground_unit_control::modules::objectives::*;
 

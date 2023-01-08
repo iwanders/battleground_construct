@@ -1,7 +1,7 @@
 use three_d::*;
 
 /// Renderpasses that involve geometry in some way
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum RenderPass {
     /// Render out shadow casters to shadow maps for all relevant lights
     ShadowMaps,

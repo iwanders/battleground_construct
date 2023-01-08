@@ -86,7 +86,7 @@ pub fn setup_scenario(
                 }
                 #[cfg(not(target_arch = "wasm32"))]
                 specification::ControllerType::LibraryLoad { name } => {
-                    unit_control_builtin::dynamic_load_control::DynamicLoadControl::new(&name)?
+                    unit_control_builtin::dynamic_load_control::DynamicLoadControl::new(name)?
                 }
                 #[cfg(feature = "unit_control_wasm")]
                 specification::ControllerType::Wasm(wasmconfig) => {

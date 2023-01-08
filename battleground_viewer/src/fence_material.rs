@@ -39,7 +39,7 @@ impl Material for FenceMaterial<'_> {
         program.use_uniform("surfaceColor", self.color);
         program.use_uniform(
             "viewProjectionInverse",
-            &(camera.projection() * camera.view()).invert().unwrap(),
+            (camera.projection() * camera.view()).invert().unwrap(),
         );
         program.use_depth_texture("depthTexture", self.depth_texture);
     }

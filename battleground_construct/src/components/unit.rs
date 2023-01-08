@@ -59,7 +59,7 @@ impl UnitModule for UnitModuleComponent {
     fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
         let value = world
             .component::<Unit>(self.unit_entity)
-            .and_then(|t| Some(t.id().as_u64() as i32))
+            .map(|t| t.id().as_u64() as i32)
             .unwrap_or(battleground_unit_control::modules::unit::UNIT_NO_UNIT_ID);
         registers.insert(
             battleground_unit_control::modules::unit::REG_UNIT_UNIT_ID,
@@ -67,7 +67,7 @@ impl UnitModule for UnitModuleComponent {
         );
         let value = world
             .component::<Unit>(self.unit_entity)
-            .and_then(|t| Some(t.unit_type() as i32))
+            .map(|t| t.unit_type() as i32)
             .unwrap_or(battleground_unit_control::modules::unit::UNIT_NO_UNIT_TYPE);
         registers.insert(
             battleground_unit_control::modules::unit::REG_UNIT_UNIT_TYPE,

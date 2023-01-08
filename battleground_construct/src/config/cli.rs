@@ -123,7 +123,7 @@ fn apply_config(
     use crate::config::specification::ControllerType;
 
     for c in config.iter() {
-        let mut tokens = c.split(":");
+        let mut tokens = c.split(':');
 
         match tokens.next().ok_or_else(|| make_error("expected token"))? {
             "control" => {

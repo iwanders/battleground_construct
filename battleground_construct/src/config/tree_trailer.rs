@@ -73,7 +73,7 @@ pub fn populate_tree_trailer(construct: &mut crate::Construct) {
                             primitive: Primitive::Sphere(Sphere {
                                 radius: decoration_radius,
                             }),
-                            material: material,
+                            material,
                         });
                     }
                 }
@@ -240,10 +240,9 @@ pub fn populate_tree_trailer(construct: &mut crate::Construct) {
             ..Default::default()
         },
     );
-    let main_tank_entities = world
+    let main_tank_entities = *world
         .component::<crate::units::tank::UnitTank>(main_tank)
-        .unwrap()
-        .clone();
+        .unwrap();
     let base_entity = main_tank_entities.base_entity;
     let turret_entity = main_tank_entities.turret_entity;
     let barrel_entity = main_tank_entities.barrel_entity;

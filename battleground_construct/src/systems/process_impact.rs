@@ -75,7 +75,7 @@ impl System for ProcessImpact {
                     hitboxes
                         .map(|(entity, hitbox)| {
                             let pose = world_pose(world, entity);
-                            (entity, pose, hitbox.clone())
+                            (entity, pose, *hitbox)
                         })
                         .collect::<Vec<_>>()
                 };

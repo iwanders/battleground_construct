@@ -6,7 +6,7 @@ impl UnitControl for InterfacePrinter {
         for m_index in interface.modules().unwrap() {
             println!("- {}", interface.module_name(m_index).unwrap());
             let mut v = interface.registers(m_index).unwrap();
-            v.sort_by(|a, b| a.cmp(b)); // sort for display.
+            v.sort(); // sort for display.
             println!(" Registers: {:x?}:", v);
             for r_index in v {
                 print!("  ({})", interface.register_name(m_index, r_index).unwrap());

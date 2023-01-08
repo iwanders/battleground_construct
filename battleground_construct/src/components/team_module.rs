@@ -20,7 +20,7 @@ impl UnitModule for TeamModule {
         // get the team membership of this entity.
         let value = world
             .component::<components::team_member::TeamMember>(self.entity)
-            .and_then(|t| Some(t.team().as_u64() as i32))
+            .map(|t| t.team().as_u64() as i32)
             .unwrap_or(battleground_unit_control::modules::team::TEAM_NO_TEAM);
         registers.insert(
             battleground_unit_control::modules::team::REG_TEAM_TEAMID,

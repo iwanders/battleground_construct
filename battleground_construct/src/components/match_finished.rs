@@ -37,6 +37,11 @@ pub struct MatchReport {
 pub struct MatchFinished {
     report: Option<MatchReport>,
 }
+impl Default for MatchFinished {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl MatchFinished {
     pub fn new() -> Self {
