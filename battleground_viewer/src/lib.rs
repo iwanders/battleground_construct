@@ -532,11 +532,11 @@ mod wasm32 {
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
     use wasm_bindgen_futures::JsFuture;
-    use web_sys::{Blob, FileReader};
+    use web_sys::{Blob, UrlSearchParams};
 
     //https://github.com/rustwasm/wasm-bindgen/issues/1292
 
-    async fn get_data() -> Result<JsValue, JsValue> {
+    async fn get_data() -> Result<Vec<u8>, JsValue> {
         use web_sys::{Request, RequestInit, RequestMode, Response};
 
         fn get_window() -> Result<web_sys::Window, JsValue> {
@@ -547,9 +547,14 @@ mod wasm32 {
         opts.method("GET");
         opts.mode(RequestMode::Cors);
 
-        let location_origin = get_window()?.location().origin()?;
+        let location_origin = get_window()?.location().search()?;
+        let url_params = UrlSearchParams::new_with_str(&location_origin)?;
+
         // info!("{}", location_origin);
-        let url = format!("/pkg/recording.bin");
+        // let url = format!("/pkg/recording.bin");
+        let url = url_params
+            .get("url")
+            .ok_or_else(|| "could not find url parameter")?;
 
         let request = Request::new_with_str_and_init(&url, &opts)?;
 
@@ -567,7 +572,27 @@ mod wasm32 {
         // Convert this other `Promise` into a rust `Future`.
         let blob = JsFuture::from(resp.blob()?).await?;
         // Ok(vec![])
-        Ok(blob)
+        let blob = Blob::from(blob);
+        info!("Blob size {}", blob.size()); // looks good!
+
+        // read_as_array_buffer(&self, blob: &Blob) -> Result<(), JsValue>
+        // let file_reader = FileReader::new()?;
+        // file_reader.read_as_array_buffer(&blob)?;
+
+        let arr = JsFuture::from(blob.array_buffer()).await?;
+        // info!("{:?}", arr);
+        let array: ArrayBuffer = arr.into();
+        // info!("{:?}", array);
+
+        // let array = ArrayBuffer::from(file_reader.result()?);
+        let array = Uint8Array::new(&array);
+        // info!("array as uin8tarray {:?}", array);
+
+        let mut as_vec = Vec::with_capacity(array.byte_length() as usize);
+        as_vec.resize(array.byte_length() as usize, 0);
+        array.copy_to(&mut as_vec[..]);
+
+        Ok(as_vec)
     }
 
     #[wasm_bindgen(start)]
@@ -579,41 +604,18 @@ mod wasm32 {
 
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-        let blob = Blob::from(get_data().await?);
-        info!("Blob size {}", blob.size()); // looks good!
+        let data = get_data().await;
 
-        // read_as_array_buffer(&self, blob: &Blob) -> Result<(), JsValue>
-        // let file_reader = FileReader::new()?;
-        // file_reader.read_as_array_buffer(&blob)?;
-
-        let arr = JsFuture::from(blob.array_buffer()).await?;
-        info!("{:?}", arr);
-        let array: ArrayBuffer = arr.into();
-        info!("{:?}", array);
-
-        // let array = ArrayBuffer::from(file_reader.result()?);
-        let array = Uint8Array::new(&array);
-        info!("array as uin8tarray {:?}", array);
-
-        let mut as_vec = Vec::with_capacity(array.byte_length() as usize);
-        as_vec.resize(array.byte_length() as usize, 0);
-        array.copy_to(&mut as_vec[..]);
-        info!("THINGS!?? {:?}", &as_vec[0..20]);
-        info!("THINGS!",);
-        /*
-         */
-
-        /*
-         */
-
-        let construct = if false {
+        let construct = if let Ok(data) = data {
+            info!("Found data!");
+            battleground_construct::config::setup::setup_playback_slice(&data).unwrap()
+        } else {
+            info!("No data, setting up the playground!");
             let mut construct = battleground_construct::Construct::new();
             battleground_construct::config::default::add_components(&mut construct.world);
             battleground_construct::config::default::add_systems(&mut construct.systems);
             battleground_construct::config::playground::populate_dev_world(&mut construct);
             construct
-        } else {
-            battleground_construct::config::setup::setup_playback_slice(&as_vec).unwrap()
         };
 
         let viewer = super::ConstructViewer::new(construct);
