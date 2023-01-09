@@ -41,7 +41,7 @@ jobs:
       - name: Rust install
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
-          sh ./rustup.sh --profile minimal -y --default-host wasm32-unknown-unknown
+          sh ./rustup.sh --profile minimal -y -t wasm32-unknown-unknown
           curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       - name: Change Dir
         run: |
