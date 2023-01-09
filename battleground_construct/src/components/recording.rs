@@ -377,6 +377,15 @@ impl Recording {
         Self::load_slice(&data)
     }
 
+    pub fn write_file(&self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let recording = self.record();
+        let data = bincode::serialize(&*recording)?;
+        use std::io::Write;
+        let mut file = std::fs::File::create(path)?;
+        file.write_all(&data)?;
+        Ok(())
+    }
+
     pub fn load_slice(data: &[u8]) -> Result<Recording, Box<dyn std::error::Error>> {
         let recorder = Self::new();
         let recording = recorder.record();

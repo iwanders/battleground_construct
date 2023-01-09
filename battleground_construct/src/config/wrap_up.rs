@@ -86,11 +86,7 @@ pub fn wrap_up_scenario(
             .component_iter::<components::recording::Recording>()
             .next()
         {
-            let recording = recording.1.record();
-            let data = bincode::serialize(&*recording)?;
-            use std::io::Write;
-            let mut file = std::fs::File::create(path)?;
-            file.write_all(&data)?;
+            recording.1.write_file(&path)?;
         }
     }
 
