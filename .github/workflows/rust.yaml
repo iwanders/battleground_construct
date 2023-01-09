@@ -1,5 +1,5 @@
 name: Rust Checks
-run-name: @${{ github.ref }} by @${{ github.actor }}
+run-name: "${{ github.ref }} by @${{ github.actor }}"
 
 on:
   push:
