@@ -33,8 +33,8 @@ jobs:
           path: |
             ~/.cargo/
             target/            
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+          key: ${{ runner.os }}-native-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-native-
       - name: Format
         # https://github.com/rust-lang/rustfmt#checking-style-on-a-ci-server
         run: cargo fmt  --all -- --check
@@ -64,8 +64,8 @@ jobs:
           path: |
             ~/.cargo/
             target/            
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+          key: ${{ runner.os }}-web-${{ hashFiles('**/Cargo.lock, ../Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-web-
       - name: Build
         run: |
           cat /home/runner/work/battleground_construct/battleground_construct/Cargo.toml
