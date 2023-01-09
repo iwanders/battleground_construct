@@ -38,6 +38,9 @@ jobs:
 
   web-wasmpack:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./battleground_viewer
     steps:
       - uses: actions/checkout@v2
       - name: Rust install
@@ -45,9 +48,6 @@ jobs:
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
           sh ./rustup.sh --profile minimal -y -t wasm32-unknown-unknown
           curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-      - name: Change Dir
-        run: |
-          cd battleground_viewer
       - name: Build
         run: |
           cat /home/runner/work/battleground_construct/battleground_construct/Cargo.toml
