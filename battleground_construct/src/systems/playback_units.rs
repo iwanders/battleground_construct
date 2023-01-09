@@ -7,9 +7,9 @@ pub struct PlaybackUnits {}
 impl System for PlaybackUnits {
     fn update(&mut self, world: &mut World) {
         for entity in world.component_entities::<units::tank::UnitTank>() {
-            let needs_spawn = !world
+            let needs_spawn = world
                 .component::<components::recorder::PlaybackUnitCreatedMarker>(entity)
-                .is_some();
+                .is_none();
             let is_destroyed = world
                 .component::<components::recorder::PlaybackUnitDestroyedMarker>(entity)
                 .is_some();
@@ -18,10 +18,7 @@ impl System for PlaybackUnits {
                 .is_some();
 
             if needs_spawn && health_present {
-                let tank_unit = world
-                    .component::<units::tank::UnitTank>(entity)
-                    .unwrap()
-                    .clone();
+                let tank_unit = *world.component::<units::tank::UnitTank>(entity).unwrap();
                 tank::add_tank_passive(world, &tank_unit);
                 world.add_component(
                     tank_unit.unit_entity,
@@ -29,10 +26,7 @@ impl System for PlaybackUnits {
                 );
             }
             if !health_present && !is_destroyed {
-                let tank_unit = world
-                    .component::<units::tank::UnitTank>(entity)
-                    .unwrap()
-                    .clone();
+                let tank_unit = *world.component::<units::tank::UnitTank>(entity).unwrap();
                 world.remove_entities(&tank_unit.children());
                 world.add_component(
                     tank_unit.unit_entity,
@@ -42,9 +36,9 @@ impl System for PlaybackUnits {
         }
 
         for entity in world.component_entities::<units::artillery::UnitArtillery>() {
-            let needs_spawn = !world
+            let needs_spawn = world
                 .component::<components::recorder::PlaybackUnitCreatedMarker>(entity)
-                .is_some();
+                .is_none();
             let is_destroyed = world
                 .component::<components::recorder::PlaybackUnitDestroyedMarker>(entity)
                 .is_some();
@@ -53,10 +47,9 @@ impl System for PlaybackUnits {
                 .is_some();
 
             if needs_spawn && health_present {
-                let artillery_unit = world
+                let artillery_unit = *world
                     .component::<units::artillery::UnitArtillery>(entity)
-                    .unwrap()
-                    .clone();
+                    .unwrap();
                 artillery::add_artillery_passive(world, &artillery_unit);
                 world.add_component(
                     artillery_unit.unit_entity,
@@ -64,10 +57,9 @@ impl System for PlaybackUnits {
                 );
             }
             if !health_present && !is_destroyed {
-                let artillery_unit = world
+                let artillery_unit = *world
                     .component::<units::artillery::UnitArtillery>(entity)
-                    .unwrap()
-                    .clone();
+                    .unwrap();
                 world.remove_entities(&artillery_unit.children());
                 world.add_component(
                     artillery_unit.unit_entity,
@@ -77,15 +69,14 @@ impl System for PlaybackUnits {
         }
 
         for entity in world.component_entities::<units::capturable_flag::UnitCapturableFlag>() {
-            let needs_spawn = !world
+            let needs_spawn = world
                 .component::<components::recorder::PlaybackUnitCreatedMarker>(entity)
-                .is_some();
+                .is_none();
 
             if needs_spawn {
-                let unit = world
+                let unit = *world
                     .component::<units::capturable_flag::UnitCapturableFlag>(entity)
-                    .unwrap()
-                    .clone();
+                    .unwrap();
                 units::capturable_flag::add_capturable_passives(world, &unit);
                 world.add_component(entity, components::recorder::PlaybackUnitCreatedMarker);
             }

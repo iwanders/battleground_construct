@@ -16,11 +16,10 @@ impl Construct {
     }
 
     pub fn can_update(&self) -> bool {
-        !self
-            .world
+        self.world
             .component_iter::<components::recorder::PlaybackFinishedMarker>()
             .next()
-            .is_some()
+            .is_none()
     }
 
     pub fn update(&mut self) {

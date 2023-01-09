@@ -73,7 +73,7 @@ impl ComponentStates {
     pub fn capture<T: Component + Serialize + 'static>(world: &World) -> ComponentStates {
         let states: Vec<(EntityId, Vec<u8>)> = world
             .component_iter::<T>()
-            .map(|(e, c)| (e.into(), { bincode::serialize(&*c).unwrap() }))
+            .map(|(e, c)| (e, { bincode::serialize(&*c).unwrap() }))
             .collect();
         // states.sort();  // this is key, this way the delta can easily be created.
         ComponentStates { states }
@@ -190,6 +190,7 @@ impl DeltaState {
     }
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone, Deserialize, Serialize)]
 enum Capture {
     WorldState(WorldState),
@@ -318,7 +319,7 @@ impl Recording {
                     }
                 }
                 Capture::ZippedDeltaState(zipped_delta) => {
-                    let delta = DeltaState::uncompress(&zipped_delta);
+                    let delta = DeltaState::uncompress(zipped_delta);
                     for (_, (_, play_fun)) in self.helpers.iter() {
                         play_fun(&delta, world);
                     }
@@ -330,10 +331,8 @@ impl Recording {
             if world
                 .component_iter::<PlaybackFinishedMarker>()
                 .next()
-                .is_some()
+                .is_none()
             {
-                return; // match is already finished.
-            } else {
                 // We can't create an entity, as the engine doesn't have an entity counter that's
                 // in sync. Lets just add this marker to the clock entity.
                 let clock_entity = world
@@ -349,6 +348,12 @@ impl Recording {
 
 pub struct Recorder {
     recording: RecordingStorage,
+}
+
+impl Default for Recorder {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Recorder {
@@ -375,7 +380,7 @@ impl Recorder {
     pub fn load_slice(data: &[u8]) -> Result<Recorder, Box<dyn std::error::Error>> {
         let recorder = Self::new();
         let recording = recorder.recording();
-        *recording.borrow_mut() = bincode::deserialize(&data[..])?;
+        *recording.borrow_mut() = bincode::deserialize(data)?;
         recording.borrow_mut().setup();
         Ok(recorder)
     }

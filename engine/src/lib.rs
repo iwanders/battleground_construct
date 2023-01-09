@@ -117,9 +117,7 @@ impl World {
 
     /// Add a new entity to the entity list, return its new id.
     pub fn add_entity(&mut self) -> EntityId {
-        let new_id = self.make_entity_id();
-        // self.entities.insert(new_id);
-        new_id
+        self.make_entity_id()
     }
 
     /// Add a component to an entity.
