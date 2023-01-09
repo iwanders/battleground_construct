@@ -6,22 +6,29 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use miniz_oxide::deflate::compress_to_vec;
 use miniz_oxide::inflate::decompress_to_vec;
 
+/// Marker to denote a unit has been reconstructed.
 pub struct PlaybackUnitCreatedMarker;
 impl Component for PlaybackUnitCreatedMarker {}
 
+/// Marker to denote a unit has been deconstructed.
 pub struct PlaybackUnitDestroyedMarker;
 impl Component for PlaybackUnitDestroyedMarker {}
 
+/// Marker to denote playback is finished, this is added to the clock entity.
 pub struct PlaybackFinishedMarker;
 impl Component for PlaybackFinishedMarker {}
 
+/// Pointer to internal data storage.
 pub type RecordStorage = std::rc::Rc<std::cell::RefCell<Record>>;
 
+/// Type ids aren't stable, so a map from names to this is kept.
 pub type ComponentType = usize;
 
+/// Map of components, from name to type id. Map is serialized at the beginning so the names
+/// are stable, id's aren't.
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 struct ComponentMap {
-    // Name to component id.
+    /// Name to component id.
     component_map: std::collections::HashMap<String, ComponentType>,
 }
 impl ComponentMap {
@@ -39,13 +46,18 @@ impl ComponentMap {
     }
 }
 
+/// Delta for a particular component, this can be applied to a World.
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 struct ComponentDelta {
+    /// Changed components, also holds new components (they're changed afterall).
     change: ComponentStates,
+
+    /// Components to be removed.
     removed: Vec<EntityId>,
 }
 
 impl ComponentDelta {
+    /// Apply this delta to a world.
     fn apply<T: Component + DeserializeOwned + 'static>(&self, world: &mut World) {
         for to_be_removed in self.removed.iter() {
             world.remove_component::<T>(*to_be_removed);
@@ -65,11 +77,13 @@ impl ComponentDelta {
     }
 }
 
+/// Serialized component states for a particular component type.
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 struct ComponentStates {
     states: Vec<(EntityId, Vec<u8>)>,
 }
 impl ComponentStates {
+    /// Capture the component states for this component type.
     pub fn capture<T: Component + Serialize + 'static>(world: &World) -> ComponentStates {
         let states: Vec<(EntityId, Vec<u8>)> = world
             .component_iter::<T>()
@@ -79,12 +93,18 @@ impl ComponentStates {
         ComponentStates { states }
     }
 
+    /// Retrieval method for the hashmap
     pub fn to_hashmap(&self) -> std::collections::HashMap<EntityId, &[u8]> {
         self.states.iter().map(|(e, d)| (*e, &d[..])).collect()
     }
 
+    /// Given this ComponentStates and the new_states, calculate the delta.
     pub fn delta(&self, new_states: &ComponentStates) -> ComponentDelta {
         let mut delta = ComponentDelta::default();
+
+        // We could make this faster, sorting on the capture and then advancing the two indices
+        // through the sorted vectors.
+
         // Cheap and dirty for now, convert to hashmap, compare.
         let old_map = self.to_hashmap();
         let new_map = new_states.to_hashmap();
@@ -112,17 +132,20 @@ impl ComponentStates {
         delta
     }
 
+    /// Retrieve the component states.
     pub fn states(&self) -> &[(EntityId, Vec<u8>)] {
         &self.states[..]
     }
 }
 
+/// A full representation of the world, holding the component states for all components.
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 struct WorldState {
     states: std::collections::HashMap<ComponentType, ComponentStates>,
 }
 
 impl WorldState {
+    /// Add a component's full state to the world state.s
     fn add_component<T: Component + Serialize + 'static>(
         &mut self,
         index: ComponentType,
@@ -132,12 +155,14 @@ impl WorldState {
             .insert(index, ComponentStates::capture::<T>(world));
     }
 
+    /// Ensure empty vectors exist for all entries in the component map.
     fn ensure_components(&mut self, component_map: &ComponentMap) {
         for index in component_map.components() {
             self.states.insert(index, Default::default());
         }
     }
 
+    /// Determine the component delta, given this state, a component type and a new state.
     fn component_delta(&self, component: ComponentType, new_state: &WorldState) -> ComponentDelta {
         self.states
             .get(&component)
@@ -151,18 +176,21 @@ impl WorldState {
     }
 }
 
+/// Delta state for the entire world.
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 struct DeltaState {
     delta: std::collections::HashMap<ComponentType, ComponentDelta>,
 }
 
 impl DeltaState {
+    /// Create a new delta state given the old state and the new state.
     pub fn new(old_state: &WorldState, new_state: &WorldState) -> Self {
         let mut delta = DeltaState::default();
         delta.capture(old_state, new_state);
         delta
     }
 
+    /// Internal worker to actually capture the states.
     fn capture(&mut self, old_state: &WorldState, new_state: &WorldState) {
         for component in new_state.states.keys() {
             let component_delta = old_state.component_delta(*component, new_state);
@@ -170,6 +198,7 @@ impl DeltaState {
         }
     }
 
+    /// Apply this delta to the provided world for the specified component type.
     fn apply<T: Component + DeserializeOwned + 'static>(
         &self,
         component: ComponentType,
@@ -180,10 +209,13 @@ impl DeltaState {
         }
     }
 
+    /// Retrieve a compressed version of this delta state.
     fn compressed(&self) -> Vec<u8> {
         let bytes = bincode::serialize(self).unwrap();
         compress_to_vec(&bytes, 6)
     }
+
+    /// Create a delta state from a sequence of bytes.
     fn uncompress(bytes: &[u8]) -> DeltaState {
         let decompressed = decompress_to_vec(bytes).expect("Failed to decompress!");
         bincode::deserialize(&decompressed).unwrap()
@@ -192,16 +224,23 @@ impl DeltaState {
 
 #[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone, Deserialize, Serialize)]
+/// Capture frame types.
 enum Capture {
+    /// Full representation of the world.
     WorldState(WorldState),
+    /// Delta, to be applied to the previous world.
     DeltaState(DeltaState),
+    /// Can be uncompressed into a DeltaState.
     ZippedDeltaState(Vec<u8>),
 }
 
+/// Helper function for type erasure to record.
 type RecordFunction = Box<dyn Fn(&mut WorldState, &World)>;
+/// Helper function for type erasure to play back.
 type PlayFunction = Box<dyn Fn(&DeltaState, &mut World)>;
 
 #[derive(Default, Deserialize, Serialize)]
+/// The storage of the recording or playback.
 pub struct Record {
     component_map: ComponentMap,
     states: Vec<Capture>,
@@ -212,24 +251,16 @@ pub struct Record {
     #[serde(skip)]
     helpers: std::collections::HashMap<ComponentType, (RecordFunction, PlayFunction)>,
 }
+
 impl Record {
+    /// Create a new empty record.
     pub fn new() -> Self {
         let mut v = Record::default();
         v.setup();
         v
     }
 
-    fn register_type<T: Component + Serialize + DeserializeOwned + 'static>(&mut self, name: &str) {
-        let component_type = self.component_map.insert(name);
-        let record = Box::new(move |world_state: &mut WorldState, world: &World| {
-            world_state.add_component::<T>(component_type, world);
-        });
-        let play = Box::new(move |delta_state: &DeltaState, world: &mut World| {
-            delta_state.apply::<T>(component_type, world)
-        });
-        self.helpers.insert(component_type, (record, play));
-    }
-
+    /// Registers all types to be recorded and played back.
     fn setup(&mut self) {
         self.register_type::<components::clock::Clock>("clock");
 
@@ -286,6 +317,19 @@ impl Record {
         self.previous_state.ensure_components(&self.component_map);
     }
 
+    /// Register a particular type for recording and playback.
+    fn register_type<T: Component + Serialize + DeserializeOwned + 'static>(&mut self, name: &str) {
+        let component_type = self.component_map.insert(name);
+        let record = Box::new(move |world_state: &mut WorldState, world: &World| {
+            world_state.add_component::<T>(component_type, world);
+        });
+        let play = Box::new(move |delta_state: &DeltaState, world: &mut World| {
+            delta_state.apply::<T>(component_type, world)
+        });
+        self.helpers.insert(component_type, (record, play));
+    }
+
+    /// Record the current world state, currently always writes a zipped delta state.
     pub fn record(&mut self, world: &World) {
         // Create a new empty world state.
         let mut new_world_state = WorldState::default();
@@ -307,6 +351,7 @@ impl Record {
         self.previous_state = new_world_state;
     }
 
+    /// Play back a step from this recording.
     pub fn step(&mut self, world: &mut World) {
         if self.playback_index < self.states.len() {
             match &self.states[self.playback_index] {
@@ -346,6 +391,7 @@ impl Record {
     }
 }
 
+/// Component for the recording.
 pub struct Recording {
     record: RecordStorage,
 }
@@ -363,10 +409,12 @@ impl Recording {
         }
     }
 
+    /// Retrieve the internal storage.
     pub fn record(&self) -> RecordStorage {
         self.record.clone()
     }
 
+    /// Load a recording from a file.
     pub fn load_file(path: &str) -> Result<Recording, Box<dyn std::error::Error>> {
         use std::io::Read;
         // let file = std::fs::File::open(path)?;
@@ -377,6 +425,7 @@ impl Recording {
         Self::load_slice(&data)
     }
 
+    /// Write a recording to a file.
     pub fn write_file(&self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
         let recording = self.record();
         let data = bincode::serialize(&*recording)?;
@@ -386,6 +435,7 @@ impl Recording {
         Ok(())
     }
 
+    /// Load a recording from a slice.
     pub fn load_slice(data: &[u8]) -> Result<Recording, Box<dyn std::error::Error>> {
         let recorder = Self::new();
         let recording = recorder.record();
