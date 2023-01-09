@@ -41,7 +41,7 @@ jobs:
       - name: Build
         run: cargo build --release --features unit_control_wasm
       - name: Clippy
-        run: cargo clippy --release --features unit_control_wasm -- --no-deps
+        run: cargo clippy --release --features unit_control_wasm -- --no-deps --deny "warnings"
       - name: Test
         run: cargo test --release --features unit_control_wasm
 
@@ -64,7 +64,7 @@ jobs:
           path: |
             ~/.cargo/
             target/            
-          key: ${{ runner.os }}-web-${{ hashFiles('**/Cargo.lock', '../Cargo.lock') }}
+          key: ${{ runner.os }}-web-${{ hashFiles('../Cargo.lock') }}
           restore-keys: ${{ runner.os }}-web-
       - name: Build
         run: |
@@ -72,5 +72,5 @@ jobs:
           wasm-pack build --release --target web --out-name web
       - name: Clippy
         run: |
-          cargo clippy --release --target wasm32-unknown-unknown -- --no-deps
+          cargo clippy --release --target wasm32-unknown-unknown -- --no-deps --deny "warnings"
           
