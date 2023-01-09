@@ -50,6 +50,7 @@ jobs:
           cd battleground_viewer
       - name: Build
         run: |
+          cat /home/runner/work/battleground_construct/battleground_construct/Cargo.toml
           wasm-pack build --release --target web --out-name web
       - name: Clippy
         run: |
