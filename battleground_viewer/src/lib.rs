@@ -539,7 +539,7 @@ mod wasm32 {
         use web_sys::{Request, RequestInit, RequestMode, Response};
 
         fn get_window() -> Result<web_sys::Window, JsValue> {
-            web_sys::window().ok_or(JsValue::from_str("couldn't get window"))
+            web_sys::window().ok_or_else(|| JsValue::from_str("couldn't get window"))
         }
         // Fetch the recording.
         let mut opts = RequestInit::new();
@@ -553,7 +553,7 @@ mod wasm32 {
         // let url = format!("/pkg/recording.bin");
         let url = url_params
             .get("url")
-            .ok_or_else(|| "could not find url parameter")?;
+            .ok_or_else(|| JsValue::from_str("could not find url parameter"))?;
 
         let request = Request::new_with_str_and_init(&url, &opts)?;
 
@@ -587,8 +587,9 @@ mod wasm32 {
         let array = Uint8Array::new(&array);
         // info!("array as uin8tarray {:?}", array);
 
-        let mut as_vec = Vec::with_capacity(array.byte_length() as usize);
-        as_vec.resize(array.byte_length() as usize, 0);
+        // let mut as_vec = Vec::with_capacity(array.byte_length() as usize);
+        // as_vec.resize(array.byte_length() as usize, 0);
+        let mut as_vec = vec![0; array.byte_length() as usize];
         array.copy_to(&mut as_vec[..]);
 
         Ok(as_vec)

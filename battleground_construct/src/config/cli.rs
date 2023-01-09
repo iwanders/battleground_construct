@@ -132,7 +132,7 @@ pub fn parse_setup_args() -> Result<Setup, Box<dyn std::error::Error>> {
                 let mut extra_config = vec![];
                 for wasm in scenario.wasm.iter() {
                     let split = wasm
-                        .split(":")
+                        .split(':')
                         .map(|v| v.to_owned())
                         .collect::<Vec<String>>();
                     if split.len() != 2 {
