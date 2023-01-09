@@ -5,10 +5,11 @@ on:
   push:
     branches:
       - master
-      - pipeline-test
+      - staging
   pull_request:
     branches:
       - master
+      - staging
   workflow_dispatch:
 
 
