@@ -23,7 +23,8 @@ jobs:
 
       - name: Rust install
         run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
+          sh ./rustup.sh --profile minimal
       - name: cargo build
         run: cargo build --release
       - name: cargo clippy
