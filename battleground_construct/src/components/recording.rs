@@ -15,7 +15,7 @@ impl Component for PlaybackUnitDestroyedMarker {}
 pub struct PlaybackFinishedMarker;
 impl Component for PlaybackFinishedMarker {}
 
-pub type RecordingStorage = std::rc::Rc<std::cell::RefCell<Recording>>;
+pub type RecordStorage = std::rc::Rc<std::cell::RefCell<Record>>;
 
 pub type ComponentType = usize;
 
@@ -202,7 +202,7 @@ type RecordFunction = Box<dyn Fn(&mut WorldState, &World)>;
 type PlayFunction = Box<dyn Fn(&DeltaState, &mut World)>;
 
 #[derive(Default, Deserialize, Serialize)]
-pub struct Recording {
+pub struct Record {
     component_map: ComponentMap,
     states: Vec<Capture>,
     #[serde(skip)]
@@ -212,9 +212,9 @@ pub struct Recording {
     #[serde(skip)]
     helpers: std::collections::HashMap<ComponentType, (RecordFunction, PlayFunction)>,
 }
-impl Recording {
+impl Record {
     pub fn new() -> Self {
-        let mut v = Recording::default();
+        let mut v = Record::default();
         v.setup();
         v
     }
@@ -346,28 +346,28 @@ impl Recording {
     }
 }
 
-pub struct Recorder {
-    recording: RecordingStorage,
+pub struct Recording {
+    record: RecordStorage,
 }
 
-impl Default for Recorder {
+impl Default for Recording {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Recorder {
+impl Recording {
     pub fn new() -> Self {
-        Recorder {
-            recording: std::rc::Rc::new(std::cell::RefCell::new(Recording::new())),
+        Recording {
+            record: std::rc::Rc::new(std::cell::RefCell::new(Record::new())),
         }
     }
 
-    pub fn recording(&self) -> RecordingStorage {
-        self.recording.clone()
+    pub fn record(&self) -> RecordStorage {
+        self.record.clone()
     }
 
-    pub fn load_file(path: &str) -> Result<Recorder, Box<dyn std::error::Error>> {
+    pub fn load_file(path: &str) -> Result<Recording, Box<dyn std::error::Error>> {
         use std::io::Read;
         // let file = std::fs::File::open(path)?;
 
@@ -377,12 +377,12 @@ impl Recorder {
         Self::load_slice(&data)
     }
 
-    pub fn load_slice(data: &[u8]) -> Result<Recorder, Box<dyn std::error::Error>> {
+    pub fn load_slice(data: &[u8]) -> Result<Recording, Box<dyn std::error::Error>> {
         let recorder = Self::new();
-        let recording = recorder.recording();
+        let recording = recorder.record();
         *recording.borrow_mut() = bincode::deserialize(data)?;
         recording.borrow_mut().setup();
         Ok(recorder)
     }
 }
-impl Component for Recorder {}
+impl Component for Recording {}

@@ -83,10 +83,10 @@ pub fn wrap_up_scenario(
     if let Some(path) = wrap_up.write_recording {
         if let Some(recording) = construct
             .world()
-            .component_iter::<components::recorder::Recorder>()
+            .component_iter::<components::recording::Recording>()
             .next()
         {
-            let recording = recording.1.recording();
+            let recording = recording.1.record();
             let data = bincode::serialize(&*recording)?;
             use std::io::Write;
             let mut file = std::fs::File::create(path)?;

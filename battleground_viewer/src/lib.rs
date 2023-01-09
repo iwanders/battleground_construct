@@ -529,12 +529,11 @@ mod wasm32 {
     use js_sys::{ArrayBuffer, Uint8Array};
     use log::info;
     use wasm_bindgen::prelude::*;
-    use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
     use wasm_bindgen_futures::JsFuture;
     use web_sys::{Blob, UrlSearchParams};
 
-    //https://github.com/rustwasm/wasm-bindgen/issues/1292
+    // https://github.com/rustwasm/wasm-bindgen/issues/1292
 
     async fn get_data() -> Result<Vec<u8>, JsValue> {
         use web_sys::{Request, RequestInit, RequestMode, Response};

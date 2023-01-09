@@ -31,15 +31,15 @@ pub fn setup(config: Setup) -> Result<Construct, Box<dyn std::error::Error>> {
 }
 
 pub fn setup_playback_slice(data: &[u8]) -> Result<Construct, Box<dyn std::error::Error>> {
-    setup_playback_common(components::recorder::Recorder::load_slice(data)?)
+    setup_playback_common(components::recording::Recording::load_slice(data)?)
 }
 
 pub fn setup_playback_path(path: &str) -> Result<Construct, Box<dyn std::error::Error>> {
-    setup_playback_common(components::recorder::Recorder::load_file(path)?)
+    setup_playback_common(components::recording::Recording::load_file(path)?)
 }
 
 fn setup_playback_common(
-    recorder: components::recorder::Recorder,
+    recorder: components::recording::Recording,
 ) -> Result<Construct, Box<dyn std::error::Error>> {
     let mut construct = Construct::new();
     let world = &mut construct.world;
@@ -79,7 +79,7 @@ pub fn setup_scenario(
     let recorder_entity = construct.world.add_entity();
     construct
         .world
-        .add_component(recorder_entity, components::recorder::Recorder::new());
+        .add_component(recorder_entity, components::recording::Recording::new());
 
     // Add the default systems.
     default::add_components(&mut construct.world);

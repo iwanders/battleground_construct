@@ -17,7 +17,7 @@ impl Construct {
 
     pub fn can_update(&self) -> bool {
         self.world
-            .component_iter::<components::recorder::PlaybackFinishedMarker>()
+            .component_iter::<components::recording::PlaybackFinishedMarker>()
             .next()
             .is_none()
     }

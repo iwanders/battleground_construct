@@ -5,7 +5,7 @@ pub struct PlaybackFinished {}
 impl System for PlaybackFinished {
     fn update(&mut self, world: &mut World) {
         let is_finished = world
-            .component_iter::<components::recorder::PlaybackFinishedMarker>()
+            .component_iter::<components::recording::PlaybackFinishedMarker>()
             .next()
             .is_some();
         if is_finished {

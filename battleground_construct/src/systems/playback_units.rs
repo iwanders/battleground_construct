@@ -8,10 +8,10 @@ impl System for PlaybackUnits {
     fn update(&mut self, world: &mut World) {
         for entity in world.component_entities::<units::tank::UnitTank>() {
             let needs_spawn = world
-                .component::<components::recorder::PlaybackUnitCreatedMarker>(entity)
+                .component::<components::recording::PlaybackUnitCreatedMarker>(entity)
                 .is_none();
             let is_destroyed = world
-                .component::<components::recorder::PlaybackUnitDestroyedMarker>(entity)
+                .component::<components::recording::PlaybackUnitDestroyedMarker>(entity)
                 .is_some();
             let health_present = world
                 .component::<components::health::Health>(entity)
@@ -22,7 +22,7 @@ impl System for PlaybackUnits {
                 tank::add_tank_passive(world, &tank_unit);
                 world.add_component(
                     tank_unit.unit_entity,
-                    components::recorder::PlaybackUnitCreatedMarker,
+                    components::recording::PlaybackUnitCreatedMarker,
                 );
             }
             if !health_present && !is_destroyed {
@@ -30,17 +30,17 @@ impl System for PlaybackUnits {
                 world.remove_entities(&tank_unit.children());
                 world.add_component(
                     tank_unit.unit_entity,
-                    components::recorder::PlaybackUnitDestroyedMarker,
+                    components::recording::PlaybackUnitDestroyedMarker,
                 );
             }
         }
 
         for entity in world.component_entities::<units::artillery::UnitArtillery>() {
             let needs_spawn = world
-                .component::<components::recorder::PlaybackUnitCreatedMarker>(entity)
+                .component::<components::recording::PlaybackUnitCreatedMarker>(entity)
                 .is_none();
             let is_destroyed = world
-                .component::<components::recorder::PlaybackUnitDestroyedMarker>(entity)
+                .component::<components::recording::PlaybackUnitDestroyedMarker>(entity)
                 .is_some();
             let health_present = world
                 .component::<components::health::Health>(entity)
@@ -53,7 +53,7 @@ impl System for PlaybackUnits {
                 artillery::add_artillery_passive(world, &artillery_unit);
                 world.add_component(
                     artillery_unit.unit_entity,
-                    components::recorder::PlaybackUnitCreatedMarker,
+                    components::recording::PlaybackUnitCreatedMarker,
                 );
             }
             if !health_present && !is_destroyed {
@@ -63,14 +63,14 @@ impl System for PlaybackUnits {
                 world.remove_entities(&artillery_unit.children());
                 world.add_component(
                     artillery_unit.unit_entity,
-                    components::recorder::PlaybackUnitDestroyedMarker,
+                    components::recording::PlaybackUnitDestroyedMarker,
                 );
             }
         }
 
         for entity in world.component_entities::<units::capturable_flag::UnitCapturableFlag>() {
             let needs_spawn = world
-                .component::<components::recorder::PlaybackUnitCreatedMarker>(entity)
+                .component::<components::recording::PlaybackUnitCreatedMarker>(entity)
                 .is_none();
 
             if needs_spawn {
@@ -78,7 +78,7 @@ impl System for PlaybackUnits {
                     .component::<units::capturable_flag::UnitCapturableFlag>(entity)
                     .unwrap();
                 units::capturable_flag::add_capturable_passives(world, &unit);
-                world.add_component(entity, components::recorder::PlaybackUnitCreatedMarker);
+                world.add_component(entity, components::recording::PlaybackUnitCreatedMarker);
             }
         }
     }

@@ -36,7 +36,7 @@ pub mod radar;
 pub mod radar_reflector;
 pub mod radio_receiver;
 pub mod radio_transmitter;
-pub mod recorder;
+pub mod recording;
 pub mod revolute;
 pub mod select_box;
 pub mod team;
