@@ -26,6 +26,15 @@ jobs:
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
           sh ./rustup.sh --profile minimal -y
+      - name: Set up cargo cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/
+            target/            
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
       - name: Format
         # https://github.com/rust-lang/rustfmt#checking-style-on-a-ci-server
         run: cargo fmt  --all -- --check
@@ -48,6 +57,15 @@ jobs:
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
           sh ./rustup.sh --profile minimal -y -t wasm32-unknown-unknown
           curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Set up cargo cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/
+            target/            
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
       - name: Build
         run: |
           cat /home/runner/work/battleground_construct/battleground_construct/Cargo.toml
