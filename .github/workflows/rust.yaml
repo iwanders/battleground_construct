@@ -26,13 +26,15 @@ jobs:
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
           sh ./rustup.sh --profile minimal -y
-      - name: Build
-        run: cargo build --release --features unit_control_wasm
-      - name: Clippy
-        run: cargo clippy --release -- --no-deps
       - name: Format
         # https://github.com/rust-lang/rustfmt#checking-style-on-a-ci-server
         run: cargo fmt  --all -- --check
+      - name: Clippy
+        run: cargo clippy --release -- --no-deps
+      - name: Build
+        run: cargo build --release --features unit_control_wasm
+      - name: Test
+        run: cargo test --release --features unit_control_wasm
 
   web-wasmpack:
     runs-on: ubuntu-latest
