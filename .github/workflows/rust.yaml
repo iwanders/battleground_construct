@@ -1,0 +1,32 @@
+name: Rust Checks
+run-name: @${{ github.ref}} by @${{ github.actor }}
+
+on:
+  push:
+    branches:
+      - master
+      - pipeline-test
+  pull_request:
+    branches:
+      - master
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Rust install
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      - name: cargo build
+        run: cargo build --release
+      - name: cargo clippy
+        run: cargo clippy --release
+      - name: cargo fmt
+        run: cargo fmt --release
