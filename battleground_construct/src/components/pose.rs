@@ -41,7 +41,6 @@ where
         quat: h.to_rotation().into(),
         pos: h.w.truncate(),
     };
-    // s.serialize(&p)
     p.serialize(s)
 }
 

@@ -1,6 +1,7 @@
 use super::components;
 use engine::prelude::*;
 
+/// This handles logic necessary at the end of playback.
 pub struct PlaybackFinished {}
 impl System for PlaybackFinished {
     fn update(&mut self, world: &mut World) {

@@ -1,6 +1,7 @@
 use super::components;
 use engine::prelude::*;
 
+/// This system plays back a recording.
 pub struct Playback {}
 impl System for Playback {
     fn update(&mut self, world: &mut World) {
