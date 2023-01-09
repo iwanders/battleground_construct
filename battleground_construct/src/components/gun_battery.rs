@@ -152,7 +152,7 @@ mod test {
                 inter_gun_duration,
                 gun_reload,
                 battery_reload,
-                offsets: vec![
+                poses: vec![
                     Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
                     Mat4::from_translation(Vec3::new(0.0, 1.0, 0.0)),
                     Mat4::from_translation(Vec3::new(0.0, 2.0, 0.0)),
@@ -203,7 +203,7 @@ mod test {
                 inter_gun_duration,
                 gun_reload,
                 battery_reload,
-                offsets: vec![
+                poses: vec![
                     Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
                     Mat4::from_translation(Vec3::new(0.0, 1.0, 0.0)),
                     Mat4::from_translation(Vec3::new(0.0, 2.0, 0.0)),
