@@ -9,25 +9,47 @@ on:
   pull_request:
     branches:
       - master
+  workflow_dispatch:
+
 
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
 
 jobs:
-  checks:
+  ubuntu-native:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
-
       - name: Rust install
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
           sh ./rustup.sh --profile minimal -y
-      - name: cargo build
-        run: cargo build --release
-      - name: cargo clippy
-        run: cargo clippy --release
-      - name: cargo fmt
-        run: cargo fmt --release
+      - name: Build
+        run: cargo build --release --features unit_control_wasm
+      - name: Clippy
+        run: cargo clippy --release -- --no-deps
+      - name: Format
+        # https://github.com/rust-lang/rustfmt#checking-style-on-a-ci-server
+        run: cargo fmt  --all -- --check
+
+  web-wasmpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Rust install
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
+          sh ./rustup.sh --profile minimal -y --default-host wasm32-unknown-unknown
+          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Change Dir
+        run: |
+          cd battleground_viewer
+      - name: Build
+        run: |
+          wasm-pack build --release --target web --out-name web
+      - name: Clippy
+        run: |
+          cargo clippy --release --target wasm32-unknown-unknown -- --no-deps
+          
