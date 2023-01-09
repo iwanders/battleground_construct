@@ -64,7 +64,7 @@ jobs:
           path: |
             ~/.cargo/
             target/            
-          key: ${{ runner.os }}-web-${{ hashFiles('../Cargo.lock') }}
+          key: ${{ runner.os }}-web-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-web-
       - name: Build
         run: |
