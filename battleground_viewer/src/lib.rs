@@ -532,12 +532,12 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 // Entry point for wasm
 #[cfg(target_arch = "wasm32")]
 mod wasm32 {
-    use js_sys::{ArrayBuffer, Uint8Array};
+    use js_sys::{ArrayBuffer, Uint8Array, Promise};
     use log::info;
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
     use wasm_bindgen_futures::JsFuture;
-    use web_sys::{Blob, UrlSearchParams};
+    use web_sys::{Blob, UrlSearchParams, Event, Response};
 
     // https://github.com/rustwasm/wasm-bindgen/issues/1292
 
@@ -545,38 +545,66 @@ mod wasm32 {
     pub struct State {
         started_request: bool,
         recording: Option<Vec<u8>>,
-        req: Option<std::pin::Pin<Box<dyn std::future::Future<Output = Result<Vec<u8>, JsValue>>>>>,
+        req: Option<Response>,
+        success_closure: Option<Box<Closure<dyn FnMut(JsValue)>>>
     }
 
     pub fn view_loop(construct: &mut super::Construct, state: &mut State) {
         info!("loop!");
         use futures::future::FutureExt;
         if !state.started_request {
-            info!("starting!");
-            state.req = Some(Box::into_pin(Box::new(get_data())));
-            state.started_request = true;
-        } else if state.req.is_some() {
-            // z is some! Do something with it...
-            match (*state.req.as_mut().unwrap()).as_mut().now_or_never() {
-                None => {}
-                Some(v) => {
-                    info!("v:: {:?}", v);
-                    match v {
-                        Ok(data) => {
-                            // we haz bytes, re-assign the construct O_o
-                            let bg =
-                                battleground_construct::config::setup::setup_playback_slice(&data)
-                                    .unwrap();
-                            *construct = bg;
-                        }
-                        Err(b) => {
-                            info!("Something went wrong :( {b:?}")
-                        }
-                    }
-                    state.req = None;
+
+            fn foo() -> Result<Promise, JsValue> {
+                use web_sys::{Request, RequestInit, RequestMode, Response};
+
+                fn get_window() -> Result<web_sys::Window, JsValue> {
+                    web_sys::window().ok_or_else(|| JsValue::from_str("couldn't get window"))
                 }
+                // Fetch the recording.
+                let mut opts = RequestInit::new();
+                opts.method("GET");
+                opts.mode(RequestMode::Cors);
+
+                let location_origin = get_window()?.location().search()?;
+                let url_params = UrlSearchParams::new_with_str(&location_origin)?;
+
+                // info!("{}", location_origin);
+                // let url = format!("/pkg/recording.bin");
+                let url = url_params
+                    .get("url")
+                    .ok_or_else(|| JsValue::from_str("could not find url parameter"))?;
+
+                let request = Request::new_with_str_and_init(&url, &opts)?;
+
+                request
+                    .headers()
+                    .set("Accept", "application/octet-stream")?;
+
+                let window = web_sys::window().unwrap();
+                Ok(window.fetch_with_request(&request))
             }
+            let v = foo();
+            match v {
+                Ok(p) => {
+                    state.success_closure = Some(Box::new(Closure::new(
+                        |resp_value: JsValue| {
+                            info!("Jsvalue on then from promise {:?}", resp_value);
+                            assert!(resp_value.is_instance_of::<Response>());
+                            let resp: Response = resp_value.dyn_into().unwrap();
+                            info!("resp {:?}", resp);
+                        }
+                    )));
+                    // This returns a promise we don't await...
+                    p.then(&*state.success_closure.as_ref().unwrap());
+                },
+                _ => panic!(),
+            }
+            
+            
         }
+
+
+        // let bg = battleground_construct::config::setup::setup_playback_slice(&data).unwrap();
     }
 
     async fn get_data() -> Result<Vec<u8>, JsValue> {
@@ -607,6 +635,7 @@ mod wasm32 {
 
         let window = web_sys::window().unwrap();
         let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;
+
 
         // `resp_value` is a `Response` object.
         assert!(resp_value.is_instance_of::<Response>());
