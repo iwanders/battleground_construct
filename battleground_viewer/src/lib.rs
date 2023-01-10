@@ -195,7 +195,13 @@ impl ConstructViewer {
         }
         let mut viewer_state = ViewerState::default();
 
+        #[cfg(target_arch = "wasm32")]
+        let mut wasm_state = wasm32::State::default();
+
         self.window.render_loop(move |mut frame_input: FrameInput| {
+            #[cfg(target_arch = "wasm32")]
+            wasm32::view_loop(&mut self.construct, &mut wasm_state);
+
             let now = time_provider::Instant::now();
             // Run the limiter to update the construct.s
             if self.construct.can_update() {
@@ -535,6 +541,44 @@ mod wasm32 {
 
     // https://github.com/rustwasm/wasm-bindgen/issues/1292
 
+    #[derive(Default)]
+    pub struct State {
+        started_request: bool,
+        recording: Option<Vec<u8>>,
+        req: Option<std::pin::Pin<Box<dyn std::future::Future<Output = Result<Vec<u8>, JsValue>>>>>,
+    }
+
+    pub fn view_loop(construct: &mut super::Construct, state: &mut State) {
+        info!("loop!");
+        use futures::future::FutureExt;
+        if !state.started_request {
+            info!("starting!");
+            state.req = Some(Box::into_pin(Box::new(get_data())));
+            state.started_request = true;
+        } else if state.req.is_some() {
+            // z is some! Do something with it...
+            match (*state.req.as_mut().unwrap()).as_mut().now_or_never() {
+                None => {}
+                Some(v) => {
+                    info!("v:: {:?}", v);
+                    match v {
+                        Ok(data) => {
+                            // we haz bytes, re-assign the construct O_o
+                            let bg =
+                                battleground_construct::config::setup::setup_playback_slice(&data)
+                                    .unwrap();
+                            *construct = bg;
+                        }
+                        Err(b) => {
+                            info!("Something went wrong :( {b:?}")
+                        }
+                    }
+                    state.req = None;
+                }
+            }
+        }
+    }
+
     async fn get_data() -> Result<Vec<u8>, JsValue> {
         use web_sys::{Request, RequestInit, RequestMode, Response};
 
@@ -604,19 +648,17 @@ mod wasm32 {
 
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-        let data = get_data().await;
-
-        let construct = if let Ok(data) = data {
-            info!("Found data!");
-            battleground_construct::config::setup::setup_playback_slice(&data).unwrap()
-        } else {
-            info!("No data, setting up the playground!");
-            let mut construct = battleground_construct::Construct::new();
-            battleground_construct::config::default::add_components(&mut construct.world);
-            battleground_construct::config::default::add_systems(&mut construct.systems);
-            battleground_construct::config::playground::populate_dev_world(&mut construct);
-            construct
-        };
+        // let construct = if let Ok(data) = data {
+        // info!("Found data!");
+        // battleground_construct::config::setup::setup_playback_slice(&data).unwrap()
+        // } else {
+        info!("No data, setting up the playground!");
+        let mut construct = battleground_construct::Construct::new();
+        battleground_construct::config::default::add_components(&mut construct.world);
+        battleground_construct::config::default::add_systems(&mut construct.systems);
+        battleground_construct::config::playground::populate_dev_world(&mut construct);
+        // construct
+        // };
 
         let viewer = super::ConstructViewer::new(construct);
 
