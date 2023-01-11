@@ -34,6 +34,30 @@ impl Construct {
         components::pose::world_pose(&self.world, entity)
     }
 
+    /// If it is a recording, return the max time.
+    pub fn recording_max_time(&self) -> Option<f32> {
+        let (_, recording) = self.world
+            .component_iter::<components::recording::Recording>()
+            .next()?;
+        recording.record().borrow().max_time()
+    }
+
+    pub fn recording_seek(&mut self, time: f32) {
+        let record =  if let Some((_, recording)) = self.world
+            .component_iter::<components::recording::Recording>()
+            .next() {
+            Some(recording.record())
+        } else {
+            None
+        };
+        if let Some(rec) = record {
+            {
+                rec.borrow_mut().seek(time);
+            }
+            rec.borrow().apply_state(&mut self.world);
+        }
+    }
+
     pub fn elapsed_as_f32(&self) -> f32 {
         let (_entity, clock) = self
             .world

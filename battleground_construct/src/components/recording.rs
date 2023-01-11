@@ -312,6 +312,7 @@ struct TypeHandler {
 pub struct Record {
     component_map: ComponentMap,
     states: Vec<Capture>,
+    max_time: Option<f32>,
     #[serde(skip)]
     current_state: WorldState,
     #[serde(skip)]
@@ -417,6 +418,9 @@ impl Record {
 
         // Store previous full snap shot for next delta calculation.
         self.current_state = new_world_state;
+        if let Some(v) = self.current_state_time() {
+            self.max_time = Some(v);
+        }
     }
 
     fn current_state_time(&self) -> Option<f32> {
@@ -426,6 +430,10 @@ impl Record {
         let (_clock_entity, clock_data) = states.states().first()?;
         let clock = bincode::deserialize::<components::clock::Clock>(&clock_data).unwrap();
         Some(clock.elapsed_as_f32())
+    }
+
+    pub fn max_time(&self) -> Option<f32> {
+        self.max_time
     }
 
     /// Component specific seek using the clock.
