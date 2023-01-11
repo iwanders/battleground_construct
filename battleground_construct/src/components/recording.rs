@@ -82,14 +82,12 @@ impl ComponentDelta {
 
     fn apply_dry(&self, states: &mut ComponentStates) {
         let d = states.raw_mut();
+
         // Assume remove is shorter, use that as outer loop.
         for to_be_removed in self.removed.iter() {
             if let Some(present) = d.iter().position(|r| r.0 == *to_be_removed) {
-                // println!("Removing {present:?}");
                 d.swap_remove(present);
-                // break; // found this entry to be removed, don't iterate over the remainder.
-                // Is it a bug that we can't have this break here? Should component states
-                // not always contain unique entities?
+                continue; // found this entry to be removed, don't iterate over the remainder.
             }
         }
 
@@ -97,10 +95,8 @@ impl ComponentDelta {
         for to_change in self.change.states().iter() {
             if let Some(present) = d.iter().position(|r| r.0 == to_change.0) {
                 // already had this, change it.
-                // println!("Updating entry for {present:?}");
                 d[present].1 = to_change.1.clone();
             } else {
-                // println!("new entry for {to_change:?}");
                 // new entry
                 d.push(to_change.clone());
             }
@@ -463,6 +459,8 @@ impl Record {
                     // println!("ZippedDeltaState");
                     let delta = DeltaState::uncompress(zipped_delta);
                     delta.apply_dry(&mut self.current_state);
+                    // store decompression result.
+                    self.states[self.playback_index] = Capture::DeltaState(delta);
                 }
             }
             current_time = self
@@ -501,6 +499,8 @@ impl Record {
                     for (_, h) in self.helpers.iter() {
                         (h.play)(&delta, world);
                     }
+                    // store decompression result.
+                    self.states[self.playback_index] = Capture::DeltaState(delta);
                 }
             }
             self.playback_index += 1;
