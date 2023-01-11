@@ -257,13 +257,6 @@ impl ConstructViewer {
                             ui.with_layout(
                                 egui::Layout::right_to_left(egui::Align::Center),
                                 |ui| {
-                                    if let Some(v) = self.construct.recording_max_time() {
-                                        ui.add(
-                                            egui::Slider::new(&mut viewer_state.playback, 0.0..=v)
-                                                .text("")
-                                                .clamp_to_range(true),
-                                        );
-                                    }
                                     ui.menu_button(
                                         format!(
                                             "{:.2} x {:.2}",
@@ -307,6 +300,18 @@ impl ConstructViewer {
                                             }
                                         },
                                     );
+
+                                    if let Some(v) = self.construct.recording_max_time() {
+                                        // https://github.com/emilk/egui/issues/1850
+                                        ui.scope(|ui| {
+                                            ui.spacing_mut().slider_width = 200.0; // Temporary change
+                                                ui.add(
+                                                    egui::Slider::new(&mut viewer_state.playback, 0.0..=v)
+                                                        .text("Seek")
+                                                        .clamp_to_range(true).show_value(true),
+                                            );
+                                        });
+                                    };
                                 },
                             );
                         });
@@ -323,6 +328,8 @@ impl ConstructViewer {
                 viewer_state.previous_playback = viewer_state.playback;
                 self.construct.recording_seek(viewer_state.playback);
             }
+            viewer_state.previous_playback = self.construct.elapsed_as_f32();
+            viewer_state.playback = viewer_state.previous_playback;
 
             for e in frame_input.events.iter() {
                 match *e {

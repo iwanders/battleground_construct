@@ -63,6 +63,7 @@ impl Construct {
             }
             // Apply the state.
             record.borrow().apply_state(&mut self.world);
+            self.update(); // one update cycle to spawn vehicles, to ensure this works while paused.
         }
 
     }

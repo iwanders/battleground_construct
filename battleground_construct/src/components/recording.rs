@@ -445,7 +445,7 @@ impl Record {
         self.current_state.ensure_components(&self.component_map);
         self.playback_index = 0;
         let mut current_time = 0.0;
-        while self.playback_index < self.states.len() && current_time < desired {
+        while self.playback_index < self.states.len() && (current_time < desired || self.playback_index == 0) {
             match &self.states[self.playback_index] {
                 Capture::WorldState(full_state) => {
                     // println!("WorldState");
