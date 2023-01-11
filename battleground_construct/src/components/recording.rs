@@ -431,7 +431,7 @@ impl Record {
         // println!("clock_component: {clock_component}");
         let states = self.current_state.component_states(clock_component)?;
         let (_clock_entity, clock_data) = states.states().first()?;
-        let clock = bincode::deserialize::<components::clock::Clock>(&clock_data).unwrap();
+        let clock = bincode::deserialize::<components::clock::Clock>(clock_data).unwrap();
         Some(clock.elapsed_as_f32())
     }
 
@@ -447,7 +447,9 @@ impl Record {
         self.current_state.ensure_components(&self.component_map);
         self.playback_index = 0;
         let mut current_time = 0.0;
-        while self.playback_index < self.states.len() && (current_time < desired || self.playback_index == 0) {
+        while self.playback_index < self.states.len()
+            && (current_time < desired || self.playback_index == 0)
+        {
             match &self.states[self.playback_index] {
                 Capture::WorldState(full_state) => {
                     // println!("WorldState");
@@ -536,7 +538,7 @@ impl Record {
                     todo!()
                 }
                 Capture::ZippedDeltaState(zipped_delta) => {
-                    let delta = DeltaState::uncompress(&zipped_delta);
+                    let delta = DeltaState::uncompress(zipped_delta);
                     for (k, v) in self.component_map.component_map.iter() {
                         if let Some(v) = delta.component_delta(*v) {
                             *accumulated.entry(k.to_string()).or_insert(0usize) += v.sum_bytes();

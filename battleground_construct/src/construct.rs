@@ -47,9 +47,14 @@ impl Construct {
     pub fn recording_seek(&mut self, time: f32) {
         // Obtain the recording, then obliterate the world, then perform the seek, effectively
         // reinstantiating it.
-        let record_entry = self.world.component_entities::<components::recording::Recording>();
+        let record_entry = self
+            .world
+            .component_entities::<components::recording::Recording>();
         if let Some(entity) = record_entry.first() {
-            let recording = self.world.remove_component::<components::recording::Recording>(*entity).unwrap();
+            let recording = self
+                .world
+                .remove_component::<components::recording::Recording>(*entity)
+                .unwrap();
             let record = recording.record();
             // Nuke the world...
             self.world = Default::default();
@@ -65,7 +70,6 @@ impl Construct {
             record.borrow().apply_state(&mut self.world);
             self.update(); // one update cycle to spawn vehicles, to ensure this works while paused.
         }
-
     }
 
     pub fn elapsed_as_f32(&self) -> f32 {

@@ -305,10 +305,14 @@ impl ConstructViewer {
                                         // https://github.com/emilk/egui/issues/1850
                                         ui.scope(|ui| {
                                             ui.spacing_mut().slider_width = 200.0; // Temporary change
-                                                ui.add(
-                                                    egui::Slider::new(&mut viewer_state.playback, 0.0..=v)
-                                                        .text("Seek")
-                                                        .clamp_to_range(true).show_value(true),
+                                            ui.add(
+                                                egui::Slider::new(
+                                                    &mut viewer_state.playback,
+                                                    0.0..=v,
+                                                )
+                                                .text("Seek")
+                                                .clamp_to_range(true)
+                                                .show_value(true),
                                             );
                                         });
                                     };

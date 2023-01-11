@@ -180,7 +180,7 @@ pub fn parse_setup_args() -> Result<Setup, Box<dyn std::error::Error>> {
         Commands::Play(play) => Ok(Setup::Play(play.file)),
         Commands::Recording(subcommand) => {
             recording_subcommand_handler(subcommand)?;
-            return Err("done".into());
+            Err("done".into())
         }
     }
 }
