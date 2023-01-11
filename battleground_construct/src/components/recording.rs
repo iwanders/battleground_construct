@@ -87,7 +87,9 @@ impl ComponentDelta {
             if let Some(present) = d.iter().position(|r| r.0 == *to_be_removed) {
                 // println!("Removing {present:?}");
                 d.swap_remove(present);
-                break; // found this entry to be removed, don't iterate over the remainder.
+                // break; // found this entry to be removed, don't iterate over the remainder.
+                // Is it a bug that we can't have this break here? Should component states
+                // not always contain unique entities?
             }
         }
 
