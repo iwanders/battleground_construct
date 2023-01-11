@@ -34,7 +34,7 @@ jobs:
           path: |
             ~/.cargo/
             target/            
-          key: ${{ runner.os }}-native-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-native-${{ github.ref }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-native-
       - name: Format
         # https://github.com/rust-lang/rustfmt#checking-style-on-a-ci-server
@@ -65,7 +65,7 @@ jobs:
           path: |
             ~/.cargo/
             target/            
-          key: ${{ runner.os }}-web-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-web-${{ github.ref }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-web-
       - name: Build
         run: |

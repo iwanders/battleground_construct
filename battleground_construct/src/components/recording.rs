@@ -87,7 +87,6 @@ impl ComponentDelta {
         for to_be_removed in self.removed.iter() {
             if let Some(present) = d.iter().position(|r| r.0 == *to_be_removed) {
                 d.swap_remove(present);
-                continue; // found this entry to be removed, don't iterate over the remainder.
             }
         }
 
