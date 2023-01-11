@@ -37,8 +37,6 @@ struct Seek {
     time: f32,
 }
 
-
-
 /// Commands related to recordings
 #[derive(Subcommand, Debug)]
 enum RecordingCommands {
@@ -187,9 +185,7 @@ pub fn parse_setup_args() -> Result<Setup, Box<dyn std::error::Error>> {
     }
 }
 
-
-
-fn recording_subcommand_handler(cmd: RecordingCommands) -> Result<(), Box<dyn std::error::Error>>{
+fn recording_subcommand_handler(cmd: RecordingCommands) -> Result<(), Box<dyn std::error::Error>> {
     use crate::components::recording::Recording;
     match cmd {
         RecordingCommands::Analyze(z) => {
@@ -200,7 +196,7 @@ fn recording_subcommand_handler(cmd: RecordingCommands) -> Result<(), Box<dyn st
                 println!("{name: <30}{count: >30}");
                 total += count;
             }
-            println!("{name: <30}{count: >30}", name="total", count=total);
+            println!("{name: <30}{count: >30}", name = "total", count = total);
         }
         RecordingCommands::Seek(z) => {
             let v = Recording::load_file(&z.file)?;

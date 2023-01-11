@@ -36,26 +36,35 @@ impl Construct {
 
     /// If it is a recording, return the max time.
     pub fn recording_max_time(&self) -> Option<f32> {
-        let (_, recording) = self.world
+        let (_, recording) = self
+            .world
             .component_iter::<components::recording::Recording>()
             .next()?;
         recording.record().borrow().max_time()
     }
 
+    /// Sketchy seek functionality.
     pub fn recording_seek(&mut self, time: f32) {
-        let record =  if let Some((_, recording)) = self.world
-            .component_iter::<components::recording::Recording>()
-            .next() {
-            Some(recording.record())
-        } else {
-            None
-        };
-        if let Some(rec) = record {
+        // Obtain the recording, then obliterate the world, then perform the seek, effectively
+        // reinstantiating it.
+        let record_entry = self.world.component_entities::<components::recording::Recording>();
+        if let Some(entity) = record_entry.first() {
+            let recording = self.world.remove_component::<components::recording::Recording>(*entity).unwrap();
+            let record = recording.record();
+            // Nuke the world...
+            self.world = Default::default();
+            // Add the recorder back.
+            let recorder_entity = self.world.add_entity();
+            self.world.add_component_boxed(recorder_entity, recording);
+
+            // Perform the seek.
             {
-                rec.borrow_mut().seek(time);
+                record.borrow_mut().seek(time);
             }
-            rec.borrow().apply_state(&mut self.world);
+            // Apply the state.
+            record.borrow().apply_state(&mut self.world);
         }
+
     }
 
     pub fn elapsed_as_f32(&self) -> f32 {

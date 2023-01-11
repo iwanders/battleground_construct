@@ -191,6 +191,8 @@ impl ConstructViewer {
         struct ViewerState {
             exiting: bool,
             paused: bool,
+            previous_playback: f32,
+            playback: f32,
             selected: std::collections::HashSet<EntityId>,
         }
         let mut viewer_state = ViewerState::default();
@@ -255,6 +257,13 @@ impl ConstructViewer {
                             ui.with_layout(
                                 egui::Layout::right_to_left(egui::Align::Center),
                                 |ui| {
+                                    if let Some(v) = self.construct.recording_max_time() {
+                                        ui.add(
+                                            egui::Slider::new(&mut viewer_state.playback, 0.0..=v)
+                                                .text("")
+                                                .clamp_to_range(true),
+                                        );
+                                    }
                                     ui.menu_button(
                                         format!(
                                             "{:.2} x {:.2}",
@@ -270,6 +279,10 @@ impl ConstructViewer {
                                             if ui.button(label).clicked() {
                                                 viewer_state.paused = !viewer_state.paused;
                                                 self.limiter.set_paused(viewer_state.paused);
+                                                ui.close_menu();
+                                            }
+                                            if ui.button("x0.05").clicked() {
+                                                self.limiter.set_desired_speed(0.05);
                                                 ui.close_menu();
                                             }
                                             if ui.button("x0.1").clicked() {
@@ -288,6 +301,10 @@ impl ConstructViewer {
                                                 self.limiter.set_desired_speed(2.0);
                                                 ui.close_menu();
                                             }
+                                            if ui.button("x5.0").clicked() {
+                                                self.limiter.set_desired_speed(5.0);
+                                                ui.close_menu();
+                                            }
                                         },
                                     );
                                 },
@@ -300,6 +317,12 @@ impl ConstructViewer {
             self.camera.set_viewport(frame_input.viewport);
             self.control
                 .handle_events(&mut self.camera, &mut frame_input.events);
+
+            if viewer_state.previous_playback != viewer_state.playback {
+                println!("Something changed, new value is {}", viewer_state.playback);
+                viewer_state.previous_playback = viewer_state.playback;
+                self.construct.recording_seek(viewer_state.playback);
+            }
 
             for e in frame_input.events.iter() {
                 match *e {

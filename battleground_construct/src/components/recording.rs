@@ -135,7 +135,6 @@ impl ComponentStates {
         self.states.iter().map(|(e, d)| (*e, &d[..])).collect()
     }
 
-
     pub fn sum_bytes(&self) -> usize {
         self.states.iter().map(|(_, p)| 8 + p.len()).sum()
     }
@@ -220,10 +219,12 @@ impl WorldState {
     pub fn component_states(&self, component: ComponentType) -> Option<&ComponentStates> {
         self.states.get(&component)
     }
-    pub fn component_states_mut(&mut self, component: ComponentType) -> Option<&mut ComponentStates> {
+    pub fn component_states_mut(
+        &mut self,
+        component: ComponentType,
+    ) -> Option<&mut ComponentStates> {
         self.states.get_mut(&component)
     }
-
 }
 
 /// Delta state for the entire world.
@@ -263,8 +264,7 @@ impl DeltaState {
         }
     }
 
-    fn apply_dry(&self, 
-        world_state: &mut WorldState) {
+    fn apply_dry(&self, world_state: &mut WorldState) {
         for (k, delta) in self.delta.iter() {
             if let Some(ref mut v) = world_state.component_states_mut(*k) {
                 delta.apply_dry(v);
@@ -395,7 +395,8 @@ impl Record {
         let play = Box::new(move |delta_state: &DeltaState, world: &mut World| {
             delta_state.apply::<T>(component_type, world)
         });
-        self.helpers.insert(component_type, TypeHandler{record, play});
+        self.helpers
+            .insert(component_type, TypeHandler { record, play });
     }
 
     /// Record the current world state, currently always writes a zipped delta state.
@@ -460,7 +461,9 @@ impl Record {
                     delta.apply_dry(&mut self.current_state);
                 }
             }
-            current_time = self.current_state_time().expect("no time in current state, need at least one frame");
+            current_time = self
+                .current_state_time()
+                .expect("no time in current state, need at least one frame");
             self.playback_index += 1;
         }
         println!("current_time: {current_time}, {}", self.playback_index);
@@ -468,7 +471,10 @@ impl Record {
 
     pub fn apply_state(&self, world: &mut World) {
         // next, create a complete delta state.
-        let full_delta = DeltaState::new(&Default::default(), &self.current_state);
+        let mut empty: WorldState = Default::default();
+        empty.ensure_components(&self.component_map);
+        let full_delta = DeltaState::new(&empty, &self.current_state);
+
         for (_, h) in self.helpers.iter() {
             (h.play)(&full_delta, world);
         }
@@ -537,7 +543,8 @@ impl Record {
                 }
             }
         }
-        let mut r: Vec<(String, usize)> = accumulated.iter().map(|(k,v)|(k.clone(), *v)).collect();
+        let mut r: Vec<(String, usize)> =
+            accumulated.iter().map(|(k, v)| (k.clone(), *v)).collect();
         r.sort();
         r
     }
