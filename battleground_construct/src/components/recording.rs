@@ -75,6 +75,10 @@ impl ComponentDelta {
             }
         }
     }
+
+    pub fn sum_bytes(&self) -> usize {
+        self.change.sum_bytes() + self.removed.len() * 8
+    }
 }
 
 /// Serialized component states for a particular component type.
@@ -96,6 +100,11 @@ impl ComponentStates {
     /// Retrieval method for the hashmap
     pub fn to_hashmap(&self) -> std::collections::HashMap<EntityId, &[u8]> {
         self.states.iter().map(|(e, d)| (*e, &d[..])).collect()
+    }
+
+
+    pub fn sum_bytes(&self) -> usize {
+        self.states.iter().map(|(_, p)| 8 + p.len()).sum()
     }
 
     /// Given this ComponentStates and the new_states, calculate the delta.
@@ -174,6 +183,11 @@ impl WorldState {
                     .expect("component expected in new state"),
             )
     }
+
+    pub fn component_states(&self, component: ComponentType) -> Option<&ComponentStates> {
+        self.states.get(&component)
+    }
+
 }
 
 /// Delta state for the entire world.
@@ -188,6 +202,10 @@ impl DeltaState {
         let mut delta = DeltaState::default();
         delta.capture(old_state, new_state);
         delta
+    }
+
+    pub fn component_delta(&self, component: ComponentType) -> Option<&ComponentDelta> {
+        self.delta.get(&component)
     }
 
     /// Internal worker to actually capture the states.
@@ -388,6 +406,35 @@ impl Record {
                 world.add_component(clock_entity, PlaybackFinishedMarker);
             }
         }
+    }
+
+    pub fn get_byte_sums(&self) -> Vec<(String, usize)> {
+        let mut accumulated = std::collections::HashMap::<String, usize>::new();
+        for s in self.states.iter() {
+            match s {
+                Capture::WorldState(full_state) => {
+                    for (k, v) in self.component_map.component_map.iter() {
+                        if let Some(v) = full_state.component_states(*v) {
+                            *accumulated.entry(k.to_string()).or_insert(0usize) += v.sum_bytes();
+                        }
+                    }
+                }
+                Capture::DeltaState(_delta) => {
+                    todo!()
+                }
+                Capture::ZippedDeltaState(zipped_delta) => {
+                    let delta = DeltaState::uncompress(&zipped_delta);
+                    for (k, v) in self.component_map.component_map.iter() {
+                        if let Some(v) = delta.component_delta(*v) {
+                            *accumulated.entry(k.to_string()).or_insert(0usize) += v.sum_bytes();
+                        }
+                    }
+                }
+            }
+        }
+        let mut r: Vec<(String, usize)> = accumulated.iter().map(|(k,v)|(k.clone(), *v)).collect();
+        r.sort();
+        r
     }
 }
 

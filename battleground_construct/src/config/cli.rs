@@ -14,14 +14,26 @@ enum Commands {
     Scenario(Scenario),
     #[command(arg_required_else_help = true)]
     Play(Play),
+    #[command(arg_required_else_help = true)]
+    #[command(subcommand)]
+    Recording(RecordingCommands),
 }
 
 /// Play subcommand
 #[derive(Debug, Args)]
 struct Play {
-    /// Path to play from
+    /// Path to use
     #[arg(value_hint = clap::ValueHint::FilePath)]
     file: String,
+}
+
+
+/// Commands related to recordings
+#[derive(Subcommand, Debug)]
+enum RecordingCommands {
+    /// Specify the scenario to run.
+    #[command(arg_required_else_help = true)]
+    Analyze(Play),
 }
 
 /// Scenario subcommand
@@ -33,7 +45,7 @@ struct Scenario {
     scenario: String,
 
     #[cfg(feature = "unit_control_wasm")]
-    #[arg(short, long, verbatim_doc_comment)]
+    #[arg(long, verbatim_doc_comment)]
     /// Direct override of the path attribute of wasm controllers. Use with --wasm team_a:path_to_module.wasm --wasm team_b:path_to_module.wasm.
     wasm: Vec<String>,
 
@@ -155,7 +167,30 @@ pub fn parse_setup_args() -> Result<Setup, Box<dyn std::error::Error>> {
             apply_config(&config_strs, specification).map(Setup::Scenario)
         }
         Commands::Play(play) => Ok(Setup::Play(play.file)),
+        Commands::Recording(subcommand) => {
+            recording_subcommand_handler(subcommand)?;
+            return Err("done".into());
+        }
     }
+}
+
+
+
+fn recording_subcommand_handler(cmd: RecordingCommands) -> Result<(), Box<dyn std::error::Error>>{
+    use crate::components::recording::Recording;
+    match cmd {
+        RecordingCommands::Analyze(z) => {
+            let mut total = 0;
+            let v = Recording::load_file(&z.file)?;
+            let record = v.record();
+            for (name, count) in record.borrow().get_byte_sums() {
+                println!("{name: <30}{count: >30}");
+                total += count;
+            }
+            println!("{name: <30}{count: >30}", name="total", count=total);
+        }
+    }
+    Ok(())
 }
 
 // Well, this function is a bit... much.
