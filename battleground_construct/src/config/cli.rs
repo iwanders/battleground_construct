@@ -27,6 +27,17 @@ struct Play {
     file: String,
 }
 
+/// Play subcommand
+#[derive(Debug, Args)]
+struct Seek {
+    /// Path to use
+    #[arg(value_hint = clap::ValueHint::FilePath)]
+    file: String,
+
+    time: f32,
+}
+
+
 
 /// Commands related to recordings
 #[derive(Subcommand, Debug)]
@@ -34,6 +45,8 @@ enum RecordingCommands {
     /// Specify the scenario to run.
     #[command(arg_required_else_help = true)]
     Analyze(Play),
+    #[command(arg_required_else_help = true)]
+    Seek(Seek),
 }
 
 /// Scenario subcommand
@@ -188,6 +201,13 @@ fn recording_subcommand_handler(cmd: RecordingCommands) -> Result<(), Box<dyn st
                 total += count;
             }
             println!("{name: <30}{count: >30}", name="total", count=total);
+        }
+        RecordingCommands::Seek(z) => {
+            let v = Recording::load_file(&z.file)?;
+            let record = v.record();
+            println!("starting seek");
+            record.borrow_mut().seek(z.time);
+            println!("finished seek");
         }
     }
     Ok(())

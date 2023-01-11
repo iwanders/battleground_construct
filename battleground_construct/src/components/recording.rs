@@ -44,6 +44,10 @@ impl ComponentMap {
     pub fn components(&self) -> Vec<ComponentType> {
         self.component_map.values().copied().collect()
     }
+
+    pub fn get(&self, name: &str) -> Option<ComponentType> {
+        self.component_map.get(name).copied()
+    }
 }
 
 /// Delta for a particular component, this can be applied to a World.
@@ -76,6 +80,31 @@ impl ComponentDelta {
         }
     }
 
+    fn apply_dry(&self, states: &mut ComponentStates) {
+        let d = states.raw_mut();
+        // Assume remove is shorter, use that as outer loop.
+        for to_be_removed in self.removed.iter() {
+            if let Some(present) = d.iter().position(|r| r.0 == *to_be_removed) {
+                // println!("Removing {present:?}");
+                d.swap_remove(present);
+                break; // found this entry to be removed, don't iterate over the remainder.
+            }
+        }
+
+        // Next, iterate over change.
+        for to_change in self.change.states().iter() {
+            if let Some(present) = d.iter().position(|r| r.0 == to_change.0) {
+                // already had this, change it.
+                // println!("Updating entry for {present:?}");
+                d[present].1 = to_change.1.clone();
+            } else {
+                // println!("new entry for {to_change:?}");
+                // new entry
+                d.push(to_change.clone());
+            }
+        }
+    }
+
     pub fn sum_bytes(&self) -> usize {
         self.change.sum_bytes() + self.removed.len() * 8
     }
@@ -87,6 +116,10 @@ struct ComponentStates {
     states: Vec<(EntityId, Vec<u8>)>,
 }
 impl ComponentStates {
+    pub fn raw_mut(&mut self) -> &mut Vec<(EntityId, Vec<u8>)> {
+        &mut self.states
+    }
+
     /// Capture the component states for this component type.
     pub fn capture<T: Component + Serialize + 'static>(world: &World) -> ComponentStates {
         let states: Vec<(EntityId, Vec<u8>)> = world
@@ -187,6 +220,9 @@ impl WorldState {
     pub fn component_states(&self, component: ComponentType) -> Option<&ComponentStates> {
         self.states.get(&component)
     }
+    pub fn component_states_mut(&mut self, component: ComponentType) -> Option<&mut ComponentStates> {
+        self.states.get_mut(&component)
+    }
 
 }
 
@@ -227,6 +263,15 @@ impl DeltaState {
         }
     }
 
+    fn apply_dry(&self, 
+        world_state: &mut WorldState) {
+        for (k, delta) in self.delta.iter() {
+            if let Some(ref mut v) = world_state.component_states_mut(*k) {
+                delta.apply_dry(v);
+            }
+        }
+    }
+
     /// Retrieve a compressed version of this delta state.
     fn compressed(&self) -> Vec<u8> {
         let bytes = bincode::serialize(self).unwrap();
@@ -257,17 +302,22 @@ type RecordFunction = Box<dyn Fn(&mut WorldState, &World)>;
 /// Helper function for type erasure to play back.
 type PlayFunction = Box<dyn Fn(&DeltaState, &mut World)>;
 
+struct TypeHandler {
+    record: RecordFunction,
+    play: PlayFunction,
+}
+
 #[derive(Default, Deserialize, Serialize)]
 /// The storage of the recording or playback.
 pub struct Record {
     component_map: ComponentMap,
     states: Vec<Capture>,
     #[serde(skip)]
-    previous_state: WorldState,
+    current_state: WorldState,
     #[serde(skip)]
     playback_index: usize,
     #[serde(skip)]
-    helpers: std::collections::HashMap<ComponentType, (RecordFunction, PlayFunction)>,
+    helpers: std::collections::HashMap<ComponentType, TypeHandler>,
 }
 
 impl Record {
@@ -332,7 +382,7 @@ impl Record {
         );
         self.register_type::<components::match_time_limit::MatchTimeLimit>("match_time_limit");
 
-        self.previous_state.ensure_components(&self.component_map);
+        self.current_state.ensure_components(&self.component_map);
     }
 
     /// Register a particular type for recording and playback.
@@ -344,7 +394,7 @@ impl Record {
         let play = Box::new(move |delta_state: &DeltaState, world: &mut World| {
             delta_state.apply::<T>(component_type, world)
         });
-        self.helpers.insert(component_type, (record, play));
+        self.helpers.insert(component_type, TypeHandler{record, play});
     }
 
     /// Record the current world state, currently always writes a zipped delta state.
@@ -353,12 +403,12 @@ impl Record {
         let mut new_world_state = WorldState::default();
 
         // Capture the state
-        for (_, (record_fun, _)) in self.helpers.iter() {
-            record_fun(&mut new_world_state, world);
+        for (_, h) in self.helpers.iter() {
+            (h.record)(&mut new_world_state, world);
         }
 
         // Determine the delta
-        let delta = DeltaState::new(&self.previous_state, &new_world_state);
+        let delta = DeltaState::new(&self.current_state, &new_world_state);
 
         // Store the delta
         // self.states.push(Capture::DeltaState(delta));
@@ -366,7 +416,54 @@ impl Record {
             .push(Capture::ZippedDeltaState(delta.compressed()));
 
         // Store previous full snap shot for next delta calculation.
-        self.previous_state = new_world_state;
+        self.current_state = new_world_state;
+    }
+
+    fn current_state_time(&self) -> Option<f32> {
+        let clock_component = self.component_map.get("clock")?;
+        // println!("clock_component: {clock_component}");
+        let states = self.current_state.component_states(clock_component)?;
+        let (_clock_entity, clock_data) = states.states().first()?;
+        let clock = bincode::deserialize::<components::clock::Clock>(&clock_data).unwrap();
+        Some(clock.elapsed_as_f32())
+    }
+
+    /// Component specific seek using the clock.
+    pub fn seek(&mut self, desired: f32) {
+        println!("Seeking to {desired}");
+        // lets start by... just applying from the start, but no deserialization, applying dry.
+        self.current_state = Default::default();
+        self.current_state.ensure_components(&self.component_map);
+        self.playback_index = 0;
+        let mut current_time = 0.0;
+        while self.playback_index < self.states.len() && current_time < desired {
+            match &self.states[self.playback_index] {
+                Capture::WorldState(full_state) => {
+                    // println!("WorldState");
+                    self.current_state = full_state.clone();
+                }
+                Capture::DeltaState(delta) => {
+                    // println!("DeltaState");
+                    delta.apply_dry(&mut self.current_state);
+                }
+                Capture::ZippedDeltaState(zipped_delta) => {
+                    // println!("ZippedDeltaState");
+                    let delta = DeltaState::uncompress(zipped_delta);
+                    delta.apply_dry(&mut self.current_state);
+                }
+            }
+            current_time = self.current_state_time().expect("no time in current state, need at least one frame");
+            self.playback_index += 1;
+        }
+        println!("current_time: {current_time}, {}", self.playback_index);
+    }
+
+    pub fn apply_state(&self, world: &mut World) {
+        // next, create a complete delta state.
+        let full_delta = DeltaState::new(&Default::default(), &self.current_state);
+        for (_, h) in self.helpers.iter() {
+            (h.play)(&full_delta, world);
+        }
     }
 
     /// Play back a step from this recording.
@@ -377,14 +474,14 @@ impl Record {
                     todo!()
                 }
                 Capture::DeltaState(delta) => {
-                    for (_, (_, play_fun)) in self.helpers.iter() {
-                        play_fun(delta, world);
+                    for (_, h) in self.helpers.iter() {
+                        (h.play)(delta, world);
                     }
                 }
                 Capture::ZippedDeltaState(zipped_delta) => {
                     let delta = DeltaState::uncompress(zipped_delta);
-                    for (_, (_, play_fun)) in self.helpers.iter() {
-                        play_fun(&delta, world);
+                    for (_, h) in self.helpers.iter() {
+                        (h.play)(&delta, world);
                     }
                 }
             }
