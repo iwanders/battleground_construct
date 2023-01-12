@@ -104,20 +104,21 @@ pub fn setup_scenario(
     let world = &mut construct.world;
 
     // Add teams
-    let mut team_set = std::collections::HashSet::<String>::new();
+    let mut team_set = std::collections::HashMap::<String, specification::Team>::new();
     let mut teams = vec![];
     for team in config.spawn_config.teams {
         let team_id = components::id_generator::generate_id(world);
         let team_entity = world.add_entity();
-        let team_component = components::team::Team::new(team_id, &team.name, team.color.into());
-        if team_set.contains(&team.name) {
+        let mut team_component = components::team::Team::new(team_id, &team.name, team.color.into());
+        team_component.set_comment(team.comment.as_ref().map(|x|x.as_str()));
+        if team_set.contains_key(&team.name) {
             // team name occurs twice and the match report won't be able to distinguish, raise
             // an error to avoid indistinguishable results.
             return Err(Box::new(SetupError::new(
                 format!("team name {} occurs twice", team.name).as_str(),
             )));
         }
-        team_set.insert(team.name.to_owned());
+        team_set.insert(team.name.to_owned(), team.clone());
         teams.push(team_component.id());
         world.add_component(team_entity, team_component);
     }
@@ -136,6 +137,7 @@ pub fn setup_scenario(
         fn controller_type_to_control(
             controller_type: &specification::ControllerType,
             control_config: &std::collections::HashMap<String, specification::ControllerType>,
+            team_config: &std::collections::HashMap::<String, specification::Team>,
         ) -> Result<Box<dyn UnitControl>, Box<dyn std::error::Error>> {
             Ok(match controller_type {
                 specification::ControllerType::SwivelShoot => {
@@ -176,7 +178,7 @@ pub fn setup_scenario(
                 specification::ControllerType::SequenceControl { controllers } => {
                     let mut v = vec![];
                     for t in controllers.iter() {
-                        v.push(controller_type_to_control(t, control_config)?);
+                        v.push(controller_type_to_control(t, control_config, team_config)?);
                     }
                     Box::new(unit_control_builtin::sequence_control::SequenceControl::new(v))
                 }
@@ -186,13 +188,20 @@ pub fn setup_scenario(
                 specification::ControllerType::FromControlConfig{ name } => {
                     let subcontrol = control_config.get(name).ok_or_else(|| {
                         SetupError::new(&format!("requested controller {} not found", name))})?;
-                    controller_type_to_control(subcontrol, control_config)?
+                    controller_type_to_control(subcontrol, control_config, team_config)?
+                }
+                specification::ControllerType::TeamController{ name } => {
+                    let subcontrol = team_config.get(name).ok_or_else(|| {
+                        SetupError::new(&format!("controlller for requested team {} not found", name))})?;
+                    let subcontrol = subcontrol.controller.as_ref().ok_or_else(||{
+                        SetupError::new(&format!("team {} doesn't have a controller but is necessary", name))})?;
+                    controller_type_to_control(&subcontrol, control_config, team_config)?
                 }
             })
         }
 
         let controller: Box<dyn UnitControl> =
-            controller_type_to_control(&spawn.controller, &config.spawn_config.control_config)?;
+            controller_type_to_control(&spawn.controller, &config.spawn_config.control_config, &team_set)?;
         match spawn.vehicle {
             specification::Unit::Tank => {
                 let tank_config = units::tank::TankSpawnConfig {

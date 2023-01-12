@@ -53,8 +53,15 @@ pub struct MatchConfig {
 pub struct Team {
     /// Team name
     pub name: String,
+
+    /// Team comment, like controller that was loaded.
+    pub comment: Option<String>,
+
     /// Color used to represent this team. RGB; 0-255.
     pub color: (u8, u8, u8),
+
+    /// The controller to use for this team.
+    pub controller: Option<ControllerType>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
@@ -94,6 +101,9 @@ pub enum ControllerType {
         controllers: Vec<ControllerType>,
     },
     FromControlConfig {
+        name: String,
+    },
+    TeamController {
         name: String,
     },
 }

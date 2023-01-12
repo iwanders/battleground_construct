@@ -57,7 +57,8 @@ struct Scenario {
 
     #[cfg(feature = "unit_control_wasm")]
     #[arg(long, verbatim_doc_comment)]
-    /// Direct override of the path attribute of wasm controllers. Use with --wasm team_a:path_to_module.wasm --wasm team_b:path_to_module.wasm.
+    /// Direct override of the path attribute of wasm controllers in the controller configs.
+    /// Use with --wasm team_a:path_to_module.wasm --wasm team_b:path_to_module.wasm.
     wasm: Vec<String>,
 
     /// Override properties from the configuration, the format of these keys is a bit bespoke and verbose.
@@ -79,7 +80,7 @@ struct Scenario {
     record: Option<String>,
 
     /// Overwrite or apply the time limit.
-    #[arg(short, long)]
+    #[arg(short = 'l', long)]
     time_limit: Option<f32>,
 }
 

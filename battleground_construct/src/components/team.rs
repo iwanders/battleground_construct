@@ -21,6 +21,7 @@ pub struct Team {
     id: TeamId,
     name: String,
     color: display::Color,
+    comment: Option<String>
 }
 
 impl Team {
@@ -29,7 +30,11 @@ impl Team {
             name: name.to_owned(),
             id: TeamId(id),
             color,
+            comment: None,
         }
+    }
+    pub fn set_comment(&mut self, value: Option<&str>) {
+        self.comment = value.map(|x| x.to_owned())
     }
     pub fn name(&self) -> &str {
         &self.name
@@ -39,6 +44,10 @@ impl Team {
     }
     pub fn id(&self) -> TeamId {
         self.id
+    }
+
+    pub fn comment(&self) -> Option<&str> {
+        self.comment.as_ref().map(|x| x.as_str())
     }
 }
 impl Component for Team {}

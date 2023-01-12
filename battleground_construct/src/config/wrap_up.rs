@@ -36,6 +36,8 @@ pub fn create_wrap_up_report(world: &World) -> WrapUpReport {
                 specification::Team {
                     name: team.name().to_owned(),
                     color: (team_color.r, team_color.g, team_color.b),
+                    controller: None,
+                    comment: team.comment().map(|x| x.to_owned()),
                 },
             );
         }
