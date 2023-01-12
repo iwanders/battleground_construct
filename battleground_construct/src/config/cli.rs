@@ -61,6 +61,13 @@ struct Scenario {
     /// Use with --wasm team_a:path_to_module.wasm --wasm team_b:path_to_module.wasm.
     wasm: Vec<String>,
 
+    #[cfg(feature = "unit_control_wasm")]
+    #[arg(long, verbatim_doc_comment)]
+    /// Direct override of the path attribute of wasm controllers in the team configs.
+    /// Use with --team team_a:path_to_module.wasm --team team_b:path_to_module.wasm.
+    /// Also sets the comment to the basename of the path.
+    team: Vec<String>,
+
     /// Override properties from the configuration, the format of these keys is a bit bespoke and verbose.
     /// In general, it is prefered to use the --wasm argument.
     /// It is limited to (depending on enabled controllers)
@@ -161,10 +168,22 @@ pub fn parse_setup_args() -> Result<Setup, Box<dyn std::error::Error>> {
                         .collect::<Vec<String>>();
                     if split.len() != 2 {
                         return Err(Box::<dyn std::error::Error>::from(
-                            "expected ':' between team name and path",
+                            "expected ':' between controller name and path",
                         ));
                     }
                     extra_config.push(format!("control:{}:wasm:path:{}", split[0], split[1]));
+                }
+                for team_entry in scenario.team.iter() {
+                    let split = team_entry
+                        .split(':')
+                        .map(|v| v.to_owned())
+                        .collect::<Vec<String>>();
+                    if split.len() != 2 {
+                        return Err(Box::<dyn std::error::Error>::from(
+                            "expected ':' between team name and path",
+                        ));
+                    }
+                    extra_config.push(format!("team:{}:control:wasm:path:{}", split[0], split[1]));
                 }
                 extra_config
             };
@@ -210,6 +229,95 @@ fn recording_subcommand_handler(cmd: RecordingCommands) -> Result<(), Box<dyn st
     Ok(())
 }
 
+use crate::config::specification::ControllerType;
+fn controller_config(
+    config: &str,
+    control: &mut ControllerType,
+    comment: Option<&mut String>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let make_error = |s: &str| Box::<dyn std::error::Error>::from(s);
+
+    let _comment = &comment; // Prevent unused variable for comment in non-wasm.
+
+    let mut tokens = config.split(':');
+    let control_type = tokens
+        .next()
+        .ok_or_else(|| make_error("expected control type"))?;
+    match control_type {
+        #[cfg(feature = "unit_control_wasm")]
+        "wasm" => {
+            let wasm = if let ControllerType::Wasm(ref mut v) = control {
+                v
+            } else {
+                *control = ControllerType::Wasm(Default::default());
+                if let ControllerType::Wasm(ref mut v) = control {
+                    v
+                } else {
+                    unreachable!()
+                }
+            };
+            let field_key = tokens
+                .next()
+                .ok_or_else(|| make_error("expected wasm control field"))?;
+            match field_key {
+                "path" => {
+                    let path_string = tokens
+                        .next()
+                        .ok_or_else(|| make_error("expected path to file"))?;
+                    wasm.path = path_string.to_owned();
+
+                    // we got a path, conver
+                    let path = std::path::Path::new(&path_string);
+                    let fname = path
+                        .file_name()
+                        .map(|v| v.to_str())
+                        .unwrap_or_else(|| Some(path_string))
+                        .ok_or_else(|| make_error("expected path to file"))?;
+                    if let Some(v) = comment {
+                        *v = fname.to_owned();
+                    }
+                }
+                "fuel_per_update" => {
+                    let value_str = tokens
+                        .next()
+                        .ok_or_else(|| make_error("expected value for fuel_per_update"))?;
+                    let value = if value_str.to_lowercase() == "none" {
+                        None
+                    } else {
+                        Some(value_str.parse::<u64>()?)
+                    };
+                    wasm.fuel_per_update = value;
+                }
+                "fuel_for_setup" => {
+                    let value_str = tokens
+                        .next()
+                        .ok_or_else(|| make_error("expected value for fuel_for_setup"))?;
+                    let value = if value_str.to_lowercase() == "none" {
+                        None
+                    } else {
+                        Some(value_str.parse::<u64>()?)
+                    };
+                    wasm.fuel_for_setup = value;
+                }
+                _ => {
+                    return Err(make_error(
+                        format!("{} is unhandled for wasm", field_key).as_str(),
+                    ));
+                }
+            }
+        }
+        "none" => {
+            *control = ControllerType::None;
+        }
+        _ => {
+            return Err(make_error(
+                format!("cannot handle control {} overrides", control_type).as_str(),
+            ));
+        }
+    }
+    Ok(())
+}
+
 // Well, this function is a bit... much.
 fn apply_config(
     config: &[&str],
@@ -217,12 +325,45 @@ fn apply_config(
 ) -> Result<ScenarioConfig, Box<dyn std::error::Error>> {
     let mut scenario = scenario;
     let make_error = |s: &str| Box::<dyn std::error::Error>::from(s);
-    use crate::config::specification::ControllerType;
 
     for c in config.iter() {
         let mut tokens = c.split(':');
 
         match tokens.next().ok_or_else(|| make_error("expected token"))? {
+            "team" => {
+                // team:{}:control:wasm:path:{}
+                let section = &mut scenario.spawn_config.teams;
+                let key = tokens
+                    .next()
+                    .ok_or_else(|| make_error("expected team name"))?;
+                let pos = section
+                    .iter()
+                    .position(|x| x.name == key)
+                    .ok_or_else(|| make_error(&format!("couldnt find team name {}", key)))?;
+                let team = &mut section[pos];
+                let team_attribute = tokens
+                    .next()
+                    .ok_or_else(|| make_error("expected team attribute to modify"))?;
+                match team_attribute {
+                    "control" => {
+                        // populate it with None, them use the common handler.
+                        team.controller = Some(ControllerType::None);
+                        let controller = team.controller.as_mut().unwrap();
+                        team.comment = Some("".to_owned());
+                        controller_config(
+                            &tokens.collect::<Vec<_>>().join(":"),
+                            controller,
+                            team.comment.as_mut(),
+                        )?;
+                    }
+                    unhandled_key => {
+                        return Err(make_error(
+                            format!("cannot handle team attribute {} overrides", unhandled_key)
+                                .as_str(),
+                        ));
+                    }
+                }
+            }
             "control" => {
                 let section = &mut scenario.spawn_config.control_config;
                 let key = tokens
@@ -231,70 +372,8 @@ fn apply_config(
                 let control = section
                     .get_mut(key)
                     .ok_or_else(|| make_error(format!("key {} didnt exist", key).as_str()))?;
-                let control_type = tokens
-                    .next()
-                    .ok_or_else(|| make_error("expected control type"))?;
-                match control_type {
-                    #[cfg(feature = "unit_control_wasm")]
-                    "wasm" => {
-                        let wasm = if let ControllerType::Wasm(ref mut v) = control {
-                            v
-                        } else {
-                            *control = ControllerType::Wasm(Default::default());
-                            if let ControllerType::Wasm(ref mut v) = control {
-                                v
-                            } else {
-                                unreachable!()
-                            }
-                        };
-                        let field_key = tokens
-                            .next()
-                            .ok_or_else(|| make_error("expected wasm control field"))?;
-                        match field_key {
-                            "path" => {
-                                wasm.path = tokens
-                                    .next()
-                                    .ok_or_else(|| make_error("expected path to file"))?
-                                    .to_owned();
-                            }
-                            "fuel_per_update" => {
-                                let value_str = tokens.next().ok_or_else(|| {
-                                    make_error("expected value for fuel_per_update")
-                                })?;
-                                let value = if value_str.to_lowercase() == "none" {
-                                    None
-                                } else {
-                                    Some(value_str.parse::<u64>()?)
-                                };
-                                wasm.fuel_per_update = value;
-                            }
-                            "fuel_for_setup" => {
-                                let value_str = tokens.next().ok_or_else(|| {
-                                    make_error("expected value for fuel_for_setup")
-                                })?;
-                                let value = if value_str.to_lowercase() == "none" {
-                                    None
-                                } else {
-                                    Some(value_str.parse::<u64>()?)
-                                };
-                                wasm.fuel_for_setup = value;
-                            }
-                            _ => {
-                                return Err(make_error(
-                                    format!("{} is unhandled for wasm", field_key).as_str(),
-                                ));
-                            }
-                        }
-                    }
-                    "none" => {
-                        *control = ControllerType::None;
-                    }
-                    _ => {
-                        return Err(make_error(
-                            format!("cannot handle control {} overrides", control_type).as_str(),
-                        ));
-                    }
-                }
+
+                controller_config(&tokens.collect::<Vec<_>>().join(":"), control, None)?;
             }
             _ => {
                 return Err(make_error("expected valid token; 'control'"));
@@ -391,6 +470,62 @@ mod test {
             assert_eq!(wasm.path, "foo.wasm");
             assert_eq!(wasm.fuel_per_update, None);
             assert_eq!(wasm.fuel_for_setup, None);
+        } else {
+            panic!("not of expected wasm type");
+        };
+    }
+
+    #[cfg(feature = "unit_control_wasm")]
+    #[test]
+    fn test_config_cli_team_config() {
+        use crate::config::specification::ControllerType;
+        use crate::config::specification::SpawnConfig;
+        use crate::config::specification::Team;
+        let v = ScenarioConfig {
+            spawn_config: SpawnConfig {
+                teams: vec![
+                    Team {
+                        name: "red".to_owned(),
+                        color: (255, 0, 0),
+                        controller: None,
+                        comment: None,
+                    },
+                    Team {
+                        name: "blue".to_owned(),
+                        color: (0, 255, 0),
+                        controller: None,
+                        comment: None,
+                    },
+                ],
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let config_override: Vec<String> = vec![
+            "team:red:control:wasm:path:foo.wasm".to_owned(),
+            "team:blue:control:wasm:path:bar.wasm".to_owned(),
+        ];
+        let strslice: Vec<&str> = config_override.iter().map(|v| v.as_str()).collect();
+        let r = apply_config(&strslice, v);
+        assert!(r.is_ok());
+        let r = r.unwrap();
+        let team_a = &r.spawn_config.teams.get(0).expect("team 0 still exist");
+        let controller_a = &team_a.controller;
+        let controller_a = controller_a.as_ref().expect("should now have a controller");
+        assert_eq!(team_a.comment, Some("foo.wasm".to_owned()));
+        if let ControllerType::Wasm(wasm) = controller_a {
+            assert_eq!(wasm.path, "foo.wasm");
+        } else {
+            panic!("not of expected wasm type");
+        };
+
+        let team_b = &r.spawn_config.teams.get(1).expect("team 0 still exist");
+        let controller_b = &team_b.controller;
+        let controller_b = controller_b.as_ref().expect("should now have a controller");
+        assert_eq!(team_b.comment, Some("bar.wasm".to_owned()));
+        if let ControllerType::Wasm(wasm) = controller_b {
+            assert_eq!(wasm.path, "bar.wasm");
         } else {
             panic!("not of expected wasm type");
         };

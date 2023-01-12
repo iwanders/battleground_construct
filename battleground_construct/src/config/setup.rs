@@ -109,8 +109,9 @@ pub fn setup_scenario(
     for team in config.spawn_config.teams {
         let team_id = components::id_generator::generate_id(world);
         let team_entity = world.add_entity();
-        let mut team_component = components::team::Team::new(team_id, &team.name, team.color.into());
-        team_component.set_comment(team.comment.as_ref().map(|x|x.as_str()));
+        let mut team_component =
+            components::team::Team::new(team_id, &team.name, team.color.into());
+        team_component.set_comment(team.comment.as_deref());
         if team_set.contains_key(&team.name) {
             // team name occurs twice and the match report won't be able to distinguish, raise
             // an error to avoid indistinguishable results.
@@ -137,7 +138,7 @@ pub fn setup_scenario(
         fn controller_type_to_control(
             controller_type: &specification::ControllerType,
             control_config: &std::collections::HashMap<String, specification::ControllerType>,
-            team_config: &std::collections::HashMap::<String, specification::Team>,
+            team_config: &std::collections::HashMap<String, specification::Team>,
         ) -> Result<Box<dyn UnitControl>, Box<dyn std::error::Error>> {
             Ok(match controller_type {
                 specification::ControllerType::SwivelShoot => {
@@ -195,13 +196,16 @@ pub fn setup_scenario(
                         SetupError::new(&format!("controlller for requested team {} not found", name))})?;
                     let subcontrol = subcontrol.controller.as_ref().ok_or_else(||{
                         SetupError::new(&format!("team {} doesn't have a controller but is necessary", name))})?;
-                    controller_type_to_control(&subcontrol, control_config, team_config)?
+                    controller_type_to_control(subcontrol, control_config, team_config)?
                 }
             })
         }
 
-        let controller: Box<dyn UnitControl> =
-            controller_type_to_control(&spawn.controller, &config.spawn_config.control_config, &team_set)?;
+        let controller: Box<dyn UnitControl> = controller_type_to_control(
+            &spawn.controller,
+            &config.spawn_config.control_config,
+            &team_set,
+        )?;
         match spawn.vehicle {
             specification::Unit::Tank => {
                 let tank_config = units::tank::TankSpawnConfig {

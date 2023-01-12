@@ -21,7 +21,7 @@ pub struct Team {
     id: TeamId,
     name: String,
     color: display::Color,
-    comment: Option<String>
+    comment: Option<String>,
 }
 
 impl Team {
@@ -47,7 +47,7 @@ impl Team {
     }
 
     pub fn comment(&self) -> Option<&str> {
-        self.comment.as_ref().map(|x| x.as_str())
+        self.comment.as_deref()
     }
 }
 impl Component for Team {}
