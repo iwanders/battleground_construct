@@ -19,6 +19,14 @@ impl MatchTimeLimit {
         self.current_time = current_time;
     }
 
+    pub fn current_time(&self) -> f32 {
+        self.current_time
+    }
+
+    pub fn time_limit(&self) -> f32 {
+        self.time_limit
+    }
+
     pub fn is_finished(&self) -> bool {
         self.current_time >= self.time_limit
     }

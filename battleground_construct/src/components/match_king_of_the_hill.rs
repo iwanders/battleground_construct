@@ -17,6 +17,16 @@ impl MatchKingOfTheHillReport {
             .map(|(k, _v)| k)
             .copied()
     }
+
+    pub fn point_limit(&self) -> Option<f32> {
+        self.point_limit
+    }
+
+    pub fn points(&self) -> Vec<(TeamId, f32)> {
+        let mut v: Vec<(TeamId, f32)> = self.points.iter().map(|(t, s)| (*t, *s)).collect();
+        v.sort_by(|a, b| a.0.cmp(&b.0));
+        v
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

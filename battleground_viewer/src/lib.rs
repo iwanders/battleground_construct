@@ -235,9 +235,73 @@ impl ConstructViewer {
                 frame_input.accumulated_time,
                 frame_input.viewport,
                 frame_input.device_pixel_ratio,
-                |gui_context| {
+                |ctx| {
+                    pub fn shadow_smaller_dark() -> epaint::Shadow {
+                        epaint::Shadow {
+                            extrusion: 4.0,
+                            color: Color32::from_black_alpha(96),
+                        }
+                    }
+
+                    // .frame(egui::containers::Frame{shadow: epaint::Shadow {extrusion: 3.0, ..Default::default()}, ..Default::default()})
+                    egui::Window::new("Match")
+                        .frame(Frame {
+                            inner_margin: ctx.style().spacing.window_margin,
+                            rounding: ctx.style().visuals.window_rounding,
+                            shadow: shadow_smaller_dark(),
+                            fill: ctx.style().visuals.window_fill,
+                            stroke: ctx.style().visuals.window_stroke,
+                            ..Frame::none()
+                        })
+                        .show(ctx, |ui| {
+                            use battleground_construct::components::match_time_limit::MatchTimeLimit;
+                            use battleground_construct::components::match_king_of_the_hill::MatchKingOfTheHill;
+                            let progress_width = 200.0;
+                            // ui.scope(|ui| {
+                                // ui.label("Hello World!");
+                                // ui.spacing_mut().slider_width = 200.0; // Temporary change
+                            for (_e, limit) in self
+                                .construct
+                                .world
+                                .component_iter::<MatchTimeLimit>(
+                            ) {
+                                let current_time = limit.current_time();
+                                let time_limit = limit.time_limit();
+                                let ratio = current_time / limit.time_limit();
+                                ui.scope(|ui| {
+                                    // ui.visuals_mut().selection.bg_fill= Color32::RED; // Temporary change
+                                    ui.add(
+                                        ProgressBar::new(ratio).desired_width(progress_width).text(format!("Time: {current_time:.1}/{time_limit:.1}")),
+                                    );
+                                });
+                            }
+
+                            for (_e, match_koth) in self
+                                .construct
+                                .world
+                                .component_iter::<MatchKingOfTheHill>(
+                            ) {
+                                let report = match_koth.report();
+                                let limit = report.point_limit();
+                                for (team, points) in report.points() {
+                                    if let Some(ref max) = limit {
+                                        ui.scope(|ui| {// progress bar, still needs to retrieve a team color.
+                                            // ui.visuals_mut().selection.bg_fill= Color32::RED; // Temporary change
+                                            let ratio = points / max;
+                                            ui.add(
+                                                ProgressBar::new(ratio).desired_width(progress_width).text(format!("{team:?}: {points:.1}/{max:.1}")),
+                                            );
+                                        });
+                                    } else {
+                                        // text.
+                                        ui.label(format!("{team:?}: {points:.1}"));
+                                    }
+                                }
+                            }
+                        });
+
                     use three_d::egui::*;
-                    egui::TopBottomPanel::top("my_panel").show(gui_context, |ui| {
+                    egui::TopBottomPanel::top("my_panel").show(ctx, |ui| {
                         menu::bar(ui, |ui| {
                             ui.menu_button("Construct", |ui| {
                                 if ui.button("Quit").clicked() {
