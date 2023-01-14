@@ -54,7 +54,8 @@ impl ConstructViewer {
     pub fn new(construct: Construct) -> Self {
         let window = Window::new(WindowSettings {
             title: "Battleground Construct".to_string(),
-            max_size: Some((1280, 720)),
+            min_size: (640, 480),
+            // max_size: Some((1280, 720)),
             ..Default::default()
         })
         .unwrap();
@@ -155,13 +156,14 @@ impl ConstructViewer {
             }
 
             // Gui rendering.
+            viewer_state.gui.update(&self.construct);
             gui.update(
                 &mut frame_input.events,
                 frame_input.accumulated_time,
                 frame_input.viewport,
                 frame_input.device_pixel_ratio,
                 |ctx| {
-                    gui::window_match(ctx, &self.construct, &mut viewer_state);
+                    gui::window_match(ctx, &self.construct, &mut viewer_state.gui);
                     gui::top_bar(ctx, &self.construct, &mut viewer_state, &mut self.limiter);
                 },
             );

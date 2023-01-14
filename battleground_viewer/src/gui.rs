@@ -1,10 +1,7 @@
 use three_d::egui;
 use three_d::egui::*;
-
-#[derive(Default, Debug)]
-pub struct State {
-    match_window: bool,
-}
+use battleground_construct::components;
+use components::team::TeamId;
 
 pub fn shadow_smaller_dark() -> epaint::Shadow {
     epaint::Shadow {
@@ -13,11 +10,41 @@ pub fn shadow_smaller_dark() -> epaint::Shadow {
     }
 }
 
+#[derive(Default, Debug)]
+pub struct State {
+    match_window: std::cell::RefCell<bool>,
+    teams: std::collections::HashMap<TeamId, components::team::Team>,
+}
+
+impl State {
+    pub fn update(&mut self, construct: &crate::Construct) {
+        for (_e, team) in construct.world.component_iter::<components::team::Team>() {
+            self.teams.insert(team.id(), team.clone());
+        }
+    }
+
+    pub fn get_team_color(&self, team_id: TeamId) -> Color32 {
+        // self.teams.get(&team_id).map(|t| t.color()).map(|x| Color32::from_rgba_unmultiplied(x.r / 2, x.g / 2, x.b / 2, x.a)).unwrap_or(Color32::GRAY)
+        let c = self.teams.get(&team_id).map(|t| t.color()).map(|x| Color32::from_rgba_unmultiplied(x.r, x.g, x.b, x.a)).unwrap_or(Color32::GRAY);
+        let mut h: crate::gui::ecolor::Hsva = c.into();
+        // Modify a bit to get more 'gui' colors.
+        h.s = (h.s - 0.2).clamp(0.0, 1.0);
+        h.v = (h.v - 0.5).clamp(0.0, 1.0);
+        h.into()
+        
+    }
+    pub fn get_team_name(&self, team_id: TeamId) -> String {
+        self.teams.get(&team_id).map(|t| t.name().to_owned()).unwrap_or(format!("{team_id:?}"))
+    }
+}
+
 pub fn window_match(
     ctx: &egui::Context,
     construct: &crate::Construct,
-    viewer_state: &mut crate::ViewerState,
+    state: &mut State,
 ) {
+    let mut open = state.match_window.borrow_mut();
+    // let open = open.unwrap();
     egui::Window::new("Match")
         .frame(Frame {
             inner_margin: ctx.style().spacing.window_margin,
@@ -26,10 +53,10 @@ pub fn window_match(
             fill: ctx.style().visuals.window_fill,
             stroke: ctx.style().visuals.window_stroke,
             ..Frame::none()
-        }).open(&mut viewer_state.gui.match_window)
+        }).open(&mut *open)
         .show(ctx, |ui| {
-            use battleground_construct::components::match_king_of_the_hill::MatchKingOfTheHill;
-            use battleground_construct::components::match_time_limit::MatchTimeLimit;
+            use components::match_king_of_the_hill::MatchKingOfTheHill;
+            use components::match_time_limit::MatchTimeLimit;
             let progress_width = 200.0;
             // ui.scope(|ui| {
             // ui.label("Hello World!");
@@ -52,20 +79,21 @@ pub fn window_match(
                 let report = match_koth.report();
                 let limit = report.point_limit();
                 for (team, points) in report.points() {
+                    let team_name = state.get_team_name(team);
                     if let Some(ref max) = limit {
                         ui.scope(|ui| {
                             // progress bar, still needs to retrieve a team color.
-                            // ui.visuals_mut().selection.bg_fill= Color32::RED; // Temporary change
+                            ui.visuals_mut().selection.bg_fill= state.get_team_color(team); // Temporary change
                             let ratio = points / max;
                             ui.add(
                                 ProgressBar::new(ratio)
                                     .desired_width(progress_width)
-                                    .text(format!("{team:?}: {points:.1}/{max:.1}")),
+                                    .text(format!("{team_name:}: {points:.1}/{max:.1}")),
                             );
                         });
                     } else {
                         // text.
-                        ui.label(format!("{team:?}: {points:.1}"));
+                        ui.label(format!("{team_name:}: {points:.1}"));
                     }
                 }
             }
@@ -86,7 +114,8 @@ pub fn top_bar(
                 }
             });
             if ui.button("Match").clicked() {
-                viewer_state.gui.match_window = !viewer_state.gui.match_window;
+                let new_state = (!*viewer_state.gui.match_window.borrow()).into();
+                viewer_state.gui.match_window = new_state;
             };
             ui.with_layout(
                 egui::Layout::centered_and_justified(egui::Direction::LeftToRight),
