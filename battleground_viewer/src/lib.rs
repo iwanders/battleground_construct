@@ -15,88 +15,22 @@ use fence_material::FenceMaterial;
 // one provided through webassembly.
 mod time_provider;
 
+mod gui;
+
+mod limiter;
+use limiter::Limiter;
+
 const PRINT_DURATIONS: bool = false;
 
-pub struct Limiter {
-    desired_speed: f32,
-    real_speed: f32,
-    is_paused: bool,
-    last_update_time: time_provider::Instant,
-    last_construct_time: f32,
-    update_deadline: time_provider::Duration,
-}
-
-impl Default for Limiter {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Limiter {
-    pub fn new() -> Self {
-        Limiter {
-            desired_speed: 1.0,
-            real_speed: 1.0,
-            last_construct_time: 0.0,
-            is_paused: false,
-            last_update_time: time_provider::Instant::now(),
-            update_deadline: time_provider::Duration::from_secs_f64(1.0 / 60.0),
-        }
-    }
-
-    pub fn set_paused(&mut self, paused: bool) {
-        self.is_paused = paused;
-    }
-
-    pub fn is_paused(&self) -> bool {
-        self.is_paused
-    }
-
-    pub fn set_desired_speed(&mut self, speed: f32) {
-        self.desired_speed = speed;
-    }
-
-    /// Real speed is always a bit off from the desired speed, that is expected as the construct
-    /// uses constant steps.
-    pub fn real_speed(&self) -> f32 {
-        self.real_speed
-    }
-
-    pub fn update<F: FnMut() -> Option<f32>>(&mut self, mut v: F) {
-        if self.is_paused {
-            self.last_update_time = time_provider::Instant::now();
-            self.real_speed = 0.0;
-            return;
-        }
-
-        let start_of_update = time_provider::Instant::now();
-
-        let time_since_last = (start_of_update - self.last_update_time).as_secs_f32();
-        let desired_construct_change = self.desired_speed * time_since_last;
-        let desired_construct_finish_time = self.last_construct_time + desired_construct_change;
-        let start_construct_time = self.last_construct_time;
-
-        if desired_construct_finish_time > start_construct_time {
-            loop {
-                if start_of_update.elapsed() >= self.update_deadline {
-                    // We didn't meet the update deadline, well... bummer.
-                    // println!("Didn't meet rate");
-                    break;
-                }
-                if let Some(new_time) = v() {
-                    self.last_construct_time = new_time;
-                    if self.last_construct_time >= desired_construct_finish_time {
-                        break;
-                    }
-                } else {
-                    break;
-                }
-            }
-        }
-        // Calculate the real speed we achieved.
-        self.real_speed = (self.last_construct_time - start_construct_time) / time_since_last;
-        self.last_update_time = time_provider::Instant::now();
-    }
+use engine::EntityId;
+#[derive(Default, Debug)]
+pub struct ViewerState {
+    exiting: bool,
+    paused: bool,
+    previous_playback: f32,
+    playback: f32,
+    selected: std::collections::HashSet<EntityId>,
+    gui_state: gui::State,
 }
 
 struct ConstructViewer {
@@ -186,15 +120,6 @@ impl ConstructViewer {
 
         let mut gui = three_d::GUI::new(&self.context);
 
-        use engine::EntityId;
-        #[derive(Default, Debug)]
-        struct ViewerState {
-            exiting: bool,
-            paused: bool,
-            previous_playback: f32,
-            playback: f32,
-            selected: std::collections::HashSet<EntityId>,
-        }
         let mut viewer_state = ViewerState::default();
 
         self.window.render_loop(move |mut frame_input: FrameInput| {
@@ -236,154 +161,10 @@ impl ConstructViewer {
                 frame_input.viewport,
                 frame_input.device_pixel_ratio,
                 |ctx| {
-                    pub fn shadow_smaller_dark() -> epaint::Shadow {
-                        epaint::Shadow {
-                            extrusion: 4.0,
-                            color: Color32::from_black_alpha(96),
-                        }
-                    }
-
-                    // .frame(egui::containers::Frame{shadow: epaint::Shadow {extrusion: 3.0, ..Default::default()}, ..Default::default()})
-                    egui::Window::new("Match")
-                        .frame(Frame {
-                            inner_margin: ctx.style().spacing.window_margin,
-                            rounding: ctx.style().visuals.window_rounding,
-                            shadow: shadow_smaller_dark(),
-                            fill: ctx.style().visuals.window_fill,
-                            stroke: ctx.style().visuals.window_stroke,
-                            ..Frame::none()
-                        })
-                        .show(ctx, |ui| {
-                            use battleground_construct::components::match_time_limit::MatchTimeLimit;
-                            use battleground_construct::components::match_king_of_the_hill::MatchKingOfTheHill;
-                            let progress_width = 200.0;
-                            // ui.scope(|ui| {
-                                // ui.label("Hello World!");
-                                // ui.spacing_mut().slider_width = 200.0; // Temporary change
-                            for (_e, limit) in self
-                                .construct
-                                .world
-                                .component_iter::<MatchTimeLimit>(
-                            ) {
-                                let current_time = limit.current_time();
-                                let time_limit = limit.time_limit();
-                                let ratio = current_time / limit.time_limit();
-                                ui.scope(|ui| {
-                                    // ui.visuals_mut().selection.bg_fill= Color32::RED; // Temporary change
-                                    ui.add(
-                                        ProgressBar::new(ratio).desired_width(progress_width).text(format!("Time: {current_time:.1}/{time_limit:.1}")),
-                                    );
-                                });
-                            }
-
-                            for (_e, match_koth) in self
-                                .construct
-                                .world
-                                .component_iter::<MatchKingOfTheHill>(
-                            ) {
-                                let report = match_koth.report();
-                                let limit = report.point_limit();
-                                for (team, points) in report.points() {
-                                    if let Some(ref max) = limit {
-                                        ui.scope(|ui| {// progress bar, still needs to retrieve a team color.
-                                            // ui.visuals_mut().selection.bg_fill= Color32::RED; // Temporary change
-                                            let ratio = points / max;
-                                            ui.add(
-                                                ProgressBar::new(ratio).desired_width(progress_width).text(format!("{team:?}: {points:.1}/{max:.1}")),
-                                            );
-                                        });
-                                    } else {
-                                        // text.
-                                        ui.label(format!("{team:?}: {points:.1}"));
-                                    }
-                                }
-                            }
-                        });
+                    gui::window_match(ctx, &self.construct, &mut viewer_state);
+                    gui::top_bar(ctx, &self.construct, &mut viewer_state, &mut self.limiter);
 
                     use three_d::egui::*;
-                    egui::TopBottomPanel::top("my_panel").show(ctx, |ui| {
-                        menu::bar(ui, |ui| {
-                            ui.menu_button("Construct", |ui| {
-                                if ui.button("Quit").clicked() {
-                                    viewer_state.exiting = true;
-                                }
-                            });
-                            ui.with_layout(
-                                egui::Layout::centered_and_justified(egui::Direction::LeftToRight),
-                                |ui| {
-                                    ui.label(if viewer_state.selected.is_empty() {
-                                        "select with middle click".to_owned()
-                                    } else {
-                                        format!("{:?}", viewer_state.selected)
-                                    });
-                                },
-                            );
-                            ui.with_layout(
-                                egui::Layout::right_to_left(egui::Align::Center),
-                                |ui| {
-                                    ui.menu_button(
-                                        format!(
-                                            "{:.2} x {:.2}",
-                                            self.construct.elapsed_as_f32(),
-                                            self.limiter.real_speed()
-                                        ),
-                                        |ui| {
-                                            let label = if viewer_state.paused {
-                                                "Resume"
-                                            } else {
-                                                "Pause"
-                                            };
-                                            if ui.button(label).clicked() {
-                                                viewer_state.paused = !viewer_state.paused;
-                                                self.limiter.set_paused(viewer_state.paused);
-                                                ui.close_menu();
-                                            }
-                                            if ui.button("x0.05").clicked() {
-                                                self.limiter.set_desired_speed(0.05);
-                                                ui.close_menu();
-                                            }
-                                            if ui.button("x0.1").clicked() {
-                                                self.limiter.set_desired_speed(0.1);
-                                                ui.close_menu();
-                                            }
-                                            if ui.button("x0.25").clicked() {
-                                                self.limiter.set_desired_speed(0.25);
-                                                ui.close_menu();
-                                            }
-                                            if ui.button("x1.0").clicked() {
-                                                self.limiter.set_desired_speed(1.0);
-                                                ui.close_menu();
-                                            }
-                                            if ui.button("x2.0").clicked() {
-                                                self.limiter.set_desired_speed(2.0);
-                                                ui.close_menu();
-                                            }
-                                            if ui.button("x5.0").clicked() {
-                                                self.limiter.set_desired_speed(5.0);
-                                                ui.close_menu();
-                                            }
-                                        },
-                                    );
-
-                                    if let Some(v) = self.construct.recording_max_time() {
-                                        // https://github.com/emilk/egui/issues/1850
-                                        ui.scope(|ui| {
-                                            ui.spacing_mut().slider_width = 200.0; // Temporary change
-                                            ui.add(
-                                                egui::Slider::new(
-                                                    &mut viewer_state.playback,
-                                                    0.0..=v,
-                                                )
-                                                .text("Seek")
-                                                .clamp_to_range(true)
-                                                .show_value(true),
-                                            );
-                                        });
-                                    };
-                                },
-                            );
-                        });
-                    });
                 },
             );
 
