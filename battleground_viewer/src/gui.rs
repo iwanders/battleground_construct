@@ -13,12 +13,14 @@ pub fn shadow_smaller_dark() -> epaint::Shadow {
 #[derive(Debug)]
 pub struct State {
     match_window: std::cell::RefCell<bool>,
+    play_window: std::cell::RefCell<bool>,
     teams: std::collections::HashMap<TeamId, components::team::Team>,
 }
 impl Default for State {
     fn default() -> Self {
         Self {
             match_window: true.into(),
+            play_window: true.into(),
             teams: Default::default(),
         }
     }
@@ -40,11 +42,15 @@ impl State {
         h.into()
     }
 
-    pub fn get_team_color(&self, team_id: TeamId) -> Color32 {
+    pub fn get_team_color(&self, team_id: Option<TeamId>) -> Color32 {
         // self.teams.get(&team_id).map(|t| t.color()).map(|x| Color32::from_rgba_unmultiplied(x.r / 2, x.g / 2, x.b / 2, x.a)).unwrap_or(Color32::GRAY)
-        let c = self.teams.get(&team_id).map(|t| t.color());
-        if let Some(c) = c {
-            Self::ui_team_color(c)
+        if let Some(team) = team_id {
+            let c = self.teams.get(&team).map(|t| t.color());
+            if let Some(c) = c {
+                Self::ui_team_color(c)
+            } else {
+                Color32::GRAY
+            }
         } else {
             Color32::GRAY
         }
@@ -93,7 +99,7 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
             }
 
             for (_e, capturable) in construct.world.component_iter::<Capturable>() {
-                let color = capturable.owner().map(|t| state.get_team_color(t)).unwrap();
+                let color = state.get_team_color(capturable.owner());
                 let ratio = capturable.strength();
                 ui.scope(|ui| {
                     ui.visuals_mut().selection.bg_fill = color;
@@ -105,16 +111,22 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
                 });
             }
 
-            for (_e, match_finished) in construct.world.component_iter::<MatchFinished>() {
+            if let Some((_e, match_finished)) =
+                construct.world.component_iter::<MatchFinished>().next()
+            {
                 if let Some(report) = match_finished.report() {
                     if let Some(winner) = report.winner {
                         let team_name = state.get_team_name(winner);
                         ui.label(format!(
-                            "{team_name:} won by {:?} in {:.1}s",
+                            "Result: {team_name:} won by {:?} in {:.1}s",
                             report.conclusion, report.duration
                         ));
                     }
+                } else {
+                    ui.label("Result: Ongoing");
                 }
+            } else {
+                ui.label("Result: Ongoing");
             }
 
             use components::unit::UnitType;
@@ -201,12 +213,78 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
         });
 }
 
-pub fn top_bar(
+pub fn window_play(
     ctx: &egui::Context,
     construct: &crate::Construct,
-    viewer_state: &mut crate::ViewerState,
+    state: &mut crate::ViewerState,
     limiter: &mut crate::Limiter,
 ) {
+    let mut open = state.gui.play_window.borrow_mut();
+    // let open = open.unwrap();
+    egui::Window::new("Play")
+        .frame(Frame {
+            inner_margin: ctx.style().spacing.window_margin,
+            rounding: ctx.style().visuals.window_rounding,
+            shadow: shadow_smaller_dark(),
+            fill: ctx.style().visuals.window_fill,
+            stroke: ctx.style().visuals.window_stroke,
+            ..Frame::none()
+        })
+        .open(&mut open)
+        .show(ctx, |ui| {
+            egui::Grid::new("some_unique_id").show(ui, |ui| {
+                ui.label("Time");
+                ui.label(format!("{:.2}", construct.elapsed_as_f32()));
+                ui.end_row();
+
+                ui.label("Realtime");
+                ui.label(format!("{:.2}", limiter.real_speed()));
+                ui.end_row();
+
+                ui.label("Playback:");
+                let label = if state.paused {
+                    "▶ resume"
+                } else {
+                    "⏸ pause"
+                };
+                if ui.button(label).clicked() {
+                    state.paused = !state.paused;
+                    limiter.set_paused(state.paused);
+                }
+                ui.end_row();
+
+                ui.label("Desired speed:");
+                egui::ComboBox::from_label("")
+                    .selected_text(format!("{:?}", state.desired_speed))
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut state.desired_speed, 0.05, "0.05");
+                        ui.selectable_value(&mut state.desired_speed, 0.25, "0.25");
+                        ui.selectable_value(&mut state.desired_speed, 1.0, "1.0");
+                        ui.selectable_value(&mut state.desired_speed, 2.0, "2.0");
+                        ui.selectable_value(&mut state.desired_speed, 5.0, "5.0");
+                    });
+                ui.end_row();
+
+                if let Some(v) = construct.recording_max_time() {
+                    ui.label("Seek:");
+                    // https://github.com/emilk/egui/issues/1850
+                    ui.scope(|ui| {
+                        ui.spacing_mut().slider_width = 200.0; // Temporary change
+                        ui.add(
+                            egui::Slider::new(&mut state.playback, 0.0..=v)
+                                .text("")
+                                .clamp_to_range(true)
+                                .show_value(true)
+                                .custom_formatter(|n, _| format!("{n: >3.2}")),
+                        );
+                    });
+                    ui.end_row();
+                };
+            });
+        });
+}
+
+pub fn top_bar(ctx: &egui::Context, viewer_state: &mut crate::ViewerState) {
     egui::TopBottomPanel::top("my_panel").show(ctx, |ui| {
         menu::bar(ui, |ui| {
             ui.menu_button("Construct", |ui| {
@@ -218,6 +296,10 @@ pub fn top_bar(
                 let new_state = (!*viewer_state.gui.match_window.borrow()).into();
                 viewer_state.gui.match_window = new_state;
             };
+            if ui.button("Play").clicked() {
+                let new_state = (!*viewer_state.gui.play_window.borrow()).into();
+                viewer_state.gui.play_window = new_state;
+            };
             ui.with_layout(
                 egui::Layout::centered_and_justified(egui::Direction::LeftToRight),
                 |ui| {
@@ -228,65 +310,6 @@ pub fn top_bar(
                     });
                 },
             );
-
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                ui.menu_button(
-                    format!(
-                        "{:.2} x {:.2}",
-                        construct.elapsed_as_f32(),
-                        limiter.real_speed()
-                    ),
-                    |ui| {
-                        let label = if viewer_state.paused {
-                            "Resume"
-                        } else {
-                            "Pause"
-                        };
-                        if ui.button(label).clicked() {
-                            viewer_state.paused = !viewer_state.paused;
-                            limiter.set_paused(viewer_state.paused);
-                            ui.close_menu();
-                        }
-                        if ui.button("x0.05").clicked() {
-                            limiter.set_desired_speed(0.05);
-                            ui.close_menu();
-                        }
-                        if ui.button("x0.1").clicked() {
-                            limiter.set_desired_speed(0.1);
-                            ui.close_menu();
-                        }
-                        if ui.button("x0.25").clicked() {
-                            limiter.set_desired_speed(0.25);
-                            ui.close_menu();
-                        }
-                        if ui.button("x1.0").clicked() {
-                            limiter.set_desired_speed(1.0);
-                            ui.close_menu();
-                        }
-                        if ui.button("x2.0").clicked() {
-                            limiter.set_desired_speed(2.0);
-                            ui.close_menu();
-                        }
-                        if ui.button("x5.0").clicked() {
-                            limiter.set_desired_speed(5.0);
-                            ui.close_menu();
-                        }
-                    },
-                );
-
-                if let Some(v) = construct.recording_max_time() {
-                    // https://github.com/emilk/egui/issues/1850
-                    ui.scope(|ui| {
-                        ui.spacing_mut().slider_width = 200.0; // Temporary change
-                        ui.add(
-                            egui::Slider::new(&mut viewer_state.playback, 0.0..=v)
-                                .text("Seek")
-                                .clamp_to_range(true)
-                                .show_value(true),
-                        );
-                    });
-                };
-            });
         });
     });
 }

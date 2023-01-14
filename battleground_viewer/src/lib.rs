@@ -23,14 +23,28 @@ use limiter::Limiter;
 const PRINT_DURATIONS: bool = false;
 
 use engine::EntityId;
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct ViewerState {
     exiting: bool,
     paused: bool,
     previous_playback: f32,
     playback: f32,
+    desired_speed: f32,
     selected: std::collections::HashSet<EntityId>,
     gui: gui::State,
+}
+impl Default for ViewerState {
+    fn default() -> Self {
+        Self {
+            exiting: false,
+            paused: false,
+            previous_playback: 0.0,
+            playback: 0.0,
+            desired_speed: 1.0,
+            selected: Default::default(),
+            gui: Default::default(),
+        }
+    }
 }
 
 struct ConstructViewer {
@@ -164,7 +178,8 @@ impl ConstructViewer {
                 frame_input.device_pixel_ratio,
                 |ctx| {
                     gui::window_match(ctx, &self.construct, &mut viewer_state.gui);
-                    gui::top_bar(ctx, &self.construct, &mut viewer_state, &mut self.limiter);
+                    gui::window_play(ctx, &self.construct, &mut viewer_state, &mut self.limiter);
+                    gui::top_bar(ctx, &mut viewer_state);
                 },
             );
 
@@ -179,6 +194,7 @@ impl ConstructViewer {
             }
             viewer_state.previous_playback = self.construct.elapsed_as_f32();
             viewer_state.playback = viewer_state.previous_playback;
+            self.limiter.set_desired_speed(viewer_state.desired_speed);
 
             for e in frame_input.events.iter() {
                 match *e {
