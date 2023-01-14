@@ -67,6 +67,13 @@ impl System for MatchLogicFinished {
             // println!("Match finished: {report:#?}");
             let id = world.add_entity();
             world.add_component(id, MatchFinished::from_report(report));
+
+            // Spawn the victory effect update tracker.
+            let victory_effect_id = world.add_entity();
+            world.add_component(
+                victory_effect_id,
+                components::victory_effect::VictoryEffect::default(),
+            );
         }
     }
 }

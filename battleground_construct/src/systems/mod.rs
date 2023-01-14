@@ -32,6 +32,7 @@ pub mod timed_function;
 pub mod unit_control;
 pub mod unit_controller_error_check;
 pub mod velocity_pose;
+pub mod victory_effect;
 
 use super::components;
 use super::components::clock::Clock;

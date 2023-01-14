@@ -306,7 +306,12 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             0.0,
             Some(fireworks_shoot_interval),
             move |_: _, world: &mut engine::World| {
-                crate::display::fireworks::create_firework(cgmath::vec3(-8.0, 10.0, 1.0), Color::RED, world);
+                crate::display::fireworks::create_firework(
+                    cgmath::vec3(-8.0, 10.0, 1.0),
+                    Color::RED,
+                    world,
+                    0,
+                );
             },
         ),
     );

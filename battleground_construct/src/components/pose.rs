@@ -94,6 +94,16 @@ macro_rules! create_transform_component {
             pub fn rotated_angle_y<A: Into<cgmath::Rad<f32>>>(self, v: A) -> Self {
                 (self.h * cgmath::Matrix4::<f32>::from_angle_y(v)).into()
             }
+
+            pub fn x(&self) -> f32 {
+                self.h.w.x
+            }
+            pub fn y(&self) -> f32 {
+                self.h.w.y
+            }
+            pub fn z(&self) -> f32 {
+                self.h.w.z
+            }
         }
         impl Component for $the_type {}
 

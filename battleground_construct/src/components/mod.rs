@@ -49,3 +49,4 @@ pub mod unit_interface;
 pub mod unit_member;
 pub mod unit_source;
 pub mod velocity;
+pub mod victory_effect;

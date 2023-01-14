@@ -71,6 +71,8 @@ pub fn add_systems(systems: &mut Systems) {
         systems::display_capture_flag::DisplayCaptureFlag {},
     ));
 
+    systems.add_system(Box::new(systems::victory_effect::VictoryEffect {}));
+
     // Update function positions.
     systems.add_system(Box::new(systems::function_pose::FunctionPose {}));
     systems.add_system(Box::new(systems::timed_function::TimedFunction {}));
