@@ -57,7 +57,7 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
             stroke: ctx.style().visuals.window_stroke,
             ..Frame::none()
         })
-        .open(&mut *open)
+        .open(&mut open)
         .show(ctx, |ui| {
             use components::match_finished::MatchFinished;
             use components::match_king_of_the_hill::MatchKingOfTheHill;
