@@ -65,7 +65,7 @@ pub struct FullMatchReport {
 
 pub fn wrap_up_scenario(
     wrap_up: super::specification::WrapUpConfig,
-    construct: &Construct,
+    construct: &mut Construct,
 ) -> Result<FullMatchReport, Box<dyn std::error::Error>> {
     let full_report = FullMatchReport {
         wrap_up: create_wrap_up_report(construct.world()),
@@ -73,6 +73,12 @@ pub fn wrap_up_scenario(
             .scenario
             .expect("can only wrap up scenario if it is a scenario"),
     };
+
+    // perform the outro.
+    let finished_time = construct.elapsed_as_f32() + wrap_up.outro;
+    while construct.elapsed_as_f32() < finished_time {
+        construct.update();
+    }
 
     // Now, check if according to the scenario we have to do anything with the report, like writing it.
     if let Some(path) = wrap_up.write_wrap_up {

@@ -156,6 +156,9 @@ pub struct ScenarioConfig {
 
 /// This struct specifies the steps to be done after a scenario wraps up.
 pub struct WrapUpConfig {
+    /// Additional time to run update before writing recording after wrap up is called.
+    pub outro: f32,
+
     /// Write the wrap up report to this file if a path is specified.
     pub write_wrap_up: Option<String>,
 

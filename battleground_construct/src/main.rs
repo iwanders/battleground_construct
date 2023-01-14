@@ -10,7 +10,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let wrap_up_config = config::cli::parse_wrap_up_args()?;
-    let report = config::wrap_up::wrap_up_scenario(wrap_up_config, &construct)?;
+    let report = config::wrap_up::wrap_up_scenario(wrap_up_config, &mut construct)?;
     println!("{report:#?}");
 
     Ok(())

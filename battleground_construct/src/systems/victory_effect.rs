@@ -14,7 +14,6 @@ impl System for VictoryEffect {
             .next()
             .and_then(|x| x.1.report().cloned());
         if report.is_none() {
-            // println!("no report");
             return;
         }
         let report = report.unwrap();
@@ -32,26 +31,22 @@ impl System for VictoryEffect {
             .map(|mut v| v.1.update(t))
             .unwrap_or(false)
         {
-            // println!("nothing to do");
             return; // no update right now.
         }
 
         // We got here, we ought to spawn victory effects!
         if report.winner.is_none() {
-            // println!("no winner");
             return;
         }
         let winner_team_id = report.winner.unwrap();
         let team_entity = components::team::get_team_entity(world, winner_team_id);
         if team_entity.is_none() {
-            // println!("no team entity");
             return;
         }
         let team_entity = team_entity.unwrap();
 
         let color = world.component::<Team>(team_entity).map(|x| *x.color());
         if color.is_none() {
-            // println!("no color");
             return;
         }
 
@@ -66,7 +61,6 @@ impl System for VictoryEffect {
                 if unit_team.team() == winner_team_id {
                     if let Some(health) = world.component::<components::health::Health>(entity) {
                         if health.is_destroyed() {
-                            // println!("is_destroyed");
                             continue;
                         }
                         // now, we need to retrieve the real pose...
@@ -92,7 +86,6 @@ impl System for VictoryEffect {
         }
 
         for (i, v) in poses.iter().enumerate() {
-            // println!("Spawning {i}: {v:?}");
             crate::display::fireworks::create_firework(*v, color, world, i);
         }
     }

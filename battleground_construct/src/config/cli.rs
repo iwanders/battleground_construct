@@ -86,6 +86,10 @@ struct Scenario {
     #[arg(short = 'w', long)]
     record: Option<String>,
 
+    /// Outro duration, defaults to 4.55 seconds.
+    #[arg(long)]
+    outro_duration: Option<f32>,
+
     /// Overwrite or apply the time limit.
     #[arg(short = 'l', long)]
     time_limit: Option<f32>,
@@ -107,6 +111,11 @@ pub fn parse_wrap_up_args() -> Result<WrapUpConfig, Box<dyn std::error::Error>> 
     }
     .clone();
 
+    let outro = match args.command {
+        Commands::Scenario(ref scenario) => scenario.outro_duration.unwrap_or(4.55),
+        _ => 0.0,
+    };
+
     let scenario = match setup {
         Setup::Scenario(config) => Some(config),
         _ => None,
@@ -116,6 +125,7 @@ pub fn parse_wrap_up_args() -> Result<WrapUpConfig, Box<dyn std::error::Error>> 
         scenario,
         write_wrap_up,
         write_recording,
+        outro,
     })
 }
 
