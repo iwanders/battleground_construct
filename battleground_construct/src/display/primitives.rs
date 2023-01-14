@@ -243,6 +243,11 @@ pub enum ParticleType {
         size: f32,
         color: Color,
     },
+    Firework {
+        /// Radius of firework, not of particles.
+        radius: f32,
+        color: Color,
+    },
 }
 impl Eq for ParticleType {}
 

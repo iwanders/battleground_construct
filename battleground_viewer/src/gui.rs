@@ -19,8 +19,8 @@ pub struct State {
 impl Default for State {
     fn default() -> Self {
         Self {
-            match_window: true.into(),
-            play_window: true.into(),
+            match_window: false.into(),
+            play_window: false.into(),
             teams: Default::default(),
         }
     }

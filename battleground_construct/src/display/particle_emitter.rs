@@ -42,6 +42,13 @@ impl ParticleEmitter {
             emitting: false,
         }
     }
+    pub fn firework(id: u64, radius: f32, color: Color) -> Self {
+        ParticleEmitter {
+            id,
+            particle_type: ParticleType::Firework { radius, color },
+            emitting: false,
+        }
+    }
 }
 impl Component for ParticleEmitter {}
 

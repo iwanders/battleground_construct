@@ -31,6 +31,12 @@ macro_rules! create_velocity_implementation {
                     w: cgmath::Vector3::new(0.0, 0.0, yaw),
                 }
             }
+            pub fn from_linear(v: cgmath::Vector3<f32>) -> Self {
+                Self {
+                    v,
+                    w: cgmath::Vector3::new(0.0, 0.0, 0.0),
+                }
+            }
 
             pub fn from_velocities(v: cgmath::Vector3<f32>, w: cgmath::Vector3<f32>) -> Self {
                 Self { v, w }

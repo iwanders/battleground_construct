@@ -75,10 +75,11 @@ pub struct ParticleEmitter {
     /// Color of each particle.
     color: three_d::Color,
 
-    // acceleration: Vec3,
     /// Initial velocity of each particle.
     velocity: Vec3,
     velocity_jitter: Vec3,
+    global_acceleration: Option<Vec3>,
+    drag: Option<Vec3>,
 
     velocity_clamp_x: Option<(f32, f32)>,
     velocity_clamp_z: Option<(f32, f32)>,
@@ -115,6 +116,8 @@ impl ParticleEmitter {
         let mut emit_next_cycle = false;
         let mut reflect_on_floor = false;
         let mut velocity_clamp_x = None;
+        let mut global_acceleration = None;
+        let mut drag = None;
         let velocity_clamp_z = None;
         let mut initial_particles = vec![];
         let mut max_distance: f32 = 1000000.0; // max distance the particle can travel before fading / expiring.
@@ -219,6 +222,63 @@ impl ParticleEmitter {
                     ));
                 }
             }
+
+            display::primitives::ParticleType::Firework { radius, color } => {
+                p_size = 0.03;
+                global_acceleration = Some(vec3(0.0, 0.0, -9.81));
+                fn color_to_tuple(
+                    color: &battleground_construct::display::Color,
+                    change: f32,
+                ) -> (f32, f32, f32, f32) {
+                    (
+                        (color.r as f32 + change).clamp(0.0, 1.0),
+                        (color.g as f32 + change).clamp(0.0, 1.0),
+                        (color.b as f32 + change).clamp(0.0, 1.0),
+                        0.25,
+                    )
+                }
+                let color_yellow = color_to_tuple(color, 0.1); // pretty yellow.
+                let color_red = color_to_tuple(color, -0.1); // More light
+                let c_interp = |p: f32, c1: (f32, f32, f32, f32), c2: (f32, f32, f32, f32)| {
+                    let r = ((c1.0 * p + c2.0 * (1.0 - p)) * 255.0) as u8;
+                    let g = ((c1.1 * p + c2.1 * (1.0 - p)) * 255.0) as u8;
+                    let b = ((c1.2 * p + c2.2 * (1.0 - p)) * 255.0) as u8;
+                    let a = ((c1.3 * p + c2.3 * (1.0 - p)) * 255.0) as u8;
+                    Color { r, g, b, a }
+                };
+                let lifetime_jitter = 0.3;
+                let lifetime = 0.8;
+                drag = Some(vec3(5.0, 5.0, 5.0));
+                let velocity_jitter = vec3(1.5, 1.5, 1.5) * *radius;
+                for _i in 0..1500 {
+                    use rand_distr::StandardNormal;
+                    // let spawn_val: f32 = rng.sample(StandardNormal);
+                    let color_val: f32 = rng.gen();
+                    // spawn particle.
+                    let pos = entity_position;
+                    let color = c_interp(color_val, color_yellow, color_red);
+                    let lifetime_val: f32 = rng.sample(StandardNormal);
+                    let expiry_time = time + lifetime + lifetime_jitter * lifetime_val;
+
+                    let v0: f32 = rng.sample(StandardNormal);
+                    let v1: f32 = rng.sample(StandardNormal);
+                    let v2: f32 = rng.sample(StandardNormal);
+                    let vel = vec3(
+                        v0 * velocity_jitter[0],
+                        v1 * velocity_jitter[1],
+                        v2 * velocity_jitter[2] + 0.5 * *radius,
+                    );
+                    let expiry_distance = 100.0;
+                    initial_particles.push(Particle::new(
+                        pos,
+                        vel,
+                        color,
+                        time,
+                        expiry_time,
+                        expiry_distance,
+                    ));
+                }
+            }
         }
         let color = p_color;
         let size = p_size;
@@ -263,6 +323,9 @@ impl ParticleEmitter {
             velocity_jitter,
             velocity_clamp_x,
             velocity_clamp_z,
+            global_acceleration,
+            drag,
+
             reflect_on_floor,
 
             fade_alpha_to_lifetime: true,
@@ -352,6 +415,19 @@ impl RetainedEffect for ParticleEmitter {
 
         // Update position and alphas
         for particle in self.particles.iter_mut() {
+            // Update velocity with acceleration if that's self.
+            if let Some(accel) = self.global_acceleration {
+                let gravity = accel.to_h();
+                let rot = particle.pos.to_rotation_h();
+                particle.vel += (gravity * rot).w.truncate() * dt;
+            }
+
+            if let Some(drag) = self.drag {
+                particle.vel.x -= particle.vel.x * drag.x * dt;
+                particle.vel.y -= particle.vel.y * drag.y * dt;
+                particle.vel.z -= particle.vel.z * drag.z * dt;
+            }
+
             // Always update position.
             let before = particle.pos.to_translation();
             particle.pos.w += particle.vel.extend(0.0) * dt;
