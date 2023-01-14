@@ -1,7 +1,7 @@
-use three_d::egui;
-use three_d::egui::*;
 use battleground_construct::components;
 use components::team::TeamId;
+use three_d::egui;
+use three_d::egui::*;
 
 pub fn shadow_smaller_dark() -> epaint::Shadow {
     epaint::Shadow {
@@ -25,24 +25,27 @@ impl State {
 
     pub fn get_team_color(&self, team_id: TeamId) -> Color32 {
         // self.teams.get(&team_id).map(|t| t.color()).map(|x| Color32::from_rgba_unmultiplied(x.r / 2, x.g / 2, x.b / 2, x.a)).unwrap_or(Color32::GRAY)
-        let c = self.teams.get(&team_id).map(|t| t.color()).map(|x| Color32::from_rgba_unmultiplied(x.r, x.g, x.b, x.a)).unwrap_or(Color32::GRAY);
+        let c = self
+            .teams
+            .get(&team_id)
+            .map(|t| t.color())
+            .map(|x| Color32::from_rgba_unmultiplied(x.r, x.g, x.b, x.a))
+            .unwrap_or(Color32::GRAY);
         let mut h: crate::gui::ecolor::Hsva = c.into();
         // Modify a bit to get more 'gui' colors.
         h.s = (h.s - 0.2).clamp(0.0, 1.0);
         h.v = (h.v - 0.5).clamp(0.0, 1.0);
         h.into()
-        
     }
     pub fn get_team_name(&self, team_id: TeamId) -> String {
-        self.teams.get(&team_id).map(|t| t.name().to_owned()).unwrap_or(format!("{team_id:?}"))
+        self.teams
+            .get(&team_id)
+            .map(|t| t.name().to_owned())
+            .unwrap_or(format!("{team_id:?}"))
     }
 }
 
-pub fn window_match(
-    ctx: &egui::Context,
-    construct: &crate::Construct,
-    state: &mut State,
-) {
+pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &mut State) {
     let mut open = state.match_window.borrow_mut();
     // let open = open.unwrap();
     egui::Window::new("Match")
@@ -53,20 +56,19 @@ pub fn window_match(
             fill: ctx.style().visuals.window_fill,
             stroke: ctx.style().visuals.window_stroke,
             ..Frame::none()
-        }).open(&mut *open)
+        })
+        .open(&mut *open)
         .show(ctx, |ui| {
+            use components::match_finished::MatchFinished;
             use components::match_king_of_the_hill::MatchKingOfTheHill;
             use components::match_time_limit::MatchTimeLimit;
             let progress_width = 200.0;
-            // ui.scope(|ui| {
-            // ui.label("Hello World!");
-            // ui.spacing_mut().slider_width = 200.0; // Temporary change
+
             for (_e, limit) in construct.world.component_iter::<MatchTimeLimit>() {
                 let current_time = limit.current_time();
                 let time_limit = limit.time_limit();
                 let ratio = current_time / limit.time_limit();
                 ui.scope(|ui| {
-                    // ui.visuals_mut().selection.bg_fill= Color32::RED; // Temporary change
                     ui.add(
                         ProgressBar::new(ratio)
                             .desired_width(progress_width)
@@ -82,8 +84,7 @@ pub fn window_match(
                     let team_name = state.get_team_name(team);
                     if let Some(ref max) = limit {
                         ui.scope(|ui| {
-                            // progress bar, still needs to retrieve a team color.
-                            ui.visuals_mut().selection.bg_fill= state.get_team_color(team); // Temporary change
+                            ui.visuals_mut().selection.bg_fill = state.get_team_color(team); // Temporary change
                             let ratio = points / max;
                             ui.add(
                                 ProgressBar::new(ratio)
@@ -92,8 +93,20 @@ pub fn window_match(
                             );
                         });
                     } else {
-                        // text.
+                        // No limit, lets just make some text.
                         ui.label(format!("{team_name:}: {points:.1}"));
+                    }
+                }
+            }
+
+            for (_e, match_finished) in construct.world.component_iter::<MatchFinished>() {
+                if let Some(report) = match_finished.report() {
+                    if let Some(winner) = report.winner {
+                        let team_name = state.get_team_name(winner);
+                        ui.label(format!(
+                            "{team_name:} won by {:?} in {:.1}s",
+                            report.conclusion, report.duration
+                        ));
                     }
                 }
             }
