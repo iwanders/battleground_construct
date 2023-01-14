@@ -10,10 +10,18 @@ pub fn shadow_smaller_dark() -> epaint::Shadow {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct State {
     match_window: std::cell::RefCell<bool>,
     teams: std::collections::HashMap<TeamId, components::team::Team>,
+}
+impl Default for State {
+    fn default() -> Self {
+        Self {
+            match_window: true.into(),
+            teams: Default::default(),
+        }
+    }
 }
 
 impl State {
@@ -32,7 +40,7 @@ impl State {
         h.into()
     }
 
-    pub fn _get_team_color(&self, team_id: TeamId) -> Color32 {
+    pub fn get_team_color(&self, team_id: TeamId) -> Color32 {
         // self.teams.get(&team_id).map(|t| t.color()).map(|x| Color32::from_rgba_unmultiplied(x.r / 2, x.g / 2, x.b / 2, x.a)).unwrap_or(Color32::GRAY)
         let c = self.teams.get(&team_id).map(|t| t.color());
         if let Some(c) = c {
@@ -63,6 +71,7 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
         })
         .open(&mut open)
         .show(ctx, |ui| {
+            use components::capturable::Capturable;
             use components::match_finished::MatchFinished;
             use components::match_king_of_the_hill::MatchKingOfTheHill;
             use components::match_time_limit::MatchTimeLimit;
@@ -79,6 +88,19 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
                         ProgressBar::new(ratio)
                             .desired_width(progress_width)
                             .text(format!("Time: {current_time:.1}/{time_limit:.1}")),
+                    );
+                });
+            }
+
+            for (_e, capturable) in construct.world.component_iter::<Capturable>() {
+                let color = capturable.owner().map(|t| state.get_team_color(t)).unwrap();
+                let ratio = capturable.strength();
+                ui.scope(|ui| {
+                    ui.visuals_mut().selection.bg_fill = color;
+                    ui.add(
+                        ProgressBar::new(ratio)
+                            .desired_width(progress_width)
+                            .text(format!("Capturable: {ratio:.1}")),
                     );
                 });
             }
@@ -158,7 +180,7 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
                             ui.add(
                                 ProgressBar::new(ratio)
                                     .desired_width(progress_width)
-                                    .text(format!("{points:.1}/{max:.1}")),
+                                    .text(format!("Points: {points:.1}/{max:.1}")),
                             );
                         });
                     } else {
