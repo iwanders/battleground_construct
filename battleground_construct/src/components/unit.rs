@@ -17,10 +17,30 @@ pub fn make_unit_id(v: u64) -> UnitId {
     UnitId(v)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Unit {
     id: UnitId,
+    #[serde(serialize_with = "serialize_unit_type")]
+    #[serde(deserialize_with = "deserialize_unit_type")]
     unit_type: UnitType,
+}
+
+use serde::{Deserializer, Serializer};
+fn deserialize_unit_type<'de, D>(deserializer: D) -> Result<UnitType, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let buf = u32::deserialize(deserializer)?;
+    use serde::de::Error;
+    let unit_type: UnitType = buf.try_into().map_err(D::Error::custom)?;
+    Ok(unit_type)
+}
+
+fn serialize_unit_type<S>(t: &UnitType, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    (*t as u32).serialize(s)
 }
 
 impl Unit {

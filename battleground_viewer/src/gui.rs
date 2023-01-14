@@ -23,19 +23,23 @@ impl State {
         }
     }
 
-    pub fn get_team_color(&self, team_id: TeamId) -> Color32 {
-        // self.teams.get(&team_id).map(|t| t.color()).map(|x| Color32::from_rgba_unmultiplied(x.r / 2, x.g / 2, x.b / 2, x.a)).unwrap_or(Color32::GRAY)
-        let c = self
-            .teams
-            .get(&team_id)
-            .map(|t| t.color())
-            .map(|x| Color32::from_rgba_unmultiplied(x.r, x.g, x.b, x.a))
-            .unwrap_or(Color32::GRAY);
+    pub fn ui_team_color(color: &battleground_construct::display::Color) -> Color32 {
+        let c = Color32::from_rgba_unmultiplied(color.r, color.g, color.b, color.a);
         let mut h: crate::gui::ecolor::Hsva = c.into();
         // Modify a bit to get more 'gui' colors.
         h.s = (h.s - 0.2).clamp(0.0, 1.0);
         h.v = (h.v - 0.5).clamp(0.0, 1.0);
         h.into()
+    }
+
+    pub fn _get_team_color(&self, team_id: TeamId) -> Color32 {
+        // self.teams.get(&team_id).map(|t| t.color()).map(|x| Color32::from_rgba_unmultiplied(x.r / 2, x.g / 2, x.b / 2, x.a)).unwrap_or(Color32::GRAY)
+        let c = self.teams.get(&team_id).map(|t| t.color());
+        if let Some(c) = c {
+            Self::ui_team_color(c)
+        } else {
+            Color32::GRAY
+        }
     }
     pub fn get_team_name(&self, team_id: TeamId) -> String {
         self.teams
@@ -64,6 +68,8 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
             use components::match_time_limit::MatchTimeLimit;
             let progress_width = 200.0;
 
+            ui.heading("General");
+
             for (_e, limit) in construct.world.component_iter::<MatchTimeLimit>() {
                 let current_time = limit.current_time();
                 let time_limit = limit.time_limit();
@@ -77,28 +83,6 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
                 });
             }
 
-            for (_e, match_koth) in construct.world.component_iter::<MatchKingOfTheHill>() {
-                let report = match_koth.report();
-                let limit = report.point_limit();
-                for (team, points) in report.points() {
-                    let team_name = state.get_team_name(team);
-                    if let Some(ref max) = limit {
-                        ui.scope(|ui| {
-                            ui.visuals_mut().selection.bg_fill = state.get_team_color(team); // Temporary change
-                            let ratio = points / max;
-                            ui.add(
-                                ProgressBar::new(ratio)
-                                    .desired_width(progress_width)
-                                    .text(format!("{team_name:}: {points:.1}/{max:.1}")),
-                            );
-                        });
-                    } else {
-                        // No limit, lets just make some text.
-                        ui.label(format!("{team_name:}: {points:.1}"));
-                    }
-                }
-            }
-
             for (_e, match_finished) in construct.world.component_iter::<MatchFinished>() {
                 if let Some(report) = match_finished.report() {
                     if let Some(winner) = report.winner {
@@ -107,6 +91,88 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
                             "{team_name:} won by {:?} in {:.1}s",
                             report.conclusion, report.duration
                         ));
+                    }
+                }
+            }
+
+            use components::unit::UnitType;
+            #[derive(Default, Debug)]
+            struct TeamInfo {
+                units: std::collections::HashMap<UnitType, (usize, usize)>,
+            }
+            let mut team_info = std::collections::HashMap::<TeamId, TeamInfo>::new();
+            for (unit_entity, unit) in construct.world.component_iter::<components::unit::Unit>() {
+                if let Some(unit_team) = construct
+                    .world
+                    .component::<components::team_member::TeamMember>(unit_entity)
+                {
+                    let unit_info = team_info
+                        .entry(unit_team.team())
+                        .or_default()
+                        .units
+                        .entry(unit.unit_type())
+                        .or_default();
+                    if let Some(health) = construct
+                        .world
+                        .component::<components::health::Health>(unit_entity)
+                    {
+                        if !health.is_destroyed() {
+                            unit_info.0 += 1;
+                        } else {
+                            unit_info.1 += 1;
+                        }
+                    } else {
+                        unit_info.1 += 1;
+                    }
+                }
+            }
+
+            let koth_report = construct
+                .world
+                .component_iter::<MatchKingOfTheHill>()
+                .next()
+                .map(|v| v.1.report());
+
+            for (team_id, team) in state.teams.iter() {
+                ui.heading(format!("Team - {}", team.name()));
+
+                if let Some(comment) = team.comment() {
+                    ui.label(format!("Comment: {comment}",));
+                }
+
+                if let Some(ref koth_report) = koth_report {
+                    let limit = koth_report.point_limit();
+
+                    let points = koth_report
+                        .points()
+                        .iter()
+                        .filter(|x| x.0 == *team_id)
+                        .map(|x| x.1)
+                        .last()
+                        .unwrap_or(0.0);
+
+                    if let Some(ref max) = limit {
+                        ui.scope(|ui| {
+                            ui.visuals_mut().selection.bg_fill = State::ui_team_color(team.color()); // Temporary change
+                            let ratio = points / max;
+                            ui.add(
+                                ProgressBar::new(ratio)
+                                    .desired_width(progress_width)
+                                    .text(format!("{points:.1}/{max:.1}")),
+                            );
+                        });
+                    } else {
+                        // No limit, lets just make some text.
+                        ui.label(format!("KotH: {points:.1}"));
+                    }
+                }
+
+                // Show the units.
+                if let Some(entry) = team_info.get(team_id) {
+                    for (unit, count) in entry.units.iter() {
+                        let alive = count.0;
+                        let dead = count.1;
+                        ui.label(format!("{unit:?}: {alive} ({dead:?})"));
                     }
                 }
             }
@@ -140,6 +206,7 @@ pub fn top_bar(
                     });
                 },
             );
+
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 ui.menu_button(
                     format!(

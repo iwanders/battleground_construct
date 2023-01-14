@@ -16,19 +16,19 @@ pub mod common {
 }
 
 /// Unit type enum to denote the unit type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum UnitType {
     Artillery,
     Tank,
 }
 
 impl TryFrom<u32> for UnitType {
-    type Error = ();
+    type Error = &'static str;
     fn try_from(v: u32) -> Result<Self, Self::Error> {
         match v {
             x if x == UnitType::Artillery as u32 => Ok(UnitType::Artillery),
             x if x == UnitType::Tank as u32 => Ok(UnitType::Tank),
-            _ => Err(()),
+            _ => Err("could not convert unit_type"),
         }
     }
 }

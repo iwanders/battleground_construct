@@ -60,6 +60,17 @@ struct ComponentDelta {
     removed: Vec<EntityId>,
 }
 
+macro_rules! function {
+    () => {{
+        fn f() {}
+        fn type_name_of<T>(_: T) -> &'static str {
+            std::any::type_name::<T>()
+        }
+        let name = type_name_of(f);
+        &name[..name.len() - 3]
+    }};
+}
+
 impl ComponentDelta {
     /// Apply this delta to a world.
     fn apply<T: Component + DeserializeOwned + 'static>(&self, world: &mut World) {
@@ -75,7 +86,13 @@ impl ComponentDelta {
                     false
                 };
             if !in_place_update {
-                world.add_component(*entity, bincode::deserialize::<T>(&data[..]).unwrap());
+                let res = bincode::deserialize::<T>(&data[..]);
+                let res = if let Ok(r) = res {
+                    r
+                } else {
+                    panic!("{}: {:?}", function!(), res.err());
+                };
+                world.add_component(*entity, res);
             }
         }
     }
@@ -359,6 +376,8 @@ impl Record {
         // For units, we use the unit, and the health component to track whether they should have
         // bodies.
         self.register_type::<components::health::Health>("health");
+
+        self.register_type::<components::unit::Unit>("unit");
         self.register_type::<crate::units::tank::UnitTank>("unit_tank");
         self.register_type::<crate::units::artillery::UnitArtillery>("unit_artillery");
         self.register_type::<crate::units::capturable_flag::UnitCapturableFlag>(
