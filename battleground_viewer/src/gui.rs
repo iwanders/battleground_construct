@@ -26,7 +26,7 @@ pub fn window_match(
             fill: ctx.style().visuals.window_fill,
             stroke: ctx.style().visuals.window_stroke,
             ..Frame::none()
-        })
+        }).open(&mut viewer_state.gui.match_window)
         .show(ctx, |ui| {
             use battleground_construct::components::match_king_of_the_hill::MatchKingOfTheHill;
             use battleground_construct::components::match_time_limit::MatchTimeLimit;
@@ -85,6 +85,9 @@ pub fn top_bar(
                     viewer_state.exiting = true;
                 }
             });
+            if ui.button("Match").clicked() {
+                viewer_state.gui.match_window = !viewer_state.gui.match_window;
+            };
             ui.with_layout(
                 egui::Layout::centered_and_justified(egui::Direction::LeftToRight),
                 |ui| {

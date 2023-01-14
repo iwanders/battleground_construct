@@ -30,7 +30,7 @@ pub struct ViewerState {
     previous_playback: f32,
     playback: f32,
     selected: std::collections::HashSet<EntityId>,
-    gui_state: gui::State,
+    gui: gui::State,
 }
 
 struct ConstructViewer {
@@ -163,8 +163,6 @@ impl ConstructViewer {
                 |ctx| {
                     gui::window_match(ctx, &self.construct, &mut viewer_state);
                     gui::top_bar(ctx, &self.construct, &mut viewer_state, &mut self.limiter);
-
-                    use three_d::egui::*;
                 },
             );
 
