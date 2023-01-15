@@ -9,8 +9,6 @@ use serde::{Deserialize, Serialize};
 pub struct MatchTeamDeathmatchJustDestroyed;
 impl Component for MatchTeamDeathmatchJustDestroyed {}
 
-
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MatchTeamDeathmatch {
     points: std::collections::HashMap<TeamId, i64>,
@@ -24,7 +22,6 @@ impl MatchTeamDeathmatch {
             points: Default::default(),
         }
     }
-
 
     pub fn get_leader(&self) -> Option<(TeamId, i64)> {
         self.points

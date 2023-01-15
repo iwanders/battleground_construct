@@ -5,8 +5,6 @@ use components::team::TeamId;
 use engine::prelude::*;
 use serde::{Deserialize, Serialize};
 
-
-
 /// This game type is a combindation of team deathmatch and king of the hill. It terminates either
 /// when the king of the hill criteria is met, or if the team death match counter exceeds the
 /// specified values AND that team holds all the capturables.
@@ -55,16 +53,15 @@ impl MatchDomination {
         // the number of points we need, check if that team owns all the capturables.
         if let Some(report) = &self.team_deathmatch_report {
             for (team_id, team_score) in report.points() {
-                if team_score >= self.points_team_deathmatch {
-                    if self
+                if team_score >= self.points_team_deathmatch
+                    && self
                         .capturables
                         .iter()
                         .all(|v| v.map(|t| team_id == t).unwrap_or(false))
-                    {
-                        // team exceeds required score AND holds all the capturables, the match is
-                        // over.
-                        return true;
-                    }
+                {
+                    // team exceeds required score AND holds all the capturables, the match is
+                    // over.
+                    return true;
                 }
             }
         }
