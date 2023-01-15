@@ -1,0 +1,89 @@
+match_config:
+  #  time_limit: 30.0
+  mode:
+    type: Domination
+    capture_points:
+      -
+        x: 0.0
+        y: 0.0
+        radius: 5.0
+        capture_speed: 0.1
+        team: 0
+    point_limit: 55.0
+    team_deathmatch_min: 2
+
+spawn_config:
+  control_config:
+    red:
+      type: SwivelShoot
+      
+  teams:
+    -
+      name: Red
+      color: [255, 0, 0]
+      controllerbackup:
+        type: FromControlConfig
+        name: red
+      controller: 
+        type: Wasm
+        path: "../target/wasm32-unknown-unknown/release/unit_control_example.wasm"
+        reload: true
+        fuel_per_update: 1000000
+
+    -
+      name: Blue
+      color: [0, 0, 255]
+  spawns:
+    -
+      x: 10.0
+      y: 0.0
+      yaw: 3.14
+      controller:
+        type: TeamController
+        name: Red
+      team: 0
+    -
+      x: -10.0
+      y: 0.0
+      yaw: 0
+      team: 0
+      controller:
+        type: TeamController
+        name: Red
+      controllerz: 
+        type: Wasm
+        path: "../target/wasm32-unknown-unknown/release/unit_control_example.wasm"
+        #  fuel_for_setup: 1
+        fuel_per_update: 1000000
+
+    -
+      x: 0.0
+      y: -10.0
+      #  yaw: 1.5708
+      yaw: 0.0
+      team: 1
+      radio_config:
+        channel_min: 10
+        channel_max: 10
+      controller:
+        type: SequenceControl
+        controllers:
+          - type: RadioPosition
+          - type: DiffDriveCapturable
+          - type: TankNaiveShoot
+
+    -
+      x: 0.0
+      y: 10.0
+      yaw: -1.5708
+      team: 1
+      radio_config:
+        channel_min: 10
+        channel_max: 10
+      controller:
+        type: SequenceControl
+        controllers:
+          - type: RadioPosition
+          - type: DiffDriveCapturable
+          - type: TankNaiveShoot
+          #  - type: InterfacePrinter

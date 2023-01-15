@@ -1,5 +1,6 @@
 use crate::components;
 // use crate::components::team::TeamId;
+use components::match_domination::MatchDomination;
 use components::match_finished::{MatchConclusion, MatchFinished, MatchReport, ObjectiveReport};
 use components::match_king_of_the_hill::MatchKingOfTheHill;
 use components::match_team_deathmatch::MatchTeamDeathmatch;
@@ -26,8 +27,16 @@ impl System for MatchLogicFinished {
             }
         }
         // Check death match
-        for (_e, match_team_deathmatch) in world.component_iter::<MatchTeamDeathmatch>() {
+        for (_e, match_team_deathmatch) in world.component_iter::<MatchDomination>() {
             if match_team_deathmatch.is_finished() {
+                is_finished = true;
+                conclusion = Some(MatchConclusion::Objective);
+                break;
+            }
+        }
+
+        for (_e, match_domination) in world.component_iter::<MatchTeamDeathmatch>() {
+            if match_domination.is_finished() {
                 is_finished = true;
                 conclusion = Some(MatchConclusion::Objective);
                 break;
@@ -62,8 +71,13 @@ impl System for MatchLogicFinished {
                 }
                 for (_e, match_team_deathmatch) in world.component_iter::<MatchTeamDeathmatch>() {
                     let report = match_team_deathmatch.report();
-                    leaders.push(report.get_leader());
+                    leaders.push(report.get_leader().map(|t| t.0));
                     reports.push(ObjectiveReport::MatchTeamDeathmatch(report));
+                }
+                for (_e, match_domination) in world.component_iter::<MatchDomination>() {
+                    let report = match_domination.report();
+                    leaders.push(report.get_leader());
+                    reports.push(ObjectiveReport::MatchDomination(report));
                 }
             }
 

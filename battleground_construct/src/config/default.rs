@@ -33,6 +33,9 @@ pub fn add_systems(systems: &mut Systems) {
         systems::match_logic_team_deathmatch::MatchLogicTeamDeathmatch {},
     ));
     systems.add_system(Box::new(
+        systems::match_logic_domination::MatchLogicDomination {},
+    ));
+    systems.add_system(Box::new(
         systems::match_logic_time_limit::MatchLogicTimeLimit {},
     ));
     systems.add_system(Box::new(

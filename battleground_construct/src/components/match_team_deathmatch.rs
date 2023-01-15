@@ -16,12 +16,11 @@ pub struct MatchTeamDeathmatchReport {
 }
 
 impl MatchTeamDeathmatchReport {
-    pub fn get_leader(&self) -> Option<TeamId> {
+    pub fn get_leader(&self) -> Option<(TeamId, i64)> {
         self.points
             .iter()
             .max_by(|a, b| a.1.cmp(b.1))
-            .map(|(k, _v)| k)
-            .copied()
+            .map(|t| (*t.0, *t.1))
     }
 
     pub fn point_limit(&self) -> Option<i64> {

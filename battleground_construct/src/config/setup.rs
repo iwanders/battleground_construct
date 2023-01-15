@@ -221,9 +221,59 @@ pub fn setup_scenario(
         }
     }
 
+    let setup_king_of_the_hill = |world: &mut engine::World,
+                                  capture_points: &[specification::CapturePoint],
+                                  point_limit: Option<f32>|
+     -> Result<(), Box<dyn std::error::Error>> {
+        for point in capture_points {
+            let optional_team_component = if let Some(team_index) = point.team {
+                let team_member = teams
+                    .get(team_index)
+                    .ok_or_else(|| Box::new(SetupError::new("team index out of range")))?;
+                Some(team_member)
+            } else {
+                None
+            };
+            let config = crate::units::capturable_flag::CapturableFlagConfig {
+                x: point.x,
+                y: point.y,
+                yaw: point.yaw,
+                radius: point.radius,
+                capture_speed: point.capture_speed,
+                initial_owner: optional_team_component.copied(),
+                ..Default::default()
+            };
+            crate::units::capturable_flag::spawn_capturable_flag(world, config);
+        }
+        // Spawn the king of the hill component.
+        let entity = world.add_entity();
+        world.add_component(
+            entity,
+            components::match_king_of_the_hill::MatchKingOfTheHill::new(point_limit),
+        );
+        Ok(())
+    };
+
     // Setup match.
     match config.match_config.mode {
         specification::MatchType::None => {}
+        specification::MatchType::Domination {
+            team_deathmatch_min,
+            capture_points,
+            point_limit,
+        } => {
+            let entity = world.add_entity();
+            world.add_component(
+                entity,
+                components::match_domination::MatchDomination::new(team_deathmatch_min),
+            );
+            let entity = world.add_entity();
+            world.add_component(
+                entity,
+                components::match_team_deathmatch::MatchTeamDeathmatch::new(None),
+            );
+            setup_king_of_the_hill(world, &capture_points, point_limit)?;
+        }
         specification::MatchType::TeamDeathmatch { point_limit } => {
             // Spawn the team deathmatch component.
             let entity = world.add_entity();
@@ -236,32 +286,7 @@ pub fn setup_scenario(
             capture_points,
             point_limit,
         } => {
-            for point in capture_points {
-                let optional_team_component = if let Some(team_index) = point.team {
-                    let team_member = teams
-                        .get(team_index)
-                        .ok_or_else(|| Box::new(SetupError::new("team index out of range")))?;
-                    Some(team_member)
-                } else {
-                    None
-                };
-                let config = crate::units::capturable_flag::CapturableFlagConfig {
-                    x: point.x,
-                    y: point.y,
-                    yaw: point.yaw,
-                    radius: point.radius,
-                    capture_speed: point.capture_speed,
-                    initial_owner: optional_team_component.copied(),
-                    ..Default::default()
-                };
-                crate::units::capturable_flag::spawn_capturable_flag(world, config);
-            }
-            // Spawn the king of the hill component.
-            let entity = world.add_entity();
-            world.add_component(
-                entity,
-                components::match_king_of_the_hill::MatchKingOfTheHill::new(point_limit),
-            );
+            setup_king_of_the_hill(world, &capture_points, point_limit)?;
         }
     }
 

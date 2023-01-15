@@ -14,7 +14,9 @@ impl System for MatchLogicTeamDeathmatch {
 
         for entity in to_count.iter() {
             // There ought to be a hit history on this component.
-            let this_entity_team = world.component::<components::team_member::TeamMember>(*entity).map(|x| x.team());
+            let this_entity_team = world
+                .component::<components::team_member::TeamMember>(*entity)
+                .map(|x| x.team());
             if let Some(history) = world.component::<components::hit_by::HitByHistory>(*entity) {
                 // And a last hit.
                 if let Some(last_hit) = history.last() {

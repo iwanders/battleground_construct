@@ -35,6 +35,11 @@ pub struct CapturePoint {
 pub enum MatchType {
     #[default]
     None,
+    Domination {
+        team_deathmatch_min: i64,
+        point_limit: Option<f32>,
+        capture_points: Vec<CapturePoint>,
+    },
     TeamDeathmatch {
         point_limit: Option<i64>,
     },
