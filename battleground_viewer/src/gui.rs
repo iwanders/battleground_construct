@@ -208,7 +208,6 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
                     }
                 }
 
-
                 if let Some(ref koth_report) = team_deathmatch_report {
                     let limit = koth_report.point_limit();
 
@@ -235,7 +234,6 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
                         ui.label(format!("Kills: {points:.1}"));
                     }
                 }
-
 
                 // Show the units.
                 if let Some(entry) = team_info.get(team_id) {

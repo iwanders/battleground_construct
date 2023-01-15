@@ -34,7 +34,6 @@ impl System for MatchLogicFinished {
             }
         }
 
-
         // Check time limit criteria.
         for (_e, match_time_limit) in world.component_iter::<MatchTimeLimit>() {
             if match_time_limit.is_finished() {
