@@ -148,14 +148,17 @@ pub fn parse_setup_args() -> Result<Setup, Box<dyn std::error::Error>> {
             }
 
             // Check if it is a built in scenario
-            let mut specification =
-                if super::reader::builtin_scenarios().iter().map(|x| x.0).collect::<Vec<_>>().contains(&scenario.scenario.as_str()) {
-                    super::reader::get_builtin_scenario(&scenario.scenario)?
-                } else {
-                    // It wasn't... well, lets hope that it is a file...
-                    let p = std::path::PathBuf::from(&scenario.scenario);
-                    super::reader::read_scenario_config(&p)?
-                };
+            let mut specification = if super::reader::builtin_scenarios()
+                .iter()
+                .map(|x| x.0)
+                .any(|x| x == scenario.scenario.as_str())
+            {
+                super::reader::get_builtin_scenario(&scenario.scenario)?
+            } else {
+                // It wasn't... well, lets hope that it is a file...
+                let p = std::path::PathBuf::from(&scenario.scenario);
+                super::reader::read_scenario_config(&p)?
+            };
 
             if let Some(new_limit) = scenario.time_limit {
                 specification.match_config.time_limit = Some(new_limit);

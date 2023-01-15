@@ -28,17 +28,30 @@ fn load_yaml_config(
     }
 }
 
-
 static BUILTINS_SCENARIO: [(&str, &[u8]); 7] = [
     ("test", include_bytes!("scenario/test.yaml")),
     ("playground", b"pre_setup: playground\n"),
-    ("tutorial_01_driving_forward", include_bytes!("scenario/tutorial_01_driving_forward.yaml")),
-    ("tutorial_02_shoot", include_bytes!("scenario/tutorial_02_shoot.yaml")),
-    ("tutorial_03_driving_objective", include_bytes!("scenario/tutorial_03_driving_objective.yaml")),
-    ("tutorial_04_shoot_radar", include_bytes!("scenario/tutorial_04_shoot_radar.yaml")),
-    ("tutorial_05_shoot_enemies", include_bytes!("scenario/tutorial_05_shoot_enemies.yaml")),
+    (
+        "tutorial_01_driving_forward",
+        include_bytes!("scenario/tutorial_01_driving_forward.yaml"),
+    ),
+    (
+        "tutorial_02_shoot",
+        include_bytes!("scenario/tutorial_02_shoot.yaml"),
+    ),
+    (
+        "tutorial_03_driving_objective",
+        include_bytes!("scenario/tutorial_03_driving_objective.yaml"),
+    ),
+    (
+        "tutorial_04_shoot_radar",
+        include_bytes!("scenario/tutorial_04_shoot_radar.yaml"),
+    ),
+    (
+        "tutorial_05_shoot_enemies",
+        include_bytes!("scenario/tutorial_05_shoot_enemies.yaml"),
+    ),
 ];
-
 
 pub fn get_builtin_scenario(
     desired_name: &str,
@@ -69,4 +82,3 @@ mod test {
         }
     }
 }
-
