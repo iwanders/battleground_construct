@@ -17,7 +17,8 @@ spawn_config:
       name: Red
       color: [255, 0, 0]
       controller:
-        type: SequenceControl
+        #  type: SequenceControl
+        type: Idle
         controllers:
           - type: RadioPosition
           - type: DiffDriveCapturable

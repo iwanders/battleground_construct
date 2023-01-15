@@ -19,6 +19,7 @@ pub mod clock;
 pub mod differential_drive;
 pub mod draw;
 pub mod gps;
+pub mod gun_battery;
 pub mod objectives;
 pub mod radar;
 pub mod radio_receiver;

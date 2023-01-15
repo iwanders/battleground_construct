@@ -36,11 +36,11 @@ pub struct GunBatteryConfig {
 }
 
 #[derive(Debug, Copy, Clone)]
-struct GunStatus {
+pub struct GunStatus {
     /// Time of last firing of this gun, to track this gun's reload.
-    last_fire_time: f32,
+    pub last_fire_time: f32,
     /// Boolean to track whether this gun is ready.
-    is_ready: bool,
+    pub is_ready: bool,
     // is_triggered: bool,
 }
 
@@ -129,6 +129,17 @@ impl GunBattery {
 
     pub fn gun_index(&self) -> usize {
         self.current_index
+    }
+
+    pub fn gun_count(&self) -> usize {
+        self.status.len()
+    }
+
+    pub fn gun_pose(&self, index: usize) -> Option<Mat4> {
+        self.config.poses.get(index).copied()
+    }
+    pub fn gun_status(&self, index: usize) -> Option<GunStatus> {
+        self.status.get(index).copied()
     }
 
     pub fn effect(&self) -> GunBatteryFireEffect {
@@ -232,53 +243,107 @@ mod test {
     }
 }
 
-/*
 use crate::components::unit_interface::{Register, RegisterMap, UnitModule};
-use battleground_unit_control::modules::cannon::*;
-pub struct CannonModule {
+use battleground_unit_control::modules::gun_battery::*;
+pub struct GunBatteryModule {
     entity: EntityId,
 }
 
-impl CannonModule {
+impl GunBatteryModule {
     pub fn new(entity: EntityId) -> Self {
-        CannonModule { entity }
+        GunBatteryModule { entity }
     }
 }
 
-impl UnitModule for CannonModule {
+impl UnitModule for GunBatteryModule {
     fn get_registers(&self, world: &World, registers: &mut RegisterMap) {
         registers.clear();
-        if let Some(cannon) = world.component::<Cannon>(self.entity) {
+        if let Some(gun_battery) = world.component::<GunBattery>(self.entity) {
             registers.insert(
-                REG_CANNON_TRIGGER,
-                Register::new_i32("trigger", cannon.is_triggered() as i32),
+                REG_GUN_BATTERY_FIRING,
+                Register::new_i32("firing", gun_battery.is_triggered() as i32),
             );
             registers.insert(
-                REG_CANNON_IS_TRIGGERED,
-                Register::new_i32("is_triggered", cannon.is_triggered() as i32),
+                REG_GUN_BATTERY_IS_TRIGGERED,
+                Register::new_i32("is_triggered", gun_battery.is_triggered() as i32),
             );
             registers.insert(
-                REG_CANNON_READY,
-                Register::new_i32("ready", cannon.is_ready() as i32),
+                REG_GUN_BATTERY_READY,
+                Register::new_i32("ready", gun_battery.is_ready() as i32),
             );
             registers.insert(
-                REG_CANNON_RELOAD_TIME,
-                Register::new_f32("reload_time", cannon.config.reload_time),
+                REG_GUN_BATTERY_GUN_RELOAD,
+                Register::new_f32("gun_reload", gun_battery.config.gun_reload),
             );
+            registers.insert(
+                REG_GUN_BATTERY_INTER_GUN_DURATION,
+                Register::new_f32("inter_gun_duration", gun_battery.config.inter_gun_duration),
+            );
+            registers.insert(
+                REG_GUN_BATTERY_RELOAD,
+                Register::new_f32("battery_reload", gun_battery.config.battery_reload),
+            );
+            registers.insert(
+                REG_GUN_BATTERY_FIRE_INDEX,
+                Register::new_i32("fire_index", gun_battery.gun_index() as i32),
+            );
+
+
+            registers.insert(
+                REG_GUN_BATTERY_COUNT,
+                Register::new_i32("gun_count", gun_battery.gun_count() as i32),
+            );
+            for i in 0..gun_battery.gun_count() {
+                use crate::util::cgmath::ToRollPitchYaw;
+                let offset = i as u32 * REG_GUN_BATTERY_STRIDE + REG_GUN_BATTERY_START;
+                let pose = gun_battery.gun_pose(i).unwrap();
+                let status = gun_battery.gun_status(i).unwrap();
+                registers.insert(
+                    offset + REG_GUN_BATTERY_OFFSET_X,
+                    Register::new_f32("x", pose.w.x),
+                );
+                registers.insert(
+                    offset + REG_GUN_BATTERY_OFFSET_Y,
+                    Register::new_f32("y", pose.w.y),
+                );
+                registers.insert(
+                    offset + REG_GUN_BATTERY_OFFSET_Z,
+                    Register::new_f32("z", pose.w.z),
+                );
+                let rpy = pose.to_rpy();
+                registers.insert(
+                    offset + REG_GUN_BATTERY_OFFSET_ROLL,
+                    Register::new_f32("roll", rpy.x),
+                );
+                registers.insert(
+                    offset + REG_GUN_BATTERY_OFFSET_PITCH,
+                    Register::new_f32("pitch", rpy.y),
+                );
+                registers.insert(
+                    offset + REG_GUN_BATTERY_OFFSET_YAW,
+                    Register::new_f32("yaw", rpy.z),
+                );
+                registers.insert(
+                    offset + REG_GUN_BATTERY_OFFSET_LAST_FIRE_TIME,
+                    Register::new_f32("last_fire_time", status.last_fire_time),
+                );
+                registers.insert(
+                    offset + REG_GUN_BATTERY_OFFSET_READY,
+                    Register::new_i32("ready", status.is_ready as i32),
+                );
+
+            }
         }
     }
 
     fn set_component(&self, world: &mut World, registers: &RegisterMap) {
-        if let Some(mut cannon) = world.component_mut::<Cannon>(self.entity) {
+        if let Some(mut gun_battery) = world.component_mut::<GunBattery>(self.entity) {
             let trigger = registers
-                .get(&REG_CANNON_TRIGGER)
+                .get(&REG_GUN_BATTERY_FIRING)
                 .expect("register doesnt exist")
                 .value_i32()
                 .expect("wrong value type");
-            if trigger != 0 {
-                cannon.trigger();
-            }
+            gun_battery.set_trigger(trigger != 0);
         }
     }
 }
-*/

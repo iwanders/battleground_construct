@@ -160,7 +160,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     world.add_component(base_entity, Pose::from_se2(config.x, config.y, config.yaw));
     let diff_drive_config = components::differential_drive_base::DifferentialDriveConfig {
         track_width: ARTILLERY_TRACK_WIDTH,
-        wheel_velocity_bounds: (-1.0, 1.0),
+        wheel_velocity_bounds: (-0.5, 0.5),
         wheel_acceleration_bounds: Some((-0.5, 0.5)),
     };
     super::common::add_common_diff_drive(
@@ -191,7 +191,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     // -----   Turret
     let revolute_config = components::revolute::RevoluteConfig {
         axis: Vec3::new(0.0, 0.0, 1.0),
-        velocity_bounds: (-1.0, 1.0),
+        velocity_bounds: (-0.75, 0.75),
         acceleration_bounds: Some((-1.0, 1.0)),
         ..Default::default()
     };
@@ -243,6 +243,12 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         muzzle_entity,
         components::gun_battery::GunBattery::new(artillery_battery_config()),
     );
+    register_interface.get_mut().add_module(
+        "gun_battery",
+        MODULE_ARTILLERY_GUN_BATTERY,
+        components::gun_battery::GunBatteryModule::new(muzzle_entity),
+    );
+
     // register_interface.get_mut().add_module(
     // "cannon",
     // MODULE_ARTILLERY_CANNON,
@@ -282,7 +288,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     );
 
     let radar_config = components::radar::RadarConfig {
-        range_max: 30.0,
+        range_max: 10.0,
         detection_angle_yaw: 10.0f32.to_radians(),
         detection_angle_pitch: 180f32.to_radians(),
         // range_max: 70.0,
@@ -450,7 +456,7 @@ pub fn artillery_fire_function(world: &mut World, gun_battery_entity: EntityId, 
     let gun_pose_velocity = velocity_on_body(muzzle_world_velocity, gun_pose);
 
     // Need to pick a velocity.
-    let muzzle_velocity = 10.0;
+    let muzzle_velocity = ARTILLERY_PARAM_MUZZLE_VELOCITY;
 
     // Get the pose of the cannon in the world coordinates. Then create the pose with the
     // Orientation in the global frame.
