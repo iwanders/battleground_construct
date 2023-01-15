@@ -13,26 +13,22 @@ match_config:
     team_deathmatch_min: 2
 
 spawn_config:
-  control_config:
-    red:
-      type: SwivelShoot
-      
   teams:
     -
       name: Red
       color: [255, 0, 0]
-      controllerbackup:
-        type: FromControlConfig
-        name: red
-      controller: 
-        type: Wasm
-        path: "../target/wasm32-unknown-unknown/release/unit_control_example.wasm"
-        reload: true
-        fuel_per_update: 1000000
+      controller:
+        type: Idle
 
     -
       name: Blue
       color: [0, 0, 255]
+      controller:
+        type: SequenceControl
+        controllers:
+          - type: RadioPosition
+          - type: DiffDriveCapturable
+          - type: TankNaiveShoot
   spawns:
     -
       x: 10.0
@@ -50,40 +46,28 @@ spawn_config:
       controller:
         type: TeamController
         name: Red
-      controllerz: 
-        type: Wasm
-        path: "../target/wasm32-unknown-unknown/release/unit_control_example.wasm"
-        #  fuel_for_setup: 1
-        fuel_per_update: 1000000
-
     -
       x: 0.0
       y: -10.0
       #  yaw: 1.5708
       yaw: 0.0
       team: 1
+      unit: Artillery
       radio_config:
         channel_min: 10
         channel_max: 10
       controller:
-        type: SequenceControl
-        controllers:
-          - type: RadioPosition
-          - type: DiffDriveCapturable
-          - type: TankNaiveShoot
+        type: TeamController
+        name: Blue
 
     -
       x: 0.0
-      y: 10.0
+      y: 30.0
       yaw: -1.5708
       team: 1
       radio_config:
         channel_min: 10
         channel_max: 10
       controller:
-        type: SequenceControl
-        controllers:
-          - type: RadioPosition
-          - type: DiffDriveCapturable
-          - type: TankNaiveShoot
-          #  - type: InterfacePrinter
+        type: TeamController
+        name: Blue

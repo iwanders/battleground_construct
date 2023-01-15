@@ -119,13 +119,14 @@ pub enum ControllerType {
 pub enum Unit {
     #[default]
     Tank,
+    Artillery,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct Spawn {
     pub team: Option<usize>,
     #[serde(default)]
-    pub vehicle: Unit,
+    pub unit: Unit,
     pub x: f32,
     pub y: f32,
     pub yaw: f32,

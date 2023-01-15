@@ -53,7 +53,7 @@ fn setup_playback_common(
     systems.add_system(Box::new(systems::playback_units::PlaybackUnits {}));
     systems.add_system(Box::new(systems::playback_finished::PlaybackFinished {}));
 
-    systems.add_system(Box::new(systems::team_color_tank::TeamColorTank {}));
+    systems.add_system(Box::new(systems::team_color_body::TeamColorBody {}));
     systems.add_system(Box::new(systems::health_bar_update::HealthBarUpdate {}));
     systems.add_system(Box::new(systems::display_tank_tracks::DisplayTankTracks {}));
     systems.add_system(Box::new(
@@ -62,7 +62,6 @@ fn setup_playback_common(
     systems.add_system(Box::new(
         systems::display_capture_flag::DisplayCaptureFlag {},
     ));
-    systems.add_system(Box::new(systems::team_color_tank::TeamColorTank {}));
 
     // One update cycle to ensure the clock is spawned.
     construct.update();
@@ -206,9 +205,9 @@ pub fn setup_scenario(
             &config.spawn_config.control_config,
             &team_set,
         )?;
-        match spawn.vehicle {
+        match spawn.unit {
             specification::Unit::Tank => {
-                let tank_config = units::tank::TankSpawnConfig {
+                let unit_config = units::tank::TankSpawnConfig {
                     x: spawn.x,
                     y: spawn.y,
                     yaw: spawn.yaw,
@@ -216,7 +215,18 @@ pub fn setup_scenario(
                     team_member: optional_team_component,
                     radio_config: Some(spawn.radio),
                 };
-                units::tank::spawn_tank(world, tank_config);
+                units::tank::spawn_tank(world, unit_config);
+            }
+            specification::Unit::Artillery => {
+                let unit_config = units::artillery::ArtillerySpawnConfig {
+                    x: spawn.x,
+                    y: spawn.y,
+                    yaw: spawn.yaw,
+                    controller,
+                    team_member: optional_team_component,
+                    radio_config: Some(spawn.radio),
+                };
+                units::artillery::spawn_artillery(world, unit_config);
             }
         }
     }

@@ -29,7 +29,7 @@ pub mod record;
 pub mod revolute_pose;
 pub mod revolute_update;
 pub mod revolute_velocity;
-pub mod team_color_tank;
+pub mod team_color_body;
 pub mod timed_function;
 pub mod unit_control;
 pub mod unit_controller_error_check;
