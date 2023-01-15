@@ -50,9 +50,9 @@ impl UnitControl for RadarDrawControl {
 
         match unit_type {
             UnitType::Tank => {
-                body_z = tank::TANK_DIM_FLOOR_TO_TURRET_Z;
-                turret_z = tank::TANK_DIM_TURRET_TO_RADAR_Z;
-                radar_z = tank::TANK_DIM_FLOOR_TO_BODY_Z;
+                body_z = 0.0;
+                turret_z = 0.0;
+                radar_z = tank::TANK_DIM_FLOOR_TO_TURRET_Z + tank::TANK_DIM_TURRET_TO_RADAR_Z;
                 radar_local_x = 0.0;
                 turret_pos = interface
                     .get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)?;
@@ -61,7 +61,7 @@ impl UnitControl for RadarDrawControl {
             }
             UnitType::Artillery => {
                 body_z = 0.0;
-                turret_z = artillery::ARTILLERY_DIM_FLOOR_TO_TURRET_Z;
+                turret_z = 0.0;
                 radar_z = artillery::ARTILLERY_DIM_TURRET_TO_RADAR_Z;
                 radar_local_x = artillery::ARTILLERY_DIM_RADAR_JOINT_TO_RADAR_X;
                 turret_pos = interface
@@ -75,7 +75,8 @@ impl UnitControl for RadarDrawControl {
         let rot = turret_pos + radar_pos;
         let local_rotation = Mat4::from_angle_z(cgmath::Rad(rot));
         let radar_offset = Mat4::from_translation(vec3(0.0, 0.0, radar_z + turret_z - body_z));
-        let local_radar = radar_offset * local_rotation * Mat4::from_translation(vec3(radar_local_x, 0.0, 0.0));
+
+        let local_radar = global_offset * radar_offset * local_rotation * Mat4::from_translation(vec3(radar_local_x, 0.0, 0.0));
 
         let global_radar = draw_to_global * global_offset * local_radar;
 
