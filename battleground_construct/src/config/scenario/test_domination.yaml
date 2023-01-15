@@ -1,5 +1,5 @@
 match_config:
-  #  time_limit: 30.0
+  time_limit: 10.0
   mode:
     type: Domination
     capture_points:

@@ -13,8 +13,6 @@ pub enum MatchConclusion {
     TimeLimit,
     /// Match was concluded based on the objectives criteria being met.
     Objective,
-    // Could have a CriteriaAccelerated here, in case we own the capture points, no no other
-    // possible contenders are alive, in that case there's no need to wait around.
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

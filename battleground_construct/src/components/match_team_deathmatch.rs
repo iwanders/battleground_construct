@@ -32,6 +32,16 @@ impl MatchTeamDeathmatchReport {
         v.sort_by(|a, b| a.0.cmp(&b.0));
         v
     }
+    pub fn is_finished(&self) -> bool {
+        if let Some(limit) = self.point_limit {
+            for (_t, v) in self.points.iter() {
+                if *v >= limit {
+                    return true;
+                }
+            }
+        }
+        false
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
