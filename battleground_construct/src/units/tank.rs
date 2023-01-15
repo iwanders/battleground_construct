@@ -275,6 +275,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
 
     // -----   Control
+    world.add_component(control_entity, display::draw_module::DrawComponent::new());
+    register_interface.get_mut().add_module(
+        "draw",
+        battleground_unit_control::units::common::MODULE_DRAW,
+        display::draw_module::DrawModule::new(control_entity),
+    );
     world.add_component(control_entity, register_interface);
 
     // Finally, add the controller.

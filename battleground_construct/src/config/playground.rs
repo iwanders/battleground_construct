@@ -96,8 +96,8 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             // yaw: std::f32::consts::PI / 2.0,
             yaw: 0.0,
             // controller: Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot::new()),
-            // controller: Box::new(control::radar_draw::RadarDrawControl {}),
-            controller: Box::new(unit_control_builtin::idle::Idle {}),
+            controller: Box::new(control::radar_draw::RadarDrawControl {}),
+            // controller: Box::new(unit_control_builtin::idle::Idle {}),
             // controller: fw_backwards,
             ..Default::default()
         },

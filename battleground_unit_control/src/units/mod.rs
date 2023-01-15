@@ -11,7 +11,7 @@ pub mod common {
 
     /// Gps is located in the body origin.
     pub const MODULE_GPS: u32 = 0x1700;
-    /// Drawing also originates from the body origin.
+    /// Drawing happens in world frame.
     pub const MODULE_DRAW: u32 = 0x1800;
 }
 

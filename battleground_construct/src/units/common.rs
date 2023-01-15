@@ -93,12 +93,6 @@ pub fn add_common_body(
     );
 
     // Lets place drawing and gps in the base as well.
-    world.add_component(body_entity, display::draw_module::DrawComponent::new());
-    register_interface.get_mut().add_module(
-        "draw",
-        common::MODULE_DRAW,
-        display::draw_module::DrawModule::new(body_entity),
-    );
     register_interface.get_mut().add_module(
         "localization",
         common::MODULE_GPS,

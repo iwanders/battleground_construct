@@ -6,9 +6,9 @@ use crate::display::draw_module::LineSegment;
 use crate::util::cgmath::prelude::*;
 use cgmath::vec3;
 
-// this is a private test controller.
+// This is a private test controller.
 
-use battleground_unit_control::units::{common, tank};
+use battleground_unit_control::units::{common, tank, artillery};
 
 pub struct RadarDrawControl {}
 
@@ -18,18 +18,27 @@ const RED: [u8; 4] = [255, 0, 0, 255];
 use battleground_unit_control::modules::gps::*;
 use battleground_unit_control::modules::radar::*;
 use battleground_unit_control::modules::revolute::*;
+use battleground_unit_control::modules::unit::*;
+use battleground_unit_control::units::UnitType;
 impl UnitControl for RadarDrawControl {
     fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::Error>> {
-        let x = interface.get_f32(common::MODULE_GPS, REG_GPS_X).unwrap();
-        let y = interface.get_f32(common::MODULE_GPS, REG_GPS_Y).unwrap();
-        let z = interface.get_f32(common::MODULE_GPS, REG_GPS_Z).unwrap();
-        let yaw = interface.get_f32(common::MODULE_GPS, REG_GPS_YAW).unwrap();
+        let x = interface.get_f32(common::MODULE_GPS, REG_GPS_X)?;
+        let y = interface.get_f32(common::MODULE_GPS, REG_GPS_Y)?;
+        let z = interface.get_f32(common::MODULE_GPS, REG_GPS_Z)?;
+        let yaw = interface.get_f32(common::MODULE_GPS, REG_GPS_YAW)?;
 
-        let body_z = 0.25;
-        let turret_z = 0.375 + 0.1 / 2.0;
-        let radar_z = 0.07;
+        let body_z;
+        let turret_z;
+        let radar_z;
+        let radar_local_x;
+        let turret_pos;
+        let radar_pos;
 
         // Gps is attached to the body.
+
+        let unit_type = interface.get_i32(common::MODULE_UNIT, REG_UNIT_UNIT_TYPE)?;
+        let unit_type: UnitType = (unit_type as u32).try_into()?;
+
         // Radar is not located in the gps, instead it has the offset body_z.
 
         // Calculate the position of the base;
@@ -39,18 +48,34 @@ impl UnitControl for RadarDrawControl {
         let draw_to_global = global_offset.to_inv_h();
         // Then, we can calculate everything in global frame, and finally draw in local.
 
-        let turret_pos = interface
-            .get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)
-            .unwrap();
-        let radar_pos = interface
-            .get_f32(tank::MODULE_TANK_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)
-            .unwrap();
+        match unit_type {
+            UnitType::Tank => {
+                body_z = tank::TANK_DIM_FLOOR_TO_TURRET_Z;
+                turret_z = tank::TANK_DIM_TURRET_TO_RADAR_Z;
+                radar_z = tank::TANK_DIM_FLOOR_TO_BODY_Z;
+                radar_local_x = 0.0;
+                turret_pos = interface
+                    .get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)?;
+                radar_pos = interface
+                    .get_f32(tank::MODULE_TANK_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)?;
+            }
+            UnitType::Artillery => {
+                body_z = 0.0;
+                turret_z = artillery::ARTILLERY_DIM_FLOOR_TO_TURRET_Z;
+                radar_z = artillery::ARTILLERY_DIM_TURRET_TO_RADAR_Z;
+                radar_local_x = artillery::ARTILLERY_DIM_RADAR_JOINT_TO_RADAR_X;
+                turret_pos = interface
+                    .get_f32(artillery::MODULE_ARTILLERY_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)?;
+                radar_pos = interface
+                    .get_f32(artillery::MODULE_ARTILLERY_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)?;
+            }
+        }
 
         // radar position in world:
         let rot = turret_pos + radar_pos;
         let local_rotation = Mat4::from_angle_z(cgmath::Rad(rot));
         let radar_offset = Mat4::from_translation(vec3(0.0, 0.0, radar_z + turret_z - body_z));
-        let local_radar = radar_offset * local_rotation;
+        let local_radar = radar_offset * local_rotation * Mat4::from_translation(vec3(radar_local_x, 0.0, 0.0));
 
         let global_radar = draw_to_global * global_offset * local_radar;
 
