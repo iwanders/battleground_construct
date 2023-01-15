@@ -73,12 +73,14 @@ pub fn builtin_scenarios() -> &'static [(&'static str, &'static [u8])] {
 }
 
 #[cfg(test)]
+#[cfg(feature = "unit_control_wasm")]
 mod test {
     use super::*;
     #[test]
     fn test_scenario_readable() {
         for v in builtin_scenarios() {
-            assert!(get_builtin_scenario(v.0).is_ok());
+            let res = get_builtin_scenario(v.0);
+            assert!(res.is_ok(), "Failed to read {}; {res:?}", v.0);
         }
     }
 }

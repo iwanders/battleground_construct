@@ -418,7 +418,7 @@ mod test {
         use crate::config::specification::SpawnConfig;
         let mut control_config = std::collections::HashMap::<String, ControllerType>::new();
         control_config.insert("a".to_owned(), ControllerType::InterfacePrinter);
-        control_config.insert("b".to_owned(), ControllerType::None);
+        control_config.insert("b".to_owned(), ControllerType::Idle);
         let v = ScenarioConfig {
             spawn_config: SpawnConfig {
                 control_config,
@@ -426,7 +426,7 @@ mod test {
             },
             ..Default::default()
         };
-        let config: Vec<String> = vec!["control:a:none".to_owned()];
+        let config: Vec<String> = vec!["control:a:idle".to_owned()];
         let strslice: Vec<&str> = config.iter().map(|v| v.as_str()).collect();
         let r = apply_config(&strslice, v);
         println!("r; {r:?}");
@@ -437,7 +437,7 @@ mod test {
             .control_config
             .get("a")
             .expect("a should still exist");
-        assert_eq!(*a, ControllerType::None);
+        assert_eq!(*a, ControllerType::Idle);
     }
 
     #[cfg(feature = "unit_control_wasm")]
@@ -446,8 +446,8 @@ mod test {
         use crate::config::specification::ControllerType;
         use crate::config::specification::SpawnConfig;
         let mut control_config = std::collections::HashMap::<String, ControllerType>::new();
-        control_config.insert("a".to_owned(), ControllerType::None);
-        control_config.insert("b".to_owned(), ControllerType::None);
+        control_config.insert("a".to_owned(), ControllerType::Idle);
+        control_config.insert("b".to_owned(), ControllerType::Idle);
         let v = ScenarioConfig {
             spawn_config: SpawnConfig {
                 control_config,
