@@ -78,6 +78,12 @@ impl System for Destroy {
 
         // Remove the destroyed markers.
         world.remove_components::<components::destroyed::Destroyed>(&destroyed);
+        for entity in destroyed {
+            world.add_component(
+                entity,
+                components::match_team_deathmatch::MatchTeamDeathmatchJustDestroyed,
+            );
+        }
 
         // Now, remove all entities marked for removal.
         world.remove_entities(&all_to_be_removed);

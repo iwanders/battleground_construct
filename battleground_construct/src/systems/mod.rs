@@ -14,6 +14,7 @@ pub mod health_tank_body;
 pub mod kinematics_differential_drive;
 pub mod match_logic_finished;
 pub mod match_logic_king_of_the_hill;
+pub mod match_logic_team_deathmatch;
 pub mod match_logic_time_limit;
 pub mod playback;
 pub mod playback_finished;

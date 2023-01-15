@@ -27,6 +27,7 @@ pub mod id_generator;
 pub mod impact;
 pub mod match_finished;
 pub mod match_king_of_the_hill;
+pub mod match_team_deathmatch;
 pub mod match_time_limit;
 pub mod objectives_module;
 pub mod parent;

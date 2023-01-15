@@ -35,7 +35,9 @@ pub struct CapturePoint {
 pub enum MatchType {
     #[default]
     None,
-    DeathMatch,
+    TeamDeathmatch {
+        point_limit: Option<usize>,
+    },
     KingOfTheHill {
         capture_points: Vec<CapturePoint>,
         point_limit: Option<f32>,

@@ -224,7 +224,14 @@ pub fn setup_scenario(
     // Setup match.
     match config.match_config.mode {
         specification::MatchType::None => {}
-        specification::MatchType::DeathMatch => {}
+        specification::MatchType::TeamDeathmatch { point_limit } => {
+            // Spawn the team deathmatch component.
+            let entity = world.add_entity();
+            world.add_component(
+                entity,
+                components::match_team_deathmatch::MatchTeamDeathmatch::new(point_limit),
+            );
+        }
         specification::MatchType::KingOfTheHill {
             capture_points,
             point_limit,

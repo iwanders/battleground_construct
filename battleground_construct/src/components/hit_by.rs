@@ -73,5 +73,8 @@ impl HitByHistory {
     pub fn add_hits(&mut self, hit_by: &HitBy) {
         self.hits.append(&mut hit_by.hits.clone())
     }
+    pub fn last(&self) -> Option<&HitRecord> {
+        self.hits.last()
+    }
 }
 impl Component for HitByHistory {}
