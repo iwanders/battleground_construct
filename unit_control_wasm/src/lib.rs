@@ -103,7 +103,7 @@ impl UnitControlWasm {
         engine: &Engine,
         path: &std::path::Path,
     ) -> Result<(Instance, SystemTime), Box<dyn std::error::Error>> {
-        let mut linker = Linker::<State>::new(&engine);
+        let mut linker = Linker::<State>::new(engine);
 
         fn get_wasm_transmission_buffer(caller: &mut Caller<'_, State>) -> TypedFunc<u32, u32> {
             let wasm_transmission_buffer = caller
@@ -447,7 +447,7 @@ impl UnitControlWasm {
             return Err(format!("module {} could not be found.", path.display()).into());
         }
 
-        let module = Module::from_file(engine, path.clone())?;
+        let module = Module::from_file(engine, path)?;
         let instance = linker.instantiate(store, &module)?;
 
         let metadata = std::fs::metadata(path)?;
