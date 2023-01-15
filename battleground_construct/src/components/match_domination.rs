@@ -70,6 +70,10 @@ impl MatchDomination {
     }
 
     pub fn get_leader(&self) -> Option<TeamId> {
+        if !self.is_finished() {
+            return None;
+        }
+
         // If we won by king of the hill, return that leader.
         if self
             .king_of_the_hill_report
@@ -82,7 +86,8 @@ impl MatchDomination {
                 .as_ref()
                 .map(|t| t.get_leader())?;
         }
-        // We didn't win by king of the hill.
+        // We didn't win by king of the hill, but we are finished, must be the team that holds
+        // the capturables.
         *self.capturables.first()?
     }
 }

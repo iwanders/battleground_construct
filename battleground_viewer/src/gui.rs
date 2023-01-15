@@ -13,14 +13,14 @@ pub fn shadow_smaller_dark() -> epaint::Shadow {
 #[derive(Debug)]
 pub struct State {
     match_window: std::cell::RefCell<bool>,
-    play_window: std::cell::RefCell<bool>,
+    time_window: std::cell::RefCell<bool>,
     teams: std::collections::HashMap<TeamId, components::team::Team>,
 }
 impl Default for State {
     fn default() -> Self {
         Self {
             match_window: false.into(),
-            play_window: false.into(),
+            time_window: false.into(),
             teams: Default::default(),
         }
     }
@@ -253,9 +253,9 @@ pub fn window_play(
     state: &mut crate::ViewerState,
     limiter: &mut crate::Limiter,
 ) {
-    let mut open = state.gui.play_window.borrow_mut();
+    let mut open = state.gui.time_window.borrow_mut();
     // let open = open.unwrap();
-    egui::Window::new("Play")
+    egui::Window::new("Time")
         .frame(Frame {
             inner_margin: ctx.style().spacing.window_margin,
             rounding: ctx.style().visuals.window_rounding,
@@ -296,6 +296,7 @@ pub fn window_play(
                         ui.selectable_value(&mut state.desired_speed, 1.0, "1.0");
                         ui.selectable_value(&mut state.desired_speed, 2.0, "2.0");
                         ui.selectable_value(&mut state.desired_speed, 5.0, "5.0");
+                        ui.selectable_value(&mut state.desired_speed, 10.0, "10.0");
                     });
                 ui.end_row();
 
@@ -330,9 +331,9 @@ pub fn top_bar(ctx: &egui::Context, viewer_state: &mut crate::ViewerState) {
                 let new_state = (!*viewer_state.gui.match_window.borrow()).into();
                 viewer_state.gui.match_window = new_state;
             };
-            if ui.button("Play").clicked() {
-                let new_state = (!*viewer_state.gui.play_window.borrow()).into();
-                viewer_state.gui.play_window = new_state;
+            if ui.button("Time").clicked() {
+                let new_state = (!*viewer_state.gui.time_window.borrow()).into();
+                viewer_state.gui.time_window = new_state;
             };
             ui.with_layout(
                 egui::Layout::centered_and_justified(egui::Direction::LeftToRight),
