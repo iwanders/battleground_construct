@@ -28,7 +28,7 @@ fn load_yaml_config(
     }
 }
 
-static BUILTINS_SCENARIO: [(&str, &[u8]); 7] = [
+static BUILTINS_SCENARIO: [(&str, &[u8]); 8] = [
     ("test", include_bytes!("scenario/test.yaml")),
     ("playground", b"pre_setup: playground\n"),
     (
@@ -50,6 +50,10 @@ static BUILTINS_SCENARIO: [(&str, &[u8]); 7] = [
     (
         "tutorial_05_shoot_enemies",
         include_bytes!("scenario/tutorial_05_shoot_enemies.yaml"),
+    ),
+    (
+        "tutorial_06_shooting_enemy",
+        include_bytes!("scenario/tutorial_06_shooting_enemy.yaml"),
     ),
 ];
 

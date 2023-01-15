@@ -22,7 +22,7 @@ spawn_config:
         controllers:
           - type: RadioPosition
           - type: DiffDriveCapturable
-          - type: TankNaiveShoot
+          - type: NaiveShoot
     -
       name: Blue
       color: [0, 0, 255]
@@ -31,7 +31,7 @@ spawn_config:
         controllers:
           - type: RadioPosition
           - type: DiffDriveCapturable
-          - type: TankNaiveShoot
+          - type: NaiveShoot
   spawns:
     -
       x: 10.0

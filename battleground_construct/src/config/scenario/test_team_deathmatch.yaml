@@ -62,7 +62,7 @@ spawn_config:
         controllers:
           - type: RadioPosition
           - type: DiffDriveCapturable
-          - type: TankNaiveShoot
+          - type: NaiveShoot
 
     -
       x: 0.0
@@ -77,5 +77,5 @@ spawn_config:
         controllers:
           - type: RadioPosition
           - type: DiffDriveCapturable
-          - type: TankNaiveShoot
+          - type: NaiveShoot
           #  - type: InterfacePrinter
