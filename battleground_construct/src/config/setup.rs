@@ -144,7 +144,7 @@ pub fn setup_scenario(
                 specification::ControllerType::SwivelShoot => {
                     Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot::new())
                 }
-                specification::ControllerType::None => {
+                specification::ControllerType::Idle => {
                     Box::new(unit_control_builtin::idle::Idle {})
                 }
                 specification::ControllerType::RadioPosition => {

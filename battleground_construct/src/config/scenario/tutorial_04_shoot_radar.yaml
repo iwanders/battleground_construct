@@ -1,0 +1,32 @@
+match_config:
+  mode:
+    type: TeamDeathmatch
+    point_limit: 1
+
+spawn_config:
+  teams:
+    -
+      name: Player
+      color: [255, 0, 0]
+      controller: 
+        type: Wasm
+        reload: true
+        path: "<no path specified>"
+        fuel_per_update: 1000000
+    -
+      name: Blue
+      color: [0, 0, 255]
+  spawns:
+    -
+      x: 5.0
+      y: 0.0
+      yaw: 3.14
+      controller:
+        type: TeamController
+        name: Player
+      team: 0
+    -
+      x: 0.0
+      y: -3.0
+      yaw: 1.5707
+      team: 1

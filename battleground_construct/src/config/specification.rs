@@ -86,7 +86,7 @@ pub struct WasmControlConfig {
 #[serde(tag = "type")]
 pub enum ControllerType {
     #[default]
-    None,
+    Idle,
     SwivelShoot,
     RadioPosition,
     #[cfg(not(target_arch = "wasm32"))]

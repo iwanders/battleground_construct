@@ -142,14 +142,14 @@ pub fn parse_setup_args() -> Result<Setup, Box<dyn std::error::Error>> {
                 let available = super::reader::builtin_scenarios();
                 println!("Available scenarios:");
                 for name in available {
-                    println!("  {}", name);
+                    println!("  {}", name.0);
                 }
                 std::process::exit(0);
             }
 
             // Check if it is a built in scenario
             let mut specification =
-                if super::reader::builtin_scenarios().contains(&scenario.scenario.as_str()) {
+                if super::reader::builtin_scenarios().iter().map(|x| x.0).collect::<Vec<_>>().contains(&scenario.scenario.as_str()) {
                     super::reader::get_builtin_scenario(&scenario.scenario)?
                 } else {
                     // It wasn't... well, lets hope that it is a file...
@@ -320,8 +320,8 @@ fn controller_config(
                 }
             }
         }
-        "none" => {
-            *control = ControllerType::None;
+        "idle" => {
+            *control = ControllerType::Idle;
         }
         _ => {
             return Err(make_error(
@@ -366,9 +366,9 @@ fn apply_config(
                     .ok_or_else(|| make_error("expected team attribute to modify"))?;
                 match team_attribute {
                     "control" => {
-                        // populate it with None, them use the common handler.
+                        // populate it with Idle, them use the common handler.
                         if team.controller.is_none() {
-                            team.controller = Some(ControllerType::None);
+                            team.controller = Some(ControllerType::Idle);
                         }
                         let controller = team.controller.as_mut().unwrap();
                         team.comment = Some("".to_owned());
