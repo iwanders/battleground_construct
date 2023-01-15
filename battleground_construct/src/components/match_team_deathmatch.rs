@@ -11,8 +11,8 @@ impl Component for MatchTeamDeathmatchJustDestroyed {}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MatchTeamDeathmatchReport {
-    points: std::collections::HashMap<TeamId, usize>,
-    point_limit: Option<usize>,
+    points: std::collections::HashMap<TeamId, i64>,
+    point_limit: Option<i64>,
 }
 
 impl MatchTeamDeathmatchReport {
@@ -24,12 +24,12 @@ impl MatchTeamDeathmatchReport {
             .copied()
     }
 
-    pub fn point_limit(&self) -> Option<usize> {
+    pub fn point_limit(&self) -> Option<i64> {
         self.point_limit
     }
 
-    pub fn points(&self) -> Vec<(TeamId, usize)> {
-        let mut v: Vec<(TeamId, usize)> = self.points.iter().map(|(t, s)| (*t, *s)).collect();
+    pub fn points(&self) -> Vec<(TeamId, i64)> {
+        let mut v: Vec<(TeamId, i64)> = self.points.iter().map(|(t, s)| (*t, *s)).collect();
         v.sort_by(|a, b| a.0.cmp(&b.0));
         v
     }
@@ -37,19 +37,19 @@ impl MatchTeamDeathmatchReport {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MatchTeamDeathmatch {
-    points: std::collections::HashMap<TeamId, usize>,
-    point_limit: Option<usize>,
+    points: std::collections::HashMap<TeamId, i64>,
+    point_limit: Option<i64>,
 }
 
 impl MatchTeamDeathmatch {
-    pub fn new(point_limit: Option<usize>) -> Self {
+    pub fn new(point_limit: Option<i64>) -> Self {
         Self {
             point_limit,
             points: Default::default(),
         }
     }
 
-    pub fn add_points(&mut self, point_additions: &[(TeamId, usize)]) {
+    pub fn add_points(&mut self, point_additions: &[(TeamId, i64)]) {
         for (team, value) in point_additions.iter() {
             *self.points.entry(*team).or_insert(0) += value;
         }

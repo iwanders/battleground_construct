@@ -352,8 +352,14 @@ fn apply_config(
                     .ok_or_else(|| make_error("expected team name"))?;
                 let pos = section
                     .iter()
-                    .position(|x| x.name == key)
-                    .ok_or_else(|| make_error(&format!("couldnt find team name {}", key)))?;
+                    .position(|x| x.name.to_lowercase() == key.to_lowercase())
+                    .ok_or_else(|| {
+                        make_error(&format!(
+                            "couldnt find team name {}; {:?}",
+                            key,
+                            section.iter().map(|x| &x.name).collect::<Vec<_>>()
+                        ))
+                    })?;
                 let team = &mut section[pos];
                 let team_attribute = tokens
                     .next()

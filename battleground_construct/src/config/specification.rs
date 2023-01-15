@@ -36,7 +36,7 @@ pub enum MatchType {
     #[default]
     None,
     TeamDeathmatch {
-        point_limit: Option<usize>,
+        point_limit: Option<i64>,
     },
     KingOfTheHill {
         capture_points: Vec<CapturePoint>,

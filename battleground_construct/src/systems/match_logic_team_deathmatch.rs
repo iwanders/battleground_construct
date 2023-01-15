@@ -10,10 +10,11 @@ impl System for MatchLogicTeamDeathmatch {
         let to_count = world.component_entities::<MatchTeamDeathmatchJustDestroyed>();
 
         // get the team that landed the finishing blow.
-        let mut new_frags: std::collections::HashMap<TeamId, usize> = Default::default();
+        let mut new_frags: std::collections::HashMap<TeamId, i64> = Default::default();
 
         for entity in to_count.iter() {
             // There ought to be a hit history on this component.
+            let this_entity_team = world.component::<components::team_member::TeamMember>(*entity).map(|x| x.team());
             if let Some(history) = world.component::<components::hit_by::HitByHistory>(*entity) {
                 // And a last hit.
                 if let Some(last_hit) = history.last() {
@@ -27,7 +28,12 @@ impl System for MatchLogicTeamDeathmatch {
                             if let Some(team_member) =
                                 world.component::<components::team_member::TeamMember>(unit_entity)
                             {
-                                *new_frags.entry(team_member.team()).or_insert(0) += 1;
+                                // Friendly fire, all shooters subtract one kill.
+                                if Some(team_member.team()) == this_entity_team {
+                                    *new_frags.entry(team_member.team()).or_insert(0) -= 1;
+                                } else {
+                                    *new_frags.entry(team_member.team()).or_insert(0) += 1;
+                                }
                             }
                         }
                     }
@@ -41,7 +47,7 @@ impl System for MatchLogicTeamDeathmatch {
             let update_pairs = new_frags
                 .iter()
                 .map(|(t, v)| (*t, *v))
-                .collect::<Vec<(TeamId, usize)>>();
+                .collect::<Vec<(TeamId, i64)>>();
             deathmatch.add_points(&update_pairs);
         }
 
