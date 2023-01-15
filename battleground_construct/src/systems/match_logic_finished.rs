@@ -2,6 +2,7 @@ use crate::components;
 // use crate::components::team::TeamId;
 use components::match_finished::{MatchConclusion, MatchFinished, MatchReport, ObjectiveReport};
 use components::match_king_of_the_hill::MatchKingOfTheHill;
+use components::match_team_deathmatch::MatchTeamDeathmatch;
 use components::match_time_limit::MatchTimeLimit;
 
 use engine::prelude::*;
@@ -20,10 +21,19 @@ impl System for MatchLogicFinished {
         for (_e, match_koth) in world.component_iter::<MatchKingOfTheHill>() {
             if match_koth.is_finished() {
                 is_finished = true;
-                conclusion = Some(MatchConclusion::Criteria);
+                conclusion = Some(MatchConclusion::Objective);
                 break;
             }
         }
+        // Check death match
+        for (_e, match_team_deathmatch) in world.component_iter::<MatchTeamDeathmatch>() {
+            if match_team_deathmatch.is_finished() {
+                is_finished = true;
+                conclusion = Some(MatchConclusion::Objective);
+                break;
+            }
+        }
+
 
         // Check time limit criteria.
         for (_e, match_time_limit) in world.component_iter::<MatchTimeLimit>() {
@@ -50,6 +60,11 @@ impl System for MatchLogicFinished {
                     let report = match_koth.report();
                     leaders.push(report.get_leader());
                     reports.push(ObjectiveReport::MatchKingOfTheHillReport(report));
+                }
+                for (_e, match_team_deathmatch) in world.component_iter::<MatchTeamDeathmatch>() {
+                    let report = match_team_deathmatch.report();
+                    leaders.push(report.get_leader());
+                    reports.push(ObjectiveReport::MatchTeamDeathmatch(report));
                 }
             }
 

@@ -80,6 +80,7 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
             use components::capturable::Capturable;
             use components::match_finished::MatchFinished;
             use components::match_king_of_the_hill::MatchKingOfTheHill;
+            use components::match_team_deathmatch::MatchTeamDeathmatch;
             use components::match_time_limit::MatchTimeLimit;
             let progress_width = 200.0;
 
@@ -167,6 +168,12 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
                 .next()
                 .map(|v| v.1.report());
 
+            let team_deathmatch_report = construct
+                .world
+                .component_iter::<MatchTeamDeathmatch>()
+                .next()
+                .map(|v| v.1.report());
+
             for (team_id, team) in state.teams.iter() {
                 ui.heading(format!("Team - {}", team.name()));
 
@@ -200,6 +207,35 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
                         ui.label(format!("KotH: {points:.1}"));
                     }
                 }
+
+
+                if let Some(ref koth_report) = team_deathmatch_report {
+                    let limit = koth_report.point_limit();
+
+                    let points = koth_report
+                        .points()
+                        .iter()
+                        .filter(|x| x.0 == *team_id)
+                        .map(|x| x.1)
+                        .last()
+                        .unwrap_or(0);
+
+                    if let Some(ref max) = limit {
+                        ui.scope(|ui| {
+                            ui.visuals_mut().selection.bg_fill = State::ui_team_color(team.color()); // Temporary change
+                            let ratio = (points / max) as f32;
+                            ui.add(
+                                ProgressBar::new(ratio)
+                                    .desired_width(progress_width)
+                                    .text(format!("Kills: {points:.1}/{max:.1}")),
+                            );
+                        });
+                    } else {
+                        // No limit, lets just make some text.
+                        ui.label(format!("Kills: {points:.1}"));
+                    }
+                }
+
 
                 // Show the units.
                 if let Some(entry) = team_info.get(team_id) {

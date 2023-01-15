@@ -2,6 +2,7 @@ use super::team::TeamId;
 use engine::prelude::*;
 
 use super::match_king_of_the_hill::MatchKingOfTheHillReport;
+use super::match_team_deathmatch::MatchTeamDeathmatchReport;
 
 use serde::{Deserialize, Serialize};
 
@@ -10,7 +11,7 @@ pub enum MatchConclusion {
     /// Match was concluded based on a time limit being reached.
     TimeLimit,
     /// Match was concluded based on the objectives criteria being met.
-    Criteria,
+    Objective,
     // Could have a CriteriaAccelerated here, in case we own the capture points, no no other
     // possible contenders are alive, in that case there's no need to wait around.
 }
@@ -18,6 +19,7 @@ pub enum MatchConclusion {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ObjectiveReport {
     MatchKingOfTheHillReport(MatchKingOfTheHillReport),
+    MatchTeamDeathmatch(MatchTeamDeathmatchReport),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
