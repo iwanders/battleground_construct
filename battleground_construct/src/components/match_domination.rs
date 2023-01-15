@@ -1,37 +1,11 @@
 use crate::components;
-use components::match_king_of_the_hill::MatchKingOfTheHillReport;
-use components::match_team_deathmatch::MatchTeamDeathmatchReport;
+use components::match_king_of_the_hill::MatchKingOfTheHill;
+use components::match_team_deathmatch::MatchTeamDeathmatch;
 use components::team::TeamId;
 use engine::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct MatchDominationReport {
-    points_team_deathmatch: i64,
-    team_deathmatch_report: Option<MatchTeamDeathmatchReport>,
-    king_of_the_hill_report: Option<MatchKingOfTheHillReport>,
-    capturables: Vec<Option<TeamId>>,
-}
 
-impl MatchDominationReport {
-    pub fn get_leader(&self) -> Option<TeamId> {
-        // If we won by king of the hills, return that leader.
-        if self
-            .king_of_the_hill_report
-            .as_ref()
-            .map(|t| t.is_finished())
-            .unwrap_or(false)
-        {
-            return self
-                .king_of_the_hill_report
-                .as_ref()
-                .map(|t| t.get_leader())?;
-        }
-        // We didn't win by king of the hill, we must've won by holding all capturables and
-        // exceeding the required points in the death match category.
-        *self.capturables.first()?
-    }
-}
 
 /// This game type is a combindation of team deathmatch and king of the hill. It terminates either
 /// when the king of the hill criteria is met, or if the team death match counter exceeds the
@@ -39,8 +13,8 @@ impl MatchDominationReport {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MatchDomination {
     points_team_deathmatch: i64,
-    team_deathmatch_report: Option<MatchTeamDeathmatchReport>,
-    king_of_the_hill_report: Option<MatchKingOfTheHillReport>,
+    team_deathmatch_report: Option<MatchTeamDeathmatch>,
+    king_of_the_hill_report: Option<MatchKingOfTheHill>,
     capturables: Vec<Option<TeamId>>,
 }
 
@@ -54,11 +28,11 @@ impl MatchDomination {
         }
     }
 
-    pub fn set_team_deathmath_report(&mut self, report: MatchTeamDeathmatchReport) {
+    pub fn set_team_deathmath_report(&mut self, report: MatchTeamDeathmatch) {
         self.team_deathmatch_report = Some(report);
     }
 
-    pub fn set_king_of_the_hill_report(&mut self, report: MatchKingOfTheHillReport) {
+    pub fn set_king_of_the_hill_report(&mut self, report: MatchKingOfTheHill) {
         self.king_of_the_hill_report = Some(report);
     }
 
@@ -98,13 +72,21 @@ impl MatchDomination {
         false
     }
 
-    pub fn report(&self) -> MatchDominationReport {
-        MatchDominationReport {
-            points_team_deathmatch: self.points_team_deathmatch,
-            team_deathmatch_report: self.team_deathmatch_report.clone(),
-            king_of_the_hill_report: self.king_of_the_hill_report.clone(),
-            capturables: self.capturables.clone(),
+    pub fn get_leader(&self) -> Option<TeamId> {
+        // If we won by king of the hill, return that leader.
+        if self
+            .king_of_the_hill_report
+            .as_ref()
+            .map(|t| t.is_finished())
+            .unwrap_or(false)
+        {
+            return self
+                .king_of_the_hill_report
+                .as_ref()
+                .map(|t| t.get_leader())?;
         }
+        // We didn't win by king of the hill.
+        *self.capturables.first()?
     }
 }
 impl Component for MatchDomination {}

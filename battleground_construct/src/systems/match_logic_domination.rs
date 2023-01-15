@@ -18,7 +18,7 @@ impl System for MatchLogicDomination {
         let team_deathmatch_report = world
             .component_iter::<MatchTeamDeathmatch>()
             .next()
-            .map(|t| t.1.report());
+            .map(|t| t.1.clone());
         if team_deathmatch_report.is_none() {
             return;
         }
@@ -27,7 +27,7 @@ impl System for MatchLogicDomination {
         let koth_report = world
             .component_iter::<MatchKingOfTheHill>()
             .next()
-            .map(|t| t.1.report());
+            .map(|t| t.1.clone());
         if koth_report.is_none() {
             return;
         }

@@ -1,9 +1,9 @@
 use super::team::TeamId;
 use engine::prelude::*;
 
-use super::match_domination::MatchDominationReport;
-use super::match_king_of_the_hill::MatchKingOfTheHillReport;
-use super::match_team_deathmatch::MatchTeamDeathmatchReport;
+use super::match_domination::MatchDomination;
+use super::match_king_of_the_hill::MatchKingOfTheHill;
+use super::match_team_deathmatch::MatchTeamDeathmatch;
 
 use serde::{Deserialize, Serialize};
 
@@ -17,9 +17,9 @@ pub enum MatchConclusion {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ObjectiveReport {
-    MatchKingOfTheHillReport(MatchKingOfTheHillReport),
-    MatchTeamDeathmatch(MatchTeamDeathmatchReport),
-    MatchDomination(MatchDominationReport),
+    MatchKingOfTheHill(MatchKingOfTheHill),
+    MatchTeamDeathmatch(MatchTeamDeathmatch),
+    MatchDomination(MatchDomination),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

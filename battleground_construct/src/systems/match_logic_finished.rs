@@ -65,17 +65,17 @@ impl System for MatchLogicFinished {
             let mut leaders = vec![];
             {
                 for (_e, match_koth) in world.component_iter::<MatchKingOfTheHill>() {
-                    let report = match_koth.report();
+                    let report = match_koth.clone();
                     leaders.push(report.get_leader());
-                    reports.push(ObjectiveReport::MatchKingOfTheHillReport(report));
+                    reports.push(ObjectiveReport::MatchKingOfTheHill(report));
                 }
                 for (_e, match_team_deathmatch) in world.component_iter::<MatchTeamDeathmatch>() {
-                    let report = match_team_deathmatch.report();
+                    let report = match_team_deathmatch.clone();
                     leaders.push(report.get_leader().map(|t| t.0));
                     reports.push(ObjectiveReport::MatchTeamDeathmatch(report));
                 }
                 for (_e, match_domination) in world.component_iter::<MatchDomination>() {
-                    let report = match_domination.report();
+                    let report = match_domination.clone();
                     leaders.push(report.get_leader());
                     reports.push(ObjectiveReport::MatchDomination(report));
                 }

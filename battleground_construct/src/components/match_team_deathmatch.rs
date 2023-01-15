@@ -9,13 +9,23 @@ use serde::{Deserialize, Serialize};
 pub struct MatchTeamDeathmatchJustDestroyed;
 impl Component for MatchTeamDeathmatchJustDestroyed {}
 
+
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct MatchTeamDeathmatchReport {
+pub struct MatchTeamDeathmatch {
     points: std::collections::HashMap<TeamId, i64>,
     point_limit: Option<i64>,
 }
 
-impl MatchTeamDeathmatchReport {
+impl MatchTeamDeathmatch {
+    pub fn new(point_limit: Option<i64>) -> Self {
+        Self {
+            point_limit,
+            points: Default::default(),
+        }
+    }
+
+
     pub fn get_leader(&self) -> Option<(TeamId, i64)> {
         self.points
             .iter()
@@ -31,31 +41,6 @@ impl MatchTeamDeathmatchReport {
         let mut v: Vec<(TeamId, i64)> = self.points.iter().map(|(t, s)| (*t, *s)).collect();
         v.sort_by(|a, b| a.0.cmp(&b.0));
         v
-    }
-    pub fn is_finished(&self) -> bool {
-        if let Some(limit) = self.point_limit {
-            for (_t, v) in self.points.iter() {
-                if *v >= limit {
-                    return true;
-                }
-            }
-        }
-        false
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct MatchTeamDeathmatch {
-    points: std::collections::HashMap<TeamId, i64>,
-    point_limit: Option<i64>,
-}
-
-impl MatchTeamDeathmatch {
-    pub fn new(point_limit: Option<i64>) -> Self {
-        Self {
-            point_limit,
-            points: Default::default(),
-        }
     }
 
     pub fn add_points(&mut self, point_additions: &[(TeamId, i64)]) {
@@ -73,13 +58,6 @@ impl MatchTeamDeathmatch {
             }
         }
         false
-    }
-
-    pub fn report(&self) -> MatchTeamDeathmatchReport {
-        MatchTeamDeathmatchReport {
-            points: self.points.clone(),
-            point_limit: self.point_limit,
-        }
     }
 }
 impl Component for MatchTeamDeathmatch {}

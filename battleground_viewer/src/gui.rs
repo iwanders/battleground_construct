@@ -166,13 +166,13 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
                 .world
                 .component_iter::<MatchKingOfTheHill>()
                 .next()
-                .map(|v| v.1.report());
+                .map(|v| v.1.clone());
 
             let team_deathmatch_report = construct
                 .world
                 .component_iter::<MatchTeamDeathmatch>()
                 .next()
-                .map(|v| v.1.report());
+                .map(|v| v.1.clone());
 
             for (team_id, team) in state.teams.iter() {
                 ui.heading(format!("Team - {}", team.name()));
