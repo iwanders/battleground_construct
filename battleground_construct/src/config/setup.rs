@@ -171,7 +171,7 @@ pub fn setup_scenario(
                     let config = unit_control_wasm::UnitControlWasmConfig {
                         wasm_path: wasmconfig.path.clone().into(),
                         fuel_per_update: wasmconfig.fuel_per_update,
-                        print_exports: wasmconfig.print_exports,
+                        reload: wasmconfig.reload,
                         fuel_for_setup: wasmconfig.fuel_for_setup,
                     };
                     Box::new(unit_control_wasm::UnitControlWasm::new_with_config(config)?)

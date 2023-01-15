@@ -3,6 +3,7 @@ use battleground_unit_control::{Interface, InterfaceError, UnitControl};
 
 use wasmtime::{Caller, Engine, Extern, Instance, Linker, Module, Store, TypedFunc};
 
+
 /// Configuration struct for the wasm control unit.
 #[derive(Clone, Debug)]
 pub struct UnitControlWasmConfig {
@@ -13,10 +14,14 @@ pub struct UnitControlWasmConfig {
     pub fuel_per_update: Option<u64>,
 
     /// Print the exports provided by the wasm module?
-    pub print_exports: bool,
+    // pub print_exports: bool,
 
     /// The alloted fuel for the setup call, defaults to 100000000 if fuel_per_update is not None.
     pub fuel_for_setup: Option<u64>,
+
+    /// Automatically reload the wasm file from disk if it has been modified. If it fails to load
+    /// the old file remains in use.
+    pub reload: bool,
 }
 
 struct State {
@@ -25,7 +30,7 @@ struct State {
 }
 
 pub struct UnitControlWasm {
-    // engine: Engine,
+    engine: Engine,
     instance: Instance,
     store: Store<State>,
     control_config: UnitControlWasmConfig,
@@ -58,6 +63,7 @@ impl UnitControlWasm {
     pub fn new_with_config(
         control_config: UnitControlWasmConfig,
     ) -> Result<Self, Box<dyn std::error::Error>> {
+
         let mut config = wasmtime::Config::default();
 
         let using_fuel = control_config.fuel_per_update.is_some();
@@ -72,6 +78,28 @@ impl UnitControlWasm {
         config.wasm_backtrace_details(wasmtime::WasmBacktraceDetails::Enable);
 
         let engine = Engine::new(&config)?;
+
+        let state_object = State {
+            register_interface: RegisterInterface::new(),
+            control_update_error: Default::default(),
+        };
+        let mut store = Store::new(&engine, state_object);
+
+        let instance = Self::load_file(&mut store, &engine, &control_config.wasm_path)?;
+
+        Ok(UnitControlWasm {
+            engine,
+            finished_setup: false,
+            control_config,
+            store,
+            instance,
+        })
+    }
+
+
+    fn load_file(store: &mut Store<State>, engine: &Engine, path: &std::path::Path) -> Result<Instance, Box<dyn std::error::Error>> {
+
+        // let engine = Engine::new(&config)?;
         let mut linker = Linker::<State>::new(&engine);
 
         fn get_wasm_transmission_buffer(caller: &mut Caller<'_, State>) -> TypedFunc<u32, u32> {
@@ -412,23 +440,19 @@ impl UnitControlWasm {
             },
         )?;
 
-        if !control_config.wasm_path.is_file() {
+
+        if !path.is_file() {
             return Err(format!(
                 "module {} could not be found.",
-                control_config.wasm_path.display()
+                path.display()
             )
             .into());
         }
 
-        let module = Module::from_file(&engine, control_config.wasm_path.clone())?;
-        let state_object = State {
-            register_interface: RegisterInterface::new(),
-            control_update_error: Default::default(),
-        };
-        let mut store = Store::new(&engine, state_object);
+        let module = Module::from_file(engine, path.clone())?;
+        let instance = linker.instantiate(store, &module)?;
 
-        let instance = linker.instantiate(&mut store, &module)?;
-
+        /*
         let exports = module.exports();
 
         if control_config.print_exports {
@@ -436,13 +460,9 @@ impl UnitControlWasm {
                 println!("exp: {}", exp.name());
             }
         }
+        */
 
-        Ok(UnitControlWasm {
-            finished_setup: false,
-            control_config,
-            store,
-            instance,
-        })
+        Ok(instance)
     }
 }
 

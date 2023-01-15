@@ -72,7 +72,7 @@ pub struct WasmControlConfig {
     #[serde(default)]
     pub fuel_for_setup: Option<u64>,
     #[serde(default)]
-    pub print_exports: bool,
+    pub reload: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
