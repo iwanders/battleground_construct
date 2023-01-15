@@ -259,7 +259,11 @@ fn controller_config(
             let wasm = if let ControllerType::Wasm(ref mut v) = control {
                 v
             } else {
-                *control = ControllerType::Wasm(Default::default());
+                if !matches!(control, ControllerType::Wasm(_)) {
+                    *control = ControllerType::Wasm(Default::default());
+                } else {
+                    println!("Unit control is already wasm");
+                }
                 if let ControllerType::Wasm(ref mut v) = control {
                     v
                 } else {
@@ -357,7 +361,9 @@ fn apply_config(
                 match team_attribute {
                     "control" => {
                         // populate it with None, them use the common handler.
-                        team.controller = Some(ControllerType::None);
+                        if team.controller.is_none() {
+                            team.controller = Some(ControllerType::None);
+                        }
                         let controller = team.controller.as_mut().unwrap();
                         team.comment = Some("".to_owned());
                         controller_config(

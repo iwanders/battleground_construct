@@ -37,7 +37,7 @@ impl UnitControl for SimpleUnitControl {
         // }
         // _foo();
 
-        log::info!("We got called");
+        // log::info!("foo");
 
         // just try to fire all the time.
         let write_res =

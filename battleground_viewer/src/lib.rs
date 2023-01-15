@@ -47,8 +47,6 @@ impl Default for ViewerState {
     }
 }
 
-
-
 struct ConstructViewer {
     camera: Camera,
     context: three_d::core::Context,

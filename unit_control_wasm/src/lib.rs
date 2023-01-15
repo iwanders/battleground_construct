@@ -1,8 +1,8 @@
 use battleground_unit_control::register_interface::RegisterInterface;
 use battleground_unit_control::{Interface, InterfaceError, UnitControl};
+use std::time::SystemTime;
 
 use wasmtime::{Caller, Engine, Extern, Instance, Linker, Module, Store, TypedFunc};
-
 
 /// Configuration struct for the wasm control unit.
 #[derive(Clone, Debug)]
@@ -34,7 +34,8 @@ pub struct UnitControlWasm {
     instance: Instance,
     store: Store<State>,
     control_config: UnitControlWasmConfig,
-    finished_setup: bool,
+    finished_module_setup: bool,
+    modified_time: SystemTime,
 }
 // Is this ok..?
 // unsafe impl std::marker::Send for UnitControlWasm {}
@@ -63,7 +64,6 @@ impl UnitControlWasm {
     pub fn new_with_config(
         control_config: UnitControlWasmConfig,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-
         let mut config = wasmtime::Config::default();
 
         let using_fuel = control_config.fuel_per_update.is_some();
@@ -85,21 +85,24 @@ impl UnitControlWasm {
         };
         let mut store = Store::new(&engine, state_object);
 
-        let instance = Self::load_file(&mut store, &engine, &control_config.wasm_path)?;
+        let (instance, modified_time) =
+            Self::load_file(&mut store, &engine, &control_config.wasm_path)?;
 
         Ok(UnitControlWasm {
             engine,
-            finished_setup: false,
+            finished_module_setup: false,
             control_config,
             store,
             instance,
+            modified_time,
         })
     }
 
-
-    fn load_file(store: &mut Store<State>, engine: &Engine, path: &std::path::Path) -> Result<Instance, Box<dyn std::error::Error>> {
-
-        // let engine = Engine::new(&config)?;
+    fn load_file(
+        store: &mut Store<State>,
+        engine: &Engine,
+        path: &std::path::Path,
+    ) -> Result<(Instance, SystemTime), Box<dyn std::error::Error>> {
         let mut linker = Linker::<State>::new(&engine);
 
         fn get_wasm_transmission_buffer(caller: &mut Caller<'_, State>) -> TypedFunc<u32, u32> {
@@ -440,17 +443,15 @@ impl UnitControlWasm {
             },
         )?;
 
-
         if !path.is_file() {
-            return Err(format!(
-                "module {} could not be found.",
-                path.display()
-            )
-            .into());
+            return Err(format!("module {} could not be found.", path.display()).into());
         }
 
         let module = Module::from_file(engine, path.clone())?;
         let instance = linker.instantiate(store, &module)?;
+
+        let metadata = std::fs::metadata(path)?;
+        let modification = metadata.modified()?;
 
         /*
         let exports = module.exports();
@@ -462,14 +463,49 @@ impl UnitControlWasm {
         }
         */
 
-        Ok(instance)
+        Ok((instance, modification))
+    }
+
+    pub fn attempt_reload(&mut self) -> Result<bool, Box<dyn std::error::Error>> {
+        // Try the reload.
+
+        let metadata = std::fs::metadata(&self.control_config.wasm_path)?;
+        let modification = metadata.modified()?;
+        if modification > self.modified_time {
+            let (instance, modified_time) = Self::load_file(
+                &mut self.store,
+                &self.engine,
+                &self.control_config.wasm_path,
+            )?;
+            self.instance = instance;
+            self.modified_time = modified_time;
+            self.finished_module_setup = false; // ensure setup runs for the wasm interface.
+            return Ok(true);
+        }
+
+        Ok(false)
     }
 }
 
 impl UnitControl for UnitControlWasm {
     fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::Error>> {
+        // check if we need to swap the controller.
+        if self.control_config.reload {
+            match self.attempt_reload() {
+                Ok(did_reload) => {
+                    if did_reload {
+                        println!("Reloaded {}", self.control_config.wasm_path.display())
+                    }
+                }
+                Err(e) => println!(
+                    "Failed reloading {}: {e:?}",
+                    self.control_config.wasm_path.display()
+                ),
+            }
+        }
+
         // First cycle? If so, do the setup.
-        if !self.finished_setup {
+        if !self.finished_module_setup {
             if self.control_config.fuel_per_update.is_some() {
                 // We cannot add infinite fuel for setup, the fuel is calculated based on lifetime
                 // consumed vs lifetime added, it is not a proper level.
@@ -487,7 +523,7 @@ impl UnitControl for UnitControlWasm {
             let wasm_setup_fun = wasm_setup.typed::<(), (), _>(&self.store)?;
             wasm_setup_fun.call(&mut self.store, ())?;
 
-            self.finished_setup = true;
+            self.finished_module_setup = true;
         }
 
         if let Some(v) = self.control_config.fuel_per_update {
