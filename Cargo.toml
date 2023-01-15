@@ -10,6 +10,9 @@ members = [
     "unit_control_builtin",
 ]
 
-[profile.release]
-opt-level = 3
-debug = true
+# https://doc.rust-lang.org/cargo/reference/profiles.html
+[profile.dev]
+# Enable some optimisations, but not all of it.
+opt-level = 2
+# Only using line numbers as debug information shaves off 10 seconds on linking the viewer.
+debug = 1
