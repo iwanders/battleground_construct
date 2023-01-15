@@ -288,7 +288,6 @@ impl UnitModule for GunBatteryModule {
                 Register::new_i32("fire_index", gun_battery.gun_index() as i32),
             );
 
-
             registers.insert(
                 REG_GUN_BATTERY_COUNT,
                 Register::new_i32("gun_count", gun_battery.gun_count() as i32),
@@ -331,7 +330,6 @@ impl UnitModule for GunBatteryModule {
                     offset + REG_GUN_BATTERY_OFFSET_READY,
                     Register::new_i32("ready", status.is_ready as i32),
                 );
-
             }
         }
     }

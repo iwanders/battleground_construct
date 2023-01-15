@@ -8,7 +8,7 @@ use cgmath::vec3;
 
 // This is a private test controller.
 
-use battleground_unit_control::units::{common, tank, artillery};
+use battleground_unit_control::units::{artillery, common, tank};
 
 pub struct RadarDrawControl {}
 
@@ -54,20 +54,24 @@ impl UnitControl for RadarDrawControl {
                 turret_z = 0.0;
                 radar_z = tank::TANK_DIM_FLOOR_TO_TURRET_Z + tank::TANK_DIM_TURRET_TO_RADAR_Z;
                 radar_local_x = 0.0;
-                turret_pos = interface
-                    .get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)?;
-                radar_pos = interface
-                    .get_f32(tank::MODULE_TANK_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)?;
+                turret_pos =
+                    interface.get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)?;
+                radar_pos =
+                    interface.get_f32(tank::MODULE_TANK_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)?;
             }
             UnitType::Artillery => {
                 body_z = 0.0;
                 turret_z = 0.0;
                 radar_z = artillery::ARTILLERY_DIM_TURRET_TO_RADAR_Z;
                 radar_local_x = artillery::ARTILLERY_DIM_RADAR_JOINT_TO_RADAR_X;
-                turret_pos = interface
-                    .get_f32(artillery::MODULE_ARTILLERY_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)?;
-                radar_pos = interface
-                    .get_f32(artillery::MODULE_ARTILLERY_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)?;
+                turret_pos = interface.get_f32(
+                    artillery::MODULE_ARTILLERY_REVOLUTE_TURRET,
+                    REG_REVOLUTE_POSITION,
+                )?;
+                radar_pos = interface.get_f32(
+                    artillery::MODULE_ARTILLERY_REVOLUTE_RADAR,
+                    REG_REVOLUTE_POSITION,
+                )?;
             }
         }
 
@@ -76,7 +80,10 @@ impl UnitControl for RadarDrawControl {
         let local_rotation = Mat4::from_angle_z(cgmath::Rad(rot));
         let radar_offset = Mat4::from_translation(vec3(0.0, 0.0, radar_z + turret_z - body_z));
 
-        let local_radar = global_offset * radar_offset * local_rotation * Mat4::from_translation(vec3(radar_local_x, 0.0, 0.0));
+        let local_radar = global_offset
+            * radar_offset
+            * local_rotation
+            * Mat4::from_translation(vec3(radar_local_x, 0.0, 0.0));
 
         let global_radar = draw_to_global * global_offset * local_radar;
 

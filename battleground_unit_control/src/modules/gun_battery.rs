@@ -22,7 +22,6 @@ pub const REG_GUN_BATTERY_RELOAD: u32 = 5;
 /// The index of the gun that will fire next.
 pub const REG_GUN_BATTERY_FIRE_INDEX: u32 = 6;
 
-
 /// The number of guns in this battery.
 pub const REG_GUN_BATTERY_COUNT: u32 = 0x1000;
 /// The start of the gun list.
@@ -46,7 +45,6 @@ pub const REG_GUN_BATTERY_OFFSET_YAW: u32 = 5;
 pub const REG_GUN_BATTERY_OFFSET_LAST_FIRE_TIME: u32 = 6;
 /// Whether this gun is currently ready for fire, integer (bool) value.
 pub const REG_GUN_BATTERY_OFFSET_READY: u32 = 7;
-
 
 /// The stride of each reflection record.
 pub const REG_GUN_BATTERY_STRIDE: u32 = 8;

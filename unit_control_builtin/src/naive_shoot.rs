@@ -9,9 +9,9 @@ use battleground_unit_control::modules::radar::*;
 use battleground_unit_control::modules::radio_receiver::*;
 use battleground_unit_control::modules::revolute::*;
 use battleground_unit_control::modules::unit::*;
+use battleground_unit_control::units::artillery;
 use battleground_unit_control::units::common;
 use battleground_unit_control::units::tank;
-use battleground_unit_control::units::artillery;
 
 use super::diff_drive_util::angle_diff;
 
@@ -44,7 +44,6 @@ impl UnitControl for NaiveShoot {
         // Orient the gun
         // Lay waste to the target.
 
-
         let barrel_length;
         let barrel_joint_z;
         let turret_joint_to_barrel;
@@ -60,35 +59,41 @@ impl UnitControl for NaiveShoot {
         match unit_type {
             UnitType::Tank => {
                 barrel_length = 1.0;
-                barrel_joint_z =  tank::TANK_DIM_FLOOR_TO_TURRET_Z + tank::TANK_DIM_FLOOR_TO_BODY_Z;
+                barrel_joint_z = tank::TANK_DIM_FLOOR_TO_TURRET_Z + tank::TANK_DIM_FLOOR_TO_BODY_Z;
                 turret_joint_to_barrel = tank::TANK_DIM_TURRET_TO_BARREL_X;
                 // radar_z = tank::TANK_DIM_FLOOR_TO_TURRET_Z + tank::TANK_DIM_TURRET_TO_RADAR_Z;
                 radar_local_x = 0.0;
                 body_z = tank::TANK_DIM_FLOOR_TO_BODY_Z;
-                turret_pos = interface
-                    .get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)?;
-                radar_pos = interface
-                    .get_f32(tank::MODULE_TANK_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)?;
+                turret_pos =
+                    interface.get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)?;
+                radar_pos =
+                    interface.get_f32(tank::MODULE_TANK_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)?;
 
-                barrel_pos = interface
-                    .get_f32(tank::MODULE_TANK_REVOLUTE_BARREL, REG_REVOLUTE_POSITION)?;
+                barrel_pos =
+                    interface.get_f32(tank::MODULE_TANK_REVOLUTE_BARREL, REG_REVOLUTE_POSITION)?;
             }
             UnitType::Artillery => {
                 barrel_length = artillery::ARTILLERY_DIM_BARREL_TO_MUZZLE_X;
-                barrel_joint_z = artillery::ARTILLERY_DIM_TURRET_TO_BARREL_Z + artillery::ARTILLERY_DIM_FLOOR_TO_TURRET_Z;
+                barrel_joint_z = artillery::ARTILLERY_DIM_TURRET_TO_BARREL_Z
+                    + artillery::ARTILLERY_DIM_FLOOR_TO_TURRET_Z;
                 turret_joint_to_barrel = 0.0;
                 // radar_z = artillery::ARTILLERY_DIM_TURRET_TO_RADAR_Z;
                 radar_local_x = artillery::ARTILLERY_DIM_RADAR_JOINT_TO_RADAR_X;
                 body_z = artillery::ARTILLERY_DIM_FLOOR_TO_BODY_Z;
-                turret_pos = interface
-                    .get_f32(artillery::MODULE_ARTILLERY_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)?;
-                radar_pos = interface
-                    .get_f32(artillery::MODULE_ARTILLERY_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)?;
-                barrel_pos = interface
-                    .get_f32(artillery::MODULE_ARTILLERY_REVOLUTE_BARREL, REG_REVOLUTE_POSITION)?;
+                turret_pos = interface.get_f32(
+                    artillery::MODULE_ARTILLERY_REVOLUTE_TURRET,
+                    REG_REVOLUTE_POSITION,
+                )?;
+                radar_pos = interface.get_f32(
+                    artillery::MODULE_ARTILLERY_REVOLUTE_RADAR,
+                    REG_REVOLUTE_POSITION,
+                )?;
+                barrel_pos = interface.get_f32(
+                    artillery::MODULE_ARTILLERY_REVOLUTE_BARREL,
+                    REG_REVOLUTE_POSITION,
+                )?;
             }
         }
-
 
         let elapsed = interface
             .get_f32(common::MODULE_CLOCK, REG_CLOCK_ELAPSED)
@@ -138,11 +143,11 @@ impl UnitControl for NaiveShoot {
 
         // Next, check that radar, calculating expressing things in global pose.
         // let turret_pos = interface
-            // .get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)
-            // .unwrap();
+        // .get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)
+        // .unwrap();
         // let radar_pos = interface
-            // .get_f32(tank::MODULE_TANK_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)
-            // .unwrap();
+        // .get_f32(tank::MODULE_TANK_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)
+        // .unwrap();
         let radar_yaw = turret_pos + radar_pos + tank_yaw;
 
         let reflection_count = interface
@@ -172,7 +177,12 @@ impl UnitControl for NaiveShoot {
         // Convert those polar coordinates to xy.
         let reflections_xy: Vec<(f32, f32)> = reflections
             .iter()
-            .map(|(yaw, distance)| (tank_x + yaw.cos() * distance + radar_pos.cos() * radar_local_x, tank_y + yaw.sin() * distance+ radar_pos.sin() * radar_local_x))
+            .map(|(yaw, distance)| {
+                (
+                    tank_x + yaw.cos() * distance + radar_pos.cos() * radar_local_x,
+                    tank_y + yaw.sin() * distance + radar_pos.sin() * radar_local_x,
+                )
+            })
             .collect();
 
         let mut enemies = vec![];

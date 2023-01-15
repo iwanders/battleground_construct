@@ -1,7 +1,7 @@
 use super::components;
+use crate::display::artillery_body::ArtilleryBody;
 use crate::display::flag::Flag;
 use crate::display::tank_body::TankBody;
-use crate::display::artillery_body::ArtilleryBody;
 use engine::prelude::*;
 
 pub struct TeamColorBody {}
@@ -22,11 +22,15 @@ impl System for TeamColorBody {
                         tank.set_color(*team.color());
                     }
                 }
-                if let Some(artillery) = world.component::<crate::units::artillery::UnitArtillery>(entity) {
+                if let Some(artillery) =
+                    world.component::<crate::units::artillery::UnitArtillery>(entity)
+                {
                     if let Some(mut flag) = world.component_mut::<Flag>(artillery.flag_entity) {
                         flag.set_color(*team.color());
                     }
-                    if let Some(mut artillery) = world.component_mut::<ArtilleryBody>(artillery.body_entity) {
+                    if let Some(mut artillery) =
+                        world.component_mut::<ArtilleryBody>(artillery.body_entity)
+                    {
                         artillery.set_color(*team.color());
                     }
                 }

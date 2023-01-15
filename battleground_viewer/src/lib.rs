@@ -209,10 +209,7 @@ impl ConstructViewer {
                     three_d::Event::KeyPress {
                         kind: Key::Q,
                         handled: false,
-                        modifiers: Modifiers {
-                            ctrl: true,
-                            ..
-                        },
+                        modifiers: Modifiers { ctrl: true, .. },
                         ..
                     } => {
                         viewer_state.exiting = true;
