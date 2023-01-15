@@ -1,17 +1,3 @@
-/*
-struct ClockConfig {
-    pub step: f32,
-}
-
-#[derive(Default)]
-struct ComponentConfig {
-    clock: Option<ClockConfig>,
-    radar: Option<crate::components::radar::Radar>,
-    controller: Option<ControllerConfig>
-    // ...
-}
-// Lets not over-engineer this from the get-go.
-*/
 use serde::{Deserialize, Serialize};
 
 fn default_capture_speed() -> f32 {
@@ -99,7 +85,7 @@ pub enum ControllerType {
     },
     DiffDriveCapturable,
     InterfacePrinter,
-    TankNaiveShoot,
+    NaiveShoot,
     #[cfg(feature = "unit_control_wasm")]
     Wasm(WasmControlConfig),
     #[serde(skip)]

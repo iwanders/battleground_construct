@@ -152,8 +152,8 @@ pub fn setup_scenario(
                 specification::ControllerType::InterfacePrinter => {
                     Box::new(unit_control_builtin::interface_printer::InterfacePrinter {})
                 }
-                specification::ControllerType::TankNaiveShoot => {
-                    Box::new(unit_control_builtin::tank_naive_shoot::TankNaiveShoot::new())
+                specification::ControllerType::NaiveShoot => {
+                    Box::new(unit_control_builtin::naive_shoot::NaiveShoot::new())
                 }
                 specification::ControllerType::DiffDriveForwardsBackwards{velocities, duration} => {
                     Box::new(unit_control_builtin::diff_drive_forwards_backwards::DiffDriveForwardsBackwardsControl::new(*velocities, *duration))

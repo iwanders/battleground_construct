@@ -28,7 +28,7 @@ spawn_config:
         controllers:
           - type: RadioPosition
           - type: DiffDriveCapturable
-          - type: TankNaiveShoot
+          - type: NaiveShoot
   spawns:
     -
       x: 10.0
@@ -52,7 +52,7 @@ spawn_config:
       #  yaw: 1.5708
       yaw: 0.0
       team: 1
-      unit: Artillery
+      #  unit: Artillery
       radio_config:
         channel_min: 10
         channel_max: 10
@@ -62,9 +62,11 @@ spawn_config:
 
     -
       x: 0.0
-      y: 30.0
+      y: 10.0
+      #  y: 30.0
       yaw: -1.5708
       team: 1
+      unit: Artillery
       radio_config:
         channel_min: 10
         channel_max: 10

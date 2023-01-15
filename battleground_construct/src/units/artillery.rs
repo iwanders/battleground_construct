@@ -423,9 +423,13 @@ pub fn add_artillery_passive(world: &mut World, unit: &UnitArtillery) {
     world.add_component(unit.health_bar_entity, Parent::new(unit.base_entity));
 }
 
-const ARTILLERY_SPLASH_DAMAGE: f32 = 0.3;
+const ARTILLERY_SPLASH_DAMAGE: f32 = 0.10;
 const ARTILLERY_SPLASH_RADIUS: f32 = 2.0;
 const ARTILLERY_TRACK_WIDTH: f32 = 1.75;
+const ARTILLERY_INTER_GUN_DURATION: f32 = 0.3;
+const ARTILLERY_BATTERY_RELOAD: f32 = 5.0;
+// 16 slots in total.
+// bursts out 1.0 damage in 10 shots, which is 3 seconds.
 
 pub fn artillery_battery_config() -> components::gun_battery::GunBatteryConfig {
     let mut poses = vec![];
@@ -441,11 +445,11 @@ pub fn artillery_battery_config() -> components::gun_battery::GunBatteryConfig {
     }
     components::gun_battery::GunBatteryConfig {
         fire_effect: std::rc::Rc::new(artillery_fire_function),
-        inter_gun_duration: 0.3,
+        inter_gun_duration: ARTILLERY_INTER_GUN_DURATION,
         // inter_gun_duration: 2.0,
         // inter_gun_duration: 0.0,
         gun_reload: 0.0, // governed by fire rate and battery reload.
-        battery_reload: 5.0,
+        battery_reload: ARTILLERY_BATTERY_RELOAD,
         poses,
     }
 }

@@ -8,38 +8,87 @@ use battleground_unit_control::modules::gps::*;
 use battleground_unit_control::modules::radar::*;
 use battleground_unit_control::modules::radio_receiver::*;
 use battleground_unit_control::modules::revolute::*;
+use battleground_unit_control::modules::unit::*;
 use battleground_unit_control::units::common;
 use battleground_unit_control::units::tank;
+use battleground_unit_control::units::artillery;
 
 use super::diff_drive_util::angle_diff;
 
-pub struct TankNaiveShoot {
+pub struct NaiveShoot {
     shoot_at: Option<(f32, f32)>,
     last_seen: f32,
 }
 
-impl Default for TankNaiveShoot {
+impl Default for NaiveShoot {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl TankNaiveShoot {
+impl NaiveShoot {
     pub fn new() -> Self {
-        TankNaiveShoot {
+        NaiveShoot {
             shoot_at: None,
             last_seen: -1000.0,
         }
     }
 }
 
-impl UnitControl for TankNaiveShoot {
+use battleground_unit_control::units::UnitType;
+impl UnitControl for NaiveShoot {
     fn update(&mut self, interface: &mut dyn Interface) -> UnitControlResult {
         // Check the radio for broadcasted friendlies.
         // Check the radar, remove any reflections that are broadcasted friendlies.
         // Put the closest target in shoot_at
         // Orient the gun
         // Lay waste to the target.
+
+
+        let barrel_length;
+        let barrel_joint_z;
+        let turret_joint_to_barrel;
+        // let radar_z;
+        let radar_local_x;
+        let body_z;
+        let turret_pos;
+        let radar_pos;
+        let barrel_pos;
+
+        let unit_type = interface.get_i32(common::MODULE_UNIT, REG_UNIT_UNIT_TYPE)?;
+        let unit_type: UnitType = (unit_type as u32).try_into()?;
+        match unit_type {
+            UnitType::Tank => {
+                barrel_length = 1.0;
+                barrel_joint_z =  tank::TANK_DIM_FLOOR_TO_TURRET_Z + tank::TANK_DIM_FLOOR_TO_BODY_Z;
+                turret_joint_to_barrel = tank::TANK_DIM_TURRET_TO_BARREL_X;
+                // radar_z = tank::TANK_DIM_FLOOR_TO_TURRET_Z + tank::TANK_DIM_TURRET_TO_RADAR_Z;
+                radar_local_x = 0.0;
+                body_z = tank::TANK_DIM_FLOOR_TO_BODY_Z;
+                turret_pos = interface
+                    .get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)?;
+                radar_pos = interface
+                    .get_f32(tank::MODULE_TANK_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)?;
+
+                barrel_pos = interface
+                    .get_f32(tank::MODULE_TANK_REVOLUTE_BARREL, REG_REVOLUTE_POSITION)?;
+            }
+            UnitType::Artillery => {
+                barrel_length = artillery::ARTILLERY_DIM_BARREL_TO_MUZZLE_X;
+                barrel_joint_z = artillery::ARTILLERY_DIM_TURRET_TO_BARREL_Z + artillery::ARTILLERY_DIM_FLOOR_TO_TURRET_Z;
+                turret_joint_to_barrel = 0.0;
+                // radar_z = artillery::ARTILLERY_DIM_TURRET_TO_RADAR_Z;
+                radar_local_x = artillery::ARTILLERY_DIM_RADAR_JOINT_TO_RADAR_X;
+                body_z = artillery::ARTILLERY_DIM_FLOOR_TO_BODY_Z;
+                turret_pos = interface
+                    .get_f32(artillery::MODULE_ARTILLERY_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)?;
+                radar_pos = interface
+                    .get_f32(artillery::MODULE_ARTILLERY_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)?;
+                barrel_pos = interface
+                    .get_f32(artillery::MODULE_ARTILLERY_REVOLUTE_BARREL, REG_REVOLUTE_POSITION)?;
+            }
+        }
+
 
         let elapsed = interface
             .get_f32(common::MODULE_CLOCK, REG_CLOCK_ELAPSED)
@@ -88,12 +137,12 @@ impl UnitControl for TankNaiveShoot {
             .unwrap();
 
         // Next, check that radar, calculating expressing things in global pose.
-        let turret_pos = interface
-            .get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)
-            .unwrap();
-        let radar_pos = interface
-            .get_f32(tank::MODULE_TANK_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)
-            .unwrap();
+        // let turret_pos = interface
+            // .get_f32(tank::MODULE_TANK_REVOLUTE_TURRET, REG_REVOLUTE_POSITION)
+            // .unwrap();
+        // let radar_pos = interface
+            // .get_f32(tank::MODULE_TANK_REVOLUTE_RADAR, REG_REVOLUTE_POSITION)
+            // .unwrap();
         let radar_yaw = turret_pos + radar_pos + tank_yaw;
 
         let reflection_count = interface
@@ -123,7 +172,7 @@ impl UnitControl for TankNaiveShoot {
         // Convert those polar coordinates to xy.
         let reflections_xy: Vec<(f32, f32)> = reflections
             .iter()
-            .map(|(yaw, distance)| (tank_x + yaw.cos() * distance, tank_y + yaw.sin() * distance))
+            .map(|(yaw, distance)| (tank_x + yaw.cos() * distance + radar_pos.cos() * radar_local_x, tank_y + yaw.sin() * distance+ radar_pos.sin() * radar_local_x))
             .collect();
 
         let mut enemies = vec![];
@@ -196,10 +245,8 @@ impl UnitControl for TankNaiveShoot {
 
             // Then, calculate the angle we need to fire at.
             let distance = (dx * dx + dy * dy).sqrt();
-            let barrel_angle = interface
-                .get_f32(tank::MODULE_TANK_REVOLUTE_BARREL, REG_REVOLUTE_POSITION)
-                .unwrap();
-            let barrel_length = 1.0;
+            let barrel_angle = barrel_pos;
+            // let barrel_length = 1.0;
 
             // S is projectile speed. G gravity
             //
@@ -207,8 +254,8 @@ impl UnitControl for TankNaiveShoot {
             // theta = tan-1(Z)
             let v = 10.0;
             let g = 9.81;
-            let turret_rot_to_barrel = 0.25;
-            let tank_z_to_barrel_z = 0.375 + 0.1 / 2.0 - 0.25;
+            let turret_rot_to_barrel = turret_joint_to_barrel;
+            let tank_z_to_barrel_z = barrel_joint_z - body_z;
             let x = distance - barrel_angle.cos() * barrel_length - turret_rot_to_barrel;
             let y = -tank_z + barrel_angle.sin() * barrel_length - tank_z_to_barrel_z;
             // println!("y: {y}");

@@ -206,6 +206,17 @@ impl ConstructViewer {
                         viewer_state.paused = !viewer_state.paused;
                         self.limiter.set_paused(viewer_state.paused);
                     }
+                    three_d::Event::KeyPress {
+                        kind: Key::Q,
+                        handled: false,
+                        modifiers: Modifiers {
+                            ctrl: true,
+                            ..
+                        },
+                        ..
+                    } => {
+                        viewer_state.exiting = true;
+                    }
                     three_d::Event::MousePress {
                         button,
                         position,

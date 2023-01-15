@@ -7,7 +7,7 @@ pub mod dynamic_load_control;
 
 pub mod idle;
 pub mod interface_printer;
-pub mod tank_naive_shoot;
+pub mod naive_shoot;
 pub mod tank_swivel_shoot;
 
 pub mod radio_position;
