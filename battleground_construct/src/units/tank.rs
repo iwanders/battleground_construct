@@ -257,7 +257,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         revolute_config,
     );
     let radar_config = components::radar::RadarConfig {
-        range_max: 30.0,
+        range_max: 20.0,
         detection_angle_yaw: 10.0f32.to_radians(),
         detection_angle_pitch: 180f32.to_radians(),
         // range_max: 70.0,

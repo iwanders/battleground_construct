@@ -69,6 +69,8 @@ impl Drawable for Flag {
         let flag_max_z = self.pole_height - self.radius * 2.0 - flag_height / 2.0;
         let flag_z = (flag_max_z - flag_min_z) * self.flag_position + flag_min_z;
 
+        let addition = Color::rgb(10, 10, 10);
+
         vec![
             Element {
                 transform: Mat4::from_translation(Vec3::new(0.0, 0.0, self.pole_height))
@@ -93,7 +95,7 @@ impl Drawable for Flag {
                     length: flag_width,
                     height: flag_height,
                 }),
-                material: self.flag_color.into(),
+                material: self.flag_color.saturating_add(&addition).into(),
             },
         ]
     }

@@ -53,11 +53,13 @@ impl UnitControl for NaiveShoot {
         let turret_pos;
         let radar_pos;
         let barrel_pos;
+        let muzzle_velocity;
 
         let unit_type = interface.get_i32(common::MODULE_UNIT, REG_UNIT_UNIT_TYPE)?;
         let unit_type: UnitType = (unit_type as u32).try_into()?;
         match unit_type {
             UnitType::Tank => {
+                muzzle_velocity = tank::TANK_PARAM_MUZZLE_VELOCITY;
                 barrel_length = 1.0;
                 barrel_joint_z = tank::TANK_DIM_FLOOR_TO_TURRET_Z + tank::TANK_DIM_FLOOR_TO_BODY_Z;
                 turret_joint_to_barrel = tank::TANK_DIM_TURRET_TO_BARREL_X;
@@ -73,6 +75,7 @@ impl UnitControl for NaiveShoot {
                     interface.get_f32(tank::MODULE_TANK_REVOLUTE_BARREL, REG_REVOLUTE_POSITION)?;
             }
             UnitType::Artillery => {
+                muzzle_velocity = artillery::ARTILLERY_PARAM_MUZZLE_VELOCITY;
                 barrel_length = artillery::ARTILLERY_DIM_BARREL_TO_MUZZLE_X;
                 barrel_joint_z = artillery::ARTILLERY_DIM_TURRET_TO_BARREL_Z
                     + artillery::ARTILLERY_DIM_FLOOR_TO_TURRET_Z;
@@ -262,7 +265,7 @@ impl UnitControl for NaiveShoot {
             //
             // Z = (S^2 +-  sqrt(S^4 - G(Gx^2 + 2 S^2 y)))/Gx;
             // theta = tan-1(Z)
-            let v = 10.0;
+            let v = muzzle_velocity;
             let g = 9.81;
             let turret_rot_to_barrel = turret_joint_to_barrel;
             let tank_z_to_barrel_z = barrel_joint_z - body_z;
