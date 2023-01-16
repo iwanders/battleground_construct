@@ -16,7 +16,7 @@ use battleground_unit_control::units::{common, tank, UnitType};
 pub struct UnitControlExample {
     last_print: f32,
 }
-impl Default for UnitControlExample{
+impl Default for UnitControlExample {
     fn default() -> Self {
         Self {
             last_print: -10000.0,
