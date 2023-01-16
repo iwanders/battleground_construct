@@ -103,7 +103,7 @@ impl ConstructViewer {
         let control = FlyControl::new(0.1);
 
         let ambient_light =
-            three_d::renderer::light::AmbientLight::new(&context, 0.3, Color::WHITE);
+            three_d::renderer::light::AmbientLight::new(&context, 0.2, Color::WHITE);
         let directional_light =
             DirectionalLight::new(&context, 1.5, Color::WHITE, &vec3(0.0, 0.2, -1.0));
 

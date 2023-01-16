@@ -57,7 +57,7 @@ pub struct Team {
     pub controller: Option<ControllerType>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct WasmControlConfig {
     pub path: String,
     #[serde(default)]
@@ -66,6 +66,16 @@ pub struct WasmControlConfig {
     pub fuel_for_setup: Option<u64>,
     #[serde(default)]
     pub reload: bool,
+}
+impl Default for WasmControlConfig {
+    fn default() -> Self {
+        Self {
+            path: "".to_owned(),
+            fuel_per_update: None,
+            fuel_for_setup: None,
+            reload: true,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
