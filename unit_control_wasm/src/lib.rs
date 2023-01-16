@@ -416,7 +416,7 @@ impl UnitControlWasm {
                     None => "out of bounds",
                 };
                 // we definitely want something better here...
-                println!("unit_control_wasm: {string:?}");
+                println!("unit_control_wasm: {string}");
             },
         )?;
 

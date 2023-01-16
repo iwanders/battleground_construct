@@ -1,0 +1,4 @@
+
+# Change the build target to wasm32-unknown-unknown.
+[build]
+target = "wasm32-unknown-unknown"
