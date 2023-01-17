@@ -1,0 +1,82 @@
+match_config:
+  time_limit: 10000.0
+  mode:
+    type: Domination
+    capture_points:
+      -
+        x: 0.0
+        y: 0.0
+        radius: 5.0
+        capture_speed: 0.0
+        team: 0
+    #  point_limit: 55.0
+    team_deathmatch_min: 20
+
+spawn_config:
+  teams:
+    -
+      name: Red
+      color: [255, 0, 0]
+      controller:
+        type: SequenceControl
+        controllers:
+          - type: RadioPosition
+          - type: DiffDriveCapturable
+          - type: NaiveShoot
+
+    -
+      name: Blue
+      color: [0, 0, 255]
+      controller:
+        type: SequenceControl
+        controllers:
+          - type: RadioPosition
+          - type: DiffDriveCapturable
+          - type: NaiveShoot
+  spawns:
+    -
+      x: 3.0
+      y: -3.0
+      yaw: 1.57
+      controller:
+        type: TeamController
+        name: Red
+      team: 0
+    -
+      x: 7.0
+      y: 0.0
+      yaw: 3.14
+      team: 0
+      unit: Artillery
+      #  controller:
+      controller:
+        type: SequenceControl
+        controllers:
+          - type: RadioPosition
+          #  - type: DiffDriveCapturable
+          #  - type: NaiveShoot
+    -
+      x: -4.0
+      y: -1.0
+      #  yaw: 1.5708
+      yaw: 0.0
+      team: 1
+      #  unit: Artillery
+      radio_config:
+        channel_min: 10
+        channel_max: 10
+      controller:
+        type: TeamController
+        name: Blue
+    -
+      x: -4.0
+      y: 3.0
+      yaw: -2.5
+      team: 1
+      #  unit: Artillery
+      radio_config:
+        channel_min: 10
+        channel_max: 10
+      controller:
+        type: TeamController
+        name: Blue
