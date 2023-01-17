@@ -30,7 +30,7 @@ This will create the `unit_control_example.wasm` file in the target directory th
   the first tutorial as scenario and specify it should load this `.wasm` file for the `player` team with:
 ```
 cd ../battleground_viewer
-cargo run --release -- scenario tutorial_01_driving_forward --team player:../target/wasm32-unknown-unknown/release/unit_control_example.wasm
+cargo run --release --features unit_control_wasm -- scenario tutorial_01_driving_forward --team player:../target/wasm32-unknown-unknown/release/unit_control_example.wasm
 ```
 5. The battleground viewer should start and you should see a red tank unit rotate in place.
 6. In the example's code, search for `MODULE_TANK_DIFF_DRIVE` and make your tank drive forwards.

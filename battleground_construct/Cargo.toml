@@ -19,9 +19,6 @@ miniz_oxide = "0.6.2"
 # Used by the cli component, reused by the viewer.
 clap = {version = "4.0.32", features=["derive"]}
 
-[features]
-default = ["unit_control_wasm"]
-
 [dev-dependencies]
 # Randomness has no place in the actual construct game engine, but is useful for fuzz testing.
 rand = "0.8.5"
