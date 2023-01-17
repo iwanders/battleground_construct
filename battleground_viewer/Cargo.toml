@@ -34,6 +34,7 @@ console_log = "0.2"
 js-sys = "0.3.60"
 
 [features]
+default = ["unit_control_wasm"]
 unit_control_wasm = ["battleground_construct/unit_control_wasm"]
 
 
