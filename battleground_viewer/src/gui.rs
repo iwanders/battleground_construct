@@ -237,7 +237,9 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
 
                 // Show the units.
                 if let Some(entry) = team_info.get(team_id) {
-                    for (unit, count) in entry.units.iter() {
+                    let mut sorted_units = entry.units.iter().collect::<Vec<_>>();
+                    sorted_units.sort();
+                    for (unit, count) in sorted_units {
                         let alive = count.0;
                         let dead = count.1;
                         ui.label(format!("{unit:?}: {alive} ({dead:?})"));

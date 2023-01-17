@@ -394,8 +394,8 @@ pub fn add_artillery_passive(world: &mut World, unit: &UnitArtillery) {
         components::select_box::SelectBox::from_hit_box(&hitbox),
     );
     let hit_collection = components::hit_collection::HitCollection::from_hit_box(hitbox);
-    world.add_component(unit.body_entity, hit_collection);
     world.add_component(unit.barrel_entity, artillery_barrel);
+    world.add_component(unit.barrel_entity, hit_collection);
 
     // -----   Radar
     world.add_component(unit.radar_entity, display::radar_model::RadarModel::new());

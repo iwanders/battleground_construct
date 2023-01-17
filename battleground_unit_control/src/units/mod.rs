@@ -16,10 +16,10 @@ pub mod common {
 }
 
 /// Unit type enum to denote the unit type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub enum UnitType {
-    Artillery,
     Tank,
+    Artillery,
 }
 
 impl TryFrom<u32> for UnitType {
