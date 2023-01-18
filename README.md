@@ -117,6 +117,11 @@ without splash damage; only direct hits against another unit will do damage. You
 these units on the front lines to act as the eyes for your artillery and take control of the capture
 points.
 
+The vehicle has a differential drive base. The turret rotation joint is located exactly above the
+differential drive base. There is a rigid member between the turret joint and the barrel joint.
+The radar is located exactly above the turret joint.
+
+
 ### Artillery
 <img align="right" width="25%" src="./media/unit_artillery.png">
 
@@ -124,6 +129,10 @@ This unit is larger than the tank, drives slower, rotates it's gun slower and ha
 it lacks in mobility it makes up in firepower. It's projectiles do splash damage so even non-direct
 hits will have significant effects on opposing units. You'll have to communicate with units that
 have better radars to get the most out of this unit.
+
+The vehicle has a differential drive base. The turret rotation joint is located exactly above the
+differential drive base. Exactly above the turret joint is the barrel joint. The radar joint is
+located above the turret joint. There is a rigid member between the radar joint and the radar.
 
 
 ## Game rules
@@ -145,7 +154,6 @@ Currently supported game modes for the scenarios are the following:
 All game modes can optionally support a time limit.
 
 A few more things of note around the rules:
-
 - If your controller panics or returns an `Err`, your unit will self destruct and you get a backtrace
   in the console.
 - Wasm unit controllers can be configured to have limited computational resources, exceeding this
@@ -159,8 +167,22 @@ to prevent that.
   units can transmit and receive on the same radio channels as other teams. If you can make your
   oponent's unit controllers panic or error out and they self destruct, that is a valid strategy.
 - The [radar](battleground_unit_control/src/modules/radar.rs) sees both friendly and unfriendly units.
+- The z coordinate is positive facing upwards (further into the sky).
+- If your unit is moving while shooting, the velocity of the unit carries over into the projectile.
+- There should be no randomness / non-determinism in the simulation, the viewer does use it in
+  visualisations but they do not affect the simulation.
+- The source code defines the rules and trumps whatever documentation / description exists.
 
+## Further information
 
+- For your unit controller, run `cargo doc` and look for the [`battleground_unit_control`](./battleground_unit_control) crate.
+- The [unit_control_example](./unit_control_example) crate holds an example controller that compiles to a `.wasm` module.
+- The [battleground_construct](./battleground_construct) crate contains all simulation / game logic.
+- The [engine](./engine) holds the [entity component systems](https://en.wikipedia.org/wiki/Entity_component_system)
+  on which the game runs.
+- The [battleground_viewer](./battleground_viewer) crate allows you to visualise the construct.
+- The [unit_control_builtin](./unit_control_builtin) crate holds the very limited built in controllers.
+- The [unit_control_wasm](./unit_control_wasm) crate implements a unit controller that loads a `.wasm` module, it is an optional dependency of battleground_construct.
 
 ## License
 License is `BSD-3-Clause`.
