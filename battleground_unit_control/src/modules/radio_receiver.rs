@@ -1,4 +1,9 @@
 //! Receiver for radio messages.
+//!
+//! This module receives radio messages, it only receives messages on the channel it has selected.
+//! It is limited in the number of messages that it can hold, if the buffer is full, new incoming
+//! messages get dropped.
+//! You can set the message count to zero to clear all messages (to mark them as received)
 
 /// The minimum selectable channel, integer value.
 pub const REG_RADIO_RX_CHANNEL_MIN: u32 = 0x12;

@@ -1,4 +1,6 @@
 //! Objective information.
+//!
+//! This provides information about the objectives in a particular scenario.
 
 /// Register index to obtain the capture point count.
 pub const REG_OBJECTIVES_CAPTURE_POINT_COUNT: u32 = 0x1000;

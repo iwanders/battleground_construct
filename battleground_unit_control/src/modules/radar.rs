@@ -1,8 +1,9 @@
 //! Information about radar reflections.
 
 //!
-//! The radar returns reflections in the radar frame, detection is limited by the detection yaw
-//! and detection pitch, both in the radar's frame.
+//! The radar returns reflections in the radar frame, detection area is limited by the detection yaw
+//! and detection pitch, both in the radar's frame. It can also only detect radar reflections up to
+//! the maximum distance.
 
 /// The maximum detection range of the radar, float value.
 pub const REG_RADAR_RANGE_MAX: u32 = 0x10;
@@ -23,7 +24,8 @@ pub const REG_RADAR_REFLECTION_OFFSET_YAW: u32 = 0;
 pub const REG_RADAR_REFLECTION_OFFSET_PITCH: u32 = 1;
 /// The offset of the distance value, float value.
 pub const REG_RADAR_REFLECTION_OFFSET_DISTANCE: u32 = 2;
-/// The offset of the strength value, float value.
+/// The offset of the strength value, float value. This is a relative term based on the distance and
+/// the object the radar reflected on.
 pub const REG_RADAR_REFLECTION_OFFSET_STRENGTH: u32 = 3;
 /// The stride of each reflection record.
 pub const REG_RADAR_REFLECTION_STRIDE: u32 = 4;

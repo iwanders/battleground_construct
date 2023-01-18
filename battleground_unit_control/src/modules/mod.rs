@@ -1,5 +1,10 @@
 //!
-//! Register offset constants start with `REG_`.
+//! This module holds all information about the unit control modules. Each module is of a certain
+//! type, a unit may contain multiple modules of the same type, for example the revolute joint
+//! control is very common and occurs multiple times in the units.
+//!
+//! Register offset constants start with `REG_`, they contain the module name so should not cause
+//! naming collisions when imported with a wildcard.
 //!
 //! If modules need to provide a list, the standard format is to have a `_COUNT` register denoting
 //! the number of entries in the list.

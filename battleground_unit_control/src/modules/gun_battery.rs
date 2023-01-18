@@ -1,7 +1,11 @@
 //! Fire control of gun batteries (like the artillery)
+//!
+//! Gun batteries have multiple guns, between firing each gun there is an inter gun delay.
+//! Each individual gun has its own reload duration, there may be an additional gun battery reload
+//! duration when all guns have been emptied.
+//! Individual guns have their own pose, last reload time and ready state. Guns fire in order.
 
-/// Trigger the cannon to fire, is_triggered will go true, and the cannon will fire as soon as ready
-/// then the trigger stays at the current state.
+/// Set the gun battery to be firing. This does not disable when a shot is fired, but keeps firing.
 pub const REG_GUN_BATTERY_FIRING: u32 = 0;
 
 /// Denotes if the gun battery has been triggered.

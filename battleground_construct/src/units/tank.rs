@@ -166,7 +166,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         body_entity,
         config.radio_config,
     );
-    super::common::add_common_body(world, &register_interface, body_entity);
+    super::common::add_common_body(world, &register_interface, 0.5, body_entity);
 
     // -----   Turret
     let revolute_config = components::revolute::RevoluteConfig {

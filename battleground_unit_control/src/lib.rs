@@ -9,13 +9,15 @@
 //! This crate also provides the necessary boilerplate to allow compiling a unit controller as a
 //! `wasm32-unknown-unknown` type, as is used by the `unit_control_wasm` crate.
 
-// Only for wasm32, load the wasm_interface, it has a bunch of extern "C" methods to create an
-// interface.
+/// Only for wasm32, load the wasm_interface, it has a bunch of extern "C" methods to create the
+/// controller and interface and invoke this periodically.
+#[doc(hidden)]
 #[cfg(feature = "wasm-interface")]
 pub mod wasm_interface;
 
-// The register interface is used as the default implementation of the [`Interface`] trait, used by
-// both the wasm control and native control.
+/// The register interface is used as the default implementation of the [`Interface`] trait, used by
+/// both the wasm control and native control. It is not considered public API.
+#[doc(hidden)]
 #[cfg(feature = "register-interface")]
 pub mod register_interface;
 

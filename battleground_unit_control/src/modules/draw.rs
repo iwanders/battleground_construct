@@ -1,8 +1,31 @@
 //! Drawing lines in the world.
 //!
 //! Lines are created by writing serialized [`LineSegment`] structs into the byte register.
+//! The [`LineSegment`] supports [`LineSegment::into_le_bytes()`] to conveniently convert this
+//! struct into bytes. It also implements [`LineSegment::from()`] for the appropriate length byte
+//! array in both directions, allowing use of the `.into()` operation.
+//! Example use:
+//! ```
+//!     use battleground_unit_control::modules::draw::LineSegment;
+//!     let mut lines = vec![];
+//!
+//!     const RED: [u8; 4] = [255, 0, 0, 255];
+//!
+//!     lines.push(LineSegment {
+//!         p0: [10.0, 0.0, 1.0],
+//!         p1: [0.0, 0.0, 1.0],
+//!         width: 0.05,
+//!         color: RED,
+//!     });
+//!    let mut draw_instructions: Vec<u8> = vec![];
+//!    for l in lines {
+//!        draw_instructions.extend(l.into_le_bytes());
+//!    }
+//!    // Write draw_instructions to the draw modules' byte register next.
+//! ```
 
-/// Register accepts serialized [`LineSegment`] structs, multiple may be provided. Bytes value.
+/// Register accepts serialized [`LineSegment`] structs, multiple structs expressed as bytes may be
+/// provided, their bytes concatenated together without padding. Bytes value.
 pub const REG_DRAW_LINES: u32 = 0;
 
 #[repr(C)]

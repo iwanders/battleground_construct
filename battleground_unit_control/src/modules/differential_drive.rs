@@ -1,4 +1,7 @@
 //! Controls a differential drive base platform.
+//!
+//! Differential drives have two parallel wheels with a track_width in between. The wheels respect
+//! the acceleration limits.
 
 /// The current left wheel/track velocity, float value.
 pub const REG_DIFF_DRIVE_LEFT_VEL: u32 = 0;

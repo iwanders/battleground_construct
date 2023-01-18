@@ -78,13 +78,14 @@ pub fn add_common_diff_drive(
 pub fn add_common_body(
     world: &mut World,
     register_interface: &RegisterInterfaceContainer,
+    reflectivity: f32,
     body_entity: EntityId,
 ) {
     // ------ Body
 
     world.add_component(
         body_entity,
-        components::radar_reflector::RadarReflector::new(),
+        components::radar_reflector::RadarReflector::new(reflectivity),
     );
     world.add_component(
         body_entity,

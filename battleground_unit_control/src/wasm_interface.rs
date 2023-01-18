@@ -1,3 +1,4 @@
+/// Macro to be able to print a function name.
 // https://stackoverflow.com/a/40234666
 macro_rules! _function {
     () => {{
@@ -10,6 +11,7 @@ macro_rules! _function {
     }};
 }
 
+/// Entry point to setup the wasm interface.
 #[no_mangle]
 pub extern "C" fn wasm_setup() {
     logging::setup();
@@ -17,20 +19,26 @@ pub extern "C" fn wasm_setup() {
     panic::setup();
 }
 
+/// External symbol called to perform a controller update loop.
 #[no_mangle]
 pub extern "C" fn wasm_controller_update() -> i64 {
     controller::update()
 }
 
+/// Module to hold everything relating to the unit's controller.
 pub mod controller {
     const UPDATE_OK: i64 = 0;
     const UPDATE_ERR: i64 = 1;
 
     extern "Rust" {
+        /// State that there will be some create_unit_control symbol, this is THE symbol exposed
+        /// by unit controller's compiled to wasm (see end of the example).
         fn create_unit_control() -> Box<dyn UnitControl>;
     }
 
     extern "C" {
+        /// If an error occured in the unit controller, this function gets called with the error to
+        /// store the message.
         fn wasm_update_error(p: *const u8, len: u32);
     }
 
@@ -43,22 +51,30 @@ pub mod controller {
     struct ControllerWrapper(Box<dyn UnitControl>);
     unsafe impl std::marker::Send for ControllerWrapper {}
 
+    /// Global singleton to hold the actual controller for this wasm instance.
     static CONTROLLER: Mutex<Option<ControllerWrapper>> = Mutex::new(None);
 
+    /// Called once to perform setup.
     pub fn setup() {
         log::info!("Allocating control");
+        // Create the controller and assign it.
         *((CONTROLLER.lock().expect("cant be poisoned")).deref_mut()) =
             unsafe { Some(ControllerWrapper(create_unit_control())) };
     }
 
+    /// Called every unit controller update.
     pub fn update() -> i64 {
+        // Get a reference to the interface.
         let mut static_interface = super::interface::StaticInterface;
+        // Acquire the controller, call the update method on it.
         let res = (CONTROLLER.lock().expect("cant be poisoned"))
             .deref_mut()
             .as_mut()
             .unwrap()
             .0
             .update(&mut static_interface);
+        // Check return code, if something went wrong, ensure we send the error through the
+        // update error method, otherwise return ok.
         match res {
             Ok(_) => UPDATE_OK,
             Err(e) => {
@@ -75,6 +91,8 @@ pub mod controller {
 mod interface {
     use crate::*;
     use std::sync::Mutex;
+
+    // Methods to set/get registers from the rust side to the in-wasm side.
     extern "C" {
         fn wasm_interface_modules() -> u32;
         fn wasm_interface_registers(module: u32) -> u32;
@@ -93,8 +111,10 @@ mod interface {
         fn wasm_interface_set_bytes(module: u32, register: u32, src: u32, len: u32) -> u32;
     }
 
+    // static singleton to store messages going from rust to here.
     static BUFFER: Mutex<Vec<u8>> = Mutex::new(Vec::new());
 
+    /// Symbol used by rust to prepare the buffer for accepting data.
     #[no_mangle]
     pub extern "C" fn wasm_transmission_buffer(len: u32) -> *mut u8 {
         let mut buffer = BUFFER.lock().expect("cannot be poisoned");
@@ -105,6 +125,7 @@ mod interface {
 
     const NO_ERROR: u32 = 0xFFFF;
     static ERROR: Mutex<u32> = Mutex::new(NO_ERROR);
+
     #[no_mangle]
     pub extern "C" fn wasm_set_error(v: u32) {
         let mut error = ERROR.lock().expect("cannot be poisoned");
@@ -299,8 +320,11 @@ mod interface {
     }
 }
 
+/// Logging module, implements a logger for the logging facade, for each message it calls
+/// the [`logging::wasm_log_record`] function to send it to rust.
 mod logging {
     extern "C" {
+        /// Function used to send messages to rust.
         pub fn wasm_log_record(p: *const u8, len: u32);
     }
     use log::{Level, LevelFilter, Metadata, Record};
@@ -329,9 +353,11 @@ mod logging {
     }
 }
 
+/// Module to perform panic handling.
 mod panic {
     use core::panic::PanicInfo;
 
+    /// Setup function to register the panic handler.
     pub fn setup() {
         use std::panic;
         // Set a custom panic hook in wasm, we need to exfiltrate the panic message.
@@ -340,6 +366,8 @@ mod panic {
         }));
     }
 
+    /// Called when a panic occurs, it sends the panic information through the wasm log method and
+    /// then halts execution.
     fn handle_panic(info: &PanicInfo) -> ! {
         // For now, just dump it on the logger, deal with it.
         let z = format!("PANIC - {}", info);

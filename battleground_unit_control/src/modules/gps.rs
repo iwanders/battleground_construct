@@ -1,10 +1,12 @@
 //! The global position of the unit.
+//!
+//! This gps is usually attached to the center of the units' body.
 
-/// Register holding the x coordinate, float value.
+/// Register holding the x coordinate in meters, float value.
 pub const REG_GPS_X: u32 = 0;
-/// Register holding the y coordinate, float value.
+/// Register holding the y coordinate in meters, float value.
 pub const REG_GPS_Y: u32 = 1;
-/// Register holding the z coordinate, float value.
+/// Register holding the z coordinate in meters, float value.
 pub const REG_GPS_Z: u32 = 2;
 /// Register holding the roll, float value, radians.
 pub const REG_GPS_ROLL: u32 = 3;

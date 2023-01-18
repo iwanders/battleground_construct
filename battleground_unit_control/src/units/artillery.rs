@@ -1,8 +1,21 @@
+//! Holds module constants specific to the artillery unit.
+
+/// Module identifier for the differential drive module.
 pub const MODULE_ARTILLERY_DIFF_DRIVE: u32 = 0x1000;
+
+/// Module identifier for the revolute joint to rotate the turret yaw.
 pub const MODULE_ARTILLERY_REVOLUTE_TURRET: u32 = 0x1100;
+
+/// Module identifier for the revolute joint to rotate the barrel's pitch.
 pub const MODULE_ARTILLERY_REVOLUTE_BARREL: u32 = 0x1200;
+
+/// Module identifier for the gun battery module.
 pub const MODULE_ARTILLERY_GUN_BATTERY: u32 = 0x1300;
+
+/// Module identifier for the revolute joint that controls the radar yaw.
 pub const MODULE_ARTILLERY_REVOLUTE_RADAR: u32 = 0x1500;
+
+/// Module identifier for the radar module.
 pub const MODULE_ARTILLERY_RADAR: u32 = 0x1600;
 
 /// Distance in z between the floor and the body center.

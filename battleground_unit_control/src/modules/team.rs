@@ -1,4 +1,6 @@
 //! Information about the unit's team.
+//!
+//! This provides the unit with knowledge about which team it is on.
 
 /// Holds the team id, integer value.
 pub const REG_TEAM_TEAMID: u32 = 0;

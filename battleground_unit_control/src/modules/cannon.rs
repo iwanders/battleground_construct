@@ -1,4 +1,5 @@
 //! Fire control of simple cannons.
+//!
 
 /// Trigger the cannon to fire, is_triggered will go true, and the cannon will fire as soon as ready
 /// then the trigger becomes inactive until activated again.

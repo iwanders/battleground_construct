@@ -6,8 +6,11 @@ use crate::interface::InterfaceErrorType;
 /// A register value record.
 #[derive(Debug)]
 pub enum Value {
+    /// An i32 value.
     I32(i32),
+    /// An f32 value.
     F32(f32),
+    /// A bytes register, with min and max length.
     Bytes {
         values: Vec<u8>,
         min_len: usize,
@@ -30,7 +33,7 @@ impl Register {
             _ => None,
         }
     }
-    /// Retrieve the u32 value from this register.
+    /// Retrieve the i32 value from this register.
     pub fn value_i32(&self) -> Option<i32> {
         match self.value {
             Value::I32(v) => Some(v),
@@ -99,6 +102,7 @@ impl Register {
 /// Type that the unit modules will populate and read from.
 pub type RegisterMap = std::collections::HashMap<RegisterId, Register>;
 
+/// Trait that should be implemented by modules exposed through an interface.
 pub trait UnitModule {
     /// Read from the components into the registers.
     fn get_registers(&self, _world: &World, _registers: &mut RegisterMap) {}
@@ -107,12 +111,20 @@ pub trait UnitModule {
     fn set_component(&self, _world: &mut World, _registers: &RegisterMap) {}
 }
 
+/// Module id type
 pub type ModuleId = u32;
+/// Register id type
 pub type RegisterId = u32;
 
+/// A module representing a single module
 pub struct Module {
+    /// The name of this module.
     name: String,
+
+    /// The handler for this module, to get the registers and set the component states.
     handler: Option<Box<dyn UnitModule>>,
+
+    /// The registers themselves.
     registers: std::collections::HashMap<RegisterId, Register>,
 }
 
@@ -168,6 +180,8 @@ impl Module {
     }
 }
 
+/// The register interface holds a bunch of modules, it is used by the unit interface and the
+/// wasm_interface.
 #[derive(Default)]
 pub struct RegisterInterface {
     modules: std::collections::HashMap<ModuleId, Module>,
@@ -318,9 +332,8 @@ impl RegisterInterface {
         })
     }
 }
-// This is useless as a component, we need an interior mutability pattern.
-// impl Component for RegisterInterface {}
 
+/// Finally, implement the interface trait for the register interface.
 use crate::interface::InterfaceError;
 impl crate::interface::Interface for RegisterInterface {
     fn modules(&self) -> Result<Vec<u32>, BoxedError> {

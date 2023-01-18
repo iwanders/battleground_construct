@@ -186,7 +186,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         body_entity,
         config.radio_config,
     );
-    super::common::add_common_body(world, &register_interface, body_entity);
+    super::common::add_common_body(world, &register_interface, 0.75, body_entity);
 
     // -----   Turret
     let revolute_config = components::revolute::RevoluteConfig {

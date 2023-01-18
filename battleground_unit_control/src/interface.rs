@@ -4,8 +4,11 @@ type BoxedError = Box<InterfaceError>;
 /// Enum to denote register type.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum RegisterType {
+    /// Register will hold an i32.
     I32,
+    /// Register will hold an f32.
     F32,
+    /// Register will hold bytes.
     Bytes,
 }
 
@@ -65,22 +68,31 @@ pub trait Interface {
     fn set_bytes(&mut self, module: u32, register: u32, values: &[u8]) -> Result<(), BoxedError>;
 }
 
-/// If an error occurs in the interface, the follow boxed error is returned.
+/// If an error occurs in the interface, the following boxed error is returned.
 #[derive(Debug, Clone)]
 pub struct InterfaceError {
+    /// The module interacted with when this error occured.
     pub module: u32,
+    /// The register interacted with when this error occured.
     pub register: u32,
+    /// The type of error that occured.
     pub error_type: InterfaceErrorType,
 }
 
 /// The error_type is further specified in the following possible failure modes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum InterfaceErrorType {
+    /// This module does not exist.
     NoSuchModule,
+    /// This register does not exist in this module.
     NoSuchRegister,
+    /// This register is of another type.
     WrongType,
+    /// The destination buffer could not hold enough values.
     ReadOverflow,
+    /// Too many values are being written, the register takes less.
     WriteOverflow,
+    /// Too few values are being written, the register requires more.
     WriteUnderflow,
 }
 
@@ -114,36 +126,40 @@ impl std::fmt::Display for InterfaceError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self.error_type {
             InterfaceErrorType::NoSuchModule => {
-                write!(f, "{}:# does not exist", self.module)
+                write!(f, "{:0>8x}:# does not exist", self.module)
             }
             InterfaceErrorType::NoSuchRegister => {
                 write!(
                     f,
-                    "{}:{} does not exist for this module",
+                    "{:0>8x}:{:0>8x} does not exist for this module",
                     self.module, self.register
                 )
             }
             InterfaceErrorType::WrongType => {
-                write!(f, "{}:{} has a different type", self.register, self.module)
+                write!(
+                    f,
+                    "{:0>8x}:{:0>8x} has a different type",
+                    self.register, self.module
+                )
             }
             InterfaceErrorType::ReadOverflow => {
                 write!(
                     f,
-                    "{}:{} destination buffer not large enough",
+                    "{:0>8x}:{:0>8x} destination buffer not large enough",
                     self.register, self.module
                 )
             }
             InterfaceErrorType::WriteOverflow => {
                 write!(
                     f,
-                    "{}:{} input data exceeds register size",
+                    "{:0>8x}:{:0>8x} input data exceeds register size",
                     self.register, self.module
                 )
             }
             InterfaceErrorType::WriteUnderflow => {
                 write!(
                     f,
-                    "{}:{} register size exceeds input data",
+                    "{:0>8x}:{:0>8x} register size exceeds input data",
                     self.register, self.module
                 )
             }
@@ -151,7 +167,7 @@ impl std::fmt::Display for InterfaceError {
     }
 }
 
-/// And error, such that it is convertible to Box<dyn std::error:Error>
+/// And error, such that it is convertible to [`Box<dyn std::error:Error>`]
 impl std::error::Error for InterfaceError {}
 
 #[cfg(test)]
