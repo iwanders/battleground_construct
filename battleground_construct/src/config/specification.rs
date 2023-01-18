@@ -41,9 +41,7 @@ pub enum MatchType {
         capture_points: Vec<CapturePoint>,
     },
     /// Team Deathmatch, first team to destroy point_limit units of another team wins.
-    TeamDeathmatch {
-        point_limit: Option<i64>,
-    },
+    TeamDeathmatch { point_limit: Option<i64> },
     /// King of the hill, first team to achieve point_limit points accumulated by controlling the
     /// capture points wins.
     KingOfTheHill {
@@ -121,9 +119,7 @@ pub enum ControllerType {
     /// Load a dynamic library and use that as a controller. Out of use and superseded by the wasm
     /// systems, because that allows sandboxing.
     #[cfg(not(target_arch = "wasm32"))]
-    LibraryLoad {
-        name: String,
-    },
+    LibraryLoad { name: String },
     /// Drive forwards for a duration, then reverse direction and drive that duration backwards.
     DiffDriveForwardsBackwards {
         velocities: (f32, f32),
@@ -145,17 +141,11 @@ pub enum ControllerType {
     #[serde(skip)]
     Function(battleground_unit_control::ControllerSpawn),
     /// A controller that executes a list of controllers in sequence.
-    SequenceControl {
-        controllers: Vec<ControllerType>,
-    },
+    SequenceControl { controllers: Vec<ControllerType> },
     /// A 'redirect' to use the controller referred to by name in the controller config.
-    FromControlConfig {
-        name: String,
-    },
+    FromControlConfig { name: String },
     /// A 'redirect' to use the controller specified in the team list.
-    TeamController {
-        name: String,
-    },
+    TeamController { name: String },
 }
 
 /// The unit type to spawn.
