@@ -3,7 +3,7 @@
 ![banner](./media/banner.png)
 
 In this simulation game, it's up to you to write a controller for your team's units; you write this
-controller / 'ai' in [Rust](https://www.rust-lang.org/), compile it into a `.wasm` file which you
+controller / ai in [Rust](https://www.rust-lang.org/) and compile it into a `.wasm` file which you
 can load into the battleground viewer or headless simulator. The file is self-contained, so you can
 exchange the compiled `.wasm` file with your friends and see who writes the best controller!
 
@@ -20,23 +20,25 @@ rustup target install wasm32-unknown-unknown
 git clone https://github.com/iwanders/battleground_construct
 cd battleground_construct
 ```
-3. Build the example controller in [unit_control_example](unit_control_example);
+3. Build the example controller in [unit_control_example](unit_control_example), this builds
+  the controller into a stand-alone `.wasm` file;
 ```
 cd unit_control_example
 cargo build --release
 ```
-This will create the `unit_control_example.wasm` file in the target directory that contains the controller.
-4. Change directories to the [battleground_viewer](battleground_viewer) directory and run it using
-  the first tutorial as scenario and specify it should load this `.wasm` file for the `player` team with:
+
+4. Change directories to the [battleground_viewer](battleground_viewer) directory. From there run
+  the viewer, specifying the correct feature to be able to load the `.wasm` file that was just
+  created in the `target` directory. The scenario loaded is one of the built in tutorial scenarios:
 ```
 cd ../battleground_viewer
 cargo run --release --features unit_control_wasm -- scenario tutorial_01_driving_forward --team player:../target/wasm32-unknown-unknown/release/unit_control_example.wasm
 ```
 5. The battleground viewer should start and you should see a red tank unit rotate in place.
-6. In the example's code, search for `MODULE_TANK_DIFF_DRIVE` and make your tank drive forwards.
-  Recompile the controller by running `cargo build --release` from its directory.
+6. In the [example](unit_control_example)'s code, search for `MODULE_TANK_DIFF_DRIVE` and make your
+  tank drive forwards. Recompile the controller by running `cargo build --release` from its directory.
   Restart the viewer with the same command as before, it does not have to recompile so this should
-  be quick.
+  be quick this time.
 7. The tank should drive into the capture area for the point and fireworks should indicate your
    victory.
 8. One can also make changes while keeping the viewer running; each time we recompile the `.wasm`

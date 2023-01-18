@@ -32,13 +32,14 @@ recording is decompressed.
 
 ## In the browser
 
-To run the battleground viewer in the browser, we need to compile it with `wasmpack`. First install
-[wasm-pack](https://github.com/rustwasm/wasm-pack) that. Then, in this directory run:
+To run the battleground viewer in the browser, we need to compile it with `wasm-pack`. First install
+[wasm-pack](https://github.com/rustwasm/wasm-pack) it, after that, from this directory run:
 
 ```
 wasm-pack build --release --target web --out-name web
 ```
-This creates the `pkg` folder in this directory.
+This command will compile the viewer and its dependencies for web and creates the `pkg` folder in
+this directory.
 
 Next, we need to host the newly created `pkg` directory and the `viewer.html` file from this
 directory, one way to do this is with:
