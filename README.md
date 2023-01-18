@@ -42,8 +42,55 @@ cargo run --release --features unit_control_wasm -- scenario tutorial_01_driving
 8. One can also make changes while keeping the viewer running; each time we recompile the `.wasm`
    file, the viewer automatically reloads it without requiring a restart.
 9. Further tutorial files are available, in the `battleground_viewer` directory, run 
-   `cargo r --release -- scenario list` for a list of tutorials.
+   `cargo r --release --features unit_control_wasm -- scenario list` for a list of tutorials.
+10. To get a feel what a match looks like with very naive unit controllers, run
+   `cargo run --release --features unit_control_wasm -- scenario match_demo`.
 
+## Running and viewing
+
+The simulation can be ran in headless mode by running the binary from the
+[battleground_construct](./battleground_construct) crate. This binary can also record the entire
+match to a recording file. The built in scenarios can be used, as well as a path to a file:
+
+For exmaple, from the [battleground_construct](./battleground_construct) directory, the following command:
+```
+cargo run --release --features unit_control_wasm -- scenario src/config/scenario/match_2v2.yaml --team red:red_team.wasm --team blue:blue_team.wasm -w /tmp/recording.bin
+```
+
+Would run the `match_2v2.yaml` scenario headless, replace the red team's controller with the
+specified `red_team.wasm`, blue with `blue_team.wasm`and record the match to `/tmp/recording.bin`. 
+
+Such a recording can be played back in the viewer, for example with:
+```
+cargo run --release -- play /tmp/recording.bin
+```
+
+The viewer can be ran natively, but can also be compiled for use in a web-browser, please see its
+[readme](./battleground_viewer) file for more information. The main functionality of this is to view
+recordings that are accessible from the same server as the one hosting the viewer's html / js. This
+means that if you run a tournament you can host all the recordings and send contestants links to the
+matches for viewing.
+
+The supported commandline arguments for the viewer and headless runner are identical. Be sure to
+pass the `--features unit_control_wasm` flag to be able to load `.wasm` files, this is not necessary
+for the viewer to be able to play recordings made with a `wasm` based unit controller.
+
+## Scenarios
+
+The configuration of the simulation game is specified in a scenario file, several of these, like the
+tutorial are compiled into the binary. These scenario specifications can be found in
+[this](battleground_construct/src/config/scenario) directory. These files specify what teams exist
+their units and the controllers, controllers can be overwritten from the commandline as well.
+
+Currently supported game modes for the scenarios are the following:
+
+- Team deathmatch: First team to achieve a set number of kills wins.
+- King of the Hill: Fight over capture points, first team to reach the limit wins.
+- Domination: Like king of the hill, but if you achieve a set number of kills and hold all capture
+  points victory is declared. So this can be used as a king of the hill without having to wait for
+  the points to count up.
+
+All game modes can optionally support a time limit.
 
 ## Unit Control
 
@@ -86,6 +133,23 @@ to prevent that.
   units can transmit and receive on the same radio channels as other teams.
 - The [radar](battleground_unit_control/src/modules/radar.rs) sees both friendly and unfriendly units.
 - Relevant dimensions for units can be accessed through the [battleground_unit_control's units](battleground_unit_control/src/units) module.
+
+### Units
+
+Currently, there are two unit types.
+
+### Tank
+This is the standard / default unit, it has a good radar a single cannon to shoot point projectiles
+without splash damage, so only direct hits against another unit will do damage. You'll want to use
+these units on the front lines to act as the eyes for your artillery and take control of the capture
+points.
+
+### Artillery
+
+This unit is larger than the tank, drives slower, rotates it's gun slower and has a poor radar, what
+it lacks in mobility it makes up in firepower. It's projectiles do splash damage so even non-direct
+hits will have significant effects on opposing units. You'll have to communicate with units that
+have better radars to get the most out of this unit.
 
 
 ## License

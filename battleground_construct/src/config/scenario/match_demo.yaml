@@ -1,0 +1,87 @@
+_PI_2: &pi_2 1.5707963267948966
+_PI: &pi 3.141592653589793
+match_config:
+  time_limit: 60.0
+  mode:
+    type: Domination
+    capture_points:
+      -
+        x: 0.0
+        y: 0.0
+        radius: 5.0
+        capture_speed: 0.1
+    point_limit: 30.0
+    team_deathmatch_min: 2
+
+spawn_config:
+  teams:
+    -
+      name: Red
+      color: [255, 0, 0]
+      controller:
+        type: SequenceControl
+        controllers:
+          - type: RadioPosition
+          - type: DiffDriveCapturable
+          - type: NaiveShoot
+
+    -
+      name: Blue
+      color: [0, 0, 255]
+      controller:
+        type: SequenceControl
+        controllers:
+          - type: RadioPosition
+          - type: DiffDriveCapturable
+          - type: NaiveShoot
+  spawns:
+    -
+      x: 10.0
+      y: 5.0
+      yaw: *pi
+      controller:
+        type: TeamController
+        name: Red
+      team: 0
+    -
+      x: 10.0
+      y: -5.0
+      yaw: *pi
+      team: 0
+      controller:
+        type: TeamController
+        name: Red
+    -
+      x: 12.5
+      y: 0.0
+      yaw: *pi
+      team: 0
+      unit: Artillery
+      controller:
+        type: TeamController
+        name: Red
+    -
+      x: -10.0
+      y: 5.0
+      yaw: 0.0
+      controller:
+        type: TeamController
+        name: Blue
+      team: 1
+    -
+      x: -10.0
+      y: -5.0
+      yaw: 0.0
+      team: 1
+      controller:
+        type: TeamController
+        name: Blue
+    -
+      x: -12.5
+      y: 0.0
+      yaw: 0.0
+      team: 1
+      unit: Artillery
+      controller:
+        type: TeamController
+        name: Blue
