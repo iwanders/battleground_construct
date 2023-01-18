@@ -52,7 +52,7 @@ The simulation can be ran in headless mode by running the binary from the
 [battleground_construct](./battleground_construct) crate. This binary can also record the entire
 match to a recording file. The built in scenarios can be used, as well as a path to a file:
 
-For exmaple, from the [battleground_construct](./battleground_construct) directory, the following command:
+For example, from the [battleground_construct](./battleground_construct) directory, the following command:
 ```
 cargo run --release --features unit_control_wasm -- scenario src/config/scenario/match_2v2.yaml --team red:red_team.wasm --team blue:blue_team.wasm -w /tmp/recording.bin
 ```
@@ -74,23 +74,6 @@ matches for viewing.
 The supported commandline arguments for the viewer and headless runner are identical. Be sure to
 pass the `--features unit_control_wasm` flag to be able to load `.wasm` files, this is not necessary
 for the viewer to be able to play recordings made with a `wasm` based unit controller.
-
-## Scenarios
-
-The configuration of the simulation game is specified in a scenario file, several of these, like the
-tutorial are compiled into the binary. These scenario specifications can be found in
-[this](battleground_construct/src/config/scenario) directory. These files specify what teams exist
-their units and the controllers, controllers can be overwritten from the commandline as well.
-
-Currently supported game modes for the scenarios are the following:
-
-- Team deathmatch: First team to achieve a set number of kills wins.
-- King of the Hill: Fight over capture points, first team to reach the limit wins.
-- Domination: Like king of the hill, but if you achieve a set number of kills and hold all capture
-  points victory is declared. So this can be used as a king of the hill without having to wait for
-  the points to count up.
-
-All game modes can optionally support a time limit.
 
 ## Unit Control
 
@@ -119,37 +102,64 @@ The modules are things like:
 - ... and more , run `cargo doc` and look for the [battleground_unit_control](battleground_unit_control) crate.
 
 It's up to you to write abstractions for these module registers if you feel that is necessary to
-control your unit well.
-
-A few more things of note;
-- If your controller panics or raises an `Err`, your unit will self destruct and you get a backtrace
-  in the console.
-- You can shoot (and hit) your own units, you have a radio
-[receiver](battleground_unit_control/src/modules/radio_receiver.rs)
-and
-[transmitter](battleground_unit_control/src/modules/radio_transmitter.rs) to talk between your units
-to prevent that.
-- Electronic warfare is authorized (and unless prevented in the configuration) the
-  units can transmit and receive on the same radio channels as other teams.
-- The [radar](battleground_unit_control/src/modules/radar.rs) sees both friendly and unfriendly units.
-- Relevant dimensions for units can be accessed through the [battleground_unit_control's units](battleground_unit_control/src/units) module.
+control your unit well. Relevant dimensions for units can be accessed through the
+[battleground_unit_control's units](battleground_unit_control/src/units) module, if you need any
+other values; look around in the [source](battleground_construct) code.
 
 ### Units
 
 Currently, there are two unit types.
 
 ### Tank
+<img align="right" width="25%" src="./media/unit_tank.png">
 This is the standard / default unit, it has a good radar a single cannon to shoot point projectiles
-without splash damage, so only direct hits against another unit will do damage. You'll want to use
+without splash damage; only direct hits against another unit will do damage. You'll want to use
 these units on the front lines to act as the eyes for your artillery and take control of the capture
 points.
 
 ### Artillery
+<img align="right" width="25%" src="./media/unit_artillery.png">
 
 This unit is larger than the tank, drives slower, rotates it's gun slower and has a poor radar, what
 it lacks in mobility it makes up in firepower. It's projectiles do splash damage so even non-direct
 hits will have significant effects on opposing units. You'll have to communicate with units that
 have better radars to get the most out of this unit.
+
+
+## Game rules
+
+The configuration of the simulation game is specified in a scenario file, several of these, like the
+tutorial are compiled into the binary. These scenario specifications can be found in
+[this](battleground_construct/src/config/scenario) directory. These files specify what teams exist
+and their units and the controllers, controllers can be overwritten from the commandline. These yaml
+files are loaded from the `ScenarioConfig` struct in the [specification](./battleground_construct/src/config/specification.rs)
+
+Currently supported game modes for the scenarios are the following:
+
+- Team deathmatch: First team to destroy the set number of units of any opposing team wins.
+- King of the Hill: Fight over capture points, first team to reach the limit wins.
+- Domination: Like king of the hill, but if you destroy a set number of opposing units and hold all
+  capture points victory is yours. So this can be used as a king of the hill without having to wait
+  for the points to count up after defeating all opposing units.
+
+All game modes can optionally support a time limit.
+
+A few more things of note around the rules:
+
+- If your controller panics or returns an `Err`, your unit will self destruct and you get a backtrace
+  in the console.
+- Wasm unit controllers can be configured to have limited computational resources, exceeding this
+  would return an `Err` and lead to the destruction of the unit.
+- You can shoot (and hit) your own units, you have a radio
+[receiver](battleground_unit_control/src/modules/radio_receiver.rs)
+and
+[transmitter](battleground_unit_control/src/modules/radio_transmitter.rs) to talk between your units
+to prevent that.
+- Electronic warfare is authorized (and unless prevented in the configuration) the
+  units can transmit and receive on the same radio channels as other teams. If you can make your
+  oponent's unit controllers panic or error out and they self destruct, that is a valid strategy.
+- The [radar](battleground_unit_control/src/modules/radar.rs) sees both friendly and unfriendly units.
+
 
 
 ## License

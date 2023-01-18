@@ -9,7 +9,9 @@ use serde::{Deserialize, Serialize};
 /// Radio config, for both transmitter and receiver.
 #[derive(Serialize, Deserialize, Debug, Default, Clone, Copy)]
 pub struct RadioConfig {
+    /// The minimum selectable channel for the radio, both receive and transmit.
     pub channel_min: usize,
+    /// The maximum selectable channel for the radio, both receive and transmit.
     pub channel_max: usize,
 }
 
