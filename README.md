@@ -141,7 +141,7 @@ The configuration of the simulation game is specified in a scenario file, severa
 tutorial are compiled into the binary. These scenario specifications can be found in
 [this](battleground_construct/src/config/scenario) directory. These files specify what teams exist
 and their units and the controllers, controllers can be overwritten from the commandline. These yaml
-files are loaded from the `ScenarioConfig` struct in the [specification](./battleground_construct/src/config/specification.rs)
+files are loaded from the `ScenarioConfig` struct in the [specification](./battleground_construct/src/config/specification.rs).
 
 Currently supported game modes for the scenarios are the following:
 
@@ -175,7 +175,7 @@ to prevent that.
 
 ## Further information
 
-- For your unit controller, run `cargo doc` and look for the [`battleground_unit_control`](./battleground_unit_control) crate.
+- For your unit controller, run `cargo doc` and look for the [battleground_unit_control](./battleground_unit_control) crate.
 - The [unit_control_example](./unit_control_example) crate holds an example controller that compiles to a `.wasm` module.
 - The [battleground_construct](./battleground_construct) crate contains all simulation / game logic.
 - The [engine](./engine) holds the [entity component systems](https://en.wikipedia.org/wiki/Entity_component_system)
@@ -185,4 +185,4 @@ to prevent that.
 - The [unit_control_wasm](./unit_control_wasm) crate implements a unit controller that loads a `.wasm` module, it is an optional dependency of battleground_construct.
 
 ## License
-License is `BSD-3-Clause`.
+License is [`BSD-3-Clause`](./LICENSE).
