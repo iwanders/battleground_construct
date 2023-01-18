@@ -20,8 +20,8 @@ rustup target install wasm32-unknown-unknown
 git clone https://github.com/iwanders/battleground_construct
 cd battleground_construct
 ```
-3. Build the example controller in [unit_control_example](unit_control_example), this builds
-  the controller into a stand-alone `.wasm` file;
+3. Build the example controller in [unit_control_example](unit_control_example), this compiles it
+  into a stand-alone `.wasm` file:
 ```
 cd unit_control_example
 cargo build --release
@@ -52,15 +52,20 @@ cargo run --release --features unit_control_wasm -- scenario tutorial_01_driving
 
 The simulation can be ran in headless mode by running the binary from the
 [battleground_construct](./battleground_construct) crate. This binary can also record the entire
-match to a recording file. The built in scenarios can be used, as well as a path to a file:
+match to a recording file. The built in scenarios can be used, as well as a path to a file.
+For example, from the [battleground_construct](./battleground_construct) directory, the following
+command:
 
-For example, from the [battleground_construct](./battleground_construct) directory, the following command:
 ```
 cargo run --release --features unit_control_wasm -- scenario src/config/scenario/match_2v2.yaml --team red:red_team.wasm --team blue:blue_team.wasm -w /tmp/recording.bin
 ```
 
 Would run the `match_2v2.yaml` scenario headless, replace the red team's controller with the
-specified `red_team.wasm`, blue with `blue_team.wasm`and record the match to `/tmp/recording.bin`. 
+specified `red_team.wasm`, blue with `blue_team.wasm`and record the match to `/tmp/recording.bin`.
+For a full list of available options for either the battleground_viewer or battleground_construct:
+```
+cargo run --release --features unit_control_wasm -- --help
+```
 
 Such a recording can be played back in the viewer, for example with:
 ```
