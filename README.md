@@ -37,14 +37,13 @@ cargo run --release --features unit_control_wasm -- scenario tutorial_01_driving
 5. The battleground viewer should start and you should see a red tank unit rotate in place.
 6. In the [example](unit_control_example)'s code, search for `MODULE_TANK_DIFF_DRIVE` and make your
   tank drive forwards. Recompile the controller by running `cargo build --release` from its directory.
-  The viewer will reload the controller and the tank should start driving straight. If it doesn't
-  drive towards the capture point, you can restart the viewer with the same command as before,
-  it does not have to recompile so this should be quick this time. Pressing 'r' restarts the
-  scenario without having to exit the viewer, and can be useful during development.
+  Restart the viewer with the same command as before, it does not have to recompile so this should
+  be quick this time.
 7. The tank should drive into the capture area for the point and fireworks should indicate your
    victory.
-8. One can also make changes while keeping the viewer running; each time we recompile the `.wasm`
-   file, the viewer automatically reloads it without requiring a restart.
+8. One can also make changes while keeping the viewer running; each time you recompile the `.wasm`
+   file, the viewer automatically reloads it without requiring a restart. You can restart the
+   scenario by pressing the `r` key in the viewer, this can be helpful during development.
 9. Further tutorial files are available, in the `battleground_viewer` directory, run 
    `cargo r --release --features unit_control_wasm -- scenario list` for a list of tutorials.
 10. To get a feel what a match looks like with very naive unit controllers, run
