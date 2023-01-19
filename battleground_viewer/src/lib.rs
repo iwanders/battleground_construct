@@ -415,8 +415,9 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         battleground_construct::config::tree_trailer::populate_tree_trailer(&mut construct);
         construct
     } else {
-        let config = battleground_construct::config::cli::parse_setup_args()?;
-        battleground_construct::config::setup::setup(config)?
+        let command = battleground_construct::config::cli::parse_args()?;
+        let setup_config = battleground_construct::config::cli::command_to_setup(&command)?;
+        battleground_construct::config::setup::setup(setup_config)?
     };
 
     let viewer = ConstructViewer::new(construct);

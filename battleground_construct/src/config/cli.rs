@@ -8,12 +8,14 @@ struct Cli {
 }
 
 #[derive(Subcommand, Debug)]
-enum Commands {
+pub enum Commands {
     /// Specify the scenario to run.
     #[command(arg_required_else_help = true)]
     Scenario(Scenario),
+    /// Play back a recording.
     #[command(arg_required_else_help = true)]
     Play(Play),
+    /// Developer tools to analyze a recording.
     #[command(arg_required_else_help = true)]
     #[command(subcommand)]
     Recording(RecordingCommands),
@@ -21,7 +23,7 @@ enum Commands {
 
 /// Play subcommand
 #[derive(Debug, Args)]
-struct Play {
+pub struct Play {
     /// Path to use
     #[arg(value_hint = clap::ValueHint::FilePath)]
     file: String,
@@ -29,7 +31,7 @@ struct Play {
 
 /// Play subcommand
 #[derive(Debug, Args)]
-struct Seek {
+pub struct Seek {
     /// Path to use
     #[arg(value_hint = clap::ValueHint::FilePath)]
     file: String,
@@ -39,7 +41,7 @@ struct Seek {
 
 /// Commands related to recordings
 #[derive(Subcommand, Debug)]
-enum RecordingCommands {
+pub enum RecordingCommands {
     /// Specify the scenario to run.
     #[command(arg_required_else_help = true)]
     Analyze(Play),
@@ -49,7 +51,7 @@ enum RecordingCommands {
 
 /// Scenario subcommand
 #[derive(Debug, Args)]
-struct Scenario {
+pub struct Scenario {
     /// Scenario to load, can be one of the builtins, or a yaml file specifying the scenario. Use
     /// 'list' as a special scenario to list the builtins.
     #[arg(value_hint = clap::ValueHint::FilePath)]
@@ -96,22 +98,22 @@ struct Scenario {
 }
 
 /// This creates a config struct handled by the wrap up functionality
-pub fn parse_wrap_up_args() -> Result<WrapUpConfig, Box<dyn std::error::Error>> {
-    let setup = parse_setup_args()?;
-    let args = Cli::parse();
+pub fn command_to_wrap_up(command: &Commands) -> Result<WrapUpConfig, Box<dyn std::error::Error>> {
+    let setup = command_to_setup(command)?;
+    // let args = Cli::parse();
 
-    let write_wrap_up = match args.command {
+    let write_wrap_up = match command {
         Commands::Scenario(ref scenario) => &scenario.report,
         _ => &None,
     }
     .clone();
-    let write_recording = match args.command {
+    let write_recording = match command {
         Commands::Scenario(ref scenario) => &scenario.record,
         _ => &None,
     }
     .clone();
 
-    let outro = match args.command {
+    let outro = match command {
         Commands::Scenario(ref scenario) => scenario.outro_duration.unwrap_or(4.55),
         _ => 0.0,
     };
@@ -134,9 +136,12 @@ pub enum Setup {
     Play(String),
 }
 
-pub fn parse_setup_args() -> Result<Setup, Box<dyn std::error::Error>> {
-    let args = Cli::parse();
-    match args.command {
+pub fn parse_args() -> Result<Commands, Box<dyn std::error::Error>> {
+    Ok(Cli::parse().command)
+}
+
+pub fn command_to_setup(command: &Commands) -> Result<Setup, Box<dyn std::error::Error>> {
+    match command {
         Commands::Scenario(scenario) => {
             if scenario.scenario == "list" {
                 let available = super::reader::builtin_scenarios();
@@ -210,7 +215,7 @@ pub fn parse_setup_args() -> Result<Setup, Box<dyn std::error::Error>> {
                 .collect();
             apply_config(&config_strs, specification).map(Setup::Scenario)
         }
-        Commands::Play(play) => Ok(Setup::Play(play.file)),
+        Commands::Play(play) => Ok(Setup::Play(play.file.clone())),
         Commands::Recording(subcommand) => {
             recording_subcommand_handler(subcommand)?;
             Err("done".into())
@@ -218,7 +223,7 @@ pub fn parse_setup_args() -> Result<Setup, Box<dyn std::error::Error>> {
     }
 }
 
-fn recording_subcommand_handler(cmd: RecordingCommands) -> Result<(), Box<dyn std::error::Error>> {
+fn recording_subcommand_handler(cmd: &RecordingCommands) -> Result<(), Box<dyn std::error::Error>> {
     use crate::components::recording::Recording;
     match cmd {
         RecordingCommands::Analyze(z) => {
