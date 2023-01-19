@@ -27,9 +27,11 @@ impl Default for State {
 }
 
 impl State {
-    pub fn update(&mut self, construct: &crate::Construct) {
-        for (_e, team) in construct.world.component_iter::<components::team::Team>() {
-            self.teams.insert(team.id(), team.clone());
+    pub fn update(&mut self, construct: &Option<crate::Construct>) {
+        if let Some(construct) = construct {
+            for (_e, team) in construct.world.component_iter::<components::team::Team>() {
+                self.teams.insert(team.id(), team.clone());
+            }
         }
     }
 
@@ -63,7 +65,12 @@ impl State {
     }
 }
 
-pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &mut State) {
+pub fn window_match(ctx: &egui::Context, construct: &Option<crate::Construct>, state: &mut State) {
+    let construct = if let Some(construct) = construct {
+        construct
+    } else {
+        return;
+    };
     let mut open = state.match_window.borrow_mut();
     // let open = open.unwrap();
     egui::Window::new("Match")
@@ -251,10 +258,15 @@ pub fn window_match(ctx: &egui::Context, construct: &crate::Construct, state: &m
 
 pub fn window_play(
     ctx: &egui::Context,
-    construct: &crate::Construct,
+    construct: &Option<crate::Construct>,
     state: &mut crate::ViewerState,
     limiter: &mut crate::Limiter,
 ) {
+    let construct = if let Some(construct) = construct {
+        construct
+    } else {
+        return;
+    };
     let mut open = state.gui.time_window.borrow_mut();
     // let open = open.unwrap();
     egui::Window::new("Time")

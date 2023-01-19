@@ -27,6 +27,7 @@ pub fn setup(config: Setup) -> Result<Construct, Box<dyn std::error::Error>> {
     match config {
         Setup::Scenario(scenario) => setup_scenario(scenario),
         Setup::Play(path) => setup_playback_path(&path),
+        Setup::PlayBytes(bytes) => setup_playback_slice(&bytes),
     }
 }
 

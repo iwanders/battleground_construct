@@ -134,6 +134,7 @@ pub fn command_to_wrap_up(command: &Commands) -> Result<WrapUpConfig, Box<dyn st
 pub enum Setup {
     Scenario(ScenarioConfig),
     Play(String),
+    PlayBytes(Vec<u8>),
 }
 
 pub fn parse_args() -> Result<Commands, Box<dyn std::error::Error>> {

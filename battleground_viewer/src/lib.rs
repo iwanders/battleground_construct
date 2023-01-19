@@ -1,6 +1,8 @@
 use three_d::*;
 
 use battleground_construct::Construct;
+use battleground_construct::config::cli::Setup;
+
 
 mod construct_render;
 use construct_render::ConstructRender;
@@ -56,16 +58,15 @@ struct ConstructViewer {
     // control: OrbitControl,
     window: Window,
 
-    construct: Construct,
+    construct: Option<Construct>,
 
     limiter: Limiter,
 
     construct_render: ConstructRender,
     printed_match_result: bool,
 }
-
 impl ConstructViewer {
-    pub fn new(construct: Construct) -> Self {
+    pub fn new(setup: Setup) -> Self {
         let window = Window::new(WindowSettings {
             title: "Battleground Construct".to_string(),
             min_size: (640, 480),
@@ -88,18 +89,6 @@ impl ConstructViewer {
             1000.0,
         );
 
-        /*
-        let config = three_d::renderer::control::OrbitControlConfig {
-            speed_orbit_horizontal: 0.1,
-            speed_orbit_vertical: 0.1,
-            speed_zoom: 2.0,
-            speed_orbit_target_left: Some(0.1),
-            speed_orbit_target_up: Some(0.1),
-            ..Default::default()
-        };
-
-        let control = OrbitControl::new_with_config(config);
-        */
         let control = FlyControl::new(0.1);
 
         let ambient_light =
@@ -108,6 +97,14 @@ impl ConstructViewer {
             DirectionalLight::new(&context, 1.5, Color::WHITE, &vec3(0.0, 0.2, -1.0));
 
         let construct_render: ConstructRender = ConstructRender::new();
+
+        let construct = match battleground_construct::config::setup::setup(setup) {
+            Ok(construct)=> Some(construct),
+            Err(e) => {
+                println!("Failed to setup: {e:?}");
+                None
+            }
+        };
 
         ConstructViewer {
             camera,
@@ -125,50 +122,15 @@ impl ConstructViewer {
 
     // Consumes the viewer...
     fn view_loop(mut self) {
-        let jump = 0.0;
 
         self.limiter.set_desired_speed(1.0);
 
-        while self.construct.elapsed_as_f32() < jump {
-            self.construct.update();
-        }
 
         let mut gui = three_d::GUI::new(&self.context);
 
         let mut viewer_state = ViewerState::default();
 
         self.window.render_loop(move |mut frame_input: FrameInput| {
-            let now = time_provider::Instant::now();
-            // Run the limiter to update the construct.s
-            if self.construct.can_update() {
-                self.limiter.update(|| {
-                    self.construct.update();
-                    if self.construct.can_update() {
-                        Some(self.construct.elapsed_as_f32())
-                    } else {
-                        None
-                    }
-                });
-            }
-
-            // This... should probably also not be here, but it's nice if the gui does something
-            // more elegant with this at some point.
-            if self.construct.is_match_finished() && !self.printed_match_result {
-                let report = battleground_construct::config::wrap_up::create_wrap_up_report(
-                    self.construct.world(),
-                );
-                println!("{report:#?}");
-                self.printed_match_result = true;
-            }
-
-            if PRINT_DURATIONS {
-                println!(
-                    "construct update (not a single step!): {:1.8}, entities: {}",
-                    now.elapsed().as_secs_f32(),
-                    self.construct.world().entity_count()
-                );
-            }
-
             // Gui rendering.
             viewer_state.gui.update(&self.construct);
             gui.update(
@@ -182,17 +144,33 @@ impl ConstructViewer {
                     gui::top_bar(ctx, &mut viewer_state);
                 },
             );
-
-            self.camera.set_viewport(frame_input.viewport);
             self.control
                 .handle_events(&mut self.camera, &mut frame_input.events);
 
+            let construct = if let Some(ref mut construct) = self.construct {
+                construct
+            } else {
+                let screen = frame_input.screen();
+                screen.write(|| gui.render());
+                if viewer_state.exiting {
+                    // This does not just exit the render loop, it also shuts down the program.
+                    return FrameOutput {
+                        exit: true,
+                        ..Default::default()
+                    };
+                }
+
+                return FrameOutput::default();
+            };
+
+            let screen = frame_input.screen();
+            self.camera.set_viewport(frame_input.viewport);
             if viewer_state.previous_playback != viewer_state.playback {
                 println!("Something changed, new value is {}", viewer_state.playback);
                 viewer_state.previous_playback = viewer_state.playback;
-                self.construct.recording_seek(viewer_state.playback);
+                construct.recording_seek(viewer_state.playback);
             }
-            viewer_state.previous_playback = self.construct.elapsed_as_f32();
+            viewer_state.previous_playback = construct.elapsed_as_f32();
             viewer_state.playback = viewer_state.previous_playback;
             self.limiter.set_desired_speed(viewer_state.desired_speed);
 
@@ -231,7 +209,7 @@ impl ConstructViewer {
 
                             // Now that we have the ray, we can calculate what and if it hit something.
                             // We need the construct to do that though.
-                            let intersects = self.construct.select_intersect(&pos, &dir);
+                            let intersects = construct.select_intersect(&pos, &dir);
 
                             // Shooting one ray through multiple entities is hard... allow shift to
                             // add or remove from the selected set.
@@ -258,20 +236,53 @@ impl ConstructViewer {
                 }
             }
 
-            let screen = frame_input.screen();
+
+            let now = time_provider::Instant::now();
+            // Run the limiter to update the construct.s
+            if construct.can_update() {
+                self.limiter.update(|| {
+                    construct.update();
+                    if construct.can_update() {
+                        Some(construct.elapsed_as_f32())
+                    } else {
+                        None
+                    }
+                });
+            }
+
+            // This... should probably also not be here, but it's nice if the gui does something
+            // more elegant with this at some point.
+            if construct.is_match_finished() && !self.printed_match_result {
+                let report = battleground_construct::config::wrap_up::create_wrap_up_report(
+                    construct.world(),
+                );
+                println!("{report:#?}");
+                self.printed_match_result = true;
+            }
+
+            if PRINT_DURATIONS {
+                println!(
+                    "construct update (not a single step!): {:1.8}, entities: {}",
+                    now.elapsed().as_secs_f32(),
+                    construct.world().entity_count()
+                );
+            }
+
+
+
 
             let now = time_provider::Instant::now();
 
             if let Some((pos, target)) = self
                 .construct_render
-                .camera_view(&self.camera, &self.construct)
+                .camera_view(&self.camera, construct)
             {
                 self.camera.set_view(pos, target, vec3(0.0, 0.0, 1.0));
             }
             self.construct_render.render(
                 &self.camera,
                 &self.context,
-                &self.construct,
+                construct,
                 &viewer_state.selected,
             );
 
@@ -410,6 +421,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Preserve the trailer...
     let tree_trailer = args.len() >= 2 && args.get(1).unwrap() == "--tree-trailer";
 
+    /*
     let construct = if tree_trailer {
         let mut construct = Construct::new();
         battleground_construct::config::tree_trailer::populate_tree_trailer(&mut construct);
@@ -419,8 +431,12 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         let setup_config = battleground_construct::config::cli::command_to_setup(&command)?;
         battleground_construct::config::setup::setup(setup_config)?
     };
+    */
+    let command = battleground_construct::config::cli::parse_args()?;
+    let setup_config = battleground_construct::config::cli::command_to_setup(&command)?;
+        // battleground_construct::config::setup::setup(setup_config)?
 
-    let viewer = ConstructViewer::new(construct);
+    let viewer = ConstructViewer::new(setup_config);
 
     // view loop consumes the viewer... :|
     viewer.view_loop();
