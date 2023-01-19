@@ -59,6 +59,8 @@ struct ConstructViewer {
     window: Window,
 
     construct: Option<Construct>,
+    setup: Option<Setup>,
+    setup_changed: bool,
 
     limiter: Limiter,
 
@@ -66,7 +68,7 @@ struct ConstructViewer {
     printed_match_result: bool,
 }
 impl ConstructViewer {
-    pub fn new(setup: Setup) -> Self {
+    pub fn new(construct: Option<Construct>, setup: Option<Setup>) -> Self {
         let window = Window::new(WindowSettings {
             title: "Battleground Construct".to_string(),
             min_size: (640, 480),
@@ -98,13 +100,14 @@ impl ConstructViewer {
 
         let construct_render: ConstructRender = ConstructRender::new();
 
-        let construct = match battleground_construct::config::setup::setup(setup) {
+        /*
+        let construct = match battleground_construct::config::setup::setup(&setup) {
             Ok(construct)=> Some(construct),
             Err(e) => {
                 println!("Failed to setup: {e:?}");
                 None
             }
-        };
+        };*/
 
         ConstructViewer {
             camera,
@@ -114,6 +117,8 @@ impl ConstructViewer {
             control,
             window,
             construct,
+            setup,
+            setup_changed: false,
             limiter,
             construct_render,
             printed_match_result: false,
@@ -146,6 +151,17 @@ impl ConstructViewer {
             );
             self.control
                 .handle_events(&mut self.camera, &mut frame_input.events);
+
+            if self.setup_changed && self.setup.is_some() {
+                self.construct = match battleground_construct::config::setup::setup(self.setup.as_ref().unwrap()) {
+                    Ok(construct)=> Some(construct),
+                    Err(e) => {
+                        println!("Failed to setup: {e:?}");
+                        None
+                    }
+                };
+                self.setup_changed = false;
+            }
 
             let construct = if let Some(ref mut construct) = self.construct {
                 construct
@@ -191,6 +207,14 @@ impl ConstructViewer {
                         ..
                     } => {
                         viewer_state.exiting = true;
+                    }
+                    three_d::Event::KeyPress {
+                        kind: Key::R,
+                        handled: false,
+                        ..
+                    } => {
+                        // Reload the construct.
+                        self.setup_changed = true;
                     }
                     three_d::Event::MousePress {
                         button,
@@ -416,10 +440,10 @@ impl ConstructViewer {
 }
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args = std::env::args().collect::<Vec<String>>();
+    // let args = std::env::args().collect::<Vec<String>>();
 
     // Preserve the trailer...
-    let tree_trailer = args.len() >= 2 && args.get(1).unwrap() == "--tree-trailer";
+    // let tree_trailer = args.len() >= 2 && args.get(1).unwrap() == "--tree-trailer";
 
     /*
     let construct = if tree_trailer {
@@ -434,9 +458,9 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     */
     let command = battleground_construct::config::cli::parse_args()?;
     let setup_config = battleground_construct::config::cli::command_to_setup(&command)?;
-        // battleground_construct::config::setup::setup(setup_config)?
+    let construct = battleground_construct::config::setup::setup(&setup_config)?;
 
-    let viewer = ConstructViewer::new(setup_config);
+    let viewer = ConstructViewer::new(Some(construct), Some(setup_config));
 
     // view loop consumes the viewer... :|
     viewer.view_loop();
@@ -526,6 +550,22 @@ mod wasm32 {
 
         let data = get_data().await;
 
+        use battleground_construct::config::cli::Setup;
+        use battleground_construct::config::specification::ScenarioConfig;
+        let setup_config = if let Ok(data) = data {
+            info!("Found data!");
+            Setup::PlayBytes(data)
+        } else {
+            Setup::Scenario(ScenarioConfig {
+                pre_setup: "playground".to_owned(),
+                ..Default::default()
+            })
+        };
+
+        let construct = battleground_construct::config::setup::setup(&setup_config).unwrap();
+
+        let viewer = super::ConstructViewer::new(Some(construct), Some(setup_config));
+        /*
         let construct = if let Ok(data) = data {
             info!("Found data!");
             battleground_construct::config::setup::setup_playback_slice(&data).unwrap()
@@ -539,6 +579,7 @@ mod wasm32 {
         };
 
         let viewer = super::ConstructViewer::new(construct);
+        */
 
         // view loop consumes the viewer... :|
         viewer.view_loop();

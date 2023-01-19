@@ -23,11 +23,11 @@ impl std::fmt::Display for SetupError {
     }
 }
 
-pub fn setup(config: Setup) -> Result<Construct, Box<dyn std::error::Error>> {
+pub fn setup(config: &Setup) -> Result<Construct, Box<dyn std::error::Error>> {
     match config {
         Setup::Scenario(scenario) => setup_scenario(scenario),
-        Setup::Play(path) => setup_playback_path(&path),
-        Setup::PlayBytes(bytes) => setup_playback_slice(&bytes),
+        Setup::Play(path) => setup_playback_path(path),
+        Setup::PlayBytes(bytes) => setup_playback_slice(bytes),
     }
 }
 
@@ -71,7 +71,7 @@ fn setup_playback_common(
 }
 
 pub fn setup_scenario(
-    config: super::specification::ScenarioConfig,
+    config: &super::specification::ScenarioConfig,
 ) -> Result<Construct, Box<dyn std::error::Error>> {
     let mut construct = Construct::new();
 
@@ -106,7 +106,7 @@ pub fn setup_scenario(
     // Add teams
     let mut team_set = std::collections::HashMap::<String, specification::Team>::new();
     let mut teams = vec![];
-    for team in config.spawn_config.teams {
+    for team in config.spawn_config.teams.iter() {
         let team_id = components::id_generator::generate_id(world);
         let team_entity = world.add_entity();
         let mut team_component =
@@ -125,7 +125,7 @@ pub fn setup_scenario(
     }
 
     // Spawn units
-    for spawn in config.spawn_config.spawns {
+    for spawn in config.spawn_config.spawns.iter() {
         let optional_team_component = if let Some(team_index) = spawn.team {
             let team_entity = teams
                 .get(team_index)
@@ -266,7 +266,7 @@ pub fn setup_scenario(
     };
 
     // Setup match.
-    match config.match_config.mode {
+    match config.match_config.mode.clone() {
         specification::MatchType::None => {}
         specification::MatchType::Domination {
             team_deathmatch_min,
