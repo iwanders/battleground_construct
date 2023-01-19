@@ -7,7 +7,8 @@
 - Move the camera forwards or backwards with the scroll wheel.
 - Select units with the middle mouse button to see what their draw module is drawing. Shift + click allows adding or removing from the selection.
 - Space bar pauses the simulation.
-- Control + q quits the viewer (non-web only) .
+- Reload the scenario with 'r', this is helpful if your units destruct because of an accidental panic during development.
+- Control + q quits the viewer (non-web only).
 
 ## Panels
 

@@ -1,8 +1,7 @@
 use three_d::*;
 
-use battleground_construct::Construct;
 use battleground_construct::config::cli::Setup;
-
+use battleground_construct::Construct;
 
 mod construct_render;
 use construct_render::ConstructRender;
@@ -127,9 +126,7 @@ impl ConstructViewer {
 
     // Consumes the viewer...
     fn view_loop(mut self) {
-
         self.limiter.set_desired_speed(1.0);
-
 
         let mut gui = three_d::GUI::new(&self.context);
 
@@ -153,8 +150,10 @@ impl ConstructViewer {
                 .handle_events(&mut self.camera, &mut frame_input.events);
 
             if self.setup_changed && self.setup.is_some() {
-                self.construct = match battleground_construct::config::setup::setup(self.setup.as_ref().unwrap()) {
-                    Ok(construct)=> Some(construct),
+                self.construct = match battleground_construct::config::setup::setup(
+                    self.setup.as_ref().unwrap(),
+                ) {
+                    Ok(construct) => Some(construct),
                     Err(e) => {
                         println!("Failed to setup: {e:?}");
                         None
@@ -260,7 +259,6 @@ impl ConstructViewer {
                 }
             }
 
-
             let now = time_provider::Instant::now();
             // Run the limiter to update the construct.s
             if construct.can_update() {
@@ -292,14 +290,9 @@ impl ConstructViewer {
                 );
             }
 
-
-
-
             let now = time_provider::Instant::now();
 
-            if let Some((pos, target)) = self
-                .construct_render
-                .camera_view(&self.camera, construct)
+            if let Some((pos, target)) = self.construct_render.camera_view(&self.camera, construct)
             {
                 self.camera.set_view(pos, target, vec3(0.0, 0.0, 1.0));
             }
@@ -565,21 +558,6 @@ mod wasm32 {
         let construct = battleground_construct::config::setup::setup(&setup_config).unwrap();
 
         let viewer = super::ConstructViewer::new(Some(construct), Some(setup_config));
-        /*
-        let construct = if let Ok(data) = data {
-            info!("Found data!");
-            battleground_construct::config::setup::setup_playback_slice(&data).unwrap()
-        } else {
-            info!("No data, setting up the playground!");
-            let mut construct = battleground_construct::Construct::new();
-            battleground_construct::config::default::add_components(&mut construct.world);
-            battleground_construct::config::default::add_systems(&mut construct.systems);
-            battleground_construct::config::playground::populate_dev_world(&mut construct);
-            construct
-        };
-
-        let viewer = super::ConstructViewer::new(construct);
-        */
 
         // view loop consumes the viewer... :|
         viewer.view_loop();
