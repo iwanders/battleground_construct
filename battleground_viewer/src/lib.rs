@@ -470,9 +470,18 @@ mod wasm32 {
     use wasm_bindgen_futures::JsFuture;
     use web_sys::{Blob, UrlSearchParams};
 
+    #[cfg(target_arch = "wasm32")]
+    #[wasm_bindgen]
+    extern "C" {
+        #[wasm_bindgen(js_namespace = window, js_name = get_recording_bytes)]
+        fn get_recording_bytes() -> Uint8Array;
+        #[wasm_bindgen(js_namespace = window, js_name = get_recording_available)]
+        fn get_recording_available() -> bool;
+    }
+
     // https://github.com/rustwasm/wasm-bindgen/issues/1292
 
-    async fn get_data() -> Result<Vec<u8>, JsValue> {
+    async fn _get_data() -> Result<Vec<u8>, JsValue> {
         use web_sys::{Request, RequestInit, RequestMode, Response};
 
         fn get_window() -> Result<web_sys::Window, JsValue> {
@@ -541,13 +550,18 @@ mod wasm32 {
 
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-        let data = get_data().await;
+        // let data = get_data().await;
 
         use battleground_construct::config::cli::Setup;
         use battleground_construct::config::specification::ScenarioConfig;
-        let setup_config = if let Ok(data) = data {
+        info!("get_recording_available: {:?}", get_recording_available());
+        info!("get_recording_bytes: {:?}", get_recording_bytes());
+        let setup_config = if get_recording_available() {
             info!("Found data!");
-            Setup::PlayBytes(data)
+            let array = get_recording_bytes();
+            let mut as_vec = vec![0; array.byte_length() as usize];
+            array.copy_to(&mut as_vec[..]);
+            Setup::PlayBytes(as_vec)
         } else {
             Setup::Scenario(ScenarioConfig {
                 pre_setup: "playground".to_owned(),

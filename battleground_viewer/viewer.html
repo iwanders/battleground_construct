@@ -4,6 +4,67 @@
   </head>
   <body>
     <canvas style="position: absolute;top:0;bottom: 0;left: 0;right: 0;margin:auto;"></canvas>
+    <p id="status_text"></p>
+    <script>
+    var collected = 0;
+    var total_length = 0;
+    var recording_bytes = new Uint8Array();
+    var recording_available = false;
+
+    function get_recording_available() {
+      return recording_available;
+    }
+    function get_recording_bytes() {
+      return recording_bytes;
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const recording_url = urlParams.get('url');
+    if (recording_url) {
+      fetch(recording_url)
+      .then((response) => {
+        const reader = response.body.getReader();
+        total_length = response.headers.get('Content-Length');
+        return new ReadableStream({
+          start(controller) {
+            return pump();
+            function pump() {
+              return reader.read().then(({ done, value }) => {
+                collected += value.length;
+                console.log(collected, total_length);
+                document.getElementById("status_text").innerHTML = `Downloading recording: ${collected}/${total_length}  (${((collected / total_length) * 100.0).toFixed(2)} %)`;
+
+                // Couldn't really figure out how to elegantly collect bytes using streams, so we use this here.
+                // Odd way of concatenating, but seems to be the only way.
+                var combined = new Uint8Array(recording_bytes.length + value.length);
+                combined.set(recording_bytes);
+                combined.set(value, recording_bytes.length);
+                recording_bytes = combined;
+                if (combined.length == total_length) {
+                  recording_available = true;
+                }
+
+                // When no more data needs to be consumed, close the stream
+                if (done) {
+                  // never seem to get here? Possibly because the stream never completes?
+                  console.log("done");
+                  recording_available = true;
+                  controller.close();
+                  return;
+                }
+                // Enqueue the next data chunk into our target stream
+                controller.enqueue(value);
+                return pump();
+              });
+            }
+          }
+        })
+      })
+      .then((foo) => console.log(foo))
+      .catch((err) => console.error(err));
+    }
+    </script>
+
     <!-- Note the usage of `type=module` here as this is an ES6 module -->
     <script type="module">
       // Use ES module import syntax to import functionality from the module
