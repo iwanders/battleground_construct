@@ -13,42 +13,41 @@ impl UnitControl for DiffDriveCapturable {
         // Determine where a capturable is.
         // While we are not there, drive there.
         let team = interface
-            .get_i32(common::MODULE_TEAM, REG_TEAM_TEAMID)
-            .unwrap();
+            .get_i32(common::MODULE_TEAM, REG_TEAM_TEAMID)?;
 
         let count = interface
             .get_i32(
                 common::MODULE_OBJECTIVES,
                 REG_OBJECTIVES_CAPTURE_POINT_COUNT,
-            )
-            .unwrap();
+            )?;
         for i in 0..count as u32 {
             let x = interface
                 .get_f32(
                     common::MODULE_OBJECTIVES,
-                    REG_OBJECTIVES_CAPTURE_POINT_COUNT + 1 + (i * 4),
-                )
-                .unwrap();
+                    REG_OBJECTIVES_CAPTURE_POINT_START + (i * REG_OBJECTIVES_CAPTURE_POINT_STRIDE) + REG_OBJECTIVES_CAPTURE_POINT_OFFSET_X,
+                )?;
             let y = interface
                 .get_f32(
                     common::MODULE_OBJECTIVES,
-                    REG_OBJECTIVES_CAPTURE_POINT_COUNT + 1 + (i * 4) + 1,
-                )
-                .unwrap();
+                    REG_OBJECTIVES_CAPTURE_POINT_START + (i * REG_OBJECTIVES_CAPTURE_POINT_STRIDE) + REG_OBJECTIVES_CAPTURE_POINT_OFFSET_Y,
+                )?;
             let owner = interface
                 .get_i32(
                     common::MODULE_OBJECTIVES,
-                    REG_OBJECTIVES_CAPTURE_POINT_COUNT + 1 + (i * 4) + 2,
-                )
-                .unwrap();
-
+                    REG_OBJECTIVES_CAPTURE_POINT_START + (i * REG_OBJECTIVES_CAPTURE_POINT_STRIDE) + REG_OBJECTIVES_CAPTURE_POINT_OFFSET_OWNER,
+                )?;
+            let radius = interface
+                .get_f32(
+                    common::MODULE_OBJECTIVES,
+                    REG_OBJECTIVES_CAPTURE_POINT_START + (i * REG_OBJECTIVES_CAPTURE_POINT_STRIDE) + REG_OBJECTIVES_CAPTURE_POINT_OFFSET_RADIUS,
+                )?;
             // We don't own this point, lets go there.
             if owner != team {
-                diff_drive_util::drive_to_goal((x, y, 0.0), interface);
+                diff_drive_util::drive_to_goal((x, y, None), interface, radius)?;
                 return Ok(());
             }
         }
-        diff_drive_util::stop(interface);
+        diff_drive_util::stop(interface)?;
         Ok(())
     }
 }
