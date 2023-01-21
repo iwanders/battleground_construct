@@ -87,11 +87,26 @@ impl Drawable for ArtilleryBarrel {
                 material,
             })
         }
-        // Cool... but now we have empty tubes... insert this super ugly cuboid to fill them for now.
+        // Cool... but now we have empty tubes... insert two panes to make them appear black.
         res.push(Element {
-            transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+            transform: Mat4::from_translation(Vec3::new((battery_length - 0.2) / 2.0, 0.0, 0.0)),
             primitive: Primitive::Cuboid(Cuboid {
-                length: battery_length - 0.2,
+                length: panel_thickness,
+                height: battery_height - panel_thickness,
+                width: battery_width - panel_thickness,
+            }),
+            material: Color {
+                r: 10,
+                g: 10,
+                b: 10,
+                a: 255,
+            }
+            .into(),
+        });
+        res.push(Element {
+            transform: Mat4::from_translation(Vec3::new(-(battery_length - 0.2) / 2.0, 0.0, 0.0)),
+            primitive: Primitive::Cuboid(Cuboid {
+                length: panel_thickness,
                 height: battery_height - panel_thickness,
                 width: battery_width - panel_thickness,
             }),
