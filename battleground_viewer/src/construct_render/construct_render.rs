@@ -112,8 +112,8 @@ impl ConstructRender {
 
     fn add_grid(&mut self) {
         // Grid goes into overlay for now...
-        let lower = -10isize;
-        let upper = 10;
+        let lower = -15isize;
+        let upper = 15;
         let main = 5;
         let t = 0.01;
         let sub_color = Color::new_opaque(150, 150, 150);

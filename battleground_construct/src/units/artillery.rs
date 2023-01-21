@@ -11,6 +11,19 @@ use serde::{Deserialize, Serialize};
 
 use battleground_unit_control::units::artillery::*;
 
+const ARTILLERY_SPLASH_DAMAGE: f32 = 0.10;
+const ARTILLERY_SPLASH_RADIUS: f32 = 2.0;
+const ARTILLERY_TRACK_WIDTH: f32 = 1.75;
+const ARTILLERY_INTER_GUN_DURATION: f32 = 0.3;
+const ARTILLERY_BATTERY_RELOAD: f32 = 5.0;
+// 16 slots in total.
+// bursts out 1.0 damage in 10 shots, which is 3 seconds.
+
+const ARTILLERY_DIFF_DRIVE_MAX_SPEED_MAGNITUDE: f32 = 0.4;
+const ARTILLERY_RADAR_RANGE: f32 = 10.0;
+
+const ARTILLERY_RADAR_REFLECTIVITY: f32 = 0.75;
+
 pub struct ArtillerySpawnConfig {
     pub x: f32,
     pub y: f32,
@@ -160,8 +173,14 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     world.add_component(base_entity, Pose::from_se2(config.x, config.y, config.yaw));
     let diff_drive_config = components::differential_drive_base::DifferentialDriveConfig {
         track_width: ARTILLERY_TRACK_WIDTH,
-        wheel_velocity_bounds: (-0.5, 0.5),
-        wheel_acceleration_bounds: Some((-0.5, 0.5)),
+        wheel_velocity_bounds: (
+            -ARTILLERY_DIFF_DRIVE_MAX_SPEED_MAGNITUDE,
+            ARTILLERY_DIFF_DRIVE_MAX_SPEED_MAGNITUDE,
+        ),
+        wheel_acceleration_bounds: Some((
+            -ARTILLERY_DIFF_DRIVE_MAX_SPEED_MAGNITUDE,
+            ARTILLERY_DIFF_DRIVE_MAX_SPEED_MAGNITUDE,
+        )),
     };
     super::common::add_common_diff_drive(
         world,
@@ -186,7 +205,12 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         body_entity,
         config.radio_config,
     );
-    super::common::add_common_body(world, &register_interface, 0.75, body_entity);
+    super::common::add_common_body(
+        world,
+        &register_interface,
+        ARTILLERY_RADAR_REFLECTIVITY,
+        body_entity,
+    );
 
     // -----   Turret
     let revolute_config = components::revolute::RevoluteConfig {
@@ -288,7 +312,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     );
 
     let radar_config = components::radar::RadarConfig {
-        range_max: 10.0,
+        range_max: ARTILLERY_RADAR_RANGE,
         detection_angle_yaw: 10.0f32.to_radians(),
         detection_angle_pitch: 180f32.to_radians(),
         // range_max: 70.0,
@@ -422,14 +446,6 @@ pub fn add_artillery_passive(world: &mut World, unit: &UnitArtillery) {
     );
     world.add_component(unit.health_bar_entity, Parent::new(unit.base_entity));
 }
-
-const ARTILLERY_SPLASH_DAMAGE: f32 = 0.10;
-const ARTILLERY_SPLASH_RADIUS: f32 = 2.0;
-const ARTILLERY_TRACK_WIDTH: f32 = 1.75;
-const ARTILLERY_INTER_GUN_DURATION: f32 = 0.3;
-const ARTILLERY_BATTERY_RELOAD: f32 = 5.0;
-// 16 slots in total.
-// bursts out 1.0 damage in 10 shots, which is 3 seconds.
 
 pub fn artillery_battery_config() -> components::gun_battery::GunBatteryConfig {
     let mut poses = vec![];

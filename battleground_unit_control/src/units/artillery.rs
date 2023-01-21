@@ -32,4 +32,4 @@ pub const ARTILLERY_DIM_RADAR_JOINT_TO_RADAR_X: f32 = 0.4;
 pub const ARTILLERY_DIM_BARREL_TO_MUZZLE_X: f32 = 0.4;
 
 /// Velocity at which cannon bullets exit the ARTILLERY's muzzle.
-pub const ARTILLERY_PARAM_MUZZLE_VELOCITY: f32 = 10.0;
+pub const ARTILLERY_PARAM_MUZZLE_VELOCITY: f32 = 12.5;

@@ -10,6 +10,9 @@ use serde::{Deserialize, Serialize};
 
 use battleground_unit_control::units::tank::*;
 
+const TANK_RADAR_REFLECTIVITY: f32 = 0.5;
+const TANK_RADAR_RANGE: f32 = 30.0;
+
 pub struct TankSpawnConfig {
     pub x: f32,
     pub y: f32,
@@ -166,7 +169,12 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         body_entity,
         config.radio_config,
     );
-    super::common::add_common_body(world, &register_interface, 0.5, body_entity);
+    super::common::add_common_body(
+        world,
+        &register_interface,
+        TANK_RADAR_REFLECTIVITY,
+        body_entity,
+    );
 
     // -----   Turret
     let revolute_config = components::revolute::RevoluteConfig {
@@ -257,7 +265,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         revolute_config,
     );
     let radar_config = components::radar::RadarConfig {
-        range_max: 20.0,
+        range_max: TANK_RADAR_RANGE,
         detection_angle_yaw: 10.0f32.to_radians(),
         detection_angle_pitch: 180f32.to_radians(),
         // range_max: 70.0,
