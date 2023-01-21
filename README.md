@@ -24,7 +24,7 @@ cd battleground_construct
   into a stand-alone `.wasm` file:
 ```
 cd unit_control_example
-cargo build --release
+cargo build --release --target wasm32-unknown-unknown
 ```
 
 4. In a new terminal go to the [battleground_viewer](battleground_viewer) directory. From there run
@@ -36,17 +36,20 @@ cargo run --release --features unit_control_wasm -- scenario tutorial_01_driving
 ```
 5. The battleground viewer should start and you should see a red tank unit rotate in place.
 6. In the [example](unit_control_example)'s code, search for `MODULE_TANK_DIFF_DRIVE` and make your
-  tank drive forwards. Recompile the controller by running `cargo build --release` from its directory.
+  tank drive forwards. Recompile the controller by running
+  `cargo build --release --target wasm32-unknown-unknown` from its directory.
   Restart the viewer with the same command as before, it does not have to recompile so this should
   be quick this time.
 7. The tank should drive into the capture area for the point and fireworks should indicate your
    victory.
-8. One can also make changes while keeping the viewer running; each time you recompile the `.wasm`
+
+
+- One can also make changes while keeping the viewer running; each time you recompile the `.wasm`
    file, the viewer automatically reloads it without requiring a restart. You can restart the
    scenario by pressing the `r` key in the viewer, this can be helpful during development.
-9. Further tutorial files are available, in the `battleground_viewer` directory, run 
+- Further tutorial files are available, in the `battleground_viewer` directory, run 
    `cargo r --release --features unit_control_wasm -- scenario list` for a list of tutorials.
-10. To get a feel what a match looks like with very naive unit controllers, run
+- To get a feel what a match looks like with very naive unit controllers, run
    `cargo run --release --features unit_control_wasm -- scenario match_demo`.
 
 ## Running and viewing
@@ -185,10 +188,10 @@ to prevent that.
 
 - For your unit controller, run `cargo doc` and look for the [battleground_unit_control](./battleground_unit_control) crate.
 - The [unit_control_example](./unit_control_example) crate holds an example controller that compiles to a `.wasm` module.
+- The [battleground_viewer](./battleground_viewer) crate allows you to visualise the construct, see its readme for instructions.
 - The [battleground_construct](./battleground_construct) crate contains all simulation / game logic.
 - The [engine](./engine) holds the [entity component systems](https://en.wikipedia.org/wiki/Entity_component_system)
   on which the game runs.
-- The [battleground_viewer](./battleground_viewer) crate allows you to visualise the construct.
 - The [unit_control_builtin](./unit_control_builtin) crate holds the very limited built in controllers.
 - The [unit_control_wasm](./unit_control_wasm) crate implements a unit controller that loads a `.wasm` module, it is an optional dependency of battleground_construct.
 
