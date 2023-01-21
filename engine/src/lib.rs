@@ -33,8 +33,10 @@ pub mod prelude {
 
 use std::cell::Ref;
 
-/// The world contains the entities and components. Components are ordered by type id, then keyed
-/// on entity. The world does allow interior mutability, but only on different component types.
+/// The world contains the entities and components.
+///
+/// Components are ordered by type id, then keyed on entity.
+/// The world does allow interior mutability, but only on different component types.
 /// Performing two mutable iterations over the same component type is a logic error and will panic.
 /// Performing a non-mutable borrow and a mutable borrow on the same component type is also a logic
 /// error and will panic.

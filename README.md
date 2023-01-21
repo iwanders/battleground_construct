@@ -44,13 +44,16 @@ cargo run --release --features unit_control_wasm -- scenario tutorial_01_driving
    victory.
 
 
-- One can also make changes while keeping the viewer running; each time you recompile the `.wasm`
-   file, the viewer automatically reloads it without requiring a restart. You can restart the
-   scenario by pressing the `r` key in the viewer, this can be helpful during development.
-- Further tutorial files are available, in the `battleground_viewer` directory, run 
-   `cargo r --release --features unit_control_wasm -- scenario list` for a list of tutorials.
-- To get a feel what a match looks like with very naive unit controllers, run
-   `cargo run --release --features unit_control_wasm -- scenario match_demo`.
+One can also make changes while keeping the viewer running; each time you recompile the `.wasm`
+file, the viewer automatically reloads it without requiring a restart. You can restart the
+scenario by pressing the `r` key in the viewer, this can be helpful during development.
+
+Further tutorial files are available, in the `battleground_viewer` directory, run 
+`cargo r --release --features unit_control_wasm -- scenario list` for a list of tutorials.
+
+
+To get a feel what a match looks like with very naive unit controllers, run
+`cargo run --release --features unit_control_wasm -- scenario match_demo`.
 
 ## Running and viewing
 
@@ -188,7 +191,7 @@ to prevent that.
 
 - For your unit controller, run `cargo doc` and look for the [battleground_unit_control](./battleground_unit_control) crate.
 - The [unit_control_example](./unit_control_example) crate holds an example controller that compiles to a `.wasm` module.
-- The [battleground_viewer](./battleground_viewer) crate allows you to visualise the construct, see its readme for instructions.
+- The [battleground_viewer](./battleground_viewer) crate allows you to visualise the construct (native and in the browser), see its readme for instructions.
 - The [battleground_construct](./battleground_construct) crate contains all simulation / game logic.
 - The [engine](./engine) holds the [entity component systems](https://en.wikipedia.org/wiki/Entity_component_system)
   on which the game runs.
