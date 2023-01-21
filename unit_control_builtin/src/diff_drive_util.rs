@@ -24,7 +24,11 @@ mod test {
     }
 }
 
-pub fn drive_to_goal(goal: (f32, f32, Option<f32>), interface: &mut dyn Interface, tolerance: f32) -> Result<(), Box<dyn std::error::Error>>{
+pub fn drive_to_goal(
+    goal: (f32, f32, Option<f32>),
+    interface: &mut dyn Interface,
+    tolerance: f32,
+) -> Result<(), Box<dyn std::error::Error>> {
     // Get the current position.
     let x = interface.get_f32(common::MODULE_GPS, REG_GPS_X)?;
     let y = interface.get_f32(common::MODULE_GPS, REG_GPS_Y)?;
@@ -67,21 +71,17 @@ pub fn drive_to_goal(goal: (f32, f32, Option<f32>), interface: &mut dyn Interfac
     let left = left_steer * steer_r + left_forward * (1.0 - steer_r);
     let right = right_steer * steer_r + right_forward * (1.0 - steer_r);
 
-    interface
-        .set_f32(tank::MODULE_TANK_DIFF_DRIVE, REG_DIFF_DRIVE_LEFT_CMD, left)?;
-    interface
-        .set_f32(
-            tank::MODULE_TANK_DIFF_DRIVE,
-            REG_DIFF_DRIVE_RIGHT_CMD,
-            right,
-        )?;
+    interface.set_f32(tank::MODULE_TANK_DIFF_DRIVE, REG_DIFF_DRIVE_LEFT_CMD, left)?;
+    interface.set_f32(
+        tank::MODULE_TANK_DIFF_DRIVE,
+        REG_DIFF_DRIVE_RIGHT_CMD,
+        right,
+    )?;
     Ok(())
 }
 
-pub fn stop(interface: &mut dyn Interface)  -> Result<(), Box<dyn std::error::Error>>{
-    interface
-        .set_f32(tank::MODULE_TANK_DIFF_DRIVE, REG_DIFF_DRIVE_LEFT_CMD, 0.0)?;
-    interface
-        .set_f32(tank::MODULE_TANK_DIFF_DRIVE, REG_DIFF_DRIVE_RIGHT_CMD, 0.0)?;
+pub fn stop(interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::Error>> {
+    interface.set_f32(tank::MODULE_TANK_DIFF_DRIVE, REG_DIFF_DRIVE_LEFT_CMD, 0.0)?;
+    interface.set_f32(tank::MODULE_TANK_DIFF_DRIVE, REG_DIFF_DRIVE_RIGHT_CMD, 0.0)?;
     Ok(())
 }
