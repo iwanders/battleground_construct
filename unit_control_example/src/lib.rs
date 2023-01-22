@@ -7,7 +7,7 @@ use battleground_unit_control::{Interface, UnitControl};
 // Modules hold their register index constants, they always contain the module name so they
 // can be imported without collisions.
 use battleground_unit_control::modules::{
-    clock::*, differential_drive::*, draw::*, gps::*, revolute::*, unit::*,
+    clock::*, controller::*, differential_drive::*, draw::*, gps::*, revolute::*, unit::*,
 };
 // Module constants live in common and their respective units.
 use battleground_unit_control::units::{common, tank, UnitType};
@@ -29,6 +29,12 @@ impl UnitControl for UnitControlExample {
     fn update(&mut self, interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::Error>> {
         // This gets the current time.
         let t = interface.get_f32(common::MODULE_CLOCK, REG_CLOCK_ELAPSED)?;
+
+        while (true) {
+            let fuel =
+                interface.get_i32(common::MODULE_CONTROLLER, REG_CONTROLLER_WASM_CPU_FUEL_LEFT)?;
+            log::info!("fuel {fuel:?}");
+        }
 
         // This can be used to retrieve the unit type.
         let unit_type = interface.get_i32(common::MODULE_UNIT, REG_UNIT_UNIT_TYPE)?;

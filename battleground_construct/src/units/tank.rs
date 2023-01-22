@@ -289,14 +289,18 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
         battleground_unit_control::units::common::MODULE_DRAW,
         display::draw_module::DrawModule::new(control_entity),
     );
-    world.add_component(control_entity, register_interface);
-
     // Finally, add the controller.
     let rc = components::unit_controller::UnitControlStorage::new(config.controller);
     world.add_component(
         control_entity,
         components::unit_controller::UnitController::new(rc),
     );
+    register_interface.get_mut().add_module(
+        "controller",
+        battleground_unit_control::units::common::MODULE_CONTROLLER,
+        components::unit_controller::UnitControllerModule::new(control_entity),
+    );
+    world.add_component(control_entity, register_interface);
 
     // Add the group, unit and team membership to each of the component.
     // Unit must be first in the group!

@@ -152,11 +152,19 @@ impl Module {
                     reg
                 }
             };
-
-            self.registers.insert(reg_id, reg);
+            self.add_register(reg_id, reg);
         }
         Ok(())
     }
+
+    pub fn add_register(&mut self, register_id: RegisterId, value: Register) {
+        self.registers.insert(register_id, value);
+    }
+
+    pub fn remove_register(&mut self, register_id: RegisterId) {
+        self.registers.remove(&register_id);
+    }
+
     pub fn write_interface(
         &self,
         module: ModuleId,
@@ -278,7 +286,7 @@ impl RegisterInterface {
         }
     }
 
-    fn get_module_mut(&mut self, module: ModuleId) -> Result<&mut Module, BoxedError> {
+    pub fn get_module_mut(&mut self, module: ModuleId) -> Result<&mut Module, BoxedError> {
         if let Some(m) = self.modules.get_mut(&module) {
             Ok(m)
         } else {

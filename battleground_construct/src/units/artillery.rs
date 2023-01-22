@@ -336,7 +336,6 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         battleground_unit_control::units::common::MODULE_DRAW,
         display::draw_module::DrawModule::new(control_entity),
     );
-    world.add_component(control_entity, register_interface);
 
     // Finally, add the controller.
     let rc = components::unit_controller::UnitControlStorage::new(config.controller);
@@ -344,6 +343,12 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
         control_entity,
         components::unit_controller::UnitController::new(rc),
     );
+    register_interface.get_mut().add_module(
+        "controller",
+        battleground_unit_control::units::common::MODULE_CONTROLLER,
+        components::unit_controller::UnitControllerModule::new(control_entity),
+    );
+    world.add_component(control_entity, register_interface);
 
     // Add the group, unit and team membership to each of the component.
     let group = Group::from(&artillery_group_entities);

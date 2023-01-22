@@ -10,16 +10,20 @@ pub mod tank;
 pub mod common {
     /// Module identifier for the clock module.
     pub const MODULE_CLOCK: u32 = 0x0100;
+
+    /// Module identifier for the controller module.
+    pub const MODULE_CONTROLLER: u32 = 0x0200;
+
     /// Module identifier for the objectives module.
-    pub const MODULE_OBJECTIVES: u32 = 0x0200;
+    pub const MODULE_OBJECTIVES: u32 = 0x0300;
     /// Module identifier for the unit's team module.
-    pub const MODULE_TEAM: u32 = 0x0300;
+    pub const MODULE_TEAM: u32 = 0x0400;
     /// Module identifier for the unit's unit module.
-    pub const MODULE_UNIT: u32 = 0x0400;
+    pub const MODULE_UNIT: u32 = 0x0500;
     /// Module identifier for the unit's radio transmitter module.
-    pub const MODULE_RADIO_TRANSMITTER: u32 = 0x0500;
+    pub const MODULE_RADIO_TRANSMITTER: u32 = 0x0600;
     /// Module identifier for the unit's radio receiver module.
-    pub const MODULE_RADIO_RECEIVER: u32 = 0x0600;
+    pub const MODULE_RADIO_RECEIVER: u32 = 0x0700;
 
     /// Module identifier for the unit's gps module.
     pub const MODULE_GPS: u32 = 0x1700;
