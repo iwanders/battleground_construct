@@ -71,6 +71,10 @@ impl ConstructRender {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.effects.clear();
+    }
+
     fn renderables(&self) -> Vec<&dyn RenderableGeometry> {
         let mut result = vec![
             &self.static_meshes as &dyn RenderableGeometry,

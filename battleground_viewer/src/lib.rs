@@ -150,6 +150,7 @@ impl ConstructViewer {
                 .handle_events(&mut self.camera, &mut frame_input.events);
 
             if self.setup_changed && self.setup.is_some() {
+                self.construct_render.reset();
                 self.construct = match battleground_construct::config::setup::setup(
                     self.setup.as_ref().unwrap(),
                 ) {
