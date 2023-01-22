@@ -75,5 +75,13 @@ impl UnitModule for UnitControllerModule {
             battleground_unit_control::modules::controller::REG_CONTROLLER_UPDATE_INTERVAL,
             Register::new_f32("update_interval", value),
         );
+        registers.insert(
+            battleground_unit_control::modules::controller::REG_CONTROLLER_WASM_CPU_FUEL_ENABLED,
+            Register::new_i32("wasm_cpu_fuel_enabled", 0),
+        );
+        registers.insert(
+            battleground_unit_control::modules::controller::REG_CONTROLLER_WASM_CPU_FUEL_LEFT,
+            Register::new_i32("wasm_cpu_fuel_left", i32::MAX),
+        );
     }
 }

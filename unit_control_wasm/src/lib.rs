@@ -27,6 +27,7 @@ pub struct UnitControlWasmConfig {
 struct State {
     register_interface: RegisterInterface,
     control_update_error: String,
+    using_fuel: bool,
 }
 
 pub struct UnitControlWasm {
@@ -82,6 +83,7 @@ impl UnitControlWasm {
         let state_object = State {
             register_interface: RegisterInterface::new(),
             control_update_error: Default::default(),
+            using_fuel,
         };
         let mut store = Store::new(&engine, state_object);
 
@@ -279,15 +281,23 @@ impl UnitControlWasm {
             "wasm_interface_get_i32",
             |mut caller: Caller<'_, State>, module: u32, register: u32| -> i32 {
                 let mut res = caller.data().register_interface.get_i32(module, register);
-                use battleground_unit_control as buc;
-                use buc::modules::controller::REG_CONTROLLER_WASM_CPU_FUEL_LEFT;
-                use buc::units::common::MODULE_CONTROLLER;
-                if module == MODULE_CONTROLLER && register == REG_CONTROLLER_WASM_CPU_FUEL_LEFT {
-                    let z = caller.consume_fuel(0);
-                    res = match z {
-                        Ok(remaining_fuel) => Ok(remaining_fuel as i32),
-                        Err(_f) => Ok(i32::MAX),
-                    };
+                if caller.data().using_fuel {
+                    use battleground_unit_control as buc;
+                    use buc::modules::controller::*;
+                    use buc::units::common::MODULE_CONTROLLER;
+                    if module == MODULE_CONTROLLER && register == REG_CONTROLLER_WASM_CPU_FUEL_LEFT
+                    {
+                        let z = caller.consume_fuel(0);
+                        res = match z {
+                            Ok(remaining_fuel) => Ok(remaining_fuel as i32),
+                            Err(_f) => Ok(i32::MAX),
+                        };
+                    }
+                    if module == MODULE_CONTROLLER
+                        && register == REG_CONTROLLER_WASM_CPU_FUEL_ENABLED
+                    {
+                        res = Ok(1);
+                    }
                 }
                 send_pod_result(caller, res, 0)
             },
@@ -495,33 +505,6 @@ impl UnitControlWasm {
 
         Ok(false)
     }
-
-    pub fn add_wasm_control_registers(
-        interface: &mut RegisterInterface,
-        fuel_per_update: Option<u64>,
-    ) {
-        use battleground_unit_control::register_interface::Register;
-
-        if let Ok(control_module) =
-            interface.get_module_mut(battleground_unit_control::units::common::MODULE_CONTROLLER)
-        {
-            control_module.add_register(battleground_unit_control::modules::controller::REG_CONTROLLER_WASM_CPU_FUEL_ENABLED, Register::new_i32("fuel_enabled",fuel_per_update.is_some() as i32));
-            if let Some(fuel) = fuel_per_update {
-                control_module.add_register(battleground_unit_control::modules::controller::REG_CONTROLLER_WASM_CPU_FUEL_LEFT, Register::new_i32("fuel_left",fuel as i32));
-            }
-        }
-    }
-
-    pub fn remove_wasm_control_registers(interface: &mut RegisterInterface) {
-        if let Ok(control_module) =
-            interface.get_module_mut(battleground_unit_control::units::common::MODULE_CONTROLLER)
-        {
-            control_module.remove_register(battleground_unit_control::modules::controller::REG_CONTROLLER_WASM_CPU_FUEL_ENABLED);
-            control_module.remove_register(
-                battleground_unit_control::modules::controller::REG_CONTROLLER_WASM_CPU_FUEL_LEFT,
-            );
-        }
-    }
 }
 
 impl UnitControl for UnitControlWasm {
@@ -576,11 +559,6 @@ impl UnitControl for UnitControlWasm {
             .data_mut()
             .register_interface
             .read_interface(interface)?;
-        // Inject custom controller registers for this interface.
-        Self::add_wasm_control_registers(
-            &mut self.store.data_mut().register_interface,
-            self.control_config.fuel_per_update,
-        );
 
         // execute the controller.
         let wasm_controller_update = self
@@ -632,8 +610,6 @@ impl UnitControl for UnitControlWasm {
             }
         }
 
-        // remove the injected wasm control registers.
-        Self::remove_wasm_control_registers(&mut self.store.data_mut().register_interface);
         // Write back the register interface.
         self.store
             .data()

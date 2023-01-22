@@ -30,21 +30,23 @@ impl UnitControl for UnitControlExample {
         // This gets the current time.
         let t = interface.get_f32(common::MODULE_CLOCK, REG_CLOCK_ELAPSED)?;
 
-        while (true) {
-            let fuel =
-                interface.get_i32(common::MODULE_CONTROLLER, REG_CONTROLLER_WASM_CPU_FUEL_LEFT)?;
-            log::info!("fuel {fuel:?}");
-        }
-
         // This can be used to retrieve the unit type.
         let unit_type = interface.get_i32(common::MODULE_UNIT, REG_UNIT_UNIT_TYPE)?;
         let unit_type: UnitType = (unit_type as u32).try_into()?;
 
         // Every 15 seconds, dump all registers and what unit we are.
         if (self.last_print + 15.0) < t {
+            let fuel =
+                interface.get_i32(common::MODULE_CONTROLLER, REG_CONTROLLER_WASM_CPU_FUEL_LEFT)?;
+            log::info!("cpu fuel at start {fuel:?}");
+
             self.last_print = t;
             log::info!("I'm a {unit_type:?}");
             dump_registers(interface)?;
+
+            let fuel =
+                interface.get_i32(common::MODULE_CONTROLLER, REG_CONTROLLER_WASM_CPU_FUEL_LEFT)?;
+            log::info!("cpu fuel at end {fuel:?}");
         }
 
         // If we are a tank, lets rotate in place to show how to command the tracks.
