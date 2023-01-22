@@ -36,7 +36,7 @@ pub struct RadioTransmitterConfig {
 impl Default for RadioTransmitterConfig {
     fn default() -> Self {
         Self {
-            transmit_range_max: 30.0,
+            transmit_range_max: 40.0,
             transmit_interval: 0.01,
             message_size_limit: 32,
             message_count_limit: 16,
