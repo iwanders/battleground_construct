@@ -56,9 +56,8 @@ impl ConstructRender {
         let glow_primitives =
             PrimitiveGeometry::new(|pass| matches!(pass, RenderPass::GlowSources));
         let fence_primitives = PrimitiveGeometry::new(|pass| matches!(pass, RenderPass::Fences));
-        let overlay_primitives = PrimitiveGeometry::new(|pass| {
-            matches!(pass, RenderPass::BaseScene | RenderPass::NonGlowDepths)
-        });
+        let overlay_primitives =
+            PrimitiveGeometry::new(|pass| matches!(pass, RenderPass::BaseSceneOverlay));
 
         ConstructRender {
             static_meshes,
@@ -510,6 +509,16 @@ impl ConstructRender {
                     el.primitive,
                     element_transform,
                     material.color.to_color(),
+                );
+                let mut m = material;
+                m.color.a = m.color.a / 4;
+                self.overlay_primitives.add_primitive(
+                    BatchProperties::BasicBehind {
+                        is_transparent: m.color.a != 255,
+                    },
+                    el.primitive,
+                    element_transform,
+                    m.color.to_color(),
                 );
             }
         }

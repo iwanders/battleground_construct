@@ -55,6 +55,7 @@ impl BatchKey for Primitive {
 pub enum BatchProperties {
     None,
     Basic { is_transparent: bool },
+    BasicBehind { is_transparent: bool },
 }
 
 impl BatchKey for BatchProperties {
@@ -69,6 +70,10 @@ impl BatchKey for BatchProperties {
             }
             BatchProperties::Basic { is_transparent } => {
                 2usize.hash(state);
+                is_transparent.hash(state);
+            }
+            BatchProperties::BasicBehind { is_transparent } => {
+                3usize.hash(state);
                 is_transparent.hash(state);
             }
         }
@@ -110,6 +115,12 @@ impl BatchMaterial for PhysicalMaterial {
             BatchProperties::Basic {
                 is_transparent: true,
             } => PhysicalMaterial::new_transparent,
+            BatchProperties::BasicBehind {
+                is_transparent: false,
+            } => PhysicalMaterial::new_opaque,
+            BatchProperties::BasicBehind {
+                is_transparent: true,
+            } => PhysicalMaterial::new_transparent,
         };
         material_new(
             context,
@@ -131,6 +142,7 @@ impl BatchMaterial for ColorMaterial {
         batch_properties: BatchProperties,
         color: Color,
     ) -> ColorMaterial {
+        let mut render_behind = false;
         let material_new = match batch_properties {
             BatchProperties::None => ColorMaterial::new_opaque,
             BatchProperties::Basic {
@@ -139,13 +151,29 @@ impl BatchMaterial for ColorMaterial {
             BatchProperties::Basic {
                 is_transparent: true,
             } => ColorMaterial::new_transparent,
+            BatchProperties::BasicBehind {
+                is_transparent: false,
+            } => {
+                render_behind = true;
+                ColorMaterial::new_opaque
+            }
+            BatchProperties::BasicBehind {
+                is_transparent: true,
+            } => {
+                render_behind = true;
+                ColorMaterial::new_transparent
+            }
         };
-        material_new(
+        let mut res = material_new(
             context,
             &CpuMaterial {
                 albedo: color,
                 ..Default::default()
             },
-        )
+        );
+        if render_behind {
+            res.render_states.depth_test = three_d::core::render_states::DepthTest::Greater;
+        }
+        res
     }
 }

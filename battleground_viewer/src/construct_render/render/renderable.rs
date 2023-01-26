@@ -7,6 +7,8 @@ pub enum RenderPass {
     ShadowMaps,
     /// All normal geometry that is present in the scene and
     BaseScene,
+    /// Overlay on top of BaseScene
+    BaseSceneOverlay,
     /// A depth buffer render for all non-emissives, so emissive glow is blocked by things in front of it
     NonGlowDepths,
     /// Geometry used to produce emissive glows

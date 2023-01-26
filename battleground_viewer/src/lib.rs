@@ -313,6 +313,7 @@ impl ConstructViewer {
             /* The rendering steps will look something like this:
                 0) Prerender shadow maps
                 A1) Scene render (targets framebuffer)
+                A2) Overlay on top of scenes.
                 B1) Render depth of non-emissives into depth texture
                 B2) Render emissives into color texture (use B1 as depth texture)
                 C) Render fence meshes to framebuffer (with bound depth texture)
@@ -334,7 +335,13 @@ impl ConstructViewer {
                     &self.construct_render.objects(RenderPass::BaseScene),
                     &[&self.ambient_light, &self.directional_light],
                 );
-
+            screen
+                // .clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0))
+                .render(
+                    &self.camera,
+                    &self.construct_render.objects(RenderPass::BaseSceneOverlay),
+                    &[&self.ambient_light, &self.directional_light],
+                );
             // B1) Render depth buffer with non-emissives
             let mut depth_texture = DepthTexture2D::new::<f32>(
                 &self.context,
