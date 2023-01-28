@@ -1,5 +1,6 @@
 use super::primitives::*;
 use crate::components;
+use crate::util::cgmath::prelude::*;
 use engine::prelude::*;
 
 pub use battleground_unit_control::modules::draw::LineSegment;
@@ -13,14 +14,21 @@ impl DrawKinematicChainRevolute {
     pub fn update(
         &mut self,
         pre_transform: Option<&components::pose::PreTransform>,
+        pose: Option<&components::pose::Pose>,
         revolute: &components::revolute::Revolute,
     ) {
         let width = 0.05;
         let mut m = Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0));
         self.elements.clear();
 
+        if let Some(p) = pose {
+            m = m * p.transform().to_inv_h();
+        }
+
         if let Some(p) = pre_transform {
-            m = p.transform().to_inv_h();
+            m = m * p.transform().to_inv_h();
+            // }
+
             self.elements.push(Element {
                 transform: m,
                 primitive: Primitive::Line(Line {
@@ -37,13 +45,13 @@ impl DrawKinematicChainRevolute {
                     }
                     .into(),
                 ),
-            }); use crate::util::cgmath::InvertHomogeneous;
+            });
             // m = p.transform().to_inv_h();
             m = Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0));
         }
 
         // now, we want to draw a circle at m, in the plane of the revolute direction.
-        fn add_ricle(elements: &mut Vec<Element>, transform: Mat4, r: f32, width: f32) {
+        fn add_circle(elements: &mut Vec<Element>, transform: Mat4, r: f32, width: f32) {
             let max = 31;
             for i in 1..max {
                 let prev = i - 1;
@@ -70,7 +78,10 @@ impl DrawKinematicChainRevolute {
                 });
             }
         }
-        add_ricle(&mut self.elements, m, 0.5, width);
+        let joint_ortho = m * Vec3::new(0.0, 0.0, 1.0)
+            .rotation_from(revolute.axis())
+            .to_h();
+        add_circle(&mut self.elements, joint_ortho, 0.10, width * 0.2);
     }
 }
 impl Component for DrawKinematicChainRevolute {}

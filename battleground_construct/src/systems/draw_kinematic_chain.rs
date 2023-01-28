@@ -1,5 +1,5 @@
 use super::components::differential_drive_base::DifferentialDriveBase;
-use super::components::pose::PreTransform;
+use super::components::pose::{Pose, PreTransform};
 use super::components::revolute::Revolute;
 use super::display::draw_kinematic_chain_diff_drive::DrawKinematicChainDiffDrive;
 use super::display::draw_kinematic_chain_revolute::DrawKinematicChainRevolute;
@@ -26,7 +26,9 @@ impl System for DrawKinematicChain {
             {
                 let pre = world.component::<PreTransform>(entity);
                 let pre = pre.as_deref();
-                draw_revolute.update(pre, &base);
+                let pose = world.component::<Pose>(entity);
+                let pose = pose.as_deref();
+                draw_revolute.update(pre, pose, &base);
             } else {
                 add_revolute.push(entity);
             }

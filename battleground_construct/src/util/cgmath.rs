@@ -9,6 +9,7 @@ pub mod prelude {
     pub use super::EuclideanNorm;
     pub use super::HomogenousTruncate;
     pub use super::InvertHomogeneous;
+    pub use super::RotationFrom;
     pub use super::ToAdjoint;
     pub use super::ToCross; // ToSkew?
     pub use super::ToHomogenous;
@@ -17,7 +18,6 @@ pub mod prelude {
     pub use super::ToRotation;
     pub use super::ToRotationH;
     pub use super::ToTranslation;
-    pub use super::RotationFrom;
     pub use super::Twist;
     pub use cgmath::Matrix;
     pub use cgmath::MetricSpace;
@@ -240,7 +240,6 @@ impl<S: BaseFloat> ToRollPitchYaw<S> for cgmath::Matrix3<S> {
         cgmath::Vector3::<S>::new(roll, pitch, yaw)
     }
 }
-
 
 pub trait RotationFrom<S: BaseFloat> {
     fn rotation_from(&self, v: cgmath::Vector3<S>) -> cgmath::Matrix3<S>;

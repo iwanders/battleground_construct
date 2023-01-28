@@ -16,7 +16,7 @@ impl DrawKinematicChainDiffDrive {
     ) {
         let track_width = diff_drive.track_width();
         let wheel_line_length = track_width / 4.0;
-        let width = 0.05;
+        let width = 0.025;
         let m = Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0));
         self.elements.clear();
 

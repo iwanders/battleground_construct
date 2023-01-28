@@ -61,6 +61,10 @@ impl Revolute {
         self.config.axis = axis;
     }
 
+    pub fn axis(&self) -> cgmath::Vector3<f32> {
+        self.config.axis
+    }
+
     pub fn set_velocity_cmd(&mut self, velocity: f32) {
         self.velocity_cmd =
             velocity.clamp(self.config.velocity_bounds.0, self.config.velocity_bounds.1);
