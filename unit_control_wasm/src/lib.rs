@@ -595,16 +595,16 @@ impl UnitControl for UnitControlWasm {
                 if e.is::<wasmtime::Trap>() {
                     let trap = e.downcast::<wasmtime::Trap>()?;
                     return Err(Box::<dyn std::error::Error>::from(
-                        format!("trap: {:?}", trap).as_str(),
+                        format!("trap: {trap:?}").as_str(),
                     ));
                 } else if e.is::<wasmtime::WasmBacktrace>() {
                     let bt = e.downcast::<wasmtime::WasmBacktrace>()?;
                     return Err(Box::<dyn std::error::Error>::from(
-                        format!("bt: {:?}", bt).as_str(),
+                        format!("bt: {bt:?}").as_str(),
                     ));
                 } else {
                     return Err(Box::<dyn std::error::Error>::from(
-                        format!("{:?}", e).as_str(),
+                        format!("{e:?}").as_str(),
                     ));
                 }
             }

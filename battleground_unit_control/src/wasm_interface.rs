@@ -79,7 +79,7 @@ pub mod controller {
             Ok(_) => UPDATE_OK,
             Err(e) => {
                 // Well... ehm, lets just exfiltrate something...
-                let v = format!("{:?}", e);
+                let v = format!("{e:?}");
                 let bytes_v = v.as_bytes();
                 unsafe { wasm_update_error(bytes_v.as_ptr(), bytes_v.len() as u32) };
                 UPDATE_ERR
@@ -370,7 +370,7 @@ mod panic {
     /// then halts execution.
     fn handle_panic(info: &PanicInfo) -> ! {
         // For now, just dump it on the logger, deal with it.
-        let z = format!("PANIC - {}", info);
+        let z = format!("PANIC - {info}");
         unsafe {
             super::logging::wasm_log_record(&z.as_bytes()[0] as *const u8, z.len() as u32);
         }

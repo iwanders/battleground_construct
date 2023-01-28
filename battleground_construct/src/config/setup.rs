@@ -97,7 +97,7 @@ pub fn setup_scenario(
             super::playground::populate_dev_world(&mut construct);
         }
         v => {
-            return Err(format!("pre_setup of {} is not supported", v).into());
+            return Err(format!("pre_setup of {v} is not supported").into());
         }
     }
 
@@ -188,14 +188,14 @@ pub fn setup_scenario(
                 }
                 specification::ControllerType::FromControlConfig{ name } => {
                     let subcontrol = control_config.get(name).ok_or_else(|| {
-                        SetupError::new(&format!("requested controller {} not found", name))})?;
+                        SetupError::new(&format!("requested controller {name} not found"))})?;
                     controller_type_to_control(subcontrol, control_config, team_config)?
                 }
                 specification::ControllerType::TeamController{ name } => {
                     let subcontrol = team_config.get(name).ok_or_else(|| {
-                        SetupError::new(&format!("controlller for requested team {} not found", name))})?;
+                        SetupError::new(&format!("controlller for requested team {name} not found"))})?;
                     let subcontrol = subcontrol.controller.as_ref().ok_or_else(||{
-                        SetupError::new(&format!("team {} doesn't have a controller but is necessary", name))})?;
+                        SetupError::new(&format!("team {name} doesn't have a controller but is necessary"))})?;
                     controller_type_to_control(subcontrol, control_config, team_config)?
                 }
             })

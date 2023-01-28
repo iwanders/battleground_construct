@@ -216,7 +216,10 @@ impl Default for OverlayMaterial {
 
 impl From<Color> for OverlayMaterial {
     fn from(color: Color) -> OverlayMaterial {
-        OverlayMaterial { color, behind_color: color.modified_alpha(color.a / 2) }
+        OverlayMaterial {
+            color,
+            behind_color: color.modified_alpha(color.a / 2),
+        }
     }
 }
 

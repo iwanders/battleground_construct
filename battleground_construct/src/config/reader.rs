@@ -70,8 +70,7 @@ pub fn get_builtin_scenario(
         }
     }
     Err(Box::<dyn std::error::Error>::from(format!(
-        "builtin scenario named {} does not exist",
-        desired_name
+        "builtin scenario named {desired_name} does not exist",
     )))
 }
 

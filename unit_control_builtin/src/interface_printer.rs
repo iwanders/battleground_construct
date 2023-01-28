@@ -7,11 +7,11 @@ impl UnitControl for InterfacePrinter {
             println!("- {}", interface.module_name(m_index).unwrap());
             let mut v = interface.registers(m_index).unwrap();
             v.sort(); // sort for display.
-            println!(" Registers: {:x?}:", v);
+            println!(" Registers: {v:x?}:");
             for r_index in v {
                 print!("  ({})", interface.register_name(m_index, r_index).unwrap());
                 let register_type = interface.register_type(m_index, r_index).unwrap();
-                print!("[{:?}]", register_type);
+                print!("[{register_type:?}]");
                 match register_type {
                     RegisterType::I32 => {
                         let v = interface.get_i32(m_index, r_index).unwrap();

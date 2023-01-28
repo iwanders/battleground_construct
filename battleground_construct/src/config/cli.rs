@@ -324,7 +324,7 @@ fn controller_config(
                 }
                 _ => {
                     return Err(make_error(
-                        format!("{} is unhandled for wasm", field_key).as_str(),
+                        format!("{field_key} is unhandled for wasm").as_str(),
                     ));
                 }
             }
@@ -334,7 +334,7 @@ fn controller_config(
         }
         _ => {
             return Err(make_error(
-                format!("cannot handle control {} overrides", control_type).as_str(),
+                format!("cannot handle control {control_type} overrides").as_str(),
             ));
         }
     }
@@ -364,8 +364,7 @@ fn apply_config(
                     .position(|x| x.name.to_lowercase() == key.to_lowercase())
                     .ok_or_else(|| {
                         make_error(&format!(
-                            "couldnt find team name {}; {:?}",
-                            key,
+                            "couldnt find team name {key}; {:?}",
                             section.iter().map(|x| &x.name).collect::<Vec<_>>()
                         ))
                     })?;
@@ -389,7 +388,7 @@ fn apply_config(
                     }
                     unhandled_key => {
                         return Err(make_error(
-                            format!("cannot handle team attribute {} overrides", unhandled_key)
+                            format!("cannot handle team attribute {unhandled_key} overrides")
                                 .as_str(),
                         ));
                     }
@@ -402,7 +401,7 @@ fn apply_config(
                     .ok_or_else(|| make_error("expected control key"))?;
                 let control = section
                     .get_mut(key)
-                    .ok_or_else(|| make_error(format!("key {} didnt exist", key).as_str()))?;
+                    .ok_or_else(|| make_error(format!("key {key} didnt exist").as_str()))?;
 
                 controller_config(&tokens.collect::<Vec<_>>().join(":"), control, None)?;
             }
