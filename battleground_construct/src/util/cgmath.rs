@@ -17,6 +17,7 @@ pub mod prelude {
     pub use super::ToRotation;
     pub use super::ToRotationH;
     pub use super::ToTranslation;
+    pub use super::RotationFrom;
     pub use super::Twist;
     pub use cgmath::Matrix;
     pub use cgmath::MetricSpace;
@@ -237,6 +238,25 @@ impl<S: BaseFloat> ToRollPitchYaw<S> for cgmath::Matrix3<S> {
         let pitch = (-self.x.z).atan2((self.y.z.powi(2) + self.z.z.powi(2)).sqrt());
         let yaw = self.x.y.atan2(self.x.x);
         cgmath::Vector3::<S>::new(roll, pitch, yaw)
+    }
+}
+
+
+pub trait RotationFrom<S: BaseFloat> {
+    fn rotation_from(&self, v: cgmath::Vector3<S>) -> cgmath::Matrix3<S>;
+}
+
+// https://math.stackexchange.com/a/3262315
+impl<S: BaseFloat> RotationFrom<S> for cgmath::Vector3<S> {
+    fn rotation_from(&self, v: cgmath::Vector3<S>) -> cgmath::Matrix3<S> {
+        use cgmath::SquareMatrix;
+        let u = *self;
+        let w = u.cross(v);
+        let k = w.to_cross();
+        let d = w.euclid_norm();
+        let vu = v.euclid_norm() * u.euclid_norm();
+        let a = (d / vu).asin();
+        cgmath::Matrix3::<S>::identity() + (k * a.sin()) + k * k * (S::one() - a.cos())
     }
 }
 
