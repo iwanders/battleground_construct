@@ -332,12 +332,15 @@ impl ConstructRender {
             },
         );
 
+        // Debug like things.
         self.component_to_meshes::<display::debug_box::DebugBox>(construct);
         self.component_to_meshes::<display::debug_sphere::DebugSphere>(construct);
         self.component_to_meshes::<display::debug_lines::DebugLines>(construct);
         self.component_to_meshes::<display::debug_elements::DebugElements>(construct);
         self.component_to_meshes::<display::debug_hit_collection::DebugHitCollection>(construct);
+        self.component_to_meshes::<display::draw_kinematic_chain_diff_drive::DrawKinematicChainDiffDrive>(construct);
 
+        // Other components.
         self.component_to_meshes::<display::flag::Flag>(construct);
         self.component_to_meshes::<display::display_control_point::DisplayControlPoint>(construct);
 

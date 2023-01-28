@@ -96,6 +96,11 @@ pub fn setup_scenario(
         "playground" => {
             super::playground::populate_dev_world(&mut construct);
         }
+        "draw_kinematic_chain" => {
+            construct
+                .systems
+                .add_system(Box::new(systems::draw_kinematic_chain::DrawKinematicChain {}));
+        }
         v => {
             return Err(format!("pre_setup of {v} is not supported").into());
         }

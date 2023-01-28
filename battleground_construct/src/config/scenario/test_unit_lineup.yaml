@@ -1,3 +1,5 @@
+pre_setup: draw_kinematic_chain
+
 spawn_config:
   teams:
     -

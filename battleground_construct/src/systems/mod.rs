@@ -5,6 +5,7 @@ pub mod clock;
 pub mod destroy;
 pub mod display_capture_flag;
 pub mod display_tank_tracks;
+pub mod draw_kinematic_chain;
 pub mod expiry_check;
 pub mod function_pose;
 pub mod gun_battery_trigger;
