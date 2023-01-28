@@ -18,9 +18,9 @@ impl DrawKinematicChainRevolute {
         let width = 0.05;
         let mut m = Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0));
         self.elements.clear();
-        println!("Update");
 
         if let Some(p) = pre_transform {
+            m = p.transform().to_inv_h();
             self.elements.push(Element {
                 transform: m,
                 primitive: Primitive::Line(Line {
@@ -37,8 +37,9 @@ impl DrawKinematicChainRevolute {
                     }
                     .into(),
                 ),
-            });
-            m = *p.transform();
+            }); use crate::util::cgmath::InvertHomogeneous;
+            // m = p.transform().to_inv_h();
+            m = Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0));
         }
 
         // now, we want to draw a circle at m, in the plane of the revolute direction.
