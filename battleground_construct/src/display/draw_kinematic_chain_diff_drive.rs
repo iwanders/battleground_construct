@@ -10,9 +10,10 @@ pub struct DrawKinematicChainDiffDrive {
 }
 
 impl DrawKinematicChainDiffDrive {
-
-
-    pub fn update(&mut self, diff_drive: &components::differential_drive_base::DifferentialDriveBase) {
+    pub fn update(
+        &mut self,
+        diff_drive: &components::differential_drive_base::DifferentialDriveBase,
+    ) {
         let track_width = diff_drive.track_width();
         let wheel_line_length = track_width / 4.0;
         let width = 0.05;
@@ -38,11 +39,11 @@ impl DrawKinematicChainDiffDrive {
             ),
         });
 
-        self.elements.push(Element{
+        self.elements.push(Element {
             transform: m,
             primitive: Primitive::Line(Line {
                 p0: (wheel_line_length / 2.0, -track_width / 2.0, 0.0),
-                p1: (-wheel_line_length / 2.0,-track_width / 2.0, 0.0),
+                p1: (-wheel_line_length / 2.0, -track_width / 2.0, 0.0),
                 width,
             }),
             material: Material::OverlayMaterial(
@@ -55,10 +56,10 @@ impl DrawKinematicChainDiffDrive {
                 .into(),
             ),
         });
-        self.elements.push(Element{
+        self.elements.push(Element {
             transform: m,
             primitive: Primitive::Line(Line {
-                p0: (wheel_line_length / 2.0,  track_width / 2.0, 0.0),
+                p0: (wheel_line_length / 2.0, track_width / 2.0, 0.0),
                 p1: (-wheel_line_length / 2.0, track_width / 2.0, 0.0),
                 width,
             }),
