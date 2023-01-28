@@ -1,8 +1,9 @@
+use super::components;
 use super::components::differential_drive_base::DifferentialDriveBase;
 use super::components::pose::{Pose, PreTransform};
 use super::components::revolute::Revolute;
 use super::display::draw_kinematic_chain_diff_drive::DrawKinematicChainDiffDrive;
-use super::display::draw_kinematic_chain_revolute::DrawKinematicChainRevolute;
+use super::display::draw_kinematic_chain_link::DrawKinematicChainLink;
 use engine::prelude::*;
 
 pub struct DrawKinematicChain {}
@@ -19,26 +20,45 @@ impl System for DrawKinematicChain {
             }
         }
 
-        let mut add_revolute = vec![];
-        for (entity, base) in world.component_iter::<Revolute>() {
-            if let Some(mut draw_revolute) =
-                world.component_mut::<DrawKinematicChainRevolute>(entity)
+        let mut add_chain_link = vec![];
+
+        for (entity, _parent) in world.component_iter::<components::parent::Parent>() {
+            if let Some(mut draw_chain_link) = world.component_mut::<DrawKinematicChainLink>(entity)
             {
+                let pose = if let Some(p) = world.component::<Pose>(entity) {
+                    *p
+                } else {
+                    Pose::default()
+                };
                 let pre = world.component::<PreTransform>(entity);
                 let pre = pre.as_deref();
-                let pose = world.component::<Pose>(entity);
-                let pose = pose.as_deref();
-                draw_revolute.update(pre, pose, &base);
+
+                let revolute = world.component::<Revolute>(entity);
+                let revolute = revolute.as_deref();
+
+                let radar = world.component::<components::radar::Radar>(entity);
+                let radar = radar.as_deref();
+                let cannon = world.component::<components::cannon::Cannon>(entity);
+                let cannon = cannon.as_deref();
+                let gun_battery = world.component::<components::gun_battery::GunBattery>(entity);
+                let gun_battery = gun_battery.as_deref();
+                if radar.is_some()
+                    || cannon.is_some()
+                    || gun_battery.is_some()
+                    || revolute.is_some()
+                {
+                    draw_chain_link.update(&pose, pre, revolute);
+                }
             } else {
-                add_revolute.push(entity);
+                add_chain_link.push(entity);
             }
         }
 
         for v in add_diff_drive {
             world.add_component(v, DrawKinematicChainDiffDrive::default());
         }
-        for v in add_revolute {
-            world.add_component(v, DrawKinematicChainRevolute::default());
+        for v in add_chain_link {
+            world.add_component(v, DrawKinematicChainLink::default());
         }
     }
 }
