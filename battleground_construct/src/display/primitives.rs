@@ -131,6 +131,14 @@ impl Color {
             a: self.a.saturating_add(rhs.a),
         }
     }
+    pub fn modified_alpha(&self, new_alpha: u8) -> Self {
+        Color {
+            r: self.r,
+            g: self.g,
+            b: self.b,
+            a: new_alpha,
+        }
+    }
 }
 
 impl From<(u8, u8, u8)> for Color {
@@ -194,19 +202,21 @@ impl Default for FenceMaterial {
 #[derive(Deserialize, Serialize, Debug, Copy, Clone, PartialEq, Eq)]
 pub struct OverlayMaterial {
     pub color: Color,
+    pub behind_color: Color,
 }
 
 impl Default for OverlayMaterial {
     fn default() -> Self {
         OverlayMaterial {
             color: Color::MAGENTA,
+            behind_color: Color::MAGENTA,
         }
     }
 }
 
 impl From<Color> for OverlayMaterial {
     fn from(color: Color) -> OverlayMaterial {
-        OverlayMaterial { color }
+        OverlayMaterial { color, behind_color: color.modified_alpha(color.a / 2) }
     }
 }
 

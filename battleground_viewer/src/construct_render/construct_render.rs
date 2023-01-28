@@ -510,15 +510,13 @@ impl ConstructRender {
                     element_transform,
                     material.color.to_color(),
                 );
-                let mut m = material;
-                m.color.a = m.color.a / 4;
                 self.overlay_primitives.add_primitive(
                     BatchProperties::BasicBehind {
-                        is_transparent: m.color.a != 255,
+                        is_transparent: material.behind_color.a != 255,
                     },
                     el.primitive,
                     element_transform,
-                    m.color.to_color(),
+                    material.behind_color.to_color(),
                 );
             }
         }
