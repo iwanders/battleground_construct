@@ -576,18 +576,16 @@ mod wasm32 {
             let mut as_vec = vec![0; array.byte_length() as usize];
             array.copy_to(&mut as_vec[..]);
             Setup::PlayBytes(as_vec)
+        } else if let Some(scenario) = get_scenario()? {
+            Setup::Scenario(
+                battleground_construct::config::reader::get_builtin_scenario(&scenario)
+                    .map_err(|v| format!("{v:?}"))?,
+            )
         } else {
-            if let Some(scenario) = get_scenario()? {
-                Setup::Scenario(
-                    battleground_construct::config::reader::get_builtin_scenario(&scenario)
-                        .map_err(|v| format!("{v:?}"))?,
-                )
-            } else {
-                Setup::Scenario(ScenarioConfig {
-                    pre_setup: "playground".to_owned(),
-                    ..Default::default()
-                })
-            }
+            Setup::Scenario(ScenarioConfig {
+                pre_setup: "playground".to_owned(),
+                ..Default::default()
+            })
         };
 
         let construct = battleground_construct::config::setup::setup(&setup_config).unwrap();
