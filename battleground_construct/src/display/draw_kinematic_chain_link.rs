@@ -68,12 +68,12 @@ impl DrawKinematicChainLink {
                 }),
                 material,
             });
-            let (ox, oy) = (-rot).sin_cos();
+            let (oy, ox) = (-rot).sin_cos();
             elements.push(Element {
                 transform,
                 primitive: Primitive::Line(Line {
                     p0: (0.0, 0.0, 0.0),
-                    p1: (r * oy, r * ox , 0.0),
+                    p1: (r * ox, r * oy , 0.0),
                     width,
                 }),
                 material,

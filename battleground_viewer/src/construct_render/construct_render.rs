@@ -342,6 +342,9 @@ impl ConstructRender {
         self.component_to_meshes::<display::draw_kinematic_chain_link::DrawKinematicChainLink>(
             construct,
         );
+        self.component_to_meshes::<display::draw_kinematic_chain_effector::DrawKinematicChainEffector>(
+            construct,
+        );
 
         // Other components.
         self.component_to_meshes::<display::flag::Flag>(construct);

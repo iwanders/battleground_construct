@@ -194,8 +194,8 @@ fn primitive_transform(primitive: &Primitive, transform: &Mat4) -> Mat4 {
             let p1 = (transform * p1_original.to_h()).to_translation();
             let rotation = Quat::from_arc(vec3(1.0, 0.0, 0.0), (p1 - p0).normalize(), None);
             // zero out the roll, we should only need pitch and yaw.
-            use battleground_construct::util::cgmath::ToRollPitchYaw;
             use battleground_construct::util::cgmath::RollPitchYawToHomogenous;
+            use battleground_construct::util::cgmath::ToRollPitchYaw;
 
             let mut rpy = <_ as Into<Mat4>>::into(rotation).to_rpy();
             rpy.x = 0.0;

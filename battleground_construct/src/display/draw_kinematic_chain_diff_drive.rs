@@ -20,6 +20,15 @@ impl DrawKinematicChainDiffDrive {
         let m = Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0));
         self.elements.clear();
 
+        let material = Material::OverlayMaterial(
+                Color {
+                    r: 128,
+                    g: 128,
+                    b: 128,
+                    a: 255,
+                }
+                .into(),
+            );
         // bar between the wheels.
         self.elements.push(Element {
             transform: m,
@@ -28,15 +37,7 @@ impl DrawKinematicChainDiffDrive {
                 p1: (0.0, track_width / 2.0, 0.0),
                 width,
             }),
-            material: Material::OverlayMaterial(
-                Color {
-                    r: 255,
-                    g: 255,
-                    b: 0,
-                    a: 255,
-                }
-                .into(),
-            ),
+            material,
         });
 
         self.elements.push(Element {
@@ -46,15 +47,7 @@ impl DrawKinematicChainDiffDrive {
                 p1: (-wheel_line_length / 2.0, -track_width / 2.0, 0.0),
                 width,
             }),
-            material: Material::OverlayMaterial(
-                Color {
-                    r: 255,
-                    g: 255,
-                    b: 0,
-                    a: 255,
-                }
-                .into(),
-            ),
+            material,
         });
         self.elements.push(Element {
             transform: m,
@@ -63,15 +56,7 @@ impl DrawKinematicChainDiffDrive {
                 p1: (-wheel_line_length / 2.0, track_width / 2.0, 0.0),
                 width,
             }),
-            material: Material::OverlayMaterial(
-                Color {
-                    r: 255,
-                    g: 255,
-                    b: 0,
-                    a: 255,
-                }
-                .into(),
-            ),
+            material,
         });
     }
 }

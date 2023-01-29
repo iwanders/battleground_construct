@@ -4,6 +4,7 @@ use super::components::pose::{Pose, PreTransform};
 use super::components::revolute::Revolute;
 use super::display::draw_kinematic_chain_diff_drive::DrawKinematicChainDiffDrive;
 use super::display::draw_kinematic_chain_link::DrawKinematicChainLink;
+use super::display::draw_kinematic_chain_effector::DrawKinematicChainEffector;
 use engine::prelude::*;
 
 pub struct DrawKinematicChain {}
@@ -54,11 +55,40 @@ impl System for DrawKinematicChain {
             }
         }
 
+        let mut add_effector = vec![];
+        for (entity, cannon) in world.component_iter::<components::cannon::Cannon>() {
+            if let Some(mut effector) = world.component_mut::<DrawKinematicChainEffector>(entity) {
+                effector.update_cannon(&cannon);
+            } else {
+                add_effector.push(entity);
+            }
+        }
+        
+        for (entity, radar) in world.component_iter::<components::radar::Radar>() {
+            if let Some(mut effector) = world.component_mut::<DrawKinematicChainEffector>(entity) {
+                effector.update_radar(&radar);
+            } else {
+                add_effector.push(entity);
+            }
+        }
+        
+        for (entity, gun_battery) in world.component_iter::<components::gun_battery::GunBattery>() {
+            if let Some(mut effector) = world.component_mut::<DrawKinematicChainEffector>(entity) {
+                effector.update_gun_battery(&gun_battery);
+            } else {
+                add_effector.push(entity);
+            }
+        }
+        
+
         for v in add_diff_drive {
             world.add_component(v, DrawKinematicChainDiffDrive::default());
         }
         for v in add_chain_link {
             world.add_component(v, DrawKinematicChainLink::default());
+        }
+        for v in add_effector {
+            world.add_component(v, DrawKinematicChainEffector::default());
         }
     }
 }

@@ -56,6 +56,13 @@ impl Radar {
         self.reflections.clone()
     }
 
+    pub fn detection_angle_yaw(&self) -> f32 {
+        self.detection_angle_yaw
+    }
+    pub fn detection_angle_pitch(&self) -> f32 {
+        self.detection_angle_pitch
+    }
+
     pub fn update_reflections(&mut self, radar_pose: &Mat4, reflectors: &[(Mat4, f32)]) {
         use crate::util::cgmath::prelude::*;
         self.reflections.clear();

@@ -9,6 +9,7 @@ pub mod debug_sphere;
 pub mod deconstructor;
 pub mod display_control_point;
 pub mod draw_kinematic_chain_diff_drive;
+pub mod draw_kinematic_chain_effector;
 pub mod draw_kinematic_chain_link;
 pub mod draw_module;
 pub mod fireworks;
