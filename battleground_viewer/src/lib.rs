@@ -487,14 +487,20 @@ mod wasm32 {
         fn get_recording_available() -> bool;
     }
 
-    // https://github.com/rustwasm/wasm-bindgen/issues/1292
+    fn get_window() -> Result<web_sys::Window, JsValue> {
+        web_sys::window().ok_or_else(|| JsValue::from_str("couldn't get window"))
+    }
+
+    fn get_scenario() -> Result<Option<String>, JsValue> {
+        let location_origin = get_window()?.location().search()?;
+        let url_params = UrlSearchParams::new_with_str(&location_origin)?;
+        Ok(url_params.get("scenario"))
+    }
 
     async fn _get_data() -> Result<Vec<u8>, JsValue> {
+        // https://github.com/rustwasm/wasm-bindgen/issues/1292
         use web_sys::{Request, RequestInit, RequestMode, Response};
 
-        fn get_window() -> Result<web_sys::Window, JsValue> {
-            web_sys::window().ok_or_else(|| JsValue::from_str("couldn't get window"))
-        }
         // Fetch the recording.
         let mut opts = RequestInit::new();
         opts.method("GET");
@@ -571,10 +577,17 @@ mod wasm32 {
             array.copy_to(&mut as_vec[..]);
             Setup::PlayBytes(as_vec)
         } else {
-            Setup::Scenario(ScenarioConfig {
-                pre_setup: "playground".to_owned(),
-                ..Default::default()
-            })
+            if let Some(scenario) = get_scenario()? {
+                Setup::Scenario(
+                    battleground_construct::config::reader::get_builtin_scenario(&scenario)
+                        .map_err(|v| format!("{v:?}"))?,
+                )
+            } else {
+                Setup::Scenario(ScenarioConfig {
+                    pre_setup: "playground".to_owned(),
+                    ..Default::default()
+                })
+            }
         };
 
         let construct = battleground_construct::config::setup::setup(&setup_config).unwrap();

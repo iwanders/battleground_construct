@@ -53,11 +53,18 @@ Visit the webserver that was just started at [http://localhost:8000/viewer.html]
 Opening this should by default open the scenario `playground`, this is a dummy scenario that is
 mainly used during development.
 
+### Recordings
 Recordings can be loaded by adding the `url` parameter like so:
 [http://localhost:8000/viewer.html?url=recording.bin](http://localhost:8000/viewer.html?url=recording.bin)
 , this would try to load recording accessed through `http://localhost:8000/recording.bin`,
 `url=foo/recording.bin` would access `http://localhost:8000/foo/recording.bin`, so a relative path
 from the host.
 
-The viewer only gets created when the entire recording has been downloaded, so it may look like it
-is stuck, but it is just downloading the file before starting the viewer.
+The viewer only gets created when the entire recording has been downloaded, a progress indicator shows the
+download progress of the recording.
+
+### Other scenarios
+Scenario's can be accessed with the `scenario` parameter;
+- [http://localhost:8000/viewer.html?scenario=unit_lineup](http://localhost:8000/viewer.html?scenario=unit_lineup) to view the unit lineup.
+- [http://localhost:8000/viewer.html?scenario=match_2v2](http://localhost:8000/viewer.html?scenario=match_2v2) Demo 2v2 match with builtin controllers.
+- [http://localhost:8000/viewer.html?scenario=match_3v3](http://localhost:8000/viewer.html?scenario=match_3v3) Demo 3v3 match with builtin controllers.
