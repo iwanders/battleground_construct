@@ -17,17 +17,14 @@ impl DrawKinematicChainLink {
         pre_transform: Option<&components::pose::PreTransform>,
         revolute: Option<&components::revolute::Revolute>,
     ) {
-        let width = 0.05;
+        let width = 0.01;
         let mut m = Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0));
         self.elements.clear();
 
-        // if let Some(p) = pose {
         m = m * pose.transform().to_inv_h();
-        // }
 
         if let Some(p) = pre_transform {
             m = m * p.transform().to_inv_h();
-            // }
 
             self.elements.push(Element {
                 transform: m,
@@ -51,8 +48,36 @@ impl DrawKinematicChainLink {
         }
 
         // now, we want to draw a circle at m, in the plane of the revolute direction.
-        fn add_circle(elements: &mut Vec<Element>, transform: Mat4, r: f32, width: f32) {
+        fn add_circle(elements: &mut Vec<Element>, transform: Mat4, r: f32, width: f32, rot: f32) {
             let max = 31;
+            let material = Material::OverlayMaterial(
+                    Color {
+                        r: 255,
+                        g: 255,
+                        b: 0,
+                        a: 255,
+                    }
+                    .into(),
+                );
+            elements.push(Element {
+                transform,
+                primitive: Primitive::Line(Line {
+                    p0: (r * 0.75 , 0.0, 0.0),
+                    p1: (r, 0.0, 0.0),
+                    width,
+                }),
+                material,
+            });
+            let (ox, oy) = (-rot).sin_cos();
+            elements.push(Element {
+                transform,
+                primitive: Primitive::Line(Line {
+                    p0: (0.0, 0.0, 0.0),
+                    p1: (r * oy, r * ox , 0.0),
+                    width,
+                }),
+                material,
+            });
             for i in 1..max {
                 let prev = i - 1;
                 let pp = (prev as f32 / (max - 1) as f32) * std::f32::consts::PI * 2.0;
@@ -66,15 +91,7 @@ impl DrawKinematicChainLink {
                         p1: (nx * r, ny * r, 0.0),
                         width,
                     }),
-                    material: Material::OverlayMaterial(
-                        Color {
-                            r: 255,
-                            g: 255,
-                            b: 0,
-                            a: 255,
-                        }
-                        .into(),
-                    ),
+                    material,
                 });
             }
         }
@@ -82,7 +99,7 @@ impl DrawKinematicChainLink {
             let joint_ortho = m * Vec3::new(0.0, 0.0, 1.0)
                 .rotation_from(revolute.axis())
                 .to_h();
-            add_circle(&mut self.elements, joint_ortho, 0.10, width * 0.2);
+            add_circle(&mut self.elements, joint_ortho, 0.10, width, revolute.position());
         }
     }
 }
