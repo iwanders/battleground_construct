@@ -23,4 +23,4 @@ spawn_config:
       team: 0
       unit: Artillery
       controller:
-        type: Idle
+        type: SwivelShoot

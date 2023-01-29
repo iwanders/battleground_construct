@@ -28,7 +28,7 @@ fn load_yaml_config(
     }
 }
 
-static BUILTINS_SCENARIO: [(&str, &[u8]); 11] = [
+static BUILTINS_SCENARIO: [(&str, &[u8]); 12] = [
     ("test", include_bytes!("scenario/test.yaml")),
     ("playground", b"pre_setup: playground\n"),
     (
@@ -58,6 +58,7 @@ static BUILTINS_SCENARIO: [(&str, &[u8]); 11] = [
     ("match_2v2", include_bytes!("scenario/match_2v2.yaml")),
     ("match_3v3", include_bytes!("scenario/match_3v3.yaml")),
     ("match_demo", include_bytes!("scenario/match_demo.yaml")),
+    ("unit_lineup", include_bytes!("scenario/unit_lineup.yaml")),
 ];
 
 pub fn get_builtin_scenario(

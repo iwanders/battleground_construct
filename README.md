@@ -122,7 +122,8 @@ other values; look around in the [source](battleground_construct) code.
 
 ### Units
 
-Currently, there are two unit types.
+Currently, there are two unit types. The `unit_lineup` scenario contains the units and visualises
+the kinematic chain.
 
 ### Tank
 <img align="right" width="25%" src="./media/unit_tank.png">
@@ -133,7 +134,8 @@ points.
 
 The vehicle has a differential drive base. The turret rotation joint is located exactly above the
 differential drive base. There is a rigid member between the turret joint and the barrel joint.
-The radar is located exactly above the turret joint.
+The radar is located exactly above the turret joint. A visualisation of the kinematic chain can be
+found in this [image](./media/unit_tank_kinematic_chain.png).
 
 
 ### Artillery
@@ -146,7 +148,8 @@ have better radars to get the most out of this unit.
 
 The vehicle has a differential drive base. The turret rotation joint is located exactly above the
 differential drive base. Exactly above the turret joint is the barrel joint. The radar joint is
-located above the turret joint. There is a rigid member between the radar joint and the radar.
+located above the turret joint. There is a rigid member between the radar joint and the radar. A
+visualisation of the kinematic chain can be found in this [image](./media/unit_artillery_kinematic_chain.png).
 
 
 ## Game rules
