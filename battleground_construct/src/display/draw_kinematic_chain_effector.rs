@@ -40,7 +40,7 @@ impl DrawKinematicChainEffector {
         let m = Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0));
         self.elements.clear();
 
-        for pose in (0..guns.gun_count()).map(|i| guns.gun_pose(i)).flatten() {
+        for pose in (0..guns.gun_count()).filter_map(|i| guns.gun_pose(i)) {
             // Simple bar pointing out from the cannon.
             use crate::util::cgmath::{ToHomogenous, ToTranslation};
             let s = pose.to_translation();
