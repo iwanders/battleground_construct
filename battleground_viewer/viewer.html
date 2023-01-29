@@ -18,51 +18,6 @@
       return recording_bytes;
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const recording_url = urlParams.get('url');
-    if (recording_url) {
-      fetch(recording_url)
-      .then((response) => {
-        const reader = response.body.getReader();
-        total_length = response.headers.get('Content-Length');
-        return new ReadableStream({
-          start(controller) {
-            return pump();
-            function pump() {
-              return reader.read().then(({ done, value }) => {
-                collected += value.length;
-                console.log(collected, total_length);
-                document.getElementById("status_text").innerHTML = `Downloading recording: ${collected}/${total_length}  (${((collected / total_length) * 100.0).toFixed(2)} %)`;
-
-                // Couldn't really figure out how to elegantly collect bytes using streams, so we use this here.
-                // Odd way of concatenating, but seems to be the only way.
-                var combined = new Uint8Array(recording_bytes.length + value.length);
-                combined.set(recording_bytes);
-                combined.set(value, recording_bytes.length);
-                recording_bytes = combined;
-                if (combined.length == total_length) {
-                  recording_available = true;
-                }
-
-                // When no more data needs to be consumed, close the stream
-                if (done) {
-                  // never seem to get here? Possibly because the stream never completes?
-                  console.log("done");
-                  recording_available = true;
-                  controller.close();
-                  return;
-                }
-                // Enqueue the next data chunk into our target stream
-                controller.enqueue(value);
-                return pump();
-              });
-            }
-          }
-        })
-      })
-      .then((foo) => console.log(foo))
-      .catch((err) => console.error(err));
-    }
     </script>
 
     <!-- Note the usage of `type=module` here as this is an ES6 module -->
@@ -76,7 +31,7 @@
       // eventually the manual initialization won't be required!
       import init from './pkg/web.js';
 
-      async function run() {
+      export async function run() {
         // First up we need to actually load the wasm file, so we use the
         // default export to inform it where the wasm file is located on the
         // server, and then we wait on the returned promise to wait for the
@@ -92,8 +47,81 @@
         // modes
         await init('./pkg/web_bg.wasm');
       }
-
-      run();
+      // Expose run in the window for later launching.
+      window.run_start = run;
     </script>
+
+    <script>
+
+      let launch_viewer = () => {
+        // If the module hasn't been processed yet, run_start doesn't exist, so here we defer to
+        // later if it is not present.
+        if (window.run_start === undefined) {
+          setTimeout(launch_viewer, 100);
+        } else {
+          window.run_start();
+        }
+      };
+      const urlParams = new URLSearchParams(window.location.search);
+      const recording_url = urlParams.get('url');
+      if (recording_url) {
+        fetch(recording_url)
+        .then((response) => {
+          // Check if it was ok, else throw an error to let catch handle it.
+          if (!response.ok) {
+              throw new Error(`${response.status}: ${response.statusText} for ${response.url}`);
+          }
+          const reader = response.body.getReader();
+          total_length = response.headers.get('Content-Length');
+          return new ReadableStream({
+            start(controller) {
+              return pump();
+              function pump() {
+                return reader.read().then(({ done, value }) => {
+                  collected += value.length;
+                  console.log(collected, total_length);
+                  document.getElementById("status_text").innerHTML = `Downloading recording: ${collected}/${total_length}  (${((collected / total_length) * 100.0).toFixed(2)} %)`;
+
+                  // Couldn't really figure out how to elegantly collect bytes using streams, so we use this here.
+                  // Odd way of concatenating, but seems to be the only way.
+                  var combined = new Uint8Array(recording_bytes.length + value.length);
+                  combined.set(recording_bytes);
+                  combined.set(value, recording_bytes.length);
+                  recording_bytes = combined;
+                  if (combined.length == total_length) {
+                    recording_available = true;
+                  }
+
+                  // When no more data needs to be consumed, close the stream
+                  if (done) {
+                    // never seem to get here? Possibly because the stream never completes?
+                    console.log("done");
+                    recording_available = true;
+                    controller.close();
+                    return;
+                  }
+                  // Enqueue the next data chunk into our target stream
+                  controller.enqueue(value);
+                  return pump();
+                });
+              }
+            }
+          })
+        })
+        .then((foo) => {
+          console.log(foo);
+          // completed the download, launch the viewer.
+          launch_viewer();
+        })
+        .catch((err) => {
+          // something bad happened, show the error.
+          document.getElementById("status_text").innerHTML = `${err}`;
+          console.error(err)
+        });
+      } else {
+        // no recording url.
+        launch_viewer();
+      }
+  </script>
   </body>
 </html>
