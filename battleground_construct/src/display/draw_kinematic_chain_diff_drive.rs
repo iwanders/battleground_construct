@@ -21,14 +21,14 @@ impl DrawKinematicChainDiffDrive {
         self.elements.clear();
 
         let material = Material::OverlayMaterial(
-                Color {
-                    r: 128,
-                    g: 128,
-                    b: 128,
-                    a: 255,
-                }
-                .into(),
-            );
+            Color {
+                r: 128,
+                g: 128,
+                b: 128,
+                a: 255,
+            }
+            .into(),
+        );
         // bar between the wheels.
         self.elements.push(Element {
             transform: m,

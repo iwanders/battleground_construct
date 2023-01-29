@@ -122,8 +122,8 @@ other values; look around in the [source](battleground_construct) code.
 
 ### Units
 
-Currently, there are two unit types. The `unit_lineup` scenario contains the units and visualises
-the kinematic chain.
+Currently, there are two unit types. The `unit_lineup` scenario showcases the units and visualises
+their kinematic chain.
 
 ### Tank
 <img align="right" width="25%" src="./media/unit_tank.png">

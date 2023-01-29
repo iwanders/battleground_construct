@@ -3,8 +3,8 @@ use super::components::differential_drive_base::DifferentialDriveBase;
 use super::components::pose::{Pose, PreTransform};
 use super::components::revolute::Revolute;
 use super::display::draw_kinematic_chain_diff_drive::DrawKinematicChainDiffDrive;
-use super::display::draw_kinematic_chain_link::DrawKinematicChainLink;
 use super::display::draw_kinematic_chain_effector::DrawKinematicChainEffector;
+use super::display::draw_kinematic_chain_link::DrawKinematicChainLink;
 use engine::prelude::*;
 
 pub struct DrawKinematicChain {}
@@ -63,7 +63,7 @@ impl System for DrawKinematicChain {
                 add_effector.push(entity);
             }
         }
-        
+
         for (entity, radar) in world.component_iter::<components::radar::Radar>() {
             if let Some(mut effector) = world.component_mut::<DrawKinematicChainEffector>(entity) {
                 effector.update_radar(&radar);
@@ -71,7 +71,7 @@ impl System for DrawKinematicChain {
                 add_effector.push(entity);
             }
         }
-        
+
         for (entity, gun_battery) in world.component_iter::<components::gun_battery::GunBattery>() {
             if let Some(mut effector) = world.component_mut::<DrawKinematicChainEffector>(entity) {
                 effector.update_gun_battery(&gun_battery);
@@ -79,7 +79,6 @@ impl System for DrawKinematicChain {
                 add_effector.push(entity);
             }
         }
-        
 
         for v in add_diff_drive {
             world.add_component(v, DrawKinematicChainDiffDrive::default());

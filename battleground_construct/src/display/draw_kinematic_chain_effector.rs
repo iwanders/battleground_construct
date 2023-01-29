@@ -9,11 +9,8 @@ pub struct DrawKinematicChainEffector {
     elements: Vec<Element>,
 }
 
-impl DrawKinematicChainEffector{
-    pub fn update_cannon(
-        &mut self,
-        _cannon: &components::cannon::Cannon,
-    ) {
+impl DrawKinematicChainEffector {
+    pub fn update_cannon(&mut self, _cannon: &components::cannon::Cannon) {
         let width = 0.01;
         let m = Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0));
         self.elements.clear();
@@ -38,17 +35,14 @@ impl DrawKinematicChainEffector{
         });
     }
 
-    pub fn update_gun_battery(
-        &mut self,
-        guns: &components::gun_battery::GunBattery,
-    ) {
+    pub fn update_gun_battery(&mut self, guns: &components::gun_battery::GunBattery) {
         let width = 0.01;
         let m = Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0));
         self.elements.clear();
 
         for pose in (0..guns.gun_count()).map(|i| guns.gun_pose(i)).flatten() {
             // Simple bar pointing out from the cannon.
-            use crate::util::cgmath::{ToTranslation, ToHomogenous};
+            use crate::util::cgmath::{ToHomogenous, ToTranslation};
             let s = pose.to_translation();
             let e = (pose * Vec3::new(0.1, 0.0, 0.0).to_h()).to_translation();
             self.elements.push(Element {
@@ -71,24 +65,20 @@ impl DrawKinematicChainEffector{
         }
     }
 
-
-    pub fn update_radar(
-        &mut self,
-        radar: &components::radar::Radar,
-    ) {
+    pub fn update_radar(&mut self, radar: &components::radar::Radar) {
         let width = 0.01;
         let m = Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0));
         self.elements.clear();
         let r = 0.2;
         let material = Material::OverlayMaterial(
-                Color {
-                    r: 0,
-                    g: 0,
-                    b: 255,
-                    a: 255,
-                }
-                .into(),
-            );
+            Color {
+                r: 0,
+                g: 0,
+                b: 255,
+                a: 255,
+            }
+            .into(),
+        );
 
         let (yaw_y, yaw_x) = radar.detection_angle_yaw().sin_cos();
         self.elements.push(Element {
@@ -130,7 +120,6 @@ impl DrawKinematicChainEffector{
             }),
             material,
         });
-
     }
 }
 impl Component for DrawKinematicChainEffector {}

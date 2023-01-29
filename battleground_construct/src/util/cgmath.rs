@@ -9,13 +9,13 @@ pub mod prelude {
     pub use super::EuclideanNorm;
     pub use super::HomogenousTruncate;
     pub use super::InvertHomogeneous;
+    pub use super::RollPitchYawToHomogenous;
     pub use super::RotationFrom;
     pub use super::ToAdjoint;
     pub use super::ToCross; // ToSkew?
     pub use super::ToHomogenous;
     pub use super::ToQuaternion;
     pub use super::ToRollPitchYaw;
-    pub use super::RollPitchYawToHomogenous;
     pub use super::ToRotation;
     pub use super::ToRotationH;
     pub use super::ToTranslation;
@@ -247,12 +247,11 @@ pub trait RollPitchYawToHomogenous<S: BaseFloat> {
 }
 impl<S: BaseFloat> RollPitchYawToHomogenous<S> for cgmath::Vector3<S> {
     fn rpy_to_h(&self) -> cgmath::Matrix4<S> {
-        Matrix4::from_angle_z(cgmath::Rad(self.z)) * Matrix4::from_angle_y(cgmath::Rad(self.y))  * Matrix4::from_angle_x(cgmath::Rad(self.x))
+        Matrix4::from_angle_z(cgmath::Rad(self.z))
+            * Matrix4::from_angle_y(cgmath::Rad(self.y))
+            * Matrix4::from_angle_x(cgmath::Rad(self.x))
     }
 }
-
-
-
 
 pub trait RotationFrom<S: BaseFloat> {
     fn rotation_from(&self, v: cgmath::Vector3<S>) -> cgmath::Matrix3<S>;

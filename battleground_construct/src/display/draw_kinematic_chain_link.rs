@@ -51,18 +51,18 @@ impl DrawKinematicChainLink {
         fn add_circle(elements: &mut Vec<Element>, transform: Mat4, r: f32, width: f32, rot: f32) {
             let max = 31;
             let material = Material::OverlayMaterial(
-                    Color {
-                        r: 255,
-                        g: 255,
-                        b: 0,
-                        a: 255,
-                    }
-                    .into(),
-                );
+                Color {
+                    r: 255,
+                    g: 255,
+                    b: 0,
+                    a: 255,
+                }
+                .into(),
+            );
             elements.push(Element {
                 transform,
                 primitive: Primitive::Line(Line {
-                    p0: (r * 0.75 , 0.0, 0.0),
+                    p0: (r * 0.75, 0.0, 0.0),
                     p1: (r, 0.0, 0.0),
                     width,
                 }),
@@ -73,7 +73,7 @@ impl DrawKinematicChainLink {
                 transform,
                 primitive: Primitive::Line(Line {
                     p0: (0.0, 0.0, 0.0),
-                    p1: (r * ox, r * oy , 0.0),
+                    p1: (r * ox, r * oy, 0.0),
                     width,
                 }),
                 material,
@@ -99,7 +99,13 @@ impl DrawKinematicChainLink {
             let joint_ortho = m * Vec3::new(0.0, 0.0, 1.0)
                 .rotation_from(revolute.axis())
                 .to_h();
-            add_circle(&mut self.elements, joint_ortho, 0.10, width, revolute.position());
+            add_circle(
+                &mut self.elements,
+                joint_ortho,
+                0.10,
+                width,
+                revolute.position(),
+            );
         }
     }
 }
