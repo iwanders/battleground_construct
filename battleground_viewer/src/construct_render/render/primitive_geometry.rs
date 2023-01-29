@@ -193,9 +193,16 @@ fn primitive_transform(primitive: &Primitive, transform: &Mat4) -> Mat4 {
             let p0 = (transform * p0_original.to_h()).to_translation();
             let p1 = (transform * p1_original.to_h()).to_translation();
             let rotation = Quat::from_arc(vec3(1.0, 0.0, 0.0), (p1 - p0).normalize(), None);
+            // zero out the roll, we should only need pitch and yaw.
+            use battleground_construct::util::cgmath::ToRollPitchYaw;
+            use battleground_construct::util::cgmath::RollPitchYawToHomogenous;
+
+            let mut rpy = <_ as Into<Mat4>>::into(rotation).to_rpy();
+            rpy.x = 0.0;
+            let rotation = rpy.rpy_to_h();
             let scale =
                 Mat4::from_nonuniform_scale((p0 - p1).magnitude(), l.width / 2.0, l.width / 2.0);
-            Mat4::from_translation(p0) * <_ as Into<Mat4>>::into(rotation) * scale
+            Mat4::from_translation(p0) * rotation * scale
         }
         Primitive::ExtrudedRectangle(extruded_rectangle) => {
             let local_offset = vec3(extruded_rectangle.length / 2.0, 0.0, 0.0);

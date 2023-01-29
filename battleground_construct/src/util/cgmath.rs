@@ -15,6 +15,7 @@ pub mod prelude {
     pub use super::ToHomogenous;
     pub use super::ToQuaternion;
     pub use super::ToRollPitchYaw;
+    pub use super::RollPitchYawToHomogenous;
     pub use super::ToRotation;
     pub use super::ToRotationH;
     pub use super::ToTranslation;
@@ -240,6 +241,18 @@ impl<S: BaseFloat> ToRollPitchYaw<S> for cgmath::Matrix3<S> {
         cgmath::Vector3::<S>::new(roll, pitch, yaw)
     }
 }
+
+pub trait RollPitchYawToHomogenous<S: BaseFloat> {
+    fn rpy_to_h(&self) -> cgmath::Matrix4<S>;
+}
+impl<S: BaseFloat> RollPitchYawToHomogenous<S> for cgmath::Vector3<S> {
+    fn rpy_to_h(&self) -> cgmath::Matrix4<S> {
+        Matrix4::from_angle_z(cgmath::Rad(self.z)) * Matrix4::from_angle_y(cgmath::Rad(self.y))  * Matrix4::from_angle_x(cgmath::Rad(self.x))
+    }
+}
+
+
+
 
 pub trait RotationFrom<S: BaseFloat> {
     fn rotation_from(&self, v: cgmath::Vector3<S>) -> cgmath::Matrix3<S>;
