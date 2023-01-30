@@ -10,6 +10,7 @@
     var total_length = 0;
     var recording_bytes = new Uint8Array();
     var recording_available = false;
+    var download_done = true;
 
     function get_recording_available() {
       return recording_available;
@@ -56,6 +57,10 @@
       let launch_viewer = () => {
         // If the module hasn't been processed yet, run_start doesn't exist, so here we defer to
         // later if it is not present.
+        if (!download_done) {
+          setTimeout(launch_viewer, 100);
+          return;
+        }
         if (window.run_start === undefined) {
           setTimeout(launch_viewer, 100);
         } else {
@@ -71,6 +76,8 @@
           if (!response.ok) {
               throw new Error(`${response.status}: ${response.statusText} for ${response.url}`);
           }
+          download_done = false;
+
           const reader = response.body.getReader();
           total_length = response.headers.get('Content-Length');
           return new ReadableStream({
@@ -90,6 +97,9 @@
                   recording_bytes = combined;
                   if (combined.length == total_length) {
                     recording_available = true;
+                    download_done = true;
+                    controller.close();
+                    return;
                   }
 
                   // When no more data needs to be consumed, close the stream
@@ -97,6 +107,7 @@
                     // never seem to get here? Possibly because the stream never completes?
                     console.log("done");
                     recording_available = true;
+                    download_done = true;
                     controller.close();
                     return;
                   }
