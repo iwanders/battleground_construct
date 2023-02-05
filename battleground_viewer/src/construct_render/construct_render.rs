@@ -280,6 +280,10 @@ impl ConstructRender {
             .collect()
     }
 
+    pub fn update(&mut self, camera: &Camera, context: &Context, construct: &Construct) {
+        self.update_effects(camera, context, construct);
+    }
+
     pub fn render(
         &mut self,
         camera: &Camera,
@@ -346,10 +350,17 @@ impl ConstructRender {
             construct,
         );
 
+        self.update_effects(camera, context, construct);
+
         // Other components.
         self.component_to_meshes::<display::flag::Flag>(construct);
         self.component_to_meshes::<display::display_control_point::DisplayControlPoint>(construct);
 
+        // Update the actual instances
+        self.finish_scene(context);
+    }
+
+    fn update_effects(&mut self, camera: &Camera, context: &Context, construct: &Construct) {
         // Get the current effect keys.
         let mut start_keys = self
             .effects
@@ -377,9 +388,6 @@ impl ConstructRender {
         for k in start_keys {
             self.effects.remove(&k);
         }
-
-        // Update the actual instances
-        self.finish_scene(context);
     }
 
     /// Function to iterate over the components and convert their drawables into elements.
