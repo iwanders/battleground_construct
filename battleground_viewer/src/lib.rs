@@ -222,39 +222,7 @@ impl ConstructViewer {
                         modifiers,
                         ..
                     } => {
-                        if button == three_d::renderer::control::MouseButton::Middle {
-                            let position = three_d::control::control_position_to_viewport_position(
-                                position,
-                                frame_input.device_pixel_ratio,
-                                &frame_input.viewport,
-                            );
-                            let pos = self.camera.position_at_pixel(position);
-                            let dir = self.camera.view_direction_at_pixel(position);
 
-                            // Now that we have the ray, we can calculate what and if it hit something.
-                            // We need the construct to do that though.
-                            let intersects = construct.select_intersect(&pos, &dir);
-
-                            // Shooting one ray through multiple entities is hard... allow shift to
-                            // add or remove from the selected set.
-                            if modifiers.shift {
-                                // toggle whatever is clicked.
-                                for v in intersects {
-                                    if viewer_state.selected.contains(&v) {
-                                        viewer_state.selected.remove(&v);
-                                    } else {
-                                        viewer_state.selected.insert(v);
-                                    }
-                                }
-                            } else {
-                                // just assign the new selection.
-                                viewer_state.selected.clear();
-                                for v in intersects {
-                                    viewer_state.selected.insert(v);
-                                }
-                            }
-                            println!("viewer_state.selected: {:?}", viewer_state.selected);
-                        }
                     }
                     _ => {}
                 }
