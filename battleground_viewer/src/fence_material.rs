@@ -27,13 +27,21 @@ impl<'a> FenceMaterial<'a> {
 }
 
 impl Material for FenceMaterial<'_> {
-    fn fragment_shader_source(&self, use_vertex_colors: bool, _lights: &[&dyn Light]) -> String {
+    fn fragment_shader(&self, _lights: &[&dyn Light]) -> FragmentShader {
         let mut shader = String::new();
-        if use_vertex_colors {
-            shader.push_str("#define USE_VERTEX_COLORS\nin vec4 col;\n");
-        }
+        // if use_vertex_colors {
+            // shader.push_str("#define USE_VERTEX_COLORS\nin vec4 col;\n");
+        // }
         shader.push_str(include_str!("shaders/fence_material.frag"));
-        shader
+
+        let mut attributes = FragmentAttributes {
+            normal: true,
+            ..FragmentAttributes::NONE
+        };
+        FragmentShader {
+            source: shader,
+            attributes,
+        }
     }
     fn use_uniforms(&self, program: &Program, camera: &Camera, _lights: &[&dyn Light]) {
         program.use_uniform("surfaceColor", self.color);

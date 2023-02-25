@@ -55,7 +55,7 @@ struct ConstructViewer {
     directional_light: DirectionalLight,
     control: FlyControl,
     // control: OrbitControl,
-    window: Window,
+    window: Window<()>,
 
     construct: Option<Construct>,
     setup: Option<Setup>,
@@ -132,7 +132,7 @@ impl ConstructViewer {
 
         let mut viewer_state = ViewerState::default();
 
-        self.window.render_loop(move |mut frame_input: FrameInput| {
+        self.window.render_loop(move |mut frame_input: FrameInput<()>| {
             // Gui rendering.
             viewer_state.gui.update(&self.construct);
             gui.update(
