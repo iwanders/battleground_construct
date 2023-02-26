@@ -178,6 +178,7 @@ dependencies = [
  "console_error_panic_hook",
  "console_log",
  "engine",
+ "env_logger",
  "js-sys",
  "log",
  "rand",
@@ -1917,7 +1918,7 @@ dependencies = [
 [[package]]
 name = "three-d"
 version = "0.15.0"
-source = "git+https://github.com/asny/three-d?rev=99cb0640e70c49bbd48b09f76ecaa0707f4012c0#99cb0640e70c49bbd48b09f76ecaa0707f4012c0"
+source = "git+https://github.com/asny/three-d?rev=822a6000762de2b6ea7bcc2d2bca104b91b37542#822a6000762de2b6ea7bcc2d2bca104b91b37542"
 dependencies = [
  "cgmath",
  "egui",

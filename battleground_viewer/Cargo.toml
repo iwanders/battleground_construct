@@ -13,6 +13,7 @@ crate-type = ["cdylib", "rlib"]
 
 
 [dependencies]
+env_logger = "0.10.0"
 engine = { path = "../engine" }
 battleground_construct = { path = "../battleground_construct" }
 #three-d = {version = "0.14.0", features=["egui-gui"]}
@@ -21,8 +22,8 @@ battleground_construct = { path = "../battleground_construct" }
 # Instanced with alpha rendering order:
 #three-d = {version = "0.15.0", features=["egui-gui"], git = "https://github.com/asny/three-d", rev = "c02af2f35ecb1a45c4aeb47e08ab51a6fb7c6130"  } # works, last working.
 #three-d = {version = "0.15.0", features=["egui-gui"], git = "https://github.com/asny/three-d", rev = "a987195dcd2d8b2919535cb638ce7e5566ddb522"  } # fails
-three-d = {version = "0.15.0", features=["egui-gui"], git = "https://github.com/asny/three-d", rev = "99cb0640e70c49bbd48b09f76ecaa0707f4012c0"  } # potential fix, yes. https://github.com/asny/three-d/pull/330
-#three-d = {version = "0.15.0", features=["egui-gui"], git = "https://github.com/asny/three-d", rev = "822a6000762de2b6ea7bcc2d2bca104b91b37542"  } # master 
+#three-d = {version = "0.15.0", features=["egui-gui"], git = "https://github.com/asny/three-d", rev = "99cb0640e70c49bbd48b09f76ecaa0707f4012c0"  } # potential fix, yes. https://github.com/asny/three-d/pull/330
+three-d = {version = "0.15.0", features=["egui-gui"], git = "https://github.com/asny/three-d", rev = "822a6000762de2b6ea7bcc2d2bca104b91b37542"  } # master 
 # Control position to viewport position conversion function.
 #three-d = {version = "0.15.0", features=["egui-gui"], git = "https://github.com/iwanders/asny-three-d", rev = "bac3dde0475ee615d64987b82f9b7ecf35173e64"  }
 rand = "0.8.5"
