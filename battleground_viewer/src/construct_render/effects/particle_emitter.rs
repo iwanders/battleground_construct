@@ -370,7 +370,7 @@ impl RetainedEffect for ParticleEmitter {
         self.particles = self
             .particles
             .drain(..)
-            .filter(|p| !p.expired(time))
+            .filter(|p| !(p.expired(time) || p.color.a == 0))
             .collect::<_>();
 
         // Spawn new particles.
