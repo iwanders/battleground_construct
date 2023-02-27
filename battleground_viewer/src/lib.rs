@@ -233,8 +233,6 @@ impl ConstructViewer {
             if construct.can_update() {
                 self.limiter.update(|| {
                     construct.update();
-                    self.construct_render
-                        .update(&self.camera, &self.context, &construct);
                     if construct.can_update() {
                         Some(construct.elapsed_as_f32())
                     } else {
