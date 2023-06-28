@@ -16,7 +16,6 @@ pub fn populate_tree_trailer(construct: &mut crate::Construct) {
 
     use components::function_pose::FunctionPose;
     use components::pose::Pose;
-    use display::Color;
 
     use crate::display::primitives::*;
     use cgmath::Deg;
