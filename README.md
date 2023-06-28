@@ -19,6 +19,7 @@ rustup target install wasm32-unknown-unknown
 ```
 git clone https://github.com/iwanders/battleground_construct
 cd battleground_construct
+git checkout 0.1.0
 ```
 3. Build the example controller in [unit_control_example](unit_control_example), this compiles it
   into a stand-alone `.wasm` file:
