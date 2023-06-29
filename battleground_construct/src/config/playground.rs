@@ -80,6 +80,20 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
         },
     );
 
+
+    let arm = units::arm::spawn_arm(
+        world,
+        units::arm::ArmSpawnConfig {
+            x: -4.0,
+            y: -4.0,
+            yaw: 0.0,
+            // controller: Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot::new()),
+            // controller: Box::new(control::radar_draw::RadarDrawControl {}),
+            controller: Box::new(unit_control_builtin::idle::Idle {})
+        },
+    );
+
+
     let fw_backwards = Box::new(
         unit_control_builtin::diff_drive_forwards_backwards::DiffDriveForwardsBackwardsControl {
             velocities: (1.0, 1.0),

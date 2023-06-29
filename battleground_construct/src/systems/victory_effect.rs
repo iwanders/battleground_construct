@@ -77,6 +77,7 @@ impl System for VictoryEffect {
                                     .expect("unit should exist")
                                     .turret_entity
                             }
+                            _ => {continue;},
                         };
                         let pose = components::pose::world_pose(world, position_entity);
                         poses.push(cgmath::vec3(pose.x(), pose.y(), pose.z()));

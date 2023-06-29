@@ -96,6 +96,7 @@ impl UnitControl for NaiveShoot {
                     REG_REVOLUTE_POSITION,
                 )?;
             }
+            _ => {panic!("unknown type for this controller");},
         }
 
         let elapsed = interface

@@ -38,6 +38,7 @@ pub mod common {
 pub enum UnitType {
     Tank,
     Artillery,
+    Unknown,
 }
 
 impl TryFrom<u32> for UnitType {
@@ -46,6 +47,7 @@ impl TryFrom<u32> for UnitType {
         match v {
             x if x == UnitType::Artillery as u32 => Ok(UnitType::Artillery),
             x if x == UnitType::Tank as u32 => Ok(UnitType::Tank),
+            x if x == UnitType::Unknown as u32 => Ok(UnitType::Unknown),
             _ => Err("could not convert unit_type"),
         }
     }
@@ -60,6 +62,9 @@ impl std::fmt::Display for UnitType {
             }
             UnitType::Artillery => {
                 write!(f, "artillery")
+            }
+            UnitType::Unknown => {
+                write!(f, "unknown")
             }
         }
     }
