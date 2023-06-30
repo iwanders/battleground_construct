@@ -1,14 +1,13 @@
+use super::Unit;
 use crate::components;
+use crate::display;
+use crate::display::primitives::Vec3;
 use engine::prelude::*;
 use serde::{Deserialize, Serialize};
-use super::Unit;
-use crate::display::primitives::Vec3;
-use crate::display;
 
 use components::group::Group;
 use components::parent::Parent;
 use components::pose::{Pose, PreTransform};
-
 
 pub struct ArmSpawnConfig {
     pub x: f32,
@@ -16,7 +15,6 @@ pub struct ArmSpawnConfig {
     pub yaw: f32,
     pub controller: Box<dyn battleground_unit_control::UnitControl>,
 }
-
 
 #[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 pub struct UnitArm {
@@ -27,14 +25,9 @@ pub struct UnitArm {
 }
 impl Component for UnitArm {}
 
-
 impl Unit for UnitArm {
     fn children(&self) -> Vec<EntityId> {
-        vec![
-            self.control_entity,
-            self.base_entity,
-            self.arm_entity,
-        ]
+        vec![self.control_entity, self.base_entity, self.arm_entity]
     }
 }
 
@@ -118,10 +111,6 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
     );
     world.add_component(arm_entity, Parent::new(base_entity));
 
-
-
-
-
     // -----   Control
     world.add_component(control_entity, display::draw_module::DrawComponent::new());
     register_interface.get_mut().add_module(
@@ -158,24 +147,22 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
 
 pub fn add_arm_passive(world: &mut World, unit: &UnitArm) {
     // -----   Body
-    let body = display::tank_body::TankBody::new();
-    let hitbox = body.hitbox();
+    let body = display::arm_joint::ArmJoint::new();
+    // let hitbox = body.hitbox();
     world.add_component(unit.base_entity, body);
-    world.add_component(
-        unit.base_entity,
-        components::select_box::SelectBox::from_hit_box(&hitbox),
-    );
-    world.add_component(unit.base_entity, hitbox);
+    // world.add_component(
+    // unit.base_entity,
+    // components::select_box::SelectBox::from_hit_box(&hitbox),
+    // );
+    // world.add_component(unit.base_entity, hitbox);
 
     // -----   Turret
-    let tank_turret = display::tank_turret::TankTurret::new();
-    let hitbox = tank_turret.hitbox();
-    world.add_component(unit.arm_entity, hitbox);
-    world.add_component(
-        unit.arm_entity,
-        components::select_box::SelectBox::from_hit_box(&hitbox),
-    );
+    let tank_turret = display::arm_joint::ArmJoint::new();
+    // let hitbox = tank_turret.hitbox();
+    // world.add_component(unit.arm_entity, hitbox);
+    // world.add_component(
+    // unit.arm_entity,
+    // components::select_box::SelectBox::from_hit_box(&hitbox),
+    // );
     world.add_component(unit.arm_entity, tank_turret);
-
-
 }

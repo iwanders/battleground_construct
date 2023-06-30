@@ -73,7 +73,9 @@ impl UnitControl for RadarDrawControl {
                     REG_REVOLUTE_POSITION,
                 )?;
             }
-            _ => {panic!("radar draw on unknown unit type");},
+            _ => {
+                panic!("radar draw on unknown unit type");
+            }
         }
 
         // radar position in world:

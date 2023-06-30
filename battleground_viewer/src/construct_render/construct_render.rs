@@ -302,6 +302,9 @@ impl ConstructRender {
 
         // Iterate through all displayables to collect meshes
 
+        // Specific to arm
+        self.component_to_meshes::<display::arm_joint::ArmJoint>(construct);
+
         // Specific to artillery
         self.component_to_meshes::<display::artillery_turret::ArtilleryTurret>(construct);
         self.component_to_meshes::<display::artillery_barrel::ArtilleryBarrel>(construct);

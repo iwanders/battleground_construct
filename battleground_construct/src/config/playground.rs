@@ -19,6 +19,10 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
     let world = &mut construct.world;
     let systems = &mut construct.systems;
 
+    construct.systems.add_system(Box::new(
+        crate::systems::draw_kinematic_chain::DrawKinematicChain {},
+    ));
+
     // super::default::add_components(world);
     // super::default::add_systems(systems);
 
@@ -80,7 +84,6 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
         },
     );
 
-
     let arm = units::arm::spawn_arm(
         world,
         units::arm::ArmSpawnConfig {
@@ -89,10 +92,9 @@ pub fn populate_dev_world(construct: &mut crate::Construct) {
             yaw: 0.0,
             // controller: Box::new(unit_control_builtin::tank_swivel_shoot::TankSwivelShoot::new()),
             // controller: Box::new(control::radar_draw::RadarDrawControl {}),
-            controller: Box::new(unit_control_builtin::idle::Idle {})
+            controller: Box::new(unit_control_builtin::idle::Idle {}),
         },
     );
-
 
     let fw_backwards = Box::new(
         unit_control_builtin::diff_drive_forwards_backwards::DiffDriveForwardsBackwardsControl {
