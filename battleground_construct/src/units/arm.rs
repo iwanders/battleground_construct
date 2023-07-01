@@ -24,6 +24,7 @@ pub struct UnitArm {
     pub base_entity: EntityId,
     pub base_revolute_entity: EntityId,
     pub arm_entity: EntityId,
+    pub lower_arm_entity: EntityId,
 }
 impl Component for UnitArm {}
 
@@ -34,6 +35,7 @@ impl Unit for UnitArm {
             self.base_entity,
             self.base_revolute_entity,
             self.arm_entity,
+            self.lower_arm_entity,
         ]
     }
 }
@@ -65,6 +67,7 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
     let base_revolute_entity = world.add_entity();
 
     let arm_entity = world.add_entity();
+    let lower_arm_entity = world.add_entity();
 
     let unit_arm = UnitArm {
         unit_entity,
@@ -72,6 +75,7 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
         base_entity,
         base_revolute_entity,
         arm_entity,
+        lower_arm_entity,
     };
     // Unit must be first in the group!
     let mut tank_group_entities: Vec<EntityId> = vec![unit_entity];
@@ -132,7 +136,7 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
         world,
         &register_interface,
         arm_entity,
-        "turret",
+        "arm",
         1,
         revolute_config,
     );
@@ -141,6 +145,28 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
         PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)).rotated_angle_z(Deg(90.0)),
     );
     world.add_component(arm_entity, Parent::new(base_revolute_entity));
+
+    // -----   lower arm
+    let revolute_config = components::revolute::RevoluteConfig {
+        axis: Vec3::new(1.0, 0.0, 0.0),
+        velocity_bounds: (-1.0, 1.0),
+        acceleration_bounds: Some((-1.0, 1.0)),
+        velocity_cmd: 0.3,
+        ..Default::default()
+    };
+    super::common::add_revolute(
+        world,
+        &register_interface,
+        lower_arm_entity,
+        "lower_arm",
+        1,
+        revolute_config,
+    );
+    world.add_component(
+        lower_arm_entity,
+        PreTransform::from_translation(Vec3::new(0.0, 1.0, 0.0)),
+    );
+    world.add_component(lower_arm_entity, Parent::new(arm_entity));
 
     // -----   Control
     world.add_component(control_entity, display::draw_module::DrawComponent::new());
@@ -179,21 +205,12 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
 pub fn add_arm_passive(world: &mut World, unit: &UnitArm) {
     // -----   Body
     let body = display::arm_joint::ArmJoint::new();
-    // let hitbox = body.hitbox();
     world.add_component(unit.base_revolute_entity, body);
-    // world.add_component(
-    // unit.base_entity,
-    // components::select_box::SelectBox::from_hit_box(&hitbox),
-    // );
-    // world.add_component(unit.base_entity, hitbox);
 
     // -----   Turret
     let tank_turret = display::arm_joint::ArmJoint::new();
-    // let hitbox = tank_turret.hitbox();
-    // world.add_component(unit.arm_entity, hitbox);
-    // world.add_component(
-    // unit.arm_entity,
-    // components::select_box::SelectBox::from_hit_box(&hitbox),
-    // );
     world.add_component(unit.arm_entity, tank_turret);
+
+    let tank_turret = display::arm_joint::ArmJoint::new();
+    world.add_component(unit.lower_arm_entity, tank_turret);
 }
