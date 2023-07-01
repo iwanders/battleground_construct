@@ -178,7 +178,7 @@ mod test {
             battery.update(t);
             assert!(battery.is_ready());
             battery.fired(t);
-            assert_eq!(battery.is_ready(), false); // not ready right now, in between the inter gun
+            assert!(!battery.is_ready()); // not ready right now, in between the inter gun
             t += inter_gun_duration;
             battery.update(t);
             assert!(battery.is_ready());
@@ -188,20 +188,20 @@ mod test {
             battery.update(t);
             battery.fired(t);
             battery.update(t);
-            assert_eq!(battery.is_ready(), false);
+            assert!(!battery.is_ready());
 
             // Next shot is the last in the gun battery.
             battery.fired(t);
-            assert_eq!(battery.is_ready(), false);
+            assert!(!battery.is_ready());
             t += inter_gun_duration;
             battery.update(t);
-            assert_eq!(battery.is_ready(), false);
+            assert!(!battery.is_ready());
             t += inter_gun_duration;
             battery.update(t);
-            assert_eq!(battery.is_ready(), false);
+            assert!(!battery.is_ready());
             t += inter_gun_duration;
             battery.update(t);
-            assert_eq!(battery.is_ready(), true); // at start again.
+            assert!(battery.is_ready()); // at start again.
             assert_eq!(battery.gun_index(), 0); // at start again.
         }
 
@@ -234,10 +234,10 @@ mod test {
 
             // Next shot is the last in the gun battery.
             battery.fired(t);
-            assert_eq!(battery.is_ready(), false);
+            assert!(!battery.is_ready());
             t += battery_reload;
             battery.update(t);
-            assert_eq!(battery.is_ready(), true); // at start again.
+            assert!(battery.is_ready()); // at start again.
             assert_eq!(battery.gun_index(), 0); // at start again.
         }
     }

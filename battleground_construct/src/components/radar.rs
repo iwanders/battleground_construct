@@ -226,7 +226,11 @@ mod test {
         radar.update_reflections(&radar_pose, &reflections);
         let obtained = radar.reflections();
         println!("Obtained: {obtained:?}");
-        let expected = vec![(3.1415926f32, 0.0f32), (1.5707964, 0.0), (0.0, 1.5707964)];
+        let expected = vec![
+            (std::f32::consts::PI, 0.0f32),
+            (std::f32::consts::PI / 2.0, 0.0),
+            (0.0, std::f32::consts::PI / 2.0),
+        ];
         for (obtain, expect) in obtained.iter().zip(expected.iter()) {
             approx_equal!(obtain.yaw, expect.0, 0.001);
             approx_equal!(obtain.pitch, expect.1, 0.001);

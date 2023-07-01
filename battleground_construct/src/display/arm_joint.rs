@@ -49,7 +49,7 @@ impl Drawable for ArmJoint {
             Element {
                 transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
                 primitive: Primitive::Cylinder(Cylinder {
-                    radius: radius,
+                    radius,
                     height: length,
                 }),
                 material,
@@ -58,13 +58,13 @@ impl Drawable for ArmJoint {
             Element {
                 transform: Mat4::from_angle_y(Deg(-90.0))
                     * Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
-                primitive: Primitive::Circle(Circle { radius: radius }),
+                primitive: Primitive::Circle(Circle { radius }),
                 material,
             },
             Element {
                 transform: Mat4::from_angle_y(Deg(-90.0))
                     * Mat4::from_translation(Vec3::new(0.0, 0.0, -length)),
-                primitive: Primitive::Circle(Circle { radius: radius }),
+                primitive: Primitive::Circle(Circle { radius }),
                 material,
             },
             Element {

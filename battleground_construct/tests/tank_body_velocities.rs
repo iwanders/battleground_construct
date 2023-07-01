@@ -49,7 +49,7 @@ fn test_tank_body_velocities() {
     );
     world.add_component(turret_id, components::pose::Pose::new());
     world.add_component(turret_id, turret_vel);
-    world.add_component(turret_id, Parent::new(base_id.clone()));
+    world.add_component(turret_id, Parent::new(base_id));
 
     // Add the barrel linear offset, and joint.
     let barrel_id = world.add_entity();
@@ -69,7 +69,7 @@ fn test_tank_body_velocities() {
     );
     world.add_component(barrel_id, components::pose::Pose::new());
     world.add_component(barrel_id, barrel_vel);
-    world.add_component(barrel_id, Parent::new(turret_id.clone()));
+    world.add_component(barrel_id, Parent::new(turret_id));
 
     // Then, the arm from the joint to the center of the barrel.
     let barrel_cog_id = world.add_entity();
@@ -77,12 +77,12 @@ fn test_tank_body_velocities() {
         barrel_cog_id,
         PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
     );
-    world.add_component(barrel_cog_id, Parent::new(barrel_id.clone()));
+    world.add_component(barrel_cog_id, Parent::new(barrel_id));
 
     // Finally, a meter further from the center of the barrel, add the nozzle.
     let nozzle_id = world.add_entity();
     println!("nozzle_id: {nozzle_id:?}");
-    world.add_component(nozzle_id, Parent::new(barrel_cog_id.clone()));
+    world.add_component(nozzle_id, Parent::new(barrel_cog_id));
     world.add_component(
         nozzle_id,
         PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
@@ -91,7 +91,7 @@ fn test_tank_body_velocities() {
     // Shell at the exit, with rotational velocity of 5.5 radians
     let shell_id = world.add_entity();
     println!("shell_id: {shell_id:?}");
-    world.add_component(shell_id, Parent::new(nozzle_id.clone()));
+    world.add_component(shell_id, Parent::new(nozzle_id));
     let mut shell_revolute =
         components::revolute::Revolute::new_with_axis(Vec3::new(1.0, 0.0, 0.0));
 
@@ -151,7 +151,7 @@ fn test_tank_body_velocities() {
             let rev = v.as_mut().unwrap();
 
             rev.set_position(std::f32::consts::PI / 4.0);
-            rev.clone()
+            **rev
         };
         {
             let mut p = world.component_mut::<Pose>(turret_id);
@@ -167,7 +167,7 @@ fn test_tank_body_velocities() {
             let rev = v.as_mut().unwrap();
 
             rev.set_position(-std::f32::consts::PI / 4.0);
-            rev.clone()
+            **rev
         };
         {
             let mut p = world.component_mut::<Pose>(barrel_id);
@@ -238,14 +238,14 @@ fn test_tank_body_velocities() {
     assert_eq!(vel_barrel_cog_in_global.w, vec3(-3.11127, 3.11127, 5.5));
     assert_eq!(
         vel_barrel_cog_in_global.v,
-        vec3(-1.3945432, 6.894543, -3.111270)
+        vec3(-1.3945432, 6.894543, -3.111_27)
     );
 
     let vel_shell_in_global = world_velocity(&world, shell_id);
     println!("vel_shell_in_global: {vel_shell_in_global:?}");
     assert_eq!(
         vel_shell_in_global.v,
-        vec3(-1.9445434, 11.844543, -6.222540)
+        vec3(-1.9445434, 11.844543, -6.222_54)
     );
-    assert_eq!(vel_shell_in_global.w, vec3(-0.36127007, 5.861270, 9.389088));
+    assert_eq!(vel_shell_in_global.w, vec3(-0.36127007, 5.861_27, 9.389088));
 }

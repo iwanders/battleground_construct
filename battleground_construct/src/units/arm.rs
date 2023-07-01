@@ -25,6 +25,7 @@ pub struct UnitArm {
     pub base_revolute_entity: EntityId,
     pub arm_entity: EntityId,
     pub lower_arm_entity: EntityId,
+    pub tip_entity: EntityId,
 }
 impl Component for UnitArm {}
 
@@ -36,6 +37,7 @@ impl Unit for UnitArm {
             self.base_revolute_entity,
             self.arm_entity,
             self.lower_arm_entity,
+            self.tip_entity,
         ]
     }
 }
@@ -68,6 +70,7 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
 
     let arm_entity = world.add_entity();
     let lower_arm_entity = world.add_entity();
+    let tip_entity = world.add_entity();
 
     let unit_arm = UnitArm {
         unit_entity,
@@ -76,6 +79,7 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
         base_revolute_entity,
         arm_entity,
         lower_arm_entity,
+        tip_entity,
     };
     // Unit must be first in the group!
     let mut tank_group_entities: Vec<EntityId> = vec![unit_entity];
@@ -167,6 +171,22 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
         PreTransform::from_translation(Vec3::new(0.0, 1.0, 0.0)),
     );
     world.add_component(lower_arm_entity, Parent::new(arm_entity));
+
+    // -----   tip
+    world.add_component(
+        tip_entity,
+        PreTransform::from_translation(Vec3::new(0.0, 1.0, 0.0)),
+    );
+    world.add_component(tip_entity, Parent::new(lower_arm_entity));
+    let particle_effect_id = components::id_generator::generate_id(world);
+    world.add_component(
+        tip_entity,
+        display::particle_emitter::ParticleEmitter::bullet_trail(
+            particle_effect_id,
+            0.05,
+            display::Color::WHITE,
+        ),
+    );
 
     // -----   Control
     world.add_component(control_entity, display::draw_module::DrawComponent::new());

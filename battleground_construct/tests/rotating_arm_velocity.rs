@@ -72,7 +72,7 @@ fn test_rotating_arm() {
     world.add_component(arm_origin, Pose::new());
 
     let arm_rotation = world.add_entity();
-    world.add_component(arm_rotation, Parent::new(arm_origin.clone()));
+    world.add_component(arm_rotation, Parent::new(arm_origin));
 
     let mut arm_revolute = components::revolute::Revolute::new_with_axis(Vec3::new(0.0, 0.0, 1.0));
     let rotation_vel = 1.0;
@@ -82,7 +82,7 @@ fn test_rotating_arm() {
     world.add_component(arm_rotation, Velocity::new());
 
     let arm_entity_pretransform = world.add_entity();
-    world.add_component(arm_entity_pretransform, Parent::new(arm_rotation.clone()));
+    world.add_component(arm_entity_pretransform, Parent::new(arm_rotation));
     world.add_component(arm_entity_pretransform, Pose::new());
     world.add_component(arm_entity_pretransform, Velocity::new());
     world.add_component(
@@ -92,7 +92,7 @@ fn test_rotating_arm() {
 
     let arm_tip = world.add_entity();
     world.add_component(arm_tip, Pose::new());
-    world.add_component(arm_tip, Parent::new(arm_entity_pretransform.clone()));
+    world.add_component(arm_tip, Parent::new(arm_entity_pretransform));
 
     let clock_id = world.add_entity();
     world.add_component(clock_id, Clock::new());

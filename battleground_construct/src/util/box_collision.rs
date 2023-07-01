@@ -241,32 +241,32 @@ mod test {
         let b = AxisAlignedBox::new(1.0f32, 1.0, 1.0);
 
         // x direction.
-        assert_eq!(b.is_inside(Vector3::new(-1.0, 0.0, 0.0)), false);
-        assert_eq!(b.is_inside(Vector3::new(-0.4, 0.0, 0.0)), true);
-        assert_eq!(b.is_inside(Vector3::new(0.0, 0.0, 0.0)), true);
-        assert_eq!(b.is_inside(Vector3::new(0.4, 0.0, 0.0)), true);
-        assert_eq!(b.is_inside(Vector3::new(1.0, 0.0, 0.0)), false);
+        assert!(!b.is_inside(Vector3::new(-1.0, 0.0, 0.0)));
+        assert!(b.is_inside(Vector3::new(-0.4, 0.0, 0.0)));
+        assert!(b.is_inside(Vector3::new(0.0, 0.0, 0.0)));
+        assert!(b.is_inside(Vector3::new(0.4, 0.0, 0.0)));
+        assert!(!b.is_inside(Vector3::new(1.0, 0.0, 0.0)));
 
         // y direction.
-        assert_eq!(b.is_inside(Vector3::new(0.0, -1.0, 0.0)), false);
-        assert_eq!(b.is_inside(Vector3::new(0.0, -0.4, 0.0)), true);
-        assert_eq!(b.is_inside(Vector3::new(0.0, 0.0, 0.0)), true);
-        assert_eq!(b.is_inside(Vector3::new(0.0, 0.4, 0.0)), true);
-        assert_eq!(b.is_inside(Vector3::new(0.0, 1.0, 0.0)), false);
+        assert!(!b.is_inside(Vector3::new(0.0, -1.0, 0.0)));
+        assert!(b.is_inside(Vector3::new(0.0, -0.4, 0.0)));
+        assert!(b.is_inside(Vector3::new(0.0, 0.0, 0.0)));
+        assert!(b.is_inside(Vector3::new(0.0, 0.4, 0.0)));
+        assert!(!b.is_inside(Vector3::new(0.0, 1.0, 0.0)));
 
         // z direction.
-        assert_eq!(b.is_inside(Vector3::new(0.0, 0.0, -1.0)), false);
-        assert_eq!(b.is_inside(Vector3::new(0.0, 0.0, -0.4)), true);
-        assert_eq!(b.is_inside(Vector3::new(0.0, 0.0, 0.0)), true);
-        assert_eq!(b.is_inside(Vector3::new(0.0, 0.0, 0.4)), true);
-        assert_eq!(b.is_inside(Vector3::new(0.0, 0.0, 1.0)), false);
+        assert!(!b.is_inside(Vector3::new(0.0, 0.0, -1.0)));
+        assert!(b.is_inside(Vector3::new(0.0, 0.0, -0.4)));
+        assert!(b.is_inside(Vector3::new(0.0, 0.0, 0.0)));
+        assert!(b.is_inside(Vector3::new(0.0, 0.0, 0.4)));
+        assert!(!b.is_inside(Vector3::new(0.0, 0.0, 1.0)));
 
         // diagonal
-        assert_eq!(b.is_inside(Vector3::new(-1.0, -1.0, -1.0)), false);
-        assert_eq!(b.is_inside(Vector3::new(-0.4, -0.4, -0.4)), true);
-        assert_eq!(b.is_inside(Vector3::new(0.0, 0.0, 0.0)), true);
-        assert_eq!(b.is_inside(Vector3::new(0.4, 0.4, 0.4)), true);
-        assert_eq!(b.is_inside(Vector3::new(1.0, 1.0, 1.0)), false);
+        assert!(!b.is_inside(Vector3::new(-1.0, -1.0, -1.0)));
+        assert!(b.is_inside(Vector3::new(-0.4, -0.4, -0.4)));
+        assert!(b.is_inside(Vector3::new(0.0, 0.0, 0.0)));
+        assert!(b.is_inside(Vector3::new(0.4, 0.4, 0.4)));
+        assert!(!b.is_inside(Vector3::new(1.0, 1.0, 1.0)));
     }
 
     #[test]
@@ -274,22 +274,13 @@ mod test {
         use cgmath::vec3;
         let b = AxisAlignedBox::new(1.0f32, 1.0, 1.0);
         // assert_eq!(b.is_intersecting(vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0), ), true);
-        assert_eq!(
-            b.is_intersecting(vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0),),
-            true
-        );
+        assert!(b.is_intersecting(vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0),));
         // assert_eq!(b.is_intersecting(vec3(1.0, 1.5, 1.0), vec3(2.0, 2.0, 2.0), ), false);
-        assert_eq!(
-            b.is_intersecting(vec3(1.0, 1.5, 1.0), vec3(2.0, 2.0, 2.0),),
-            false
-        );
+        assert!(!b.is_intersecting(vec3(1.0, 1.5, 1.0), vec3(2.0, 2.0, 2.0),));
 
         // pointing at box, but not into it.
         // assert_eq!(b.is_intersecting(vec3(3.0, 0.0, 0.0), vec3(5.0, 0.0, 0.0)), false);
-        assert_eq!(
-            b.is_intersecting(vec3(3.0, 0.0, 0.0), vec3(5.0, 0.0, 0.0)),
-            false
-        );
+        assert!(!b.is_intersecting(vec3(3.0, 0.0, 0.0), vec3(5.0, 0.0, 0.0)));
 
         verify_points(&b, vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0), 0.001);
         verify_points(&b, vec3(2.0, 0.0, 0.0), vec3(3.0, 0.0, 0.0), 0.001);
