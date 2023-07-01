@@ -5,15 +5,18 @@ spawn_config:
     -
       name: Red
       color: [255, 0, 0]
-      controller:
-        type: Idle
+      controller: 
+        type: Wasm
+        reload: true
+        path: "<no path specified>"
 
   spawns:
     -
       x: 0.0
-      y: 5.0
-      yaw: 3.14
+      y: 0.0
+      yaw: 0.0
       team: 0
       unit: Arm
       controller:
-        type: Idle
+        type: TeamController
+        name: Red

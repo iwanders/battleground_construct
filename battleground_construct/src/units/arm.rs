@@ -141,7 +141,7 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
         &register_interface,
         arm_entity,
         "arm",
-        1,
+        2,
         revolute_config,
     );
     world.add_component(
@@ -163,7 +163,7 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
         &register_interface,
         lower_arm_entity,
         "lower_arm",
-        1,
+        3,
         revolute_config,
     );
     world.add_component(
