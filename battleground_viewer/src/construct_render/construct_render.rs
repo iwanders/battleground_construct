@@ -304,6 +304,7 @@ impl ConstructRender {
 
         // Specific to arm
         self.component_to_meshes::<display::arm_joint::ArmJoint>(construct);
+        self.component_to_meshes::<display::arm_segment::ArmSegment>(construct);
 
         // Specific to artillery
         self.component_to_meshes::<display::artillery_turret::ArtilleryTurret>(construct);

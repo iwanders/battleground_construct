@@ -3,7 +3,9 @@ use cgmath::Deg;
 use engine::prelude::*;
 
 #[derive(Copy, Debug, Clone)]
-pub struct ArmJoint {}
+pub struct ArmJoint {
+    inline: bool,
+}
 impl Default for ArmJoint {
     fn default() -> Self {
         ArmJoint::new()
@@ -12,7 +14,11 @@ impl Default for ArmJoint {
 
 impl ArmJoint {
     pub fn new() -> Self {
-        ArmJoint {}
+        ArmJoint { inline: false }
+    }
+    pub fn inline(mut self) -> Self {
+        self.inline = true;
+        self
     }
 }
 impl Component for ArmJoint {}
@@ -43,11 +49,18 @@ impl Drawable for ArmJoint {
 
         let radius = 0.1;
         let length = 0.2;
+        let x = -length / 2.0;
+
+        let t = if self.inline {
+            Mat4::from_angle_y(Deg(0.0))
+        } else {
+            Mat4::from_angle_z(Deg(-90.0))
+        };
 
         vec![
             // Cylinder at the base
             Element {
-                transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+                transform: t * Mat4::from_translation(Vec3::new(x, 0.0, 0.0)),
                 primitive: Primitive::Cylinder(Cylinder {
                     radius,
                     height: length,
@@ -56,19 +69,21 @@ impl Drawable for ArmJoint {
             },
             // a totally disjoint circle capping the cylinder!
             Element {
-                transform: Mat4::from_angle_y(Deg(-90.0))
-                    * Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+                transform: t
+                    * Mat4::from_angle_y(Deg(-90.0))
+                    * Mat4::from_translation(Vec3::new(0.0, 0.0, x)),
                 primitive: Primitive::Circle(Circle { radius }),
                 material,
             },
             Element {
-                transform: Mat4::from_angle_y(Deg(-90.0))
-                    * Mat4::from_translation(Vec3::new(0.0, 0.0, -length)),
+                transform: t
+                    * Mat4::from_angle_y(Deg(-90.0))
+                    * Mat4::from_translation(Vec3::new(0.0, 0.0, -x)),
                 primitive: Primitive::Circle(Circle { radius }),
                 material,
             },
             Element {
-                transform: Mat4::from_translation(Vec3::new(length / 2.0, 0.0, 0.0)),
+                transform: t * Mat4::from_translation(Vec3::new(x + length / 2.0, 0.0, 0.0)),
                 primitive: Primitive::Cuboid(Cuboid {
                     length: length * 0.75,
                     width: radius * 2.0 + 0.05,

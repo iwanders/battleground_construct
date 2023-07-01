@@ -1,4 +1,5 @@
 pub mod arm_joint;
+pub mod arm_segment;
 pub mod artillery_barrel;
 pub mod artillery_body;
 pub mod artillery_turret;

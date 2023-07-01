@@ -128,9 +128,9 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
     );
     world.add_component(base_revolute_entity, Parent::new(base_entity));
 
-    // -----   Turret
+    // -----   arm
     let revolute_config = components::revolute::RevoluteConfig {
-        axis: Vec3::new(1.0, 0.0, 0.0),
+        axis: Vec3::new(0.0, 1.0, 0.0),
         velocity_bounds: (-1.0, 1.0),
         acceleration_bounds: Some((-1.0, 1.0)),
         velocity_cmd: 0.3,
@@ -146,13 +146,13 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
     );
     world.add_component(
         arm_entity,
-        PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)).rotated_angle_z(Deg(90.0)),
+        PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
     );
     world.add_component(arm_entity, Parent::new(base_revolute_entity));
 
     // -----   lower arm
     let revolute_config = components::revolute::RevoluteConfig {
-        axis: Vec3::new(1.0, 0.0, 0.0),
+        axis: Vec3::new(0.0, 1.0, 0.0),
         velocity_bounds: (-1.0, 1.0),
         acceleration_bounds: Some((-1.0, 1.0)),
         velocity_cmd: 0.3,
@@ -168,14 +168,14 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
     );
     world.add_component(
         lower_arm_entity,
-        PreTransform::from_translation(Vec3::new(0.0, 1.0, 0.0)),
+        PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
     );
     world.add_component(lower_arm_entity, Parent::new(arm_entity));
 
     // -----   tip
     world.add_component(
         tip_entity,
-        PreTransform::from_translation(Vec3::new(0.0, 1.0, 0.0)),
+        PreTransform::from_translation(Vec3::new(1.0, 0.0, 0.0)),
     );
     world.add_component(tip_entity, Parent::new(lower_arm_entity));
     let particle_effect_id = components::id_generator::generate_id(world);
@@ -224,13 +224,19 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
 
 pub fn add_arm_passive(world: &mut World, unit: &UnitArm) {
     // -----   Body
-    let body = display::arm_joint::ArmJoint::new();
+    let body = display::arm_joint::ArmJoint::new().inline();
     world.add_component(unit.base_revolute_entity, body);
+    // world.add_component(unit.base_revolute_entity, display::arm_segment::ArmSegment::new());
 
     // -----   Turret
-    let tank_turret = display::arm_joint::ArmJoint::new();
-    world.add_component(unit.arm_entity, tank_turret);
+    let arm_joint = display::arm_joint::ArmJoint::new();
+    world.add_component(unit.arm_entity, arm_joint);
+    world.add_component(unit.arm_entity, display::arm_segment::ArmSegment::new());
 
-    let tank_turret = display::arm_joint::ArmJoint::new();
-    world.add_component(unit.lower_arm_entity, tank_turret);
+    let lower_arm_joint = display::arm_joint::ArmJoint::new();
+    world.add_component(unit.lower_arm_entity, lower_arm_joint);
+    world.add_component(
+        unit.lower_arm_entity,
+        display::arm_segment::ArmSegment::new(),
+    );
 }
