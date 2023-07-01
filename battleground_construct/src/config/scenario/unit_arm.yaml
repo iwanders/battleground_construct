@@ -1,0 +1,19 @@
+pre_setup: draw_kinematic_chain
+
+spawn_config:
+  teams:
+    -
+      name: Red
+      color: [255, 0, 0]
+      controller:
+        type: Idle
+
+  spawns:
+    -
+      x: 0.0
+      y: 5.0
+      yaw: 3.14
+      team: 0
+      unit: Arm
+      controller:
+        type: Idle

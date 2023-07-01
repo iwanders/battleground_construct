@@ -154,6 +154,7 @@ pub enum Unit {
     #[default]
     Tank,
     Artillery,
+    Arm,
 }
 
 /// Configures a unit spawn.

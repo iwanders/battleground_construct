@@ -234,6 +234,15 @@ pub fn setup_scenario(
                 };
                 units::artillery::spawn_artillery(world, unit_config);
             }
+            specification::Unit::Arm => {
+                let unit_config = units::arm::ArmSpawnConfig {
+                    x: spawn.x,
+                    y: spawn.y,
+                    yaw: spawn.yaw,
+                    controller,
+                };
+                units::arm::spawn_arm(world, unit_config);
+            }
         }
     }
 

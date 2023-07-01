@@ -122,7 +122,7 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
         world,
         &register_interface,
         base_revolute_entity,
-        "turret",
+        "base",
         1,
         revolute_config,
     );
@@ -184,7 +184,7 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
         display::particle_emitter::ParticleEmitter::bullet_trail(
             particle_effect_id,
             0.05,
-            display::Color::WHITE,
+            display::Color::RED,
         ),
     );
 
@@ -226,7 +226,10 @@ pub fn add_arm_passive(world: &mut World, unit: &UnitArm) {
     // -----   Body
     let body = display::arm_joint::ArmJoint::new().inline();
     world.add_component(unit.base_revolute_entity, body);
-    // world.add_component(unit.base_revolute_entity, display::arm_segment::ArmSegment::new());
+    world.add_component(
+        unit.base_revolute_entity,
+        display::arm_segment::ArmSegment::new(),
+    );
 
     // -----   Turret
     let arm_joint = display::arm_joint::ArmJoint::new();
