@@ -10,6 +10,17 @@ pub struct ParticleEmitter {
 }
 
 impl ParticleEmitter {
+    pub fn trail(id: u64, size: f32, color: Color, lifetime: f32) -> Self {
+        ParticleEmitter {
+            id,
+            particle_type: ParticleType::Trail {
+                size,
+                color,
+                lifetime,
+            },
+            emitting: true,
+        }
+    }
     pub fn bullet_trail(id: u64, size: f32, color: Color) -> Self {
         ParticleEmitter {
             id,

@@ -54,8 +54,11 @@ impl JointP {
         self.position
     }
 
-    pub fn set_velocity(&self,
-        interface: &mut dyn Interface, v: f32) -> Result<(), Box<dyn std::error::Error>>  {
+    pub fn set_velocity(
+        &self,
+        interface: &mut dyn Interface,
+        v: f32,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         interface.set_f32(self.revolute, REG_REVOLUTE_VELOCITY_CMD, v)?;
         Ok(())
     }
@@ -150,24 +153,19 @@ impl UnitControl for UnitControlExample {
         let T320_ut = H2_0.to_adjoint() * T311u;
         // log::info!("T210_ut: {T210_ut:?}");
 
-
         // ugh, now we need a 6 x 3 matrix :/
         // but an adjoint can be multiplied by a twist
         let adj_neg_h3_0 = (-H3_0.w.truncate()).to_h().to_adjoint();
         let c0 = adj_neg_h3_0 * T100u;
         let c1 = adj_neg_h3_0 * T210_ut;
         let c2 = adj_neg_h3_0 * T320_ut;
-        let J_part = cgmath::Matrix3::<f32>::from_cols(
-            c0.v,
-            c1.v,
-            c2.v,
-        );
+        let J_part = cgmath::Matrix3::<f32>::from_cols(c0.v, c1.v, c2.v);
         use cgmath::SquareMatrix;
         let pseudo = J_part.transpose() * (J_part * J_part.transpose()).invert().unwrap();
         let qd = pseudo * xd;
-        c_0.set_velocity(interface, qd.x);
-        c_1.set_velocity(interface, qd.y);
-        c_2.set_velocity(interface, qd.z);
+        c_0.set_velocity(interface, qd.x)?;
+        c_1.set_velocity(interface, qd.y)?;
+        c_2.set_velocity(interface, qd.z)?;
 
         Ok(())
     }
@@ -213,7 +211,11 @@ fn draw_clear(interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::E
 
 const RATE: f32 = 0.2;
 fn figure_eight_trajectory(t: f32) -> cgmath::Vector3<f32> {
-    vec3(0.8 * (t * RATE).cos(), -1.5, 0.8 + 0.6 * (2.0 *(t * RATE)).sin())
+    vec3(
+        0.8 * (t * RATE).cos(),
+        -1.5,
+        1.5 + 0.6 * (2.0 * (t * RATE)).sin(),
+    )
 }
 fn draw_trajectory(
     interface: &mut dyn Interface,

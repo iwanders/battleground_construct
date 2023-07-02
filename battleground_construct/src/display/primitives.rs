@@ -239,6 +239,11 @@ pub struct Element {
 
 #[derive(Deserialize, Serialize, Debug, Copy, Clone, PartialEq)]
 pub enum ParticleType {
+    Trail {
+        size: f32,
+        color: Color,
+        lifetime: f32,
+    },
     BulletTrail {
         size: f32,
         color: Color,

@@ -183,10 +183,11 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
     let particle_effect_id = components::id_generator::generate_id(world);
     world.add_component(
         tip_entity,
-        display::particle_emitter::ParticleEmitter::bullet_trail(
+        display::particle_emitter::ParticleEmitter::trail(
             particle_effect_id,
-            0.05,
+            0.025,
             display::Color::RED,
+            6.0,
         ),
     );
 

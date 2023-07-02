@@ -108,7 +108,7 @@ impl ParticleEmitter {
     ) -> Self {
         let mut p_color: Color = Color::default();
         let p_size: f32;
-        let lifetime = 0.4;
+        let mut p_lifetime = 0.4;
         let spawn_interval = 0.01;
         let mut initial_particle_velocity = vec3(0.0, 0.0, 0.0);
         let mut velocity_jitter = vec3(0.1, 0.1, 0.1);
@@ -124,6 +124,17 @@ impl ParticleEmitter {
         let mut rng = rand::thread_rng();
 
         match display {
+            display::primitives::ParticleType::Trail {
+                color,
+                size,
+                lifetime,
+            } => {
+                p_color = color.to_color();
+                p_color.a = 255;
+                p_size = *size;
+                p_lifetime = *lifetime;
+                velocity_jitter = vec3(0.0, 0.0, 0.0);
+            }
             display::primitives::ParticleType::BulletTrail { color, size } => {
                 p_color = color.to_color();
                 p_color.a = 128;
@@ -282,6 +293,7 @@ impl ParticleEmitter {
         }
         let color = p_color;
         let size = p_size;
+        let lifetime = p_lifetime;
 
         let mut square = CpuMesh::circle(8);
         // let mut square = CpuMesh::square();
