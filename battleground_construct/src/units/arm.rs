@@ -107,10 +107,12 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
 
     // Base revolute.
 
-    // world.add_component(
-        // base_revolute_entity,
-        // PreTransform::new().rotated_angle_y(Deg(-90.0)),
-    // );
+    world.add_component(
+        base_revolute_entity,
+        PreTransform::new()
+            .rotated_angle_z(Deg(-90.0))
+            .rotated_angle_y(Deg(-90.0)),
+    );
     let revolute_config = components::revolute::RevoluteConfig {
         axis: Vec3::new(1.0, 0.0, 0.0),
         velocity_bounds: (-1.0, 1.0),
