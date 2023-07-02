@@ -1,3 +1,7 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+#![allow(dead_code)]
+#![allow(unused_variables)]
 use battleground_unit_control::log;
 use battleground_unit_control::modules::{clock::*, controller::*, revolute::*, unit::*};
 use battleground_unit_control::{Interface, UnitControl};
@@ -124,6 +128,8 @@ impl UnitControl for UnitControlExample {
         draw_frame(interface, H2_0)?;
         draw_frame(interface, H3_0)?;
 
+        draw_trajectory(interface, t)?;
+
         Ok(())
     }
 }
@@ -163,6 +169,36 @@ fn draw_clear(interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::E
         battleground_unit_control::modules::draw::REG_DRAW_LINES,
         &[],
     )?;
+    Ok(())
+}
+
+fn figure_eight_trajectory(t: f32) -> cgmath::Vector3<f32> {
+    // x = 8*cos(1*t);
+    // y = -15;
+    // z = 8+ 6*sin(2*t);
+    vec3(0.8 * t.cos(), -1.5, 0.8 + 0.6 * (2.0 * t).sin())
+}
+fn draw_trajectory(
+    interface: &mut dyn Interface,
+    t: f32,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let l = std::f32::consts::PI * 2.0;
+    let dl = l / 100.0;
+    for k in 0..101 {
+        let x0 = k as f32 * dl;
+        let x1 = (k + 1) as f32 * dl;
+        let p0 = figure_eight_trajectory(x0);
+        let p1 = figure_eight_trajectory(x1);
+        draw_line(
+            interface,
+            LineSegment {
+                p0: p0.into(),
+                p1: p1.into(),
+                width: 0.01,
+                color: TRANSPARENT_MAGENTA,
+            },
+        )?;
+    }
     Ok(())
 }
 
