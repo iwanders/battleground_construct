@@ -391,7 +391,6 @@ mod test {
 
         let t = Twist::new(vec3(4.0f32, 5.0, 6.0), vec3(1.0, 2.0, 3.0));
         let exp_t = t.exp();
-        println!("zzz {exp_t:?}");
         /*
         The answer here is:
         -0.69492   0.71352   0.08929   1.63586
