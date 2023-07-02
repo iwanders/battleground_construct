@@ -154,7 +154,7 @@ impl UnitControl for UnitControlExample {
         // log::info!("T210_ut: {T210_ut:?}");
 
         // ugh, now we need a 6 x 3 matrix :/
-        // but an adjoint can be multiplied by a twist
+        // but an adjoint can be multiplied by a twist, and we only care about the position.
         let adj_neg_h3_0 = (-H3_0.w.truncate()).to_h().to_adjoint();
         let c0 = adj_neg_h3_0 * T100u;
         let c1 = adj_neg_h3_0 * T210_ut;
@@ -209,7 +209,7 @@ fn draw_clear(interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::E
     Ok(())
 }
 
-const RATE: f32 = 0.2;
+const RATE: f32 = 0.4;
 fn figure_eight_trajectory(t: f32) -> cgmath::Vector3<f32> {
     vec3(
         0.8 * (t * RATE).cos(),
@@ -245,7 +245,7 @@ fn draw_trajectory(
             p0: p0.into(),
             p1: (p0 + vec3(0.00, 0.00, -0.01)).into(),
             width: 0.1,
-            color: RED,
+            color: GREEN,
         },
     )?;
     Ok(())

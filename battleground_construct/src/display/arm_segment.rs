@@ -46,6 +46,13 @@ impl Drawable for ArmSegment {
                 }),
                 material,
             },
+            // Cap at the end.
+            Element {
+                transform: Mat4::from_translation(Vec3::new(length, 0.0, 0.0))
+                    * Mat4::from_angle_y(cgmath::Deg(90.0)),
+                primitive: Primitive::Circle(Circle { radius }),
+                material,
+            },
         ]
     }
 }

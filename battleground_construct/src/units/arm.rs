@@ -187,9 +187,16 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
             particle_effect_id,
             0.025,
             display::Color::RED,
-            6.0,
+            16.0,
         ),
     );
+
+    // Attach a cannon, just for easy visualisation of the tip.
+    let cannon_config = components::cannon::CannonConfig {
+        reload_time: 2.0,
+        fire_effect: std::rc::Rc::new(crate::units::tank::cannon_function),
+    };
+    world.add_component(tip_entity, components::cannon::Cannon::new(cannon_config));
 
     // -----   Control
     world.add_component(control_entity, display::draw_module::DrawComponent::new());
