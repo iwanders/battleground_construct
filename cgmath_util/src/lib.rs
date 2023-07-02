@@ -182,6 +182,40 @@ impl<S: BaseFloat> Twist<S> {
     pub fn new(v: cgmath::Vector3<S>, w: cgmath::Vector3<S>) -> Self {
         Self { v, w }
     }
+
+    pub fn to_cross(&self) -> Matrix4<S> {
+        cgmath::Matrix4::<S>::from_cols(
+            cgmath::Vector4::<S>::new(S::zero(), self.w.z, -self.w.y, S::zero()),
+            cgmath::Vector4::<S>::new(-self.w.z, S::zero(), self.w.x, S::zero()),
+            cgmath::Vector4::<S>::new(self.w.y, -self.w.x, S::zero(), S::zero()),
+            self.v.extend(S::zero()),
+        )
+    }
+
+    pub fn exp(&self) -> Matrix4<S> {
+        use cgmath::SquareMatrix;
+        let wnorm = self.w.euclid_norm();
+        let r = (self.w / wnorm).rotation_about(cgmath::Rad::<S>(self.w.euclid_norm()));
+        let s = S::one() / (wnorm * wnorm);
+        let wv = self.w.to_cross() * self.v;
+        let wvw = self.w * self.w.transposed_mul(self.v);
+        let v = ((cgmath::Matrix3::<S>::identity() - r) * wv + wvw) * s;
+        let mut r = r.to_h();
+        r.w = v.extend(S::one());
+        r
+    }
+}
+
+// Scaling of a twist, expected it was a unit twist, but not validated.
+impl<S: BaseFloat> std::ops::Mul<S> for Twist<S> {
+    type Output = Twist<S>;
+
+    fn mul(self, other: S) -> Self::Output {
+        Twist {
+            w: self.w * other,
+            v: self.v * other,
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Copy, Clone, PartialEq)]
@@ -255,6 +289,17 @@ impl<S: BaseFloat> RollPitchYawToHomogenous<S> for cgmath::Vector3<S> {
 
 pub trait RotationFrom<S: BaseFloat> {
     fn rotation_from(&self, v: cgmath::Vector3<S>) -> cgmath::Matrix3<S>;
+
+    fn rotation_about<A: Into<cgmath::Rad<S>>>(&self, angle: A) -> cgmath::Matrix3<S>
+    where
+        Self: ToCross<S> + Sized,
+    {
+        use cgmath::Angle;
+        use cgmath::SquareMatrix;
+        let k = self.to_cross();
+        let a: cgmath::Rad<S> = angle.into();
+        cgmath::Matrix3::<S>::identity() + (k * a.sin()) + k * k * (S::one() - a.cos())
+    }
 }
 
 // https://math.stackexchange.com/a/3262315
@@ -268,6 +313,16 @@ impl<S: BaseFloat> RotationFrom<S> for cgmath::Vector3<S> {
         let vu = v.euclid_norm() * u.euclid_norm();
         let a = (d / vu).asin();
         cgmath::Matrix3::<S>::identity() + (k * a.sin()) + k * k * (S::one() - a.cos())
+    }
+}
+
+pub trait MulTranspose<S: BaseFloat> {
+    fn transposed_mul(&self, other: cgmath::Vector3<S>) -> S;
+}
+
+impl<S: BaseFloat> MulTranspose<S> for cgmath::Vector3<S> {
+    fn transposed_mul(&self, other: cgmath::Vector3<S>) -> S {
+        self[0] * other[0] + self[1] * other[1] + self[2] * other[2]
     }
 }
 
@@ -304,5 +359,44 @@ mod test {
             Matrix4::from_angle_z(cgmath::Rad(0.3)) * Matrix4::from_angle_x(cgmath::Rad(0.3));
         let rpy = transform.to_rpy();
         assert_eq!(rpy, vec3(0.3, 0.0, 0.3));
+    }
+
+    #[test]
+    fn test_rotation_about() {
+        use cgmath::Rad;
+        let v = vec3(1.0f32, 0.0, 0.0);
+        let r = v.rotation_about(Rad(0.5));
+        assert_eq!(r.x.x, 1.0);
+        assert!((r.y.y - 0.87758).abs() < 0.001);
+        assert!((r.y.z - 0.47943).abs() < 0.001);
+        assert!((r.z.y - -0.47943).abs() < 0.001);
+        assert!((r.z.z - 0.87758).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_exponential_twist() {
+        let t = Twist::new(vec3(0.0f32, 0.0, 0.0), vec3(0.0, 0.0, 1.0));
+        let exp_t = t.exp();
+        assert!((exp_t.x.x - 0.54030).abs() < 0.001);
+        assert!((exp_t.x.y - 0.84147).abs() < 0.001);
+        assert!((exp_t.y.x - -0.84147).abs() < 0.001);
+        assert!((exp_t.y.y - 0.54030).abs() < 0.001);
+        assert!((exp_t.z.z - 1.0).abs() < 0.001);
+        assert!((exp_t.w.w - 1.0).abs() < 0.001);
+
+        let t = Twist::new(vec3(4.0f32, 5.0, 6.0), vec3(1.0, 2.0, 3.0));
+        let exp_t = t.exp();
+        println!("{exp_t:?}");
+        /*
+        The answer here is:
+        -0.69492   0.71352   0.08929   1.63586
+        -0.19201  -0.30379   0.93319   5.28902
+        0.69298   0.63135   0.34811   6.59537
+        0.00000   0.00000   0.00000   1.00000
+        */
+        assert!((exp_t.w.x - 1.63586).abs() < 0.001);
+        assert!((exp_t.w.y - 5.28902).abs() < 0.001);
+        assert!((exp_t.w.z - 6.59537).abs() < 0.001);
+        assert!((exp_t.w.w - 1.0).abs() < 0.001);
     }
 }
