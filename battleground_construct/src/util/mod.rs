@@ -1,5 +1,5 @@
 pub mod box_collision;
-pub mod cgmath;
+pub use cgmath_util as cgmath;
 
 #[cfg(test)]
 pub mod test_util;

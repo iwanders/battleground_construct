@@ -9,6 +9,7 @@ license = "BSD-3-Clause"
 engine = { path = "../engine", features=["serde"] }
 battleground_unit_control = { path = "../battleground_unit_control", features=["register-interface"]}
 unit_control_builtin = { path = "../unit_control_builtin"}
+cgmath_util = { path = "../cgmath_util"}
 unit_control_wasm = { path = "../unit_control_wasm", optional=true}
 cgmath = {version = "0.18.0", features = ["serde"]}
 serde = { version = "1.0", features = ["derive"] }

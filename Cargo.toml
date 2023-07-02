@@ -5,6 +5,7 @@ members = [
     "battleground_construct",
     "battleground_viewer",
     "battleground_unit_control",
+    "cgmath_util",
     "unit_control_arm",
     "unit_control_example",
     "unit_control_wasm",

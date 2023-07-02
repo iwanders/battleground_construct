@@ -65,7 +65,7 @@ impl UnitControl for UnitControlExample {
         let mut c_0 = JointP::new(rev_base);
         let mut c_1 = JointP::new(rev_arm);
         let mut c_2 = JointP::new(rev_elbow);
-        // c_1.set_point(PI_2);
+        c_1.set_point(PI_2);
 
         c_0.update(interface);
         c_1.update(interface);
