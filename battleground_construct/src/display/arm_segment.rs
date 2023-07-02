@@ -1,4 +1,5 @@
 use super::primitives::*;
+use crate::components::hit_box::HitBox;
 use engine::prelude::*;
 
 #[derive(Copy, Debug, Clone)]
@@ -12,6 +13,12 @@ impl Default for ArmSegment {
 impl ArmSegment {
     pub fn new() -> Self {
         ArmSegment {}
+    }
+    pub fn hit_boxes(&self) -> Vec<(Mat4, HitBox)> {
+        vec![(
+            Mat4::from_translation(Vec3::new(1.0 / 2.0, 0.0, 0.0)),
+            HitBox::new(1.0, 0.05 * 2.0, 0.05 * 2.0),
+        )]
     }
 }
 impl Component for ArmSegment {}

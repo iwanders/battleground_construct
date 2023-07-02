@@ -226,15 +226,28 @@ pub fn add_arm_passive(world: &mut World, unit: &UnitArm) {
     // -----   Body
     let body = display::arm_joint::ArmJoint::new().inline();
     world.add_component(unit.base_revolute_entity, body);
+    let segment = display::arm_segment::ArmSegment::new();
+    world.add_component(unit.base_revolute_entity, segment);
+
+    // well, this all isn't really elegant.
+
+    let boxes = segment.hit_boxes();
+    let hit_collection = components::hit_collection::HitCollection::from_hit_boxes(&boxes);
+    // world.add_component(unit.base_revolute_entity, display::debug_hit_collection::DebugHitCollection::from_hit_collection(&hit_collection));
     world.add_component(
         unit.base_revolute_entity,
-        display::arm_segment::ArmSegment::new(),
+        components::select_box::SelectBox::from_hit_box(&boxes[0].1),
     );
+    world.add_component(unit.base_revolute_entity, hit_collection);
 
     // -----   Turret
     let arm_joint = display::arm_joint::ArmJoint::new();
     world.add_component(unit.arm_entity, arm_joint);
-    world.add_component(unit.arm_entity, display::arm_segment::ArmSegment::new());
+    let segment = display::arm_segment::ArmSegment::new();
+    world.add_component(unit.arm_entity, segment);
+    let hit_collection =
+        components::hit_collection::HitCollection::from_hit_boxes(&segment.hit_boxes());
+    world.add_component(unit.arm_entity, hit_collection);
 
     let lower_arm_joint = display::arm_joint::ArmJoint::new();
     world.add_component(unit.lower_arm_entity, lower_arm_joint);

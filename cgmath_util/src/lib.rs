@@ -12,7 +12,7 @@ pub mod prelude {
     pub use super::RollPitchYawToHomogenous;
     pub use super::RotationFrom;
     pub use super::ToAdjoint;
-    pub use super::ToCross; // ToSkew?
+    pub use super::ToCross; // ToSkew? / 'Tilde' operation
     pub use super::ToHomogenous;
     pub use super::ToQuaternion;
     pub use super::ToRollPitchYaw;
@@ -195,6 +195,11 @@ impl<S: BaseFloat> Twist<S> {
     pub fn exp(&self) -> Matrix4<S> {
         use cgmath::SquareMatrix;
         let wnorm = self.w.euclid_norm();
+        if wnorm == S::zero() {
+            let mut r = cgmath::Matrix4::<S>::identity();
+            r.w = self.v.extend(S::one());
+            return r;
+        }
         let r = (self.w / wnorm).rotation_about(cgmath::Rad::<S>(self.w.euclid_norm()));
         let s = S::one() / (wnorm * wnorm);
         let wv = self.w.to_cross() * self.v;
@@ -386,7 +391,7 @@ mod test {
 
         let t = Twist::new(vec3(4.0f32, 5.0, 6.0), vec3(1.0, 2.0, 3.0));
         let exp_t = t.exp();
-        println!("{exp_t:?}");
+        println!("zzz {exp_t:?}");
         /*
         The answer here is:
         -0.69492   0.71352   0.08929   1.63586
@@ -398,5 +403,36 @@ mod test {
         assert!((exp_t.w.y - 5.28902).abs() < 0.001);
         assert!((exp_t.w.z - 6.59537).abs() < 0.001);
         assert!((exp_t.w.w - 1.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_combined() {
+        let l1 = 0.5f32;
+        let l2 = 1.0f32;
+        let l3 = 1.5f32;
+        let q1 = 1.0;
+        let q2 = 2.0;
+        let q3 = 3.0;
+
+        let t1 = Twist::new(vec3(0.0f32, 0.0, 0.0), vec3(0.0, 0.0, 1.0));
+        let h1_00 = vec3(0.0, 0.0, l1).to_h();
+        let h1_0 = (t1 * q1).exp() * h1_00;
+        println!("{h1_0:?}");
+        assert!((h1_0.x.x - 0.5403023).abs() < 0.001);
+        assert!((h1_0.w.z - 0.5).abs() < 0.001);
+
+        let t2 = Twist::new(vec3(0.0, l1, 0.0), vec3(1.0, 0.0, 0.0));
+        let h2_00 = vec3(0.0, 0.0, l1 + l2).to_h();
+        let h2_0 = (t1 * q1).exp() * (t2 * q2).exp() * h2_00;
+        println!("{h2_0:?}");
+        assert!((h2_0.x.x - 0.54030).abs() < 0.001);
+        assert!((h2_0.w.z - 0.08385).abs() < 0.001);
+
+        let t3 = Twist::new(vec3(0.0, l1 + l2, 0.0), vec3(1.0, 0.0, 0.0));
+        let h3_00 = vec3(0.0, 0.0, l1 + l2 + l3).to_h();
+        let h3_0 = (t1 * q1).exp() * (t2 * q2).exp() * (t3 * q3).exp() * h3_00;
+        println!("{h3_0:?}");
+        assert!((h3_0.x.x - 0.54030).abs() < 0.001);
+        assert!((h3_0.w.z - 0.50935).abs() < 0.001);
     }
 }

@@ -9,6 +9,7 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 battleground_unit_control = { path = "../battleground_unit_control", features=["wasm-interface"] }
+cgmath_util = { path = "../cgmath_util"}
 
 cgmath = {version = "0.18.0", features = ["serde"]}
 serde = { version = "1.0", features = ["derive"] }
