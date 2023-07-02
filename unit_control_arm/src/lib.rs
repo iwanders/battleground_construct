@@ -1,14 +1,14 @@
 #![allow(non_snake_case)]
-#![allow(unused_imports)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-use battleground_unit_control::log;
-use battleground_unit_control::modules::{clock::*, controller::*, revolute::*, unit::*};
+// #![allow(unused_imports)]
+// #![allow(dead_code)]
+// #![allow(unused_variables)]
+// use battleground_unit_control::log;
+use battleground_unit_control::modules::{clock::*, revolute::*};
 use battleground_unit_control::{Interface, UnitControl};
 // Module constants live in common and their respective units.
 use battleground_unit_control::modules::draw::LineSegment;
-use battleground_unit_control::units::{common, UnitType};
-use cgmath_util;
+use battleground_unit_control::units::common;
+// use cgmath_util;
 use cgmath_util::prelude::*;
 use cgmath_util::vec3;
 
@@ -20,16 +20,8 @@ const RED: [u8; 4] = [255, 0, 0, 255];
 const TRANSPARENT_MAGENTA: [u8; 4] = [255, 0, 255, 64];
 
 /// Our example controller!
-pub struct UnitControlExample {
-    last_print: f32,
-}
-impl Default for UnitControlExample {
-    fn default() -> Self {
-        Self {
-            last_print: -10000.0,
-        }
-    }
-}
+#[derive(Default)]
+pub struct UnitControlExample {}
 
 pub struct JointP {
     k_p: f32,
@@ -91,7 +83,6 @@ impl UnitControl for UnitControlExample {
 
         // This gets the current time.
         let t = interface.get_f32(common::MODULE_CLOCK, REG_CLOCK_ELAPSED)?;
-        let PI_2 = std::f32::consts::PI / 2.0;
 
         let l0 = 1.0;
         let l1 = 1.0;
@@ -129,10 +120,6 @@ impl UnitControl for UnitControlExample {
             * (T310 * c_2.position()).exp()
             * H300;
 
-        // This can be used to retrieve the unit type.
-        let unit_type = interface.get_i32(common::MODULE_UNIT, REG_UNIT_UNIT_TYPE)?;
-        let unit_type: UnitType = (unit_type as u32).try_into()?;
-
         draw_frame(interface, H1_0)?;
         draw_frame(interface, H2_0)?;
         draw_frame(interface, H3_0)?;
@@ -169,35 +156,6 @@ impl UnitControl for UnitControlExample {
 
         Ok(())
     }
-}
-
-fn dump_registers(interface: &dyn Interface) -> Result<(), Box<dyn std::error::Error>> {
-    use battleground_unit_control::RegisterType;
-    for module_index in interface.modules()? {
-        log::info!("module_name: {}", interface.module_name(module_index)?);
-        let registers = interface.registers(module_index)?;
-        for register_index in registers {
-            let name = interface.register_name(module_index, register_index)?;
-            let register_type = interface.register_type(module_index, register_index)?;
-            match register_type {
-                RegisterType::I32 => {
-                    let v = interface.get_i32(module_index, register_index)?;
-                    log::info!("    {module_index:0>8x}:{register_index:0>8x} (i32) {name}: {v}");
-                }
-                RegisterType::F32 => {
-                    let v = interface.get_f32(module_index, register_index)?;
-                    log::info!("    {module_index:0>8x}:{register_index:0>8x} (f32) {name}: {v}");
-                }
-                RegisterType::Bytes => {
-                    let len = interface.get_bytes_len(module_index, register_index)?;
-                    let mut read_v = vec![0; len];
-                    interface.get_bytes(module_index, register_index, &mut read_v)?;
-                    log::info!("    {module_index:0>8x}:{register_index:0>8x} (bytes {len}) {name}: {read_v:?}");
-                }
-            }
-        }
-    }
-    Ok(())
 }
 
 fn draw_clear(interface: &mut dyn Interface) -> Result<(), Box<dyn std::error::Error>> {
@@ -267,7 +225,7 @@ fn draw_line(
     )?;
     read_v.extend(l.into_le_bytes());
 
-    let v = interface.set_bytes(
+    interface.set_bytes(
         common::MODULE_DRAW,
         battleground_unit_control::modules::draw::REG_DRAW_LINES,
         &read_v,
