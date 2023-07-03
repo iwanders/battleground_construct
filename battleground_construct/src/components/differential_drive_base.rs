@@ -66,6 +66,9 @@ impl DifferentialDriveBase {
     pub fn wheel_velocities(&self) -> (f32, f32) {
         self.wheel_velocity_vel
     }
+    pub fn wheel_velocities_cmd(&self) -> (f32, f32) {
+        self.wheel_velocity_cmd
+    }
 
     pub fn wheel_velocities_mut(&mut self) -> &mut (f32, f32) {
         &mut self.wheel_velocity_vel
@@ -124,13 +127,15 @@ impl UnitModule for DifferentialDriveBaseModule {
                 Register::new_f32("right_wheel_vel", vels.1),
             );
 
+            let cmd = base.wheel_velocities_cmd();
+
             registers.insert(
                 REG_DIFF_DRIVE_LEFT_CMD,
-                Register::new_f32("left_wheel_cmd", vels.0),
+                Register::new_f32("left_wheel_cmd", cmd.0),
             );
             registers.insert(
                 REG_DIFF_DRIVE_RIGHT_CMD,
-                Register::new_f32("right_wheel_cmd", vels.1),
+                Register::new_f32("right_wheel_cmd", cmd.1),
             );
 
             let accel_bounds = base.wheel_acceleration_bounds().unwrap_or((0.0, 0.0));

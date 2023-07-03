@@ -47,6 +47,9 @@ pub fn add_systems(systems: &mut Systems) {
         systems::kinematics_differential_drive::KinematicsDifferentialDrive {},
     ));
     systems.add_system(Box::new(
+        systems::kinematics_tricycle::KinematicsTricycle {},
+    ));
+    systems.add_system(Box::new(
         systems::acceleration_velocity::AccelerationVelocity {},
     ));
     systems.add_system(Box::new(systems::velocity_pose::VelocityPose {}));

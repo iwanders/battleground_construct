@@ -77,6 +77,26 @@ pub fn add_common_diff_drive(
     );
 }
 
+pub fn add_common_tricycle(
+    world: &mut World,
+    register_interface: &RegisterInterfaceContainer,
+    base_entity: EntityId,
+    steer_entity: EntityId,
+    config: components::tricycle_base::TricycleConfig,
+    module_id: u32,
+) {
+    world.add_component(base_entity, components::velocity::Velocity::new());
+    world.add_component(
+        base_entity,
+        components::tricycle_base::TricycleBase::new(config, steer_entity),
+    );
+    register_interface.get_mut().add_module(
+        "tricycle",
+        module_id,
+        components::tricycle_base::TricycleBaseModule::new(base_entity),
+    );
+}
+
 pub fn add_common_body(
     world: &mut World,
     register_interface: &RegisterInterfaceContainer,

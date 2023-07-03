@@ -152,18 +152,19 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
 
     // -----   Base
     world.add_component(base_entity, Pose::from_se2(config.x, config.y, config.yaw));
-    // let diff_drive_config = components::differential_drive_base::DifferentialDriveConfig {
-    // track_width: 1.0,
-    // wheel_velocity_bounds: (-1.0, 1.0),
-    // wheel_acceleration_bounds: Some((-0.5, 0.5)),
-    // };
-    // super::common::add_common_diff_drive(
-    // world,
-    // &register_interface,
-    // base_entity,
-    // diff_drive_config,
-    // MODULE_CONSTRUCTOR_DIFF_DRIVE,
-    // );
+    let tricycle_config = components::tricycle_base::TricycleConfig {
+        wheel_base: 1.0,
+        wheel_velocity_bounds: (-1.0, 1.0),
+        wheel_acceleration_bounds: Some((-0.5, 0.5)),
+    };
+    super::common::add_common_tricycle(
+        world,
+        &register_interface,
+        base_entity,
+        front_left_steer_entity,
+        tricycle_config,
+        333, //MODULE_TANK_DIFF_DRIVE
+    );
 
     // -----   Body
     world.add_component(body_entity, Parent::new(base_entity));
