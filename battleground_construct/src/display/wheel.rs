@@ -53,10 +53,12 @@ impl Drawable for Wheel {
         }
         .into();
 
+        let c = -self.config.width / 2.0;
+
         let mut r = vec![
             // Main cylinder
             Element {
-                transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+                transform: Mat4::from_translation(Vec3::new(c, 0.0, 0.0)),
                 primitive: Primitive::Cylinder(Cylinder {
                     height: self.config.width,
                     radius: self.config.radius,
@@ -65,7 +67,7 @@ impl Drawable for Wheel {
             },
             // Cap at the base.
             Element {
-                transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0))
+                transform: Mat4::from_translation(Vec3::new(c, 0.0, 0.0))
                     * Mat4::from_angle_y(cgmath::Deg(90.0)),
                 primitive: Primitive::Circle(Circle {
                     radius: self.config.radius,
@@ -74,7 +76,7 @@ impl Drawable for Wheel {
             },
             // Cap at the end.
             Element {
-                transform: Mat4::from_translation(Vec3::new(self.config.width, 0.0, 0.0))
+                transform: Mat4::from_translation(Vec3::new(c + self.config.width, 0.0, 0.0))
                     * Mat4::from_angle_y(cgmath::Deg(90.0)),
                 primitive: Primitive::Circle(Circle {
                     radius: self.config.radius,
@@ -99,7 +101,7 @@ impl Drawable for Wheel {
                 let v = v.rem_euclid(total_length);
                 Mat4::from_angle_x(cgmath::Rad(v * 2.0 * std::f32::consts::PI))
                     * Mat4::from_translation(Vec3::new(
-                        self.config.width / 2.0,
+                        c + self.config.width / 2.0,
                         0.0,
                         self.config.radius,
                     ))

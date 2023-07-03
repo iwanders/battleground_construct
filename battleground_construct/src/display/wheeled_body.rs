@@ -50,7 +50,7 @@ impl WheeledBody {
     pub fn pose_rear_left_wheel(&self) -> Pose {
         Pose::from_translation(Vec3::new(
             0.0,
-            -(WHEELED_BODY_WIDTH + WHEELED_BODY_AXLE_PROTRUSION / 2.0) / 2.0,
+            -(WHEELED_BODY_WIDTH + WHEELED_BODY_AXLE_PROTRUSION * 2.0) / 2.0,
             WHEELED_BODY_AXLE_OFFSET,
         ))
         .rotated_angle_z(cgmath::Deg(-90.0))
@@ -58,7 +58,7 @@ impl WheeledBody {
     pub fn pose_rear_right_wheel(&self) -> Pose {
         Pose::from_translation(Vec3::new(
             0.0,
-            (WHEELED_BODY_WIDTH + WHEELED_BODY_AXLE_PROTRUSION / 2.0) / 2.0,
+            (WHEELED_BODY_WIDTH + WHEELED_BODY_AXLE_PROTRUSION * 2.0) / 2.0,
             WHEELED_BODY_AXLE_OFFSET,
         ))
         .rotated_angle_z(cgmath::Deg(90.0))
@@ -67,7 +67,7 @@ impl WheeledBody {
     pub fn pose_front_left_wheel(&self) -> Pose {
         Pose::from_translation(Vec3::new(
             WHEELED_BODY_WHEELBASE,
-            -(WHEELED_BODY_WIDTH + WHEELED_BODY_AXLE_PROTRUSION / 2.0) / 2.0,
+            -(WHEELED_BODY_WIDTH + WHEELED_BODY_AXLE_PROTRUSION * 2.0) / 2.0,
             WHEELED_BODY_AXLE_OFFSET,
         ))
         .rotated_angle_z(cgmath::Deg(-90.0))
@@ -75,7 +75,7 @@ impl WheeledBody {
     pub fn pose_front_right_wheel(&self) -> Pose {
         Pose::from_translation(Vec3::new(
             WHEELED_BODY_WHEELBASE,
-            (WHEELED_BODY_WIDTH + WHEELED_BODY_AXLE_PROTRUSION / 2.0) / 2.0,
+            (WHEELED_BODY_WIDTH + WHEELED_BODY_AXLE_PROTRUSION * 2.0) / 2.0,
             WHEELED_BODY_AXLE_OFFSET,
         ))
         .rotated_angle_z(cgmath::Deg(90.0))

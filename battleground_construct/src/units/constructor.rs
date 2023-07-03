@@ -291,7 +291,7 @@ pub fn add_constructor_passive(world: &mut World, unit: &UnitConstructor) {
 
     // -----   Wheels
     const WHEEL_RADIUS: f32 = 0.15;
-    const WHEEL_WIDTH: f32 = 0.1;
+    const WHEEL_WIDTH: f32 = 0.125;
     let wheel_config = display::wheel::WheelConfig {
         width: WHEEL_WIDTH,
         radius: WHEEL_RADIUS,
