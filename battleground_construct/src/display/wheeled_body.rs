@@ -5,6 +5,7 @@ use engine::prelude::*;
 
 const WHEELED_BODY_HEIGHT: f32 = 0.15;
 const WHEELED_BODY_WIDTH: f32 = 1.0;
+const WHEELED_BODY_LENGTH: f32 = 1.5;
 const WHEELED_BODY_ORIGIN_SHIFT: f32 = 0.5;
 const WHEELED_BODY_AXLE_PROTRUSION: f32 = 0.1;
 const WHEELED_BODY_AXLE_RADIUS: f32 = 0.05;
@@ -27,7 +28,7 @@ impl Default for WheeledBody {
 impl WheeledBody {
     pub fn new() -> Self {
         WheeledBody {
-            length: 1.5,
+            length: WHEELED_BODY_LENGTH,
             width: WHEELED_BODY_WIDTH,
             height: WHEELED_BODY_HEIGHT,
             color: Color {
