@@ -324,6 +324,7 @@ impl ConstructRender {
 
         // Wheeled base
         self.component_to_meshes::<display::wheeled_body::WheeledBody>(construct);
+        self.component_to_meshes::<display::wheel::Wheel>(construct);
 
         // We could also pre-calculate all entities that have the correct unit members, and then
         // filter based on that...

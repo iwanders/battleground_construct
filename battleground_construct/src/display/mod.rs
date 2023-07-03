@@ -25,6 +25,7 @@ pub mod tank_body;
 pub mod tank_bullet;
 pub mod tank_turret;
 pub mod tracks_side;
+pub mod wheel;
 pub mod wheeled_body;
 
 pub use primitives::Color;

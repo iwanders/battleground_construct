@@ -12,7 +12,6 @@ use battleground_unit_control::units::constructor::*;
 
 const CONSTRUCTOR_RADAR_REFLECTIVITY: f32 = 0.5;
 
-
 pub struct ConstructorSpawnConfig {
     pub x: f32,
     pub y: f32,
@@ -43,6 +42,15 @@ pub struct UnitConstructor {
     pub body_entity: EntityId,
     pub health_bar_entity: EntityId,
     pub flag_entity: EntityId,
+
+    pub rear_left_wheel_entity: EntityId,
+    pub rear_right_wheel_entity: EntityId,
+
+    pub front_left_steer_entity: EntityId,
+    pub front_right_steer_entity: EntityId,
+
+    pub front_left_wheel_entity: EntityId,
+    pub front_right_wheel_entity: EntityId,
 }
 impl Component for UnitConstructor {}
 
@@ -54,6 +62,10 @@ impl Unit for UnitConstructor {
             self.body_entity,
             self.health_bar_entity,
             self.flag_entity,
+            self.rear_left_wheel_entity,
+            self.rear_right_wheel_entity,
+            self.front_left_wheel_entity,
+            self.front_right_wheel_entity,
         ]
     }
 }
@@ -91,6 +103,15 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
     let flag_entity = world.add_entity();
     let health_bar_entity = world.add_entity();
 
+    let rear_left_wheel_entity = world.add_entity();
+    let rear_right_wheel_entity = world.add_entity();
+
+    let front_left_steer_entity = world.add_entity();
+    let front_right_steer_entity = world.add_entity();
+
+    let front_left_wheel_entity = world.add_entity();
+    let front_right_wheel_entity = world.add_entity();
+
     let unit_constructor = UnitConstructor {
         unit_entity,
         control_entity,
@@ -98,6 +119,15 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
         body_entity,
         flag_entity,
         health_bar_entity,
+
+        rear_left_wheel_entity,
+        rear_right_wheel_entity,
+
+        front_left_wheel_entity,
+        front_right_wheel_entity,
+
+        front_left_steer_entity,
+        front_right_steer_entity,
     };
     // Unit must be first in the group!
     let mut constructor_group_entities: Vec<EntityId> = vec![unit_entity];
@@ -123,20 +153,19 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
     // -----   Base
     world.add_component(base_entity, Pose::from_se2(config.x, config.y, config.yaw));
     // let diff_drive_config = components::differential_drive_base::DifferentialDriveConfig {
-        // track_width: 1.0,
-        // wheel_velocity_bounds: (-1.0, 1.0),
-        // wheel_acceleration_bounds: Some((-0.5, 0.5)),
+    // track_width: 1.0,
+    // wheel_velocity_bounds: (-1.0, 1.0),
+    // wheel_acceleration_bounds: Some((-0.5, 0.5)),
     // };
     // super::common::add_common_diff_drive(
-        // world,
-        // &register_interface,
-        // base_entity,
-        // diff_drive_config,
-        // MODULE_CONSTRUCTOR_DIFF_DRIVE,
+    // world,
+    // &register_interface,
+    // base_entity,
+    // diff_drive_config,
+    // MODULE_CONSTRUCTOR_DIFF_DRIVE,
     // );
 
     // -----   Body
-    // const CONSTRUCTOR_DIM_FLOOR_TO_BODY_Z: f32 = 0.3;
     world.add_component(body_entity, Parent::new(base_entity));
     world.add_component(
         body_entity,
@@ -156,6 +185,57 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
         body_entity,
     );
 
+    // -----   Wheels
+
+    let body = display::wheeled_body::WheeledBody::new();
+    world.add_component(rear_left_wheel_entity, Parent::new(body_entity));
+    world.add_component(
+        rear_left_wheel_entity,
+        PreTransform::from_mat4(*body.pose_rear_left_wheel()),
+    );
+    world.add_component(rear_right_wheel_entity, Parent::new(body_entity));
+    world.add_component(
+        rear_right_wheel_entity,
+        PreTransform::from_mat4(*body.pose_rear_right_wheel()),
+    );
+
+    world.add_component(front_left_steer_entity, Parent::new(body_entity));
+    world.add_component(
+        front_left_steer_entity,
+        PreTransform::from_mat4(*body.pose_front_left_wheel()),
+    );
+    world.add_component(front_right_steer_entity, Parent::new(body_entity));
+    world.add_component(
+        front_right_steer_entity,
+        PreTransform::from_mat4(*body.pose_front_right_wheel()),
+    );
+
+    // Should be a revolute and a revolute sync in between here, not direct parent.
+
+    let revolute_config = components::revolute::RevoluteConfig {
+        axis: Vec3::new(0.0, 0.0, 1.0),
+        velocity_bounds: (-1.0, 1.0),
+        acceleration_bounds: Some((-1.0, 1.0)),
+        velocity_cmd: 0.1,
+        ..Default::default()
+    };
+    super::common::add_revolute(
+        world,
+        &register_interface,
+        front_left_steer_entity,
+        "turret",
+        1337,
+        revolute_config,
+    );
+    world.add_component(
+        front_left_wheel_entity,
+        Parent::new(front_left_steer_entity),
+    );
+
+    world.add_component(
+        front_right_wheel_entity,
+        Parent::new(front_right_steer_entity),
+    );
 
     // -----   Control
     world.add_component(control_entity, display::draw_module::DrawComponent::new());
@@ -206,23 +286,37 @@ pub fn add_constructor_passive(world: &mut World, unit: &UnitConstructor) {
     );
     world.add_component(unit.body_entity, hitbox);
 
-
-    // -----   Tracks
-    /*
-    let track_config = display::tracks_side::TracksSideConfig {
-        width: 0.4,
-        length: 1.4,
-        height: 0.2,
-        track_width: 1.0,
+    // -----   Wheels
+    const WHEEL_RADIUS: f32 = 0.15;
+    const WHEEL_WIDTH: f32 = 0.1;
+    let wheel_config = display::wheel::WheelConfig {
+        width: WHEEL_WIDTH,
+        radius: WHEEL_RADIUS,
     };
-    let tracks = display::tracks_side::TracksSide::from_config(track_config, unit.base_entity);
+
+    let wheel = display::wheel::Wheel::from_config(wheel_config);
     let hit_collection =
-        components::hit_collection::HitCollection::from_hit_boxes(&tracks.hit_boxes());
-    world.add_component(unit.base_entity, tracks);
-    world.add_component(unit.base_entity, hit_collection);
-    */
+        components::hit_collection::HitCollection::from_hit_boxes(&wheel.hit_boxes());
+    world.add_component(unit.rear_left_wheel_entity, wheel);
+    world.add_component(unit.rear_left_wheel_entity, hit_collection);
 
+    let wheel = display::wheel::Wheel::from_config(wheel_config);
+    let hit_collection =
+        components::hit_collection::HitCollection::from_hit_boxes(&wheel.hit_boxes());
+    world.add_component(unit.rear_right_wheel_entity, wheel);
+    world.add_component(unit.rear_right_wheel_entity, hit_collection);
 
+    let wheel = display::wheel::Wheel::from_config(wheel_config);
+    let hit_collection =
+        components::hit_collection::HitCollection::from_hit_boxes(&wheel.hit_boxes());
+    world.add_component(unit.front_left_wheel_entity, wheel);
+    world.add_component(unit.front_left_wheel_entity, hit_collection);
+
+    let wheel = display::wheel::Wheel::from_config(wheel_config);
+    let hit_collection =
+        components::hit_collection::HitCollection::from_hit_boxes(&wheel.hit_boxes());
+    world.add_component(unit.front_right_wheel_entity, wheel);
+    world.add_component(unit.front_right_wheel_entity, hit_collection);
 
     // -----   Flag
     world.add_component(
@@ -246,5 +340,3 @@ pub fn add_constructor_passive(world: &mut World, unit: &UnitConstructor) {
     );
     world.add_component(unit.health_bar_entity, Parent::new(unit.base_entity));
 }
-
-

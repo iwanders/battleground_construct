@@ -4,8 +4,8 @@
 //! when importing with a wildcard.
 
 pub mod artillery;
-pub mod tank;
 pub mod constructor;
+pub mod tank;
 
 /// Holds module information that's shared between units.
 pub mod common {

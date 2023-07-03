@@ -2,8 +2,8 @@ pub mod arm;
 pub mod artillery;
 pub mod capturable_flag;
 pub mod common;
-pub mod tank;
 pub mod constructor;
+pub mod tank;
 
 use engine::prelude::*;
 
