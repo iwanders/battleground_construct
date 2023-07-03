@@ -232,6 +232,8 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
         Parent::new(front_left_steer_entity),
     );
 
+    super::common::add_revolute_pair(world, front_right_steer_entity, front_left_steer_entity);
+
     world.add_component(
         front_right_wheel_entity,
         Parent::new(front_right_steer_entity),

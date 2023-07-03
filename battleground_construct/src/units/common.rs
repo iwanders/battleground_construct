@@ -162,6 +162,14 @@ pub fn add_revolute(
     world.add_component(entity, components::pose::Pose::new());
     world.add_component(entity, components::velocity::Velocity::new());
 }
+pub fn add_revolute_pair(world: &mut World, entity: EntityId, pair_entity: EntityId) {
+    world.add_component(
+        entity,
+        components::revolute_pair::RevolutePair::new(pair_entity),
+    );
+    world.add_component(entity, components::pose::Pose::new());
+    world.add_component(entity, components::velocity::Velocity::new());
+}
 
 pub fn add_radar(
     world: &mut World,

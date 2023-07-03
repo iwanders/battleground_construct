@@ -40,6 +40,7 @@ pub mod radio_receiver;
 pub mod radio_transmitter;
 pub mod recording;
 pub mod revolute;
+pub mod revolute_pair;
 pub mod select_box;
 pub mod team;
 pub mod team_member;
