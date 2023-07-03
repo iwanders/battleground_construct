@@ -165,6 +165,13 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
         tricycle_config,
         333, //MODULE_TANK_DIFF_DRIVE
     );
+    world.add_component(
+        base_entity,
+        components::tricycle_front_wheel::TricycleFrontWheel::new(&[
+            front_left_wheel_entity,
+            front_right_wheel_entity,
+        ]),
+    );
 
     // -----   Body
     world.add_component(body_entity, Parent::new(base_entity));

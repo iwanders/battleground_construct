@@ -77,6 +77,9 @@ pub fn add_systems(systems: &mut Systems) {
     systems.add_system(Box::new(systems::health_bar_update::HealthBarUpdate {}));
     systems.add_system(Box::new(systems::display_tank_tracks::DisplayTankTracks {}));
     systems.add_system(Box::new(
+        systems::display_tricycle_wheels::DisplayTricycleWheels {},
+    ));
+    systems.add_system(Box::new(
         systems::display_capture_flag::DisplayCaptureFlag {},
     ));
 

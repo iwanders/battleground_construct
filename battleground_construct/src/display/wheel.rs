@@ -98,7 +98,7 @@ impl Drawable for Wheel {
 
             // Determine the track equation.
             let pos = |v: f32| {
-                let v = v.rem_euclid(total_length);
+                // let v = v.rem_euclid(total_length);
                 Mat4::from_angle_x(cgmath::Rad(v * 2.0 * std::f32::consts::PI))
                     * Mat4::from_translation(Vec3::new(
                         c + self.config.width / 2.0,

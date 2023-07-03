@@ -70,7 +70,7 @@ impl WheeledBody {
             -(WHEELED_BODY_WIDTH + WHEELED_BODY_AXLE_PROTRUSION * 2.0) / 2.0,
             WHEELED_BODY_AXLE_OFFSET,
         ))
-        .rotated_angle_z(cgmath::Deg(-90.0))
+        .rotated_angle_z(cgmath::Deg(90.0))
     }
     pub fn pose_front_right_wheel(&self) -> Pose {
         Pose::from_translation(Vec3::new(
