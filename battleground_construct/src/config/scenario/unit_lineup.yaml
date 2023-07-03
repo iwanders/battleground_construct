@@ -24,3 +24,11 @@ spawn_config:
       unit: Artillery
       controller:
         type: SwivelShoot
+    -
+      x: 0.0
+      y: 0.0
+      yaw: 3.14
+      team: 0
+      unit: Constructor
+      controller:
+        type: Idle

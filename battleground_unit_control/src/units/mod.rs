@@ -5,6 +5,7 @@
 
 pub mod artillery;
 pub mod tank;
+pub mod constructor;
 
 /// Holds module information that's shared between units.
 pub mod common {
@@ -36,8 +37,9 @@ pub mod common {
 /// This implements [`UnitType::try_from`] to convert from u32 to the enum.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub enum UnitType {
-    Tank,
     Artillery,
+    Constructor,
+    Tank,
     Unknown,
 }
 
@@ -46,6 +48,7 @@ impl TryFrom<u32> for UnitType {
     fn try_from(v: u32) -> Result<Self, Self::Error> {
         match v {
             x if x == UnitType::Artillery as u32 => Ok(UnitType::Artillery),
+            x if x == UnitType::Constructor as u32 => Ok(UnitType::Constructor),
             x if x == UnitType::Tank as u32 => Ok(UnitType::Tank),
             x if x == UnitType::Unknown as u32 => Ok(UnitType::Unknown),
             _ => Err("could not convert unit_type"),
@@ -57,11 +60,14 @@ impl TryFrom<u32> for UnitType {
 impl std::fmt::Display for UnitType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            UnitType::Tank => {
-                write!(f, "tank")
-            }
             UnitType::Artillery => {
                 write!(f, "artillery")
+            }
+            UnitType::Constructor => {
+                write!(f, "constructor")
+            }
+            UnitType::Tank => {
+                write!(f, "tank")
             }
             UnitType::Unknown => {
                 write!(f, "unknown")

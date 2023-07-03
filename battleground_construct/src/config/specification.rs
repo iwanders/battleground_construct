@@ -155,6 +155,7 @@ pub enum Unit {
     Tank,
     Artillery,
     Arm,
+    Constructor,
 }
 
 /// Configures a unit spawn.

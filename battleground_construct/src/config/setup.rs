@@ -243,6 +243,17 @@ pub fn setup_scenario(
                 };
                 units::arm::spawn_arm(world, unit_config);
             }
+            specification::Unit::Constructor => {
+                let unit_config = units::constructor::ConstructorSpawnConfig {
+                    x: spawn.x,
+                    y: spawn.y,
+                    yaw: spawn.yaw,
+                    controller,
+                    team_member: optional_team_component,
+                    radio_config: Some(spawn.radio),
+                };
+                units::constructor::spawn_constructor(world, unit_config);
+            }
         }
     }
 
