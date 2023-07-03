@@ -53,7 +53,7 @@ impl WheeledBody {
             -(WHEELED_BODY_WIDTH + WHEELED_BODY_AXLE_PROTRUSION * 2.0) / 2.0,
             WHEELED_BODY_AXLE_OFFSET,
         ))
-        .rotated_angle_z(cgmath::Deg(-90.0))
+        .rotated_angle_z(cgmath::Deg(90.0))
     }
     pub fn pose_rear_right_wheel(&self) -> Pose {
         Pose::from_translation(Vec3::new(
@@ -79,6 +79,10 @@ impl WheeledBody {
             WHEELED_BODY_AXLE_OFFSET,
         ))
         .rotated_angle_z(cgmath::Deg(90.0))
+    }
+
+    pub fn track_width(&self) -> f32 {
+        WHEELED_BODY_WIDTH + WHEELED_BODY_AXLE_PROTRUSION * 2.0
     }
 }
 impl Component for WheeledBody {}

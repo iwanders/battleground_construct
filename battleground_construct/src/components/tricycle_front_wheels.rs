@@ -2,13 +2,13 @@ use engine::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct TricycleFrontWheel {
+pub struct TricycleFrontWheels {
     wheels: Vec<EntityId>,
 }
 
-impl TricycleFrontWheel {
+impl TricycleFrontWheels {
     pub fn new(wheels: &[EntityId]) -> Self {
-        TricycleFrontWheel {
+        TricycleFrontWheels {
             wheels: wheels.to_vec(),
         }
     }
@@ -16,4 +16,4 @@ impl TricycleFrontWheel {
         &self.wheels
     }
 }
-impl Component for TricycleFrontWheel {}
+impl Component for TricycleFrontWheels {}

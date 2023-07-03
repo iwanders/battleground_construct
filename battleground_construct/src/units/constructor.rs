@@ -151,6 +151,8 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
     add_constructor_passive(world, &unit_constructor);
 
     // -----   Base
+    let body = display::wheeled_body::WheeledBody::new();
+
     world.add_component(base_entity, Pose::from_se2(config.x, config.y, config.yaw));
     let tricycle_config = components::tricycle_base::TricycleConfig {
         wheel_base: 1.0,
@@ -167,10 +169,17 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
     );
     world.add_component(
         base_entity,
-        components::tricycle_front_wheel::TricycleFrontWheel::new(&[
+        components::tricycle_front_wheels::TricycleFrontWheels::new(&[
             front_left_wheel_entity,
             front_right_wheel_entity,
         ]),
+    );
+    world.add_component(
+        base_entity,
+        components::tricycle_rear_wheels::TricycleRearWheels::new(
+            &[rear_left_wheel_entity, rear_right_wheel_entity],
+            body.track_width(),
+        ),
     );
 
     // -----   Body
@@ -195,7 +204,6 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
 
     // -----   Wheels
 
-    let body = display::wheeled_body::WheeledBody::new();
     world.add_component(rear_left_wheel_entity, Parent::new(body_entity));
     world.add_component(
         rear_left_wheel_entity,
