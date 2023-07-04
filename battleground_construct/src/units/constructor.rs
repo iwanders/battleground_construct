@@ -155,7 +155,7 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
 
     world.add_component(base_entity, Pose::from_se2(config.x, config.y, config.yaw));
     let tricycle_config = components::tricycle_base::TricycleConfig {
-        wheel_base: 1.0,
+        wheel_base: 1.5,
         wheel_velocity_bounds: (-1.0, 1.0),
         wheel_acceleration_bounds: Some((-0.5, 0.5)),
     };
@@ -226,8 +226,6 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
         PreTransform::from_mat4(*body.pose_front_right_wheel()),
     );
 
-    // Should be a revolute and a revolute sync in between here, not direct parent.
-
     let revolute_config = components::revolute::RevoluteConfig {
         axis: Vec3::new(0.0, 0.0, 1.0),
         velocity_bounds: (-1.0, 1.0),
@@ -247,12 +245,20 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
         front_left_wheel_entity,
         Parent::new(front_left_steer_entity),
     );
+    world.add_component(
+        front_left_wheel_entity,
+        PreTransform::from_translation(Vec3::new(-0.15, 0.0, 0.0)),
+    );
 
     super::common::add_revolute_pair(world, front_right_steer_entity, front_left_steer_entity);
 
     world.add_component(
         front_right_wheel_entity,
         Parent::new(front_right_steer_entity),
+    );
+    world.add_component(
+        front_right_wheel_entity,
+        PreTransform::from_translation(Vec3::new(0.15, 0.0, 0.0)),
     );
 
     // -----   Control
@@ -329,6 +335,10 @@ pub fn add_constructor_passive(world: &mut World, unit: &UnitConstructor) {
         components::hit_collection::HitCollection::from_hit_boxes(&wheel.hit_boxes());
     world.add_component(unit.front_left_wheel_entity, wheel);
     world.add_component(unit.front_left_wheel_entity, hit_collection);
+    world.add_component(
+        unit.front_left_wheel_entity,
+        display::wheeled_steer_beam::WheeledSteerBeam {},
+    );
 
     let wheel = display::wheel::Wheel::from_config(wheel_config);
     let hit_collection =

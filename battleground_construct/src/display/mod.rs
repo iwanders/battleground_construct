@@ -27,5 +27,6 @@ pub mod tank_turret;
 pub mod tracks_side;
 pub mod wheel;
 pub mod wheeled_body;
+pub mod wheeled_steer_beam;
 
 pub use primitives::Color;

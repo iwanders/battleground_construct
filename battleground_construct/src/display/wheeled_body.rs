@@ -3,14 +3,14 @@ use crate::components::hit_box::HitBox;
 use crate::components::pose::Pose;
 use engine::prelude::*;
 
-const WHEELED_BODY_HEIGHT: f32 = 0.15;
+const WHEELED_BODY_HEIGHT: f32 = 0.20;
 const WHEELED_BODY_WIDTH: f32 = 1.0;
 const WHEELED_BODY_LENGTH: f32 = 1.5;
 const WHEELED_BODY_ORIGIN_SHIFT: f32 = 0.5;
 const WHEELED_BODY_AXLE_PROTRUSION: f32 = 0.1;
 const WHEELED_BODY_AXLE_RADIUS: f32 = 0.05;
-const WHEELED_BODY_AXLE_OFFSET: f32 = -WHEELED_BODY_HEIGHT / 2.0 - WHEELED_BODY_AXLE_RADIUS / 2.0;
-const WHEELED_BODY_WHEELBASE: f32 = 1.0;
+const WHEELED_BODY_AXLE_OFFSET: f32 = -WHEELED_BODY_HEIGHT / 2.0;
+const WHEELED_BODY_WHEELBASE: f32 = 1.5;
 
 #[derive(Copy, Debug, Clone)]
 pub struct WheeledBody {
@@ -67,7 +67,7 @@ impl WheeledBody {
     pub fn pose_front_left_wheel(&self) -> Pose {
         Pose::from_translation(Vec3::new(
             WHEELED_BODY_WHEELBASE,
-            -(WHEELED_BODY_WIDTH + WHEELED_BODY_AXLE_PROTRUSION * 2.0) / 2.0,
+            0.0,
             WHEELED_BODY_AXLE_OFFSET,
         ))
         .rotated_angle_z(cgmath::Deg(90.0))
@@ -75,7 +75,7 @@ impl WheeledBody {
     pub fn pose_front_right_wheel(&self) -> Pose {
         Pose::from_translation(Vec3::new(
             WHEELED_BODY_WHEELBASE,
-            (WHEELED_BODY_WIDTH + WHEELED_BODY_AXLE_PROTRUSION * 2.0) / 2.0,
+            0.0,
             WHEELED_BODY_AXLE_OFFSET,
         ))
         .rotated_angle_z(cgmath::Deg(90.0))
@@ -118,20 +118,6 @@ impl Drawable for WheeledBody {
                 }),
                 material: self.color.into(),
             },
-            // front axle (at origin);
-            Element {
-                transform: Mat4::from_translation(Vec3::new(
-                    WHEELED_BODY_WHEELBASE,
-                    0.0,
-                    WHEELED_BODY_AXLE_OFFSET,
-                )),
-                primitive: Primitive::Cuboid(Cuboid {
-                    length: WHEELED_BODY_AXLE_RADIUS,
-                    width: self.width + WHEELED_BODY_AXLE_PROTRUSION * 2.0,
-                    height: WHEELED_BODY_AXLE_RADIUS,
-                }),
-                material: self.color.into(),
-            },
             Element {
                 transform: Mat4::from_translation(Vec3::new(
                     WHEELED_BODY_ORIGIN_SHIFT,
@@ -157,6 +143,30 @@ impl Drawable for WheeledBody {
                     height: 0.02,
                 }),
                 material: emissive_material,
+            },
+            // front steer rotation
+            Element {
+                transform: Mat4::from_translation(Vec3::new(WHEELED_BODY_WHEELBASE, 0.0, -0.1))
+                    * Mat4::from_angle_y(cgmath::Deg(-90.0)),
+                primitive: Primitive::Cylinder(Cylinder {
+                    height: 0.20,
+                    radius: 0.05,
+                }),
+                material: self.color.into(),
+            },
+            // front platform above steering.
+            Element {
+                transform: Mat4::from_translation(Vec3::new(
+                    0.1 + WHEELED_BODY_WHEELBASE - /* length */ 0.30 / 2.0,
+                    0.0,
+                    WHEELED_BODY_HEIGHT / 2.0  - /*height*/ 0.04 / 2.0,
+                )),
+                primitive: Primitive::Cuboid(Cuboid {
+                    length: 0.4,
+                    width: WHEELED_BODY_WIDTH,
+                    height: 0.04,
+                }),
+                material: self.color.into(),
             },
         ]
     }
