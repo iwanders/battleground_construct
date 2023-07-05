@@ -34,9 +34,13 @@ impl Wheel {
     }
 
     pub fn hit_boxes(&self) -> Vec<(Mat4, HitBox)> {
-        let track = HitBox::new(self.config.radius, self.config.width, self.config.radius);
+        let track = HitBox::new(
+            self.config.radius * 2.0,
+            self.config.width,
+            self.config.radius * 2.0,
+        );
         vec![(
-            Mat4::from_translation(Vec3::new(0.0, -self.config.width / 2.0, self.config.radius)),
+            Mat4::from_translation(Vec3::new(0.0, -self.config.width / 2.0, 0.0)),
             track,
         )]
     }
@@ -98,8 +102,8 @@ impl Drawable for Wheel {
 
             // Determine the track equation.
             let pos = |v: f32| {
-                // let v = v.rem_euclid(total_length);
-                Mat4::from_angle_x(cgmath::Rad(v * 2.0 * std::f32::consts::PI))
+                let v = v.rem_euclid(total_length);
+                Mat4::from_angle_x(cgmath::Rad((v / total_length) * 2.0 * std::f32::consts::PI))
                     * Mat4::from_translation(Vec3::new(
                         c + self.config.width / 2.0,
                         0.0,

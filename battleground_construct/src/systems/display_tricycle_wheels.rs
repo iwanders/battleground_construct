@@ -1,3 +1,4 @@
+use super::components::pose::PreTransform;
 use super::components::revolute::Revolute;
 use super::components::tricycle_base::TricycleBase;
 use super::components::tricycle_front_wheels::TricycleFrontWheels;
@@ -20,18 +21,24 @@ impl System for DisplayTricycleWheels {
         for (entity, base) in world.component_iter::<TricycleBase>() {
             // Reproduce the velocity calculation here, less than ideal...
             let wheel_vel = base.wheel_velocity();
-            let angle = world
-                .component::<Revolute>(base.steering_joint())
-                .unwrap()
-                .position();
+            let (angle, angle_vel) = {
+                let rev = world.component::<Revolute>(base.steering_joint()).unwrap();
+                (rev.position(), rev.velocity())
+            };
             let wheel_base = base.wheel_base();
             let angular_velocity = (wheel_vel / wheel_base) * angle.sin();
             let linear_velocity = wheel_vel * angle.cos();
 
             if let Some(front_wheels) = world.component::<TricycleFrontWheels>(entity) {
                 for wheel_entity in front_wheels.wheels() {
+                    let wheel_dist =
+                        if let Some(wheel_pre) = world.component::<PreTransform>(*wheel_entity) {
+                            wheel_pre.x()
+                        } else {
+                            0.0f32
+                        };
                     if let Some(ref mut wheel) = world.component_mut::<Wheel>(*wheel_entity) {
-                        wheel.add_track_distance(dt * wheel_vel)
+                        wheel.add_track_distance(dt * wheel_vel + -dt * angle_vel * wheel_dist);
                     }
                 }
             }
