@@ -1,5 +1,6 @@
 pub mod arm;
 pub mod artillery;
+pub mod base_tricycle;
 pub mod capturable_flag;
 pub mod common;
 pub mod constructor;
