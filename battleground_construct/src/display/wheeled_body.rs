@@ -97,6 +97,11 @@ impl Drawable for WheeledBody {
             ..Default::default()
         });
 
+        const CABIN_LENGTH: f32 = 0.3;
+        const CABIN_MARGIN: f32 = 0.05;
+        const CABIN_HEIGHT: f32 = 0.4;
+        const WINDOW_HEIGHT: f32 = 0.15;
+
         vec![
             // main body
             Element {
@@ -117,32 +122,6 @@ impl Drawable for WheeledBody {
                     height: WHEELED_BODY_AXLE_RADIUS,
                 }),
                 material: self.color.into(),
-            },
-            Element {
-                transform: Mat4::from_translation(Vec3::new(
-                    WHEELED_BODY_ORIGIN_SHIFT,
-                    0.4,
-                    WHEELED_BODY_HEIGHT / 2.0 + 0.01,
-                )),
-                primitive: Primitive::Cuboid(Cuboid {
-                    length: self.length - 0.25,
-                    width: 0.1,
-                    height: 0.02,
-                }),
-                material: emissive_material,
-            },
-            Element {
-                transform: Mat4::from_translation(Vec3::new(
-                    WHEELED_BODY_ORIGIN_SHIFT,
-                    -0.4,
-                    WHEELED_BODY_HEIGHT / 2.0 + 0.01,
-                )),
-                primitive: Primitive::Cuboid(Cuboid {
-                    length: self.length - 0.25,
-                    width: 0.1,
-                    height: 0.02,
-                }),
-                material: emissive_material,
             },
             // front steer rotation
             Element {
@@ -167,6 +146,34 @@ impl Drawable for WheeledBody {
                     height: 0.04,
                 }),
                 material: self.color.into(),
+            },
+            // The 'cabin'
+            Element {
+                transform: Mat4::from_translation(Vec3::new(
+                    WHEELED_BODY_WHEELBASE - CABIN_MARGIN / 2.0,
+                    0.0,
+                    WHEELED_BODY_HEIGHT / 2.0 + CABIN_HEIGHT / 2.0,
+                )),
+                primitive: Primitive::Cuboid(Cuboid {
+                    length: CABIN_LENGTH,
+                    width: self.width - CABIN_MARGIN,
+                    height: CABIN_HEIGHT,
+                }),
+                material: self.color.into(),
+            },
+            // emissive team color, use as 'window'
+            Element {
+                transform: Mat4::from_translation(Vec3::new(
+                    WHEELED_BODY_WHEELBASE - CABIN_MARGIN / 2.0 + CABIN_LENGTH / 2.0 + 0.01,
+                    0.0,
+                    WHEELED_BODY_HEIGHT / 2.0 + CABIN_HEIGHT - WINDOW_HEIGHT / 2.0 - CABIN_MARGIN,
+                )),
+                primitive: Primitive::Cuboid(Cuboid {
+                    length: 0.02,
+                    width: self.width - CABIN_MARGIN * 2.0,
+                    height: WINDOW_HEIGHT,
+                }),
+                material: emissive_material,
             },
         ]
     }

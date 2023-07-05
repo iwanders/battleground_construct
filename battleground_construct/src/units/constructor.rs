@@ -353,14 +353,14 @@ pub fn add_constructor_passive(world: &mut World, unit: &UnitConstructor) {
     );
     world.add_component(
         unit.flag_entity,
-        Pose::from_xyz(-0.8, -0.4, 0.3).rotated_angle_z(cgmath::Deg(180.0)),
+        Pose::from_xyz(1.4, -0.4, 0.6).rotated_angle_z(cgmath::Deg(180.0)),
     );
     world.add_component(unit.flag_entity, Parent::new(unit.base_entity));
 
     // -----   Health Bar
     world.add_component(
         unit.health_bar_entity,
-        Pose::from_xyz(-0.8, 0.0, 0.40).rotated_angle_z(cgmath::Deg(90.0)),
+        Pose::from_xyz(1.5, 0.0, 0.75).rotated_angle_z(cgmath::Deg(90.0)),
     );
     world.add_component(
         unit.health_bar_entity,
