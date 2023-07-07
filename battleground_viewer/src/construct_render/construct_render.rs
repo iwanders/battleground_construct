@@ -348,6 +348,7 @@ impl ConstructRender {
         self.component_to_meshes::<display::debug_elements::DebugElements>(construct);
         self.component_to_meshes::<display::debug_hit_collection::DebugHitCollection>(construct);
         self.component_to_meshes::<display::draw_kinematic_chain_diff_drive::DrawKinematicChainDiffDrive>(construct);
+        self.component_to_meshes::<display::draw_kinematic_chain_tricycle::DrawKinematicChainTricycle>(construct);
         self.component_to_meshes::<display::draw_kinematic_chain_link::DrawKinematicChainLink>(
             construct,
         );

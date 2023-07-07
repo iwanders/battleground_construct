@@ -2,7 +2,6 @@ use super::{Unit, UnitId};
 use crate::components;
 use crate::display;
 use crate::display::primitives::Vec3;
-use components::group::Group;
 use components::parent::Parent;
 use components::pose::{Pose, PreTransform};
 use engine::prelude::*;
@@ -310,20 +309,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     );
     world.add_component(control_entity, register_interface);
 
-    // Add the group, unit and team membership to each of the component.
-    // Unit must be first in the group!
-    let mut tank_group_entities: Vec<EntityId> = vec![unit_entity];
-    tank_group_entities.append(&mut unit_tank.children());
-
-    let group = Group::from(&tank_group_entities);
-    for e in tank_group_entities.iter() {
-        world.add_component(*e, group.clone());
-        world.add_component(*e, components::unit_member::UnitMember::new(unit_id));
-        // This feels a bit like a crux... but it's cheap and easy.
-        if let Some(team_member) = config.team_member {
-            world.add_component(*e, team_member);
-        }
-    }
+    super::common::add_group_team_unit(world, &unit_tank, config.team_member);
 
     unit_entity
 }

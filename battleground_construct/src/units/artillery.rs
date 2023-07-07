@@ -3,7 +3,6 @@ use crate::components;
 use crate::components::velocity::velocity_on_body;
 use crate::display;
 use crate::display::primitives::{Mat4, Vec3};
-use components::group::Group;
 use components::parent::Parent;
 use components::pose::{Pose, PreTransform};
 use engine::prelude::*;
@@ -359,16 +358,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     );
     world.add_component(control_entity, register_interface);
 
-    // Add the group, unit and team membership to each of the component.
-    let group = Group::from(&artillery_group_entities);
-    for e in artillery_group_entities.iter() {
-        world.add_component(*e, group.clone());
-        world.add_component(*e, components::unit_member::UnitMember::new(unit_id));
-        // This feels a bit like a crux... but it's cheap and easy.
-        if let Some(team_member) = config.team_member {
-            world.add_component(*e, team_member);
-        }
-    }
+    super::common::add_group_team_unit(world, &unit_artillery, config.team_member);
 
     unit_entity
 }
