@@ -1,6 +1,5 @@
-use super::Unit;
+use super::{Unit, UnitId};
 use crate::components;
-use crate::components::unit::UnitId;
 use crate::display;
 use crate::display::primitives::Vec3;
 use battleground_unit_control::units::UnitType;
@@ -11,10 +10,10 @@ use serde::{Deserialize, Serialize};
 
 use battleground_unit_control::units::constructor::*;
 
+// Display submodule doesn't use these.
 const BASE_TRICYCLE_RADAR_REFLECTIVITY: f32 = 0.5;
 const BASE_TRICYCLE_WHEEL_RADIUS: f32 = 0.15;
 const BASE_TRICYCLE_WHEEL_WIDTH: f32 = 0.125;
-const BASE_TRICYCLE_WHEEL_BASE: f32 = 1.5;
 const BASE_TRICYCLE_FRONT_WHEEL_OFFSET: f32 = 0.15;
 
 #[derive(Deserialize, Serialize, Debug, Clone, Copy)]
@@ -60,6 +59,12 @@ impl Unit for BaseTricycle {
             self.front_left_wheel_entity,
             self.front_right_wheel_entity,
         ]
+    }
+    fn unit_entity(&self) -> EntityId {
+        self.unit_entity
+    }
+    fn unit_id(&self) -> UnitId {
+        self.unit_id
     }
 }
 
@@ -141,7 +146,7 @@ pub fn spawn_base_tricycle(
 
     world.add_component(unit_entity, base_tricycle);
 
-    add_constructor_passive(world, &base_tricycle);
+    add_base_tricycle_passive(world, &base_tricycle);
 
     // -----   Base
     let body = display::wheeled_body::WheeledBody::new();
@@ -158,7 +163,7 @@ pub fn spawn_base_tricycle(
         base_entity,
         front_left_steer_entity,
         tricycle_config,
-        333, //MODULE_TANK_DIFF_DRIVE
+        MODULE_BASE_TRICYCLE_DRIVE,
     );
     world.add_component(
         base_entity,
@@ -179,7 +184,7 @@ pub fn spawn_base_tricycle(
     world.add_component(body_entity, Parent::new(base_entity));
     world.add_component(
         body_entity,
-        PreTransform::from_translation(Vec3::new(0.0, 0.0, CONSTRUCTOR_DIM_FLOOR_TO_BODY_Z)),
+        PreTransform::from_translation(Vec3::new(0.0, 0.0, BASE_TRICYCLE_DIM_FLOOR_TO_BODY_Z)),
     );
 
     super::common::add_radio_receiver_transmitter(
@@ -223,7 +228,7 @@ pub fn spawn_base_tricycle(
         axis: Vec3::new(0.0, 0.0, 1.0),
         velocity_bounds: (-1.0, 1.0),
         acceleration_bounds: Some((-1.0, 1.0)),
-        velocity_cmd: 0.1,
+        velocity_cmd: 0.0,
         ..Default::default()
     };
     super::common::add_revolute(
@@ -231,7 +236,7 @@ pub fn spawn_base_tricycle(
         &register_interface,
         front_left_steer_entity,
         "steer",
-        1337,
+        MODULE_BASE_TRICYCLE_REVOLUTE_STEER,
         revolute_config,
     );
     world.add_component(
@@ -277,7 +282,7 @@ pub fn spawn_base_tricycle(
     base_tricycle
 }
 
-pub fn add_constructor_passive(world: &mut World, unit: &BaseTricycle) {
+pub fn add_base_tricycle_passive(world: &mut World, unit: &BaseTricycle) {
     // -----   Body
     let body = display::wheeled_body::WheeledBody::new();
     let hitbox = body.hitbox();

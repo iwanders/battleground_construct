@@ -1,4 +1,4 @@
-use super::Unit;
+use super::{Unit, UnitId};
 use crate::components;
 use crate::display;
 use crate::display::primitives::Vec3;
@@ -20,6 +20,7 @@ pub struct ArmSpawnConfig {
 #[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 pub struct UnitArm {
     pub unit_entity: EntityId,
+    pub unit_id: UnitId,
     pub control_entity: EntityId,
     pub base_entity: EntityId,
     pub base_revolute_entity: EntityId,
@@ -39,6 +40,12 @@ impl Unit for UnitArm {
             self.lower_arm_entity,
             self.tip_entity,
         ]
+    }
+    fn unit_entity(&self) -> EntityId {
+        self.unit_entity
+    }
+    fn unit_id(&self) -> UnitId {
+        self.unit_id
     }
 }
 
@@ -72,8 +79,20 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
     let lower_arm_entity = world.add_entity();
     let tip_entity = world.add_entity();
 
+    // Create the register interface, we'll add modules throughout this function.
+    let register_interface = components::unit_interface::RegisterInterfaceContainer::new(
+        components::unit_interface::RegisterInterface::new(),
+    );
+    let unit_id = super::common::add_common_unit(
+        world,
+        &register_interface,
+        unit_entity,
+        battleground_unit_control::units::UnitType::Unknown,
+    );
+
     let unit_arm = UnitArm {
         unit_entity,
+        unit_id,
         control_entity,
         base_entity,
         base_revolute_entity,
@@ -85,20 +104,9 @@ pub fn spawn_arm(world: &mut World, config: ArmSpawnConfig) -> EntityId {
     let mut tank_group_entities: Vec<EntityId> = vec![unit_entity];
     tank_group_entities.append(&mut unit_arm.children());
 
-    // Create the register interface, we'll add modules throughout this function.
-    let register_interface = components::unit_interface::RegisterInterfaceContainer::new(
-        components::unit_interface::RegisterInterface::new(),
-    );
     super::common::add_common_global(&register_interface);
 
     world.add_component(unit_entity, unit_arm);
-
-    let unit_id = super::common::add_common_unit(
-        world,
-        &register_interface,
-        unit_entity,
-        battleground_unit_control::units::UnitType::Unknown,
-    );
 
     add_arm_passive(world, &unit_arm);
 

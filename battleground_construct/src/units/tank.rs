@@ -1,4 +1,4 @@
-use super::Unit;
+use super::{Unit, UnitId};
 use crate::components;
 use crate::display;
 use crate::display::primitives::Vec3;
@@ -38,6 +38,7 @@ impl Default for TankSpawnConfig {
 #[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 pub struct UnitTank {
     pub unit_entity: EntityId,
+    pub unit_id: UnitId,
     pub control_entity: EntityId,
     pub base_entity: EntityId,
     pub body_entity: EntityId,
@@ -63,6 +64,12 @@ impl Unit for UnitTank {
             self.barrel_entity,
             self.muzzle_entity,
         ]
+    }
+    fn unit_entity(&self) -> EntityId {
+        self.unit_entity
+    }
+    fn unit_id(&self) -> UnitId {
+        self.unit_id
     }
 }
 
@@ -108,8 +115,20 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let barrel_entity = world.add_entity();
     let muzzle_entity = world.add_entity();
 
+    // Create the register interface, we'll add modules throughout this function.
+    let register_interface = components::unit_interface::RegisterInterfaceContainer::new(
+        components::unit_interface::RegisterInterface::new(),
+    );
+    let unit_id = super::common::add_common_unit(
+        world,
+        &register_interface,
+        unit_entity,
+        battleground_unit_control::units::UnitType::Tank,
+    );
+
     let unit_tank = UnitTank {
         unit_entity,
+        unit_id,
         control_entity,
         base_entity,
         body_entity,
@@ -124,20 +143,9 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     let mut tank_group_entities: Vec<EntityId> = vec![unit_entity];
     tank_group_entities.append(&mut unit_tank.children());
 
-    // Create the register interface, we'll add modules throughout this function.
-    let register_interface = components::unit_interface::RegisterInterfaceContainer::new(
-        components::unit_interface::RegisterInterface::new(),
-    );
     super::common::add_common_global(&register_interface);
 
     world.add_component(unit_entity, unit_tank);
-
-    let unit_id = super::common::add_common_unit(
-        world,
-        &register_interface,
-        unit_entity,
-        battleground_unit_control::units::UnitType::Tank,
-    );
 
     add_tank_passive(world, &unit_tank);
 

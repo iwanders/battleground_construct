@@ -209,3 +209,25 @@ pub fn add_radar(
         components::radar::Radar::new_with_config(radar_config),
     );
 }
+
+pub fn add_group_team_unit(
+    world: &mut World,
+    unit: &dyn super::Unit,
+    team: Option<components::team_member::TeamMember>,
+) {
+    use crate::components::group::Group;
+    // Add the group, unit and team membership to each of the component.
+    // Unit must be first in the group!
+    let mut constructor_group_entities: Vec<EntityId> = vec![unit.unit_entity()];
+    constructor_group_entities.append(&mut unit.children());
+
+    let group = Group::from(&constructor_group_entities);
+    for e in constructor_group_entities.iter() {
+        world.add_component(*e, group.clone());
+        world.add_component(*e, components::unit_member::UnitMember::new(unit.unit_id()));
+        // This feels a bit like a crux... but it's cheap and easy.
+        if let Some(team_member) = team {
+            world.add_component(*e, team_member);
+        }
+    }
+}

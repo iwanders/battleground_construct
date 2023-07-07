@@ -36,7 +36,7 @@ impl TricycleBase {
         TricycleBase {
             steering_joint,
             config,
-            wheel_velocity_cmd: 0.1,
+            wheel_velocity_cmd: 0.0,
             wheel_velocity_vel: 0.0,
         }
     }

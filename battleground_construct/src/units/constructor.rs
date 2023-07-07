@@ -1,5 +1,5 @@
 use super::base_tricycle::{spawn_base_tricycle, BaseTricycle, BaseTricycleSpawnConfig};
-use super::Unit;
+use super::{Unit, UnitId};
 use crate::components;
 // use crate::display;
 // use crate::display::primitives::Vec3;
@@ -35,16 +35,22 @@ impl Default for ConstructorSpawnConfig {
 
 #[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 pub struct UnitConstructor {
-    pub base_entity: BaseTricycle,
+    pub base: BaseTricycle,
     pub thing: EntityId,
 }
 impl Component for UnitConstructor {}
 
 impl Unit for UnitConstructor {
     fn children(&self) -> Vec<EntityId> {
-        let mut r = self.base_entity.children();
+        let mut r = self.base.children();
         r.push(self.thing);
         r
+    }
+    fn unit_entity(&self) -> EntityId {
+        self.base.unit_entity()
+    }
+    fn unit_id(&self) -> UnitId {
+        self.base.unit_id()
     }
 }
 
@@ -65,21 +71,13 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
         battleground_unit_control::units::UnitType::Constructor,
     );
 
-    use crate::components::group::Group;
-    // Add the group, unit and team membership to each of the component.
-    // Unit must be first in the group!
-    let mut constructor_group_entities: Vec<EntityId> = vec![base.unit_entity];
-    constructor_group_entities.append(&mut base.children());
+    let new_entity = world.add_entity();
+    let unit_constructor = UnitConstructor {
+        base,
+        thing: new_entity,
+    };
 
-    let group = Group::from(&constructor_group_entities);
-    for e in constructor_group_entities.iter() {
-        world.add_component(*e, group.clone());
-        world.add_component(*e, components::unit_member::UnitMember::new(base.unit_id));
-        // This feels a bit like a crux... but it's cheap and easy.
-        if let Some(team_member) = config.team_member {
-            world.add_component(*e, team_member);
-        }
-    }
+    super::common::add_group_team_unit(world, &unit_constructor, config.team_member);
 
     base.unit_entity
 }

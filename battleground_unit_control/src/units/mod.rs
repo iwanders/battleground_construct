@@ -4,6 +4,7 @@
 //! when importing with a wildcard.
 
 pub mod artillery;
+pub mod base_tricycle;
 pub mod constructor;
 pub mod tank;
 
