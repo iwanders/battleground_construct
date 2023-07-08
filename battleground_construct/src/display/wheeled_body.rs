@@ -12,6 +12,12 @@ const WHEELED_BODY_AXLE_RADIUS: f32 = 0.05;
 const WHEELED_BODY_AXLE_OFFSET: f32 = -WHEELED_BODY_HEIGHT / 2.0;
 const WHEELED_BODY_WHEELBASE: f32 = 1.5;
 
+const WHEELED_BODY_CABIN_LENGTH: f32 = 0.3;
+const WHEELED_BODY_CABIN_MARGIN: f32 = 0.05;
+const WHEELED_BODY_CABIN_HEIGHT: f32 = 0.4;
+const WHEELED_BODY_WINDOW_HEIGHT: f32 = 0.15;
+const WHEELED_BODY_FRONT_PLATFORM: f32 = 0.4;
+
 #[derive(Copy, Debug, Clone)]
 pub struct WheeledBody {
     pub length: f32,
@@ -44,7 +50,15 @@ impl WheeledBody {
     }
 
     pub fn hitbox(&self) -> HitBox {
-        HitBox::new(self.length, self.width, self.height)
+        HitBox::new(
+            WHEELED_BODY_LENGTH + WHEELED_BODY_FRONT_PLATFORM,
+            self.width,
+            self.height,
+        )
+    }
+
+    pub fn center_offset(&self) -> f32 {
+        WHEELED_BODY_WHEELBASE / 2.0 + WHEELED_BODY_AXLE_OFFSET + WHEELED_BODY_CABIN_MARGIN
     }
 
     pub fn pose_rear_left_wheel(&self) -> Pose {
@@ -97,11 +111,6 @@ impl Drawable for WheeledBody {
             ..Default::default()
         });
 
-        const CABIN_LENGTH: f32 = 0.3;
-        const CABIN_MARGIN: f32 = 0.05;
-        const CABIN_HEIGHT: f32 = 0.4;
-        const WINDOW_HEIGHT: f32 = 0.15;
-
         vec![
             // main body
             Element {
@@ -136,12 +145,12 @@ impl Drawable for WheeledBody {
             // front platform above steering.
             Element {
                 transform: Mat4::from_translation(Vec3::new(
-                    0.1 + WHEELED_BODY_WHEELBASE - /* length */ 0.30 / 2.0,
+                    0.1 + WHEELED_BODY_WHEELBASE - /* length */ 0.3 / 2.0,
                     0.0,
                     WHEELED_BODY_HEIGHT / 2.0  - /*height*/ 0.04 / 2.0,
                 )),
                 primitive: Primitive::Cuboid(Cuboid {
-                    length: 0.4,
+                    length: WHEELED_BODY_FRONT_PLATFORM,
                     width: WHEELED_BODY_WIDTH,
                     height: 0.04,
                 }),
@@ -150,28 +159,32 @@ impl Drawable for WheeledBody {
             // The 'cabin'
             Element {
                 transform: Mat4::from_translation(Vec3::new(
-                    WHEELED_BODY_WHEELBASE - CABIN_MARGIN / 2.0,
+                    WHEELED_BODY_WHEELBASE - WHEELED_BODY_CABIN_MARGIN / 2.0,
                     0.0,
-                    WHEELED_BODY_HEIGHT / 2.0 + CABIN_HEIGHT / 2.0,
+                    WHEELED_BODY_HEIGHT / 2.0 + WHEELED_BODY_CABIN_HEIGHT / 2.0,
                 )),
                 primitive: Primitive::Cuboid(Cuboid {
-                    length: CABIN_LENGTH,
-                    width: self.width - CABIN_MARGIN,
-                    height: CABIN_HEIGHT,
+                    length: WHEELED_BODY_CABIN_LENGTH,
+                    width: self.width - WHEELED_BODY_CABIN_MARGIN,
+                    height: WHEELED_BODY_CABIN_HEIGHT,
                 }),
                 material: self.color.into(),
             },
             // emissive team color, use as 'window'
             Element {
                 transform: Mat4::from_translation(Vec3::new(
-                    WHEELED_BODY_WHEELBASE - CABIN_MARGIN / 2.0 + CABIN_LENGTH / 2.0 + 0.01,
+                    WHEELED_BODY_WHEELBASE - WHEELED_BODY_CABIN_MARGIN / 2.0
+                        + WHEELED_BODY_CABIN_LENGTH / 2.0
+                        + 0.01,
                     0.0,
-                    WHEELED_BODY_HEIGHT / 2.0 + CABIN_HEIGHT - WINDOW_HEIGHT / 2.0 - CABIN_MARGIN,
+                    WHEELED_BODY_HEIGHT / 2.0 + WHEELED_BODY_CABIN_HEIGHT
+                        - WHEELED_BODY_WINDOW_HEIGHT / 2.0
+                        - WHEELED_BODY_CABIN_MARGIN,
                 )),
                 primitive: Primitive::Cuboid(Cuboid {
                     length: 0.02,
-                    width: self.width - CABIN_MARGIN * 2.0,
-                    height: WINDOW_HEIGHT,
+                    width: self.width - WHEELED_BODY_CABIN_MARGIN * 2.0,
+                    height: WHEELED_BODY_WINDOW_HEIGHT,
                 }),
                 material: emissive_material,
             },

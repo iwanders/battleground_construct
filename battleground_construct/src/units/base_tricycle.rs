@@ -23,6 +23,9 @@ pub struct BaseTricycle {
     pub control_entity: EntityId,
     pub base_entity: EntityId,
     pub body_entity: EntityId,
+
+    pub center_entity: EntityId,
+
     pub health_bar_entity: EntityId,
     pub flag_entity: EntityId,
 
@@ -52,6 +55,7 @@ impl Unit for BaseTricycle {
             self.control_entity,
             self.base_entity,
             self.body_entity,
+            self.center_entity,
             self.health_bar_entity,
             self.flag_entity,
             self.rear_left_wheel_entity,
@@ -102,6 +106,7 @@ pub fn spawn_base_tricycle(
 
     let base_entity = world.add_entity();
     let body_entity = world.add_entity();
+    let center_entity = world.add_entity();
     let flag_entity = world.add_entity();
     let health_bar_entity = world.add_entity();
 
@@ -126,6 +131,7 @@ pub fn spawn_base_tricycle(
         control_entity,
         base_entity,
         body_entity,
+        center_entity,
         flag_entity,
         health_bar_entity,
 
@@ -187,6 +193,12 @@ pub fn spawn_base_tricycle(
         PreTransform::from_translation(Vec3::new(0.0, 0.0, BASE_TRICYCLE_DIM_FLOOR_TO_BODY_Z)),
     );
 
+    world.add_component(center_entity, Parent::new(body_entity));
+    world.add_component(
+        center_entity,
+        PreTransform::from_translation(Vec3::new(body.center_offset(), 0.0, 0.0)),
+    );
+
     super::common::add_radio_receiver_transmitter(
         world,
         &register_interface,
@@ -228,7 +240,7 @@ pub fn spawn_base_tricycle(
         axis: Vec3::new(0.0, 0.0, 1.0),
         velocity_bounds: (-1.0, 1.0),
         acceleration_bounds: Some((-1.0, 1.0)),
-        velocity_cmd: 0.0,
+        velocity_cmd: 0.1,
         ..Default::default()
     };
     super::common::add_revolute(
@@ -287,11 +299,21 @@ pub fn add_base_tricycle_passive(world: &mut World, unit: &BaseTricycle) {
     let body = display::wheeled_body::WheeledBody::new();
     let hitbox = body.hitbox();
     world.add_component(unit.body_entity, body);
+
+    // ----- Center entity
     world.add_component(
-        unit.body_entity,
+        unit.center_entity,
         components::select_box::SelectBox::from_hit_box(&hitbox),
     );
-    world.add_component(unit.body_entity, hitbox);
+    use crate::display::primitives::Mat4;
+    world.add_component(unit.center_entity, hitbox);
+    world.add_component(
+        unit.center_entity,
+        display::debug_hit_collection::DebugHitCollection::from_hit_boxes(&[(
+            Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+            hitbox,
+        )]),
+    );
 
     // -----   Wheels
     let wheel_config = display::wheel::WheelConfig {
