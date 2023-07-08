@@ -25,6 +25,7 @@ pub struct BaseTricycle {
     pub body_entity: EntityId,
 
     pub center_entity: EntityId,
+    pub cabin_entity: EntityId,
 
     pub health_bar_entity: EntityId,
     pub flag_entity: EntityId,
@@ -56,6 +57,7 @@ impl Unit for BaseTricycle {
             self.base_entity,
             self.body_entity,
             self.center_entity,
+            self.cabin_entity,
             self.health_bar_entity,
             self.flag_entity,
             self.rear_left_wheel_entity,
@@ -107,6 +109,7 @@ pub fn spawn_base_tricycle(
     let base_entity = world.add_entity();
     let body_entity = world.add_entity();
     let center_entity = world.add_entity();
+    let cabin_entity = world.add_entity();
     let flag_entity = world.add_entity();
     let health_bar_entity = world.add_entity();
 
@@ -132,6 +135,7 @@ pub fn spawn_base_tricycle(
         base_entity,
         body_entity,
         center_entity,
+        cabin_entity,
         flag_entity,
         health_bar_entity,
 
@@ -193,23 +197,31 @@ pub fn spawn_base_tricycle(
         PreTransform::from_translation(Vec3::new(0.0, 0.0, BASE_TRICYCLE_DIM_FLOOR_TO_BODY_Z)),
     );
 
+    // ---- Center
     world.add_component(center_entity, Parent::new(body_entity));
     world.add_component(
         center_entity,
         PreTransform::from_translation(Vec3::new(body.center_offset(), 0.0, 0.0)),
     );
 
+    // ---- Cabin
+    world.add_component(cabin_entity, Parent::new(body_entity));
+    world.add_component(
+        cabin_entity,
+        PreTransform::from_translation(body.cabin_offset()),
+    );
+
     super::common::add_radio_receiver_transmitter(
         world,
         &register_interface,
-        body_entity,
+        center_entity,
         config.radio_config,
     );
     super::common::add_common_body(
         world,
         &register_interface,
         BASE_TRICYCLE_RADAR_REFLECTIVITY,
-        body_entity,
+        center_entity,
     );
 
     // -----   Wheels
@@ -297,23 +309,23 @@ pub fn spawn_base_tricycle(
 pub fn add_base_tricycle_passive(world: &mut World, unit: &BaseTricycle) {
     // -----   Body
     let body = display::wheeled_body::WheeledBody::new();
-    let hitbox = body.hitbox();
     world.add_component(unit.body_entity, body);
 
     // ----- Center entity
+    let hitbox = body.hitbox();
     world.add_component(
         unit.center_entity,
         components::select_box::SelectBox::from_hit_box(&hitbox),
     );
-    use crate::display::primitives::Mat4;
     world.add_component(unit.center_entity, hitbox);
+
+    // ---- Cabin entity:
+    let cabin_hitbox = body.cabin_hitbox();
     world.add_component(
-        unit.center_entity,
-        display::debug_hit_collection::DebugHitCollection::from_hit_boxes(&[(
-            Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
-            hitbox,
-        )]),
+        unit.cabin_entity,
+        components::select_box::SelectBox::from_hit_box(&cabin_hitbox),
     );
+    world.add_component(unit.cabin_entity, cabin_hitbox);
 
     // -----   Wheels
     let wheel_config = display::wheel::WheelConfig {
@@ -356,18 +368,28 @@ pub fn add_base_tricycle_passive(world: &mut World, unit: &BaseTricycle) {
     );
     world.add_component(
         unit.flag_entity,
-        Pose::from_xyz(1.4, -0.4, 0.6).rotated_angle_z(cgmath::Deg(180.0)),
+        Pose::from_xyz(
+            -0.1,
+            -display::wheeled_body::WHEELED_BODY_CABIN_WIDTH / 2.0 + 0.05,
+            0.0,
+        )
+        .rotated_angle_z(cgmath::Deg(180.0)),
     );
-    world.add_component(unit.flag_entity, Parent::new(unit.base_entity));
+    world.add_component(unit.flag_entity, Parent::new(unit.cabin_entity));
 
     // -----   Health Bar
     world.add_component(
         unit.health_bar_entity,
-        Pose::from_xyz(1.5, 0.0, 0.75).rotated_angle_z(cgmath::Deg(90.0)),
+        Pose::from_xyz(
+            0.0,
+            0.0,
+            display::wheeled_body::WHEELED_BODY_CABIN_HEIGHT / 2.0,
+        )
+        .rotated_angle_z(cgmath::Deg(90.0)),
     );
     world.add_component(
         unit.health_bar_entity,
         display::health_bar::HealthBar::new(unit.unit_entity, 0.6),
     );
-    world.add_component(unit.health_bar_entity, Parent::new(unit.base_entity));
+    world.add_component(unit.health_bar_entity, Parent::new(unit.cabin_entity));
 }

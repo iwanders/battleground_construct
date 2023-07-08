@@ -3,20 +3,21 @@ use crate::components::hit_box::HitBox;
 use crate::components::pose::Pose;
 use engine::prelude::*;
 
-const WHEELED_BODY_HEIGHT: f32 = 0.20;
-const WHEELED_BODY_WIDTH: f32 = 1.0;
-const WHEELED_BODY_LENGTH: f32 = 1.5;
-const WHEELED_BODY_ORIGIN_SHIFT: f32 = 0.5;
-const WHEELED_BODY_AXLE_PROTRUSION: f32 = 0.1;
-const WHEELED_BODY_AXLE_RADIUS: f32 = 0.05;
-const WHEELED_BODY_AXLE_OFFSET: f32 = -WHEELED_BODY_HEIGHT / 2.0;
-const WHEELED_BODY_WHEELBASE: f32 = 1.5;
+pub const WHEELED_BODY_HEIGHT: f32 = 0.20;
+pub const WHEELED_BODY_WIDTH: f32 = 1.0;
+pub const WHEELED_BODY_LENGTH: f32 = 1.5;
+pub const WHEELED_BODY_ORIGIN_SHIFT: f32 = 0.5;
+pub const WHEELED_BODY_AXLE_PROTRUSION: f32 = 0.1;
+pub const WHEELED_BODY_AXLE_RADIUS: f32 = 0.05;
+pub const WHEELED_BODY_AXLE_OFFSET: f32 = -WHEELED_BODY_HEIGHT / 2.0;
+pub const WHEELED_BODY_WHEELBASE: f32 = 1.5;
 
-const WHEELED_BODY_CABIN_LENGTH: f32 = 0.3;
-const WHEELED_BODY_CABIN_MARGIN: f32 = 0.05;
-const WHEELED_BODY_CABIN_HEIGHT: f32 = 0.4;
-const WHEELED_BODY_WINDOW_HEIGHT: f32 = 0.15;
-const WHEELED_BODY_FRONT_PLATFORM: f32 = 0.4;
+pub const WHEELED_BODY_CABIN_LENGTH: f32 = 0.3;
+pub const WHEELED_BODY_CABIN_MARGIN: f32 = 0.05;
+pub const WHEELED_BODY_CABIN_HEIGHT: f32 = 0.4;
+pub const WHEELED_BODY_CABIN_WIDTH: f32 = WHEELED_BODY_WIDTH - WHEELED_BODY_CABIN_MARGIN;
+pub const WHEELED_BODY_WINDOW_HEIGHT: f32 = 0.15;
+pub const WHEELED_BODY_FRONT_PLATFORM: f32 = 0.4;
 
 #[derive(Copy, Debug, Clone)]
 pub struct WheeledBody {
@@ -59,6 +60,21 @@ impl WheeledBody {
 
     pub fn center_offset(&self) -> f32 {
         WHEELED_BODY_WHEELBASE / 2.0 + WHEELED_BODY_AXLE_OFFSET + WHEELED_BODY_CABIN_MARGIN
+    }
+
+    pub fn cabin_offset(&self) -> Vec3 {
+        Vec3::new(
+            WHEELED_BODY_WHEELBASE - WHEELED_BODY_CABIN_MARGIN / 2.0,
+            0.0,
+            WHEELED_BODY_CABIN_HEIGHT / 2.0 + WHEELED_BODY_HEIGHT / 2.0,
+        )
+    }
+    pub fn cabin_hitbox(&self) -> HitBox {
+        HitBox::new(
+            WHEELED_BODY_CABIN_LENGTH,
+            WHEELED_BODY_CABIN_WIDTH,
+            WHEELED_BODY_CABIN_HEIGHT,
+        )
     }
 
     pub fn pose_rear_left_wheel(&self) -> Pose {
