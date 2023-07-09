@@ -89,10 +89,10 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
         PreTransform::from_translation(Vec3::new(0.0, -0.25, 0.0)),
     );
 
-    // world.add_component(
-    // left_box.base,
-    // crate::display::debug_sphere::DebugSphere::with_radius(0.1),
-    // );
+    world.add_component(
+        left_box.lid,
+        crate::display::debug_sphere::DebugSphere::with_radius(0.1),
+    );
 
     let unit_constructor = UnitConstructor { base, left_box };
 

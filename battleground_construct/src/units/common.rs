@@ -248,13 +248,36 @@ pub struct ComponentBoxSpawnConfig {
 }
 
 pub fn add_component_box(world: &mut World, config: ComponentBoxSpawnConfig) -> ComponentBox {
+    use crate::components::parent::Parent;
+    use crate::components::pose::PreTransform;
+    use crate::display::primitives::Vec3;
     let base = world.add_entity();
 
     let component_box = crate::display::component_box::ComponentBox::from_config(config);
+    let lid_hinge_offset = component_box.lid_hinge_offset();
     let hitboxes = component_box.hit_collection();
     world.add_component(base, hitboxes);
     world.add_component(base, component_box);
 
     let lid = world.add_entity();
+    let lid_box = crate::display::component_box_lid::ComponentBoxLid::from_config(config);
+
+    let revolute_config = components::revolute::RevoluteConfig {
+        axis: Vec3::new(-1.0, 0.0, 0.0),
+        velocity_bounds: (-0.75, 0.75),
+        acceleration_bounds: Some((-1.0, 1.0)),
+        velocity_cmd: 0.1,
+        ..Default::default()
+    };
+
+    world.add_component(lid, lid_box);
+    let revolute = components::revolute::Revolute::from_config(revolute_config);
+    world.add_component(lid, revolute);
+    world.add_component(lid, components::pose::Pose::new());
+    world.add_component(lid, components::velocity::Velocity::new());
+
+    world.add_component(lid, PreTransform::from_translation(lid_hinge_offset));
+    world.add_component(lid, Parent::new(base));
+
     ComponentBox { base, lid }
 }

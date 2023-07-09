@@ -4,6 +4,7 @@ pub mod artillery_barrel;
 pub mod artillery_body;
 pub mod artillery_turret;
 pub mod component_box;
+pub mod component_box_lid;
 pub mod debug_box;
 pub mod debug_elements;
 pub mod debug_hit_collection;

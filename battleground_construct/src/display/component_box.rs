@@ -34,6 +34,10 @@ impl ComponentBox {
             HitBox::new(self.length, self.width, self.height),
         )])
     }
+
+    pub fn lid_hinge_offset(&self) -> Vec3 {
+        Vec3::new(-self.length / 2.0, self.width / 2.0, self.height)
+    }
 }
 impl Component for ComponentBox {}
 
