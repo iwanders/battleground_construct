@@ -3,6 +3,16 @@ use crate::components::hit_box::HitBox;
 use crate::components::hit_collection::HitCollection;
 use engine::prelude::*;
 
+/*
+Exterior dimensions of the box.
+                        ^ height
+                        |
+                        |
+     <- height / 2.    base     -> height / 2.0
+*/
+
+const WALL_THICKNESS: f32 = 0.02;
+
 #[derive(Copy, Debug, Clone)]
 pub struct ComponentBox {
     pub width: f32,
@@ -29,20 +39,62 @@ impl Component for ComponentBox {}
 
 impl Drawable for ComponentBox {
     fn drawables(&self) -> Vec<Element> {
-        vec![Element {
-            transform: Mat4::from_translation(Vec3::new(0.0, 0.0, 0.0)),
-            primitive: Primitive::Cuboid(Cuboid {
-                width: self.width,
-                height: self.height,
-                length: self.length,
-            }),
-            material: Color {
-                r: 200,
-                g: 100,
-                b: 0,
-                a: 255,
-            }
-            .into(),
-        }]
+        let wall_offset = self.height / 2.0;
+        let y = self.width / 2.0;
+        let x = self.length / 2.0 - WALL_THICKNESS;
+        let material: Material = Color {
+            r: 200,
+            g: 100,
+            b: 0,
+            a: 255,
+        }
+        .into();
+
+        vec![
+            Element {
+                transform: Mat4::from_translation(Vec3::new(
+                    0.0,
+                    -y + WALL_THICKNESS / 2.0,
+                    wall_offset,
+                )),
+                primitive: Primitive::Cuboid(Cuboid {
+                    width: WALL_THICKNESS,
+                    height: self.height,
+                    length: self.length - WALL_THICKNESS * 2.0,
+                }),
+                material,
+            },
+            Element {
+                transform: Mat4::from_translation(Vec3::new(
+                    0.0,
+                    y - WALL_THICKNESS / 2.0,
+                    wall_offset,
+                )),
+                primitive: Primitive::Cuboid(Cuboid {
+                    width: WALL_THICKNESS,
+                    height: self.height,
+                    length: self.length - WALL_THICKNESS * 2.0,
+                }),
+                material,
+            },
+            Element {
+                transform: Mat4::from_translation(Vec3::new(x, 0.0, wall_offset)),
+                primitive: Primitive::Cuboid(Cuboid {
+                    width: self.width,
+                    height: self.height,
+                    length: WALL_THICKNESS,
+                }),
+                material,
+            },
+            Element {
+                transform: Mat4::from_translation(Vec3::new(-x, 0.0, wall_offset)),
+                primitive: Primitive::Cuboid(Cuboid {
+                    width: self.width,
+                    height: self.height,
+                    length: WALL_THICKNESS,
+                }),
+                material,
+            },
+        ]
     }
 }

@@ -78,7 +78,7 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
 
     let left_box_config = ComponentBoxSpawnConfig {
         length: 1.25,
-        height: 0.3,
+        height: 0.2,
         width: 0.4,
     };
     let left_box = add_component_box(world, left_box_config);
