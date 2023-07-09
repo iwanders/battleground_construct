@@ -231,3 +231,30 @@ pub fn add_group_team_unit(
         }
     }
 }
+
+#[derive(Deserialize, Serialize, Debug, Clone, Copy)]
+pub struct ComponentBox {
+    /// The base entity to which the box is attached at the center.
+    pub base: EntityId,
+    /// The entity to which the lid is attached, it also has the revolute joint.
+    pub lid: EntityId,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, Copy)]
+pub struct ComponentBoxSpawnConfig {
+    pub width: f32,
+    pub length: f32,
+    pub height: f32,
+}
+
+pub fn add_component_box(world: &mut World, config: ComponentBoxSpawnConfig) -> ComponentBox {
+    let base = world.add_entity();
+
+    let component_box = crate::display::component_box::ComponentBox::from_config(config);
+    let hitboxes = component_box.hit_collection();
+    world.add_component(base, hitboxes);
+    world.add_component(base, component_box);
+
+    let lid = world.add_entity();
+    ComponentBox { base, lid }
+}

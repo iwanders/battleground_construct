@@ -325,7 +325,7 @@ pub fn add_tank_passive(world: &mut World, unit: &UnitTank) {
     );
     world.add_component(unit.body_entity, hitbox);
 
-    // -----   Turrent
+    // -----   Turret
     let tank_turret = display::tank_turret::TankTurret::new();
     let hitbox = tank_turret.hitbox();
     world.add_component(unit.turret_entity, hitbox);

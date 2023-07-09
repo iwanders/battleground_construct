@@ -7,10 +7,13 @@ pub const WHEELED_BODY_HEIGHT: f32 = 0.20;
 pub const WHEELED_BODY_WIDTH: f32 = 1.0;
 pub const WHEELED_BODY_LENGTH: f32 = 1.5;
 pub const WHEELED_BODY_ORIGIN_SHIFT: f32 = 0.5;
+pub const WHEELED_BODY_ORIGIN_Z: f32 =
+    battleground_unit_control::units::base_tricycle::BASE_TRICYCLE_DIM_FLOOR_TO_BODY_Z;
 pub const WHEELED_BODY_AXLE_PROTRUSION: f32 = 0.1;
 pub const WHEELED_BODY_AXLE_RADIUS: f32 = 0.05;
 pub const WHEELED_BODY_AXLE_OFFSET: f32 = -WHEELED_BODY_HEIGHT / 2.0;
 pub const WHEELED_BODY_WHEELBASE: f32 = 1.5;
+pub const WHEELED_BODY_WHEEL_RADIUS: f32 = 0.15;
 
 pub const WHEELED_BODY_CABIN_LENGTH: f32 = 0.3;
 pub const WHEELED_BODY_CABIN_MARGIN: f32 = 0.05;
@@ -67,6 +70,13 @@ impl WheeledBody {
             WHEELED_BODY_WHEELBASE - WHEELED_BODY_CABIN_MARGIN / 2.0,
             0.0,
             WHEELED_BODY_CABIN_HEIGHT / 2.0 + WHEELED_BODY_HEIGHT / 2.0,
+        )
+    }
+    pub fn payload_offset(&self) -> Vec3 {
+        Vec3::new(
+            (WHEELED_BODY_LENGTH - WHEELED_BODY_ORIGIN_SHIFT) / 2.0,
+            0.0,
+            WHEELED_BODY_WHEEL_RADIUS + WHEELED_BODY_HEIGHT,
         )
     }
     pub fn cabin_hitbox(&self) -> HitBox {

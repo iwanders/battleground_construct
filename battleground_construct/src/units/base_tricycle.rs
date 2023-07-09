@@ -12,7 +12,6 @@ use battleground_unit_control::units::constructor::*;
 
 // Display submodule doesn't use these.
 const BASE_TRICYCLE_RADAR_REFLECTIVITY: f32 = 0.5;
-const BASE_TRICYCLE_WHEEL_RADIUS: f32 = 0.15;
 const BASE_TRICYCLE_WHEEL_WIDTH: f32 = 0.125;
 const BASE_TRICYCLE_FRONT_WHEEL_OFFSET: f32 = 0.15;
 
@@ -25,6 +24,7 @@ pub struct BaseTricycle {
     pub body_entity: EntityId,
 
     pub center_entity: EntityId,
+    pub payload_entity: EntityId,
     pub cabin_entity: EntityId,
 
     pub health_bar_entity: EntityId,
@@ -57,6 +57,7 @@ impl Unit for BaseTricycle {
             self.base_entity,
             self.body_entity,
             self.center_entity,
+            self.payload_entity,
             self.cabin_entity,
             self.health_bar_entity,
             self.flag_entity,
@@ -108,6 +109,7 @@ pub fn spawn_base_tricycle(
 
     let base_entity = world.add_entity();
     let body_entity = world.add_entity();
+    let payload_entity = world.add_entity();
     let center_entity = world.add_entity();
     let cabin_entity = world.add_entity();
     let flag_entity = world.add_entity();
@@ -134,6 +136,7 @@ pub fn spawn_base_tricycle(
         control_entity,
         base_entity,
         body_entity,
+        payload_entity,
         center_entity,
         cabin_entity,
         flag_entity,
@@ -203,6 +206,12 @@ pub fn spawn_base_tricycle(
         center_entity,
         PreTransform::from_translation(Vec3::new(body.center_offset(), 0.0, 0.0)),
     );
+    // ---- Payload
+    world.add_component(payload_entity, Parent::new(base_entity));
+    world.add_component(
+        payload_entity,
+        PreTransform::from_translation(body.payload_offset()),
+    );
 
     // ---- Cabin
     world.add_component(cabin_entity, Parent::new(body_entity));
@@ -252,7 +261,7 @@ pub fn spawn_base_tricycle(
         axis: Vec3::new(0.0, 0.0, 1.0),
         velocity_bounds: (-1.0, 1.0),
         acceleration_bounds: Some((-1.0, 1.0)),
-        velocity_cmd: 0.1,
+        velocity_cmd: 0.0,
         ..Default::default()
     };
     super::common::add_revolute(
@@ -330,7 +339,7 @@ pub fn add_base_tricycle_passive(world: &mut World, unit: &BaseTricycle) {
     // -----   Wheels
     let wheel_config = display::wheel::WheelConfig {
         width: BASE_TRICYCLE_WHEEL_WIDTH,
-        radius: BASE_TRICYCLE_WHEEL_RADIUS,
+        radius: crate::display::wheeled_body::WHEELED_BODY_WHEEL_RADIUS,
     };
 
     let wheel = display::wheel::Wheel::from_config(wheel_config);

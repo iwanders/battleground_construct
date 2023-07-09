@@ -321,6 +321,7 @@ impl ConstructRender {
         self.component_to_meshes::<display::tracks_side::TracksSide>(construct);
         self.component_to_meshes::<display::health_bar::HealthBar>(construct);
         self.component_to_meshes::<display::radar_model::RadarModel>(construct);
+        self.component_to_meshes::<display::component_box::ComponentBox>(construct);
 
         // Wheeled base
         self.component_to_meshes::<display::wheeled_body::WheeledBody>(construct);
