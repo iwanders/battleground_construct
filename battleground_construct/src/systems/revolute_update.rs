@@ -30,10 +30,10 @@ impl System for RevoluteUpdate {
             let other = rev.pair();
             if let Some(revolute) = world.component_mut::<Revolute>(other) {
                 if let Some(mut vel) = world.component_mut::<Velocity>(entity) {
-                    *vel = revolute.to_twist().into();
+                    *vel = revolute.to_twist_scaled(rev.scale()).into();
                 }
                 if let Some(mut pose) = world.component_mut::<Pose>(entity) {
-                    let created_pose = revolute.to_pose();
+                    let created_pose = revolute.to_pose_scaled(rev.scale());
                     *pose = created_pose;
                 }
             }

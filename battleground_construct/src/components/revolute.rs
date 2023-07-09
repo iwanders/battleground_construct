@@ -119,11 +119,24 @@ impl Revolute {
     pub fn to_pose(&self) -> Pose {
         cgmath::Matrix4::<f32>::from_axis_angle(self.config.axis, cgmath::Rad(self.position)).into()
     }
+    pub fn to_pose_scaled(&self, scale: f32) -> Pose {
+        cgmath::Matrix4::<f32>::from_axis_angle(
+            self.config.axis,
+            cgmath::Rad(self.position) * scale,
+        )
+        .into()
+    }
 
     pub fn to_twist(&self) -> crate::util::cgmath::prelude::Twist<f32> {
         crate::util::cgmath::prelude::Twist::<f32>::new(
             cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0),
             self.config.axis * self.velocity,
+        )
+    }
+    pub fn to_twist_scaled(&self, scale: f32) -> crate::util::cgmath::prelude::Twist<f32> {
+        crate::util::cgmath::prelude::Twist::<f32>::new(
+            cgmath::Vector3::<f32>::new(0.0, 0.0, 0.0),
+            self.config.axis * self.velocity * scale,
         )
     }
 }

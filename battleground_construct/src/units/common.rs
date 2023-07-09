@@ -182,15 +182,14 @@ pub fn add_revolute(
     world.add_component(entity, components::pose::Pose::new());
     world.add_component(entity, components::velocity::Velocity::new());
 }
-pub fn add_revolute_pair(world: &mut World, entity: EntityId, pair_entity: EntityId) {
+pub fn add_revolute_pair(world: &mut World, entity: EntityId, pair_entity: EntityId, scale: f32) {
     world.add_component(
         entity,
-        components::revolute_pair::RevolutePair::new(pair_entity),
+        components::revolute_pair::RevolutePair::new(pair_entity, scale),
     );
     world.add_component(entity, components::pose::Pose::new());
     world.add_component(entity, components::velocity::Velocity::new());
 }
-
 pub fn add_radar(
     world: &mut World,
     register_interface: &RegisterInterfaceContainer,
@@ -260,7 +259,10 @@ pub fn add_component_box(world: &mut World, config: ComponentBoxSpawnConfig) -> 
     world.add_component(base, component_box);
 
     let lid = world.add_entity();
+    let lid2 = world.add_entity();
     let lid_box = crate::display::component_box_lid::ComponentBoxLid::from_config(config);
+    let lid_box2 = crate::display::component_box_lid::ComponentBoxLid::from_config(config);
+    let lid2_hinge_offset = lid_box.lid_offset();
 
     let revolute_config = components::revolute::RevoluteConfig {
         axis: Vec3::new(-1.0, 0.0, 0.0),
@@ -278,6 +280,12 @@ pub fn add_component_box(world: &mut World, config: ComponentBoxSpawnConfig) -> 
 
     world.add_component(lid, PreTransform::from_translation(lid_hinge_offset));
     world.add_component(lid, Parent::new(base));
+
+    world.add_component(lid2, lid_box2);
+
+    add_revolute_pair(world, lid2, lid, -2.0);
+    world.add_component(lid2, PreTransform::from_translation(lid2_hinge_offset));
+    world.add_component(lid2, Parent::new(lid));
 
     ComponentBox { base, lid }
 }

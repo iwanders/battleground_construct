@@ -12,9 +12,12 @@ pub struct ComponentBoxLid {
 impl ComponentBoxLid {
     pub fn from_config(config: crate::units::common::ComponentBoxSpawnConfig) -> Self {
         ComponentBoxLid {
-            width: config.width,
+            width: config.width / 2.0,
             length: config.length,
         }
+    }
+    pub fn lid_offset(&self) -> Vec3 {
+        Vec3::new(0.0, -self.width, 0.0)
     }
 }
 impl Component for ComponentBoxLid {}

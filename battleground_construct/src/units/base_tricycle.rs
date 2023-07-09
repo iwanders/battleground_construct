@@ -281,7 +281,12 @@ pub fn spawn_base_tricycle(
         PreTransform::from_translation(Vec3::new(-BASE_TRICYCLE_FRONT_WHEEL_OFFSET, 0.0, 0.0)),
     );
 
-    super::common::add_revolute_pair(world, front_right_steer_entity, front_left_steer_entity);
+    super::common::add_revolute_pair(
+        world,
+        front_right_steer_entity,
+        front_left_steer_entity,
+        1.0,
+    );
 
     world.add_component(
         front_right_wheel_entity,
