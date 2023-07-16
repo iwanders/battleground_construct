@@ -289,3 +289,25 @@ pub fn add_component_box(world: &mut World, config: ComponentBoxSpawnConfig) -> 
 
     ComponentBox { base, lid }
 }
+
+pub fn get_register_interface(world: &mut World, control_entity: EntityId) -> components::unit_interface::RegisterInterfaceContainer {
+    world.component::<components::unit_interface::RegisterInterfaceContainer>(control_entity).unwrap().clone()
+}
+
+
+pub fn add_common_deploy(
+    world: &mut World,
+    register_interface: &RegisterInterfaceContainer,
+    base_entity: EntityId,
+    config: components::deploy::DeployConfig,
+) {
+    world.add_component(
+        base_entity,
+        components::deploy::Deploy::new(config),
+    );
+    register_interface.get_mut().add_module(
+        "deply",
+        common::MODULE_DEPLOY,
+        components::deploy::DeployModule::new(base_entity),
+    );
+}

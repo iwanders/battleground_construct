@@ -38,6 +38,7 @@ impl Default for ConstructorSpawnConfig {
 pub struct UnitConstructor {
     pub base: BaseTricycle,
     pub right_box: ComponentBox,
+    pub left_box: ComponentBox,
 }
 impl Component for UnitConstructor {}
 
@@ -46,6 +47,8 @@ impl Unit for UnitConstructor {
         let mut r = self.base.children();
         r.push(self.right_box.base);
         r.push(self.right_box.lid);
+        r.push(self.left_box.base);
+        r.push(self.left_box.lid);
         r
     }
     fn unit_entity(&self) -> EntityId {
@@ -76,12 +79,12 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
         battleground_unit_control::units::UnitType::Constructor,
     );
 
-    let right_box_config = ComponentBoxSpawnConfig {
+    let box_config = ComponentBoxSpawnConfig {
         length: 1.25,
         height: 0.2,
         width: 0.4,
     };
-    let right_box = add_component_box(world, right_box_config);
+    let right_box = add_component_box(world, box_config.clone());
 
     world.add_component(right_box.base, Parent::new(base.payload_entity));
     world.add_component(
@@ -89,14 +92,29 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
         PreTransform::from_translation(Vec3::new(0.0, -0.25, 0.0)),
     );
 
-    // world.add_component(
-    // left_box.lid,
-    // crate::display::debug_sphere::DebugSphere::with_radius(0.1),
-    // );
+    let left_box = add_component_box(world, box_config);
 
-    let unit_constructor = UnitConstructor { base, right_box };
+    world.add_component(left_box.base, Parent::new(base.payload_entity));
+    world.add_component(
+        left_box.base,
+        PreTransform::from_translation(Vec3::new(0.0, 0.25, 0.0)).rotated_angle_z(cgmath::Deg(180.0)),
+    );
+
+    let unit_constructor = UnitConstructor { base, right_box, left_box};
+
+    let register_interface = super::common::get_register_interface(world, base.control_entity);
+
+    let deploy_config = components::deploy::DeployConfig{
+        deploy_function: std::rc::Rc::new(deploy_function),
+    };
+
+    super::common::add_common_deploy(world, &register_interface, base.control_entity, deploy_config);
 
     super::common::add_group_team_unit(world, &unit_constructor, config.team_member);
 
     base.unit_entity
+}
+
+pub fn deploy_function(world: &mut World, control_entity: EntityId, desired: components::deploy::DeployState) -> components::deploy::DeployState {
+    components::deploy::DeployState::InTransition
 }

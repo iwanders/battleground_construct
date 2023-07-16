@@ -22,6 +22,7 @@
 pub mod cannon;
 pub mod clock;
 pub mod controller;
+pub mod deploy;
 pub mod differential_drive;
 pub mod draw;
 pub mod gps;

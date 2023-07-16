@@ -31,6 +31,9 @@ pub mod common {
     pub const MODULE_GPS: u32 = 0x1700;
     /// Module identifier for the unit's draw module.
     pub const MODULE_DRAW: u32 = 0x1800;
+
+    /// Module identifier for the unit's deploy module, if it has one.
+    pub const MODULE_DEPLOY: u32 = 0x1900;
 }
 
 /// Unit type enum to denote the unit type.
