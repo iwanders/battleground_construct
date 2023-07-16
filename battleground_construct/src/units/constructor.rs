@@ -84,7 +84,7 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
         height: 0.2,
         width: 0.4,
     };
-    let right_box = add_component_box(world, box_config.clone());
+    let right_box = add_component_box(world, box_config);
 
     world.add_component(right_box.base, Parent::new(base.payload_entity));
     world.add_component(
@@ -159,7 +159,7 @@ pub fn deploy_function(world: &mut World, control_entity: EntityId) {
         if constructor.is_none() {
             return;
         }
-        constructor.unwrap().clone()
+        *constructor.unwrap()
     };
 
     let current_state;

@@ -266,7 +266,7 @@ impl ComponentBox {
                 return components::deploy::DeployState::InTransition;
             }
         }
-        return components::deploy::DeployState::InTransition;
+        components::deploy::DeployState::InTransition
     }
 }
 
