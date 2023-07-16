@@ -120,8 +120,7 @@ impl System for ProcessImpact {
                 // Ok, now we have all the things that we hit with the splash, we need to deduplicate
                 // them by group, and only select the splash that has the highest damage.
                 let mut deduplicated_splashes = vec![];
-                while !splashes.is_empty() {
-                    let last = splashes.pop().unwrap();
+                while let Some(last) = splashes.pop() {
                     // If last is part of a group, obtain the group, else just this entry.
                     let group_entities = world
                         .component::<components::group::Group>(last.0)
