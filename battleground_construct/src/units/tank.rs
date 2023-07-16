@@ -310,6 +310,7 @@ pub fn spawn_tank(world: &mut World, config: TankSpawnConfig) -> EntityId {
     world.add_component(control_entity, register_interface);
 
     super::common::add_group_team_unit(world, &unit_tank, config.team_member);
+    world.add_component(unit_tank.unit_entity(), unit_tank);
 
     unit_entity
 }

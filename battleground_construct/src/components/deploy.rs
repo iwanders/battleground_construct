@@ -9,7 +9,6 @@ pub enum DeployState {
     Normal,
 }
 
-
 // This must be an Rc, as we need to be able to copy it to allow a mutable world, we cannot borrow
 // it out of the deploy module.
 pub type DeployFunction = std::rc::Rc<dyn for<'a> Fn(&'a mut World, EntityId)>;
@@ -73,26 +72,33 @@ impl UnitModule for DeployModule {
         registers.clear();
         if let Some(deploy) = world.component::<Deploy>(self.entity) {
             let current = deploy.get_state();
-            let finished = current == deploy.get_desired_state();
+            let desired = deploy.get_desired_state();
+
+            let finished = current == desired;
+
             registers.insert(
                 REG_DEPLOY_FINISHED,
                 Register::new_i32("finished", finished as i32),
             );
+
+            let desired_as_i32 = match desired {
+                DeployState::Normal => DEPLOY_STATE_NORMAL,
+                DeployState::Deployed => DEPLOY_STATE_DEPLOYED,
+                DeployState::InTransition => DEPLOY_STATE_IN_TRANSITION,
+            };
+
             registers.insert(
                 REG_DEPLOY_DESIRED_STATE,
-                Register::new_i32("desired_state", (deploy.get_desired_state() == DeployState::Deployed) as i32),
+                Register::new_i32("desired_state", desired_as_i32),
             );
 
             let current_as_i32 = match current {
                 DeployState::Normal => DEPLOY_STATE_NORMAL,
                 DeployState::Deployed => DEPLOY_STATE_DEPLOYED,
                 DeployState::InTransition => DEPLOY_STATE_IN_TRANSITION,
-                
             };
-            registers.insert(
-                REG_DEPLOY_STATE,
-                Register::new_i32("state", current_as_i32),
-            );
+
+            registers.insert(REG_DEPLOY_STATE, Register::new_i32("state", current_as_i32));
         }
     }
 
@@ -106,7 +112,7 @@ impl UnitModule for DeployModule {
 
             if d == DEPLOY_STATE_NORMAL {
                 deploy.set_desired_state(DeployState::Normal);
-            } else if d == DEPLOY_STATE_DEPLOYED{
+            } else if d == DEPLOY_STATE_DEPLOYED {
                 deploy.set_desired_state(DeployState::Deployed);
             }
         }

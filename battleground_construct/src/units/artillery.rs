@@ -359,6 +359,7 @@ pub fn spawn_artillery(world: &mut World, config: ArtillerySpawnConfig) -> Entit
     world.add_component(control_entity, register_interface);
 
     super::common::add_group_team_unit(world, &unit_artillery, config.team_member);
+    world.add_component(unit_artillery.unit_entity(), unit_artillery);
 
     unit_entity
 }

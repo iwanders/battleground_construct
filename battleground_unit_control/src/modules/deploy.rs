@@ -8,7 +8,7 @@ pub const REG_DEPLOY_FINISHED: u32 = 0;
 pub const REG_DEPLOY_DESIRED_STATE: u32 = 1;
 
 /// Register to hold the current deployment state.
-pub const REG_DEPLOY_STATE: u32 = 1;
+pub const REG_DEPLOY_STATE: u32 = 2;
 
 /// Value used to express normal state.
 pub const DEPLOY_STATE_NORMAL: i32 = 0;

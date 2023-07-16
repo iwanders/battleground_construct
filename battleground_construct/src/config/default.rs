@@ -110,5 +110,5 @@ pub fn add_systems(systems: &mut Systems) {
     systems.add_system(Box::new(systems::gun_battery_trigger::GunBatteryTrigger {}));
 
     // Run other systems
-    systems.add_system(Box::new(systems::deploy::Deploy{}));
+    systems.add_system(Box::new(systems::deploy::Deploy {}));
 }

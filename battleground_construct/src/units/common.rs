@@ -239,6 +239,37 @@ pub struct ComponentBox {
     pub lid: EntityId,
 }
 
+impl ComponentBox {
+    pub fn deploy(
+        &self,
+        world: &mut World,
+        desired_state: components::deploy::DeployState,
+    ) -> components::deploy::DeployState {
+        if let Some(mut revolute) = world.component_mut::<components::revolute::Revolute>(self.lid)
+        {
+            let deployed_position = std::f32::consts::PI / 2.0;
+            let normal_position = 0.0;
+
+            let setpoint = if desired_state == components::deploy::DeployState::Deployed {
+                deployed_position
+            } else {
+                normal_position
+            };
+
+            let error = setpoint - revolute.position();
+            revolute.set_velocity_cmd(error.min(0.3).max(-0.3));
+
+            if error.abs() < 0.05 {
+                revolute.set_velocity_cmd(0.0);
+                return desired_state;
+            } else {
+                return components::deploy::DeployState::InTransition;
+            }
+        }
+        return components::deploy::DeployState::InTransition;
+    }
+}
+
 #[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 pub struct ComponentBoxSpawnConfig {
     pub width: f32,
@@ -290,10 +321,15 @@ pub fn add_component_box(world: &mut World, config: ComponentBoxSpawnConfig) -> 
     ComponentBox { base, lid }
 }
 
-pub fn get_register_interface(world: &mut World, control_entity: EntityId) -> components::unit_interface::RegisterInterfaceContainer {
-    world.component::<components::unit_interface::RegisterInterfaceContainer>(control_entity).unwrap().clone()
+pub fn get_register_interface(
+    world: &mut World,
+    control_entity: EntityId,
+) -> components::unit_interface::RegisterInterfaceContainer {
+    world
+        .component::<components::unit_interface::RegisterInterfaceContainer>(control_entity)
+        .unwrap()
+        .clone()
 }
-
 
 pub fn add_common_deploy(
     world: &mut World,
@@ -301,10 +337,7 @@ pub fn add_common_deploy(
     base_entity: EntityId,
     config: components::deploy::DeployConfig,
 ) {
-    world.add_component(
-        base_entity,
-        components::deploy::Deploy::new(config),
-    );
+    world.add_component(base_entity, components::deploy::Deploy::new(config));
     register_interface.get_mut().add_module(
         "deply",
         common::MODULE_DEPLOY,

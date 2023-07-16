@@ -104,3 +104,10 @@ pub fn get_unit_entity(world: &World, unit_id: UnitId) -> Option<EntityId> {
     }
     None
 }
+pub fn get_unit_entity_of(world: &World, other_entity: EntityId) -> Option<EntityId> {
+    if let Some(unit_member) = world.component::<super::unit_member::UnitMember>(other_entity) {
+        get_unit_entity(world, unit_member.unit())
+    } else {
+        None
+    }
+}
