@@ -109,12 +109,14 @@ pub fn spawn_constructor(world: &mut World, config: ConstructorSpawnConfig) -> E
     };
 
     super::common::add_common_deploy(world, &register_interface, base.control_entity, deploy_config);
+    world.component_mut::<components::deploy::Deploy>(base.control_entity).unwrap().set_desired_state(components::deploy::DeployState::Deployed);
 
     super::common::add_group_team_unit(world, &unit_constructor, config.team_member);
 
     base.unit_entity
 }
 
-pub fn deploy_function(world: &mut World, control_entity: EntityId, desired: components::deploy::DeployState) -> components::deploy::DeployState {
-    components::deploy::DeployState::InTransition
+pub fn deploy_function(world: &mut World, control_entity: EntityId) {
+    println!("Deploying!");
+    // components::deploy::DeployState::InTransition
 }

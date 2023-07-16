@@ -12,7 +12,7 @@ pub enum DeployState {
 
 // This must be an Rc, as we need to be able to copy it to allow a mutable world, we cannot borrow
 // it out of the deploy module.
-pub type DeployFunction = std::rc::Rc<dyn for<'a> Fn(&'a mut World, EntityId, /* desired */ DeployState) -> /* current */DeployState>;
+pub type DeployFunction = std::rc::Rc<dyn for<'a> Fn(&'a mut World, EntityId)>;
 
 pub struct DeployConfig {
     pub deploy_function: DeployFunction,

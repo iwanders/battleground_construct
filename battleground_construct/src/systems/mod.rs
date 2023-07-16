@@ -3,6 +3,7 @@ pub mod cannon_trigger;
 pub mod capture;
 pub mod clock;
 pub mod destroy;
+pub mod deploy;
 pub mod display_capture_flag;
 pub mod display_tank_tracks;
 pub mod display_tricycle_wheels;

@@ -268,7 +268,7 @@ pub fn add_component_box(world: &mut World, config: ComponentBoxSpawnConfig) -> 
         axis: Vec3::new(-1.0, 0.0, 0.0),
         velocity_bounds: (-0.75, 0.75),
         acceleration_bounds: Some((-1.0, 1.0)),
-        velocity_cmd: 0.1,
+        velocity_cmd: 0.0,
         ..Default::default()
     };
 
