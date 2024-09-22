@@ -355,7 +355,7 @@ mod logging {
 
 /// Module to perform panic handling.
 mod panic {
-    use core::panic::PanicInfo;
+    use std::panic::PanicHookInfo;
 
     /// Setup function to register the panic handler.
     pub fn setup() {
@@ -368,7 +368,7 @@ mod panic {
 
     /// Called when a panic occurs, it sends the panic information through the wasm log method and
     /// then halts execution.
-    fn handle_panic(info: &PanicInfo) -> ! {
+    fn handle_panic(info: &PanicHookInfo) -> ! {
         // For now, just dump it on the logger, deal with it.
         let z = format!("PANIC - {info}");
         unsafe {
