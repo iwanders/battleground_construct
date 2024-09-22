@@ -244,8 +244,12 @@ impl RegisterInterface {
         );
     }
 
-    pub fn add_module<M: UnitModule + Sized + 'static>(&mut self, name: &str, index: ModuleId, handler: M)
-    {
+    pub fn add_module<M: UnitModule + Sized + 'static>(
+        &mut self,
+        name: &str,
+        index: ModuleId,
+        handler: M,
+    ) {
         self.modules.insert(
             index,
             Module {

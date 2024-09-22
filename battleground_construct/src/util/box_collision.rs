@@ -1,5 +1,5 @@
 use cgmath::{BaseNum, Vector3};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// Generic AxisAlignedBox of given dimensions. AxisAlignedBox is centered around the origin.
 /// Technicallly a RectangularAxisAlignedBox.
