@@ -502,9 +502,9 @@ mod wasm32 {
         use web_sys::{Request, RequestInit, RequestMode, Response};
 
         // Fetch the recording.
-        let mut opts = RequestInit::new();
-        opts.method("GET");
-        opts.mode(RequestMode::Cors);
+        let opts = RequestInit::new();
+        opts.set_method("GET");
+        opts.set_mode(RequestMode::Cors);
 
         let location_origin = get_window()?.location().search()?;
         let url_params = UrlSearchParams::new_with_str(&location_origin)?;
