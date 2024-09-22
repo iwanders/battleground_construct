@@ -1,10 +1,10 @@
 use cgmath::{BaseNum, Vector3};
+use serde::{Serialize, Deserialize};
 
 /// Generic AxisAlignedBox of given dimensions. AxisAlignedBox is centered around the origin.
 /// Technicallly a RectangularAxisAlignedBox.
 #[repr(C)]
-#[derive(Copy, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AxisAlignedBox<S: BaseNum> {
     pub x: S, // x
     pub y: S, // y
