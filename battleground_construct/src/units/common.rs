@@ -257,7 +257,7 @@ impl ComponentBox {
             };
 
             let error = setpoint - revolute.position();
-            revolute.set_velocity_cmd(error.min(0.3).max(-0.3));
+            revolute.set_velocity_cmd(error.clamp(-0.3, 0.3));
 
             if error.abs() < 0.05 {
                 revolute.set_velocity_cmd(0.0);

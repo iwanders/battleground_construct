@@ -332,14 +332,14 @@ impl ConstructViewer {
                 .clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0))
                 .render(
                     &self.camera,
-                    &self.construct_render.objects(RenderPass::BaseScene),
+                    self.construct_render.objects(RenderPass::BaseScene),
                     &[&self.ambient_light, &self.directional_light],
                 );
             screen
                 // .clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0))
                 .render(
                     &self.camera,
-                    &self.construct_render.objects(RenderPass::BaseSceneOverlay),
+                    self.construct_render.objects(RenderPass::BaseSceneOverlay),
                     &[&self.ambient_light, &self.directional_light],
                 );
             // B1) Render depth buffer with non-emissives
@@ -364,7 +364,7 @@ impl ConstructViewer {
                 .render_with_material(
                     &write_depth_material,
                     &self.camera,
-                    &self.construct_render.objects(RenderPass::NonGlowDepths),
+                    self.construct_render.objects(RenderPass::NonGlowDepths),
                     &[],
                 );
 
@@ -386,7 +386,7 @@ impl ConstructViewer {
             )
             .render(
                 &self.camera,
-                &self.construct_render.objects(RenderPass::GlowSources),
+                self.construct_render.objects(RenderPass::GlowSources),
                 &[],
             );
 
@@ -395,7 +395,7 @@ impl ConstructViewer {
             screen.render_with_material(
                 &fence_material,
                 &self.camera,
-                &self.construct_render.objects(RenderPass::Fences),
+                self.construct_render.objects(RenderPass::Fences),
                 &[],
             );
 

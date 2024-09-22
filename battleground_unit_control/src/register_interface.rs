@@ -81,7 +81,7 @@ impl Register {
             value: Value::Bytes {
                 values: vec![],
                 min_len: 0,
-                max_len: std::usize::MAX,
+                max_len: usize::MAX,
             },
         }
     }
@@ -244,9 +244,7 @@ impl RegisterInterface {
         );
     }
 
-    pub fn add_module<M: UnitModule>(&mut self, name: &str, index: ModuleId, handler: M)
-    where
-        M: Sized + 'static,
+    pub fn add_module<M: UnitModule + Sized + 'static>(&mut self, name: &str, index: ModuleId, handler: M)
     {
         self.modules.insert(
             index,
