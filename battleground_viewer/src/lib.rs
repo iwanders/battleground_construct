@@ -82,7 +82,7 @@ impl ConstructViewer {
 
         let limiter = Limiter::new();
 
-        let camera = Camera::new_perspective(
+        let mut camera = Camera::new_perspective(
             window.viewport(),
             vec3(-5.0, 2.0, 1.5), // position
             vec3(0.0, 0.0, -0.5), // target
@@ -91,6 +91,9 @@ impl ConstructViewer {
             0.1,
             1000.0,
         );
+        // camera.color_mapping = ColorMapping::ComputeToSrgb;
+        // camera.color_mapping = ColorMapping::default();
+        camera.set_default_tone_and_color_mapping();
 
         let control = FlyControl::new(0.1);
 
@@ -399,6 +402,15 @@ impl ConstructViewer {
                 &self.camera,
                 self.construct_render.objects(RenderPass::Fences),
                 &[],
+            );
+
+            screen.render_with_effect(
+                &crate::fence_material::FenceEffect {},
+                &self.camera,
+                &self.construct_render.objects(RenderPass::Fences),
+                &[],
+                None,
+                None,
             );
 
             // D) Write B2 into A additively
