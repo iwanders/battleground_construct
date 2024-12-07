@@ -3,6 +3,8 @@ use three_d::*;
 use super::batching::*;
 use super::*;
 
+use three_d::core::prelude::Srgba as Color;
+
 use battleground_construct::display::primitives::Primitive;
 
 #[derive(Debug, Copy, Clone)]

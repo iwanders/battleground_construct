@@ -2,6 +2,8 @@ use three_d::*;
 
 use battleground_construct::display::primitives::Primitive;
 
+use three_d::core::prelude::Srgba as Color;
+
 pub trait BatchKey {
     fn to_batch_key(&self) -> u64;
 }

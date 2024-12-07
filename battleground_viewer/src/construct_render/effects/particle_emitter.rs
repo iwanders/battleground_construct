@@ -6,6 +6,8 @@ use rand::rngs::ThreadRng;
 use rand::Rng;
 use three_d::*;
 
+use three_d::core::prelude::Srgba as Color;
+
 use super::RetainedEffect;
 
 #[derive(Debug, Copy, Clone)]
@@ -73,7 +75,7 @@ pub struct ParticleEmitter {
     max_distance: f32,
 
     /// Color of each particle.
-    color: three_d::Color,
+    color: Color,
 
     /// Initial velocity of each particle.
     velocity: Vec3,

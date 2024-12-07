@@ -10,6 +10,8 @@ use construct_render::RenderPass;
 mod fence_material;
 use fence_material::FenceMaterial;
 
+use three_d::core::prelude::Srgba as Color;
+
 // This solution is a bit heavy handed, but using the time from the frame input means we have no
 // means of updating the time while we're in the frame calculation and thus can't break the
 // construct simulation steps. So we use this external time provider that's either std::Time or the

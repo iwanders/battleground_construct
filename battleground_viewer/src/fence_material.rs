@@ -1,5 +1,7 @@
 use three_d::*;
 
+use three_d::core::prelude::Srgba as Color;
+
 #[derive(Clone)]
 pub struct FenceMaterial<'a> {
     pub color: Color,

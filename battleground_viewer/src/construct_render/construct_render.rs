@@ -11,6 +11,8 @@ use battleground_construct::display::primitives::{Drawable, Primitive};
 use battleground_construct::Construct;
 use engine::prelude::*;
 
+use three_d::core::prelude::Srgba as Color;
+
 use crate::construct_render::util::ColorConvert;
 use effects::RetainedEffect;
 

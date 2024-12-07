@@ -5,6 +5,8 @@ use battleground_construct::util::cgmath::prelude::*;
 use rand::Rng;
 use three_d::*;
 
+use three_d::core::prelude::Srgba as Color;
+
 use super::RetainedEffect;
 
 // use battleground_construct::util::cgmath::InvertHomogeneous;

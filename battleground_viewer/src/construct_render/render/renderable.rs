@@ -52,7 +52,7 @@ impl<'a> Geometry for GeometryRef<'a> {
         }
     }
 
-    fn render_with_post_material(
+    fn render_with_effect(
         &self,
         material: &dyn PostMaterial,
         camera: &Camera,

@@ -3,6 +3,8 @@ use three_d::*;
 use super::batching::*;
 use super::*;
 
+use three_d::core::prelude::Srgba as Color;
+
 /// A geometry buffer for that accepts arbitrary meshes. If you have a collection of
 // ready-to-go `Primitive`s, use `PrimitiveGeometry`.
 pub struct MeshGeometry<M: Material + BatchMaterial> {
