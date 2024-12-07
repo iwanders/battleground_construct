@@ -39,7 +39,7 @@ pub enum GeometryRef<'a> {
     Mesh(&'a Mesh),
 }
 
-impl<'a> Geometry for GeometryRef<'a> {
+impl Geometry for GeometryRef<'_> {
     fn render_with_material(
         &self,
         material: &dyn Material,
