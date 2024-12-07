@@ -13,9 +13,6 @@ pub struct UnitControlWasmConfig {
     /// The alloted fuel per update call, if this is exceeded an exception is raised.
     pub fuel_per_update: Option<u64>,
 
-    /// Print the exports provided by the wasm module?
-    // pub print_exports: bool,
-
     /// The alloted fuel for the setup call, defaults to 100000000 if fuel_per_update is not None.
     pub fuel_for_setup: Option<u64>,
 
