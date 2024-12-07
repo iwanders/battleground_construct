@@ -299,7 +299,7 @@ impl ParticleEmitter {
 
         let mut square = CpuMesh::circle(8);
         // let mut square = CpuMesh::square();
-        square.transform(&Mat4::from_scale(size)).unwrap();
+        square.transform(Mat4::from_scale(size)).unwrap();
 
         // renderable.set_material(z);
 
@@ -467,7 +467,7 @@ impl RetainedEffect for ParticleEmitter {
         }
 
         if self.face_camera {
-            self.view_matrix = *camera.view();
+            self.view_matrix = camera.view();
         }
         self.last_time = time;
     }

@@ -159,8 +159,8 @@ impl ConstructRender {
     }
 
     pub fn camera_view(&self, camera: &Camera, construct: &Construct) -> Option<(Vec3, Vec3)> {
-        let mut current_pos = *camera.position();
-        let mut current_target = *camera.target();
+        let mut current_pos = camera.position();
+        let mut current_target = camera.target();
         let mut modified: bool = false;
         use battleground_construct::components::camera_position::CameraPosition;
         use battleground_construct::components::camera_target::CameraTarget;

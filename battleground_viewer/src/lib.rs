@@ -97,7 +97,7 @@ impl ConstructViewer {
         let ambient_light =
             three_d::renderer::light::AmbientLight::new(&context, 0.2, Color::WHITE);
         let directional_light =
-            DirectionalLight::new(&context, 1.5, Color::WHITE, &vec3(0.0, 0.2, -1.0));
+            DirectionalLight::new(&context, 1.5, Color::WHITE, vec3(0.0, 0.2, -1.0));
 
         let construct_render: ConstructRender = ConstructRender::new();
 
@@ -225,11 +225,11 @@ impl ConstructViewer {
                         ..
                     } => {
                         if button == three_d::renderer::control::MouseButton::Middle {
-                            let position = three_d::control::control_position_to_viewport_position(
+                            /*let position = three_d::control::control_position_to_viewport_position(
                                 position,
                                 frame_input.device_pixel_ratio,
                                 &frame_input.viewport,
-                            );
+                            );*/
                             let pos = self.camera.position_at_pixel(position);
                             let dir = self.camera.view_direction_at_pixel(position);
 
@@ -403,7 +403,16 @@ impl ConstructViewer {
 
             // D) Write B2 into A additively
             screen
-                .write(|| {
+                .apply_screen_effect(
+                    &BloomEffect {
+                        emissive_texture: &emissive_texture,
+                    },
+                    &self.camera,
+                    &[],
+                    None,
+                    None,
+                )
+                /*.write(|| {
                     apply_effect(
                         &self.context,
                         include_str!("shaders/bloom_effect.frag"),
@@ -418,7 +427,7 @@ impl ConstructViewer {
                             program.use_texture("emissive_buffer", &emissive_texture);
                         },
                     )
-                })
+                })*/
                 .write(|| gui.render());
 
             //----------------------------------------------------------------
@@ -439,6 +448,58 @@ impl ConstructViewer {
 
             FrameOutput::default()
         });
+    }
+}
+
+/*
+&self.context,
+include_str!("shaders/bloom_effect.frag"),
+,
+self.camera.viewport(),
+|program| {
+    program.use_texture("emissive_buffer", &emissive_texture);
+},
+*/
+
+struct BloomEffect<'a> {
+    emissive_texture: &'a Texture2D,
+}
+
+impl<'a> Effect for BloomEffect<'a> {
+    fn fragment_shader_source(
+        &self,
+        _lights: &[&dyn Light],
+        _color_texture: Option<ColorTexture>,
+        depth_texture: Option<DepthTexture>,
+    ) -> String {
+        include_str!("shaders/bloom_effect.frag").to_owned()
+    }
+    fn id(
+        &self,
+        color_texture: Option<ColorTexture<'_>>,
+        depth_texture: Option<DepthTexture<'_>>,
+    ) -> EffectMaterialId {
+        three_d::renderer::EffectMaterialId(0x0003)
+    }
+
+    fn use_uniforms(
+        &self,
+        program: &Program,
+        camera: &dyn Viewer,
+        _lights: &[&dyn Light],
+        _color_texture: Option<ColorTexture>,
+        depth_texture: Option<DepthTexture>,
+    ) {
+        program.use_texture("emissive_buffer", self.emissive_texture);
+    }
+
+    fn render_states(&self) -> RenderStates {
+        RenderStates {
+            write_mask: WriteMask::COLOR,
+            blend: Blend::ADD,
+            cull: Cull::Back,
+            depth_test: DepthTest::Always,
+        }
     }
 }
 

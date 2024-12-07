@@ -29,16 +29,23 @@ impl<'a> FenceMaterial<'a> {
 }
 
 impl Material for FenceMaterial<'_> {
-    fn fragment_shader_source(&self, use_vertex_colors: bool, _lights: &[&dyn Light]) -> String {
+    // fn fragment_shader_source(&self, use_vertex_colors: bool, _lights: &[&dyn Light]) -> String {
+    fn fragment_shader_source(&self, _lights: &[&dyn Light]) -> String {
         let mut shader = String::new();
-        if use_vertex_colors {
-            shader.push_str("#define USE_VERTEX_COLORS\nin vec4 col;\n");
-        }
+        // if use_vertex_colors {
+        // shader.push_str("#define USE_VERTEX_COLORS\nin vec4 col;\n");
+        // }
         shader.push_str(include_str!("shaders/fence_material.frag"));
         shader
     }
-    fn use_uniforms(&self, program: &Program, camera: &Camera, _lights: &[&dyn Light]) {
-        program.use_uniform("surfaceColor", self.color);
+    fn use_uniforms(&self, program: &Program, camera: &dyn Viewer, _lights: &[&dyn Light]) {
+        let z = three_d::core::prelude::Vector4 {
+            x: self.color.r,
+            y: self.color.g,
+            z: self.color.b,
+            w: self.color.a,
+        };
+        program.use_uniform("surfaceColor", z);
         program.use_uniform(
             "viewProjectionInverse",
             (camera.projection() * camera.view()).invert().unwrap(),
@@ -50,5 +57,8 @@ impl Material for FenceMaterial<'_> {
     }
     fn material_type(&self) -> MaterialType {
         MaterialType::Transparent
+    }
+    fn id(&self) -> EffectMaterialId {
+        three_d::renderer::EffectMaterialId(0x0001)
     }
 }

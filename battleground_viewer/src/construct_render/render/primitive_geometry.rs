@@ -132,7 +132,7 @@ fn primitive_to_mesh(primitive: &Primitive) -> CpuMesh {
             let mut m = CpuMesh::cube();
             // Returns an axis aligned unconnected cube mesh with positions in the range [-1..1] in all axes.
             // So default box is not identity.
-            m.transform(&Mat4::from_nonuniform_scale(
+            m.transform(Mat4::from_nonuniform_scale(
                 cuboid.length / 2.0,
                 cuboid.width / 2.0,
                 cuboid.height / 2.0,
@@ -142,12 +142,12 @@ fn primitive_to_mesh(primitive: &Primitive) -> CpuMesh {
         }
         Primitive::Sphere(sphere) => {
             let mut m = CpuMesh::sphere(32);
-            m.transform(&Mat4::from_scale(sphere.radius)).unwrap();
+            m.transform(Mat4::from_scale(sphere.radius)).unwrap();
             m
         }
         Primitive::Cylinder(cylinder) => {
             let mut m = CpuMesh::cylinder(128);
-            m.transform(&Mat4::from_nonuniform_scale(
+            m.transform(Mat4::from_nonuniform_scale(
                 cylinder.height,
                 cylinder.radius,
                 cylinder.radius,
@@ -157,7 +157,7 @@ fn primitive_to_mesh(primitive: &Primitive) -> CpuMesh {
         }
         Primitive::Cone(cone) => {
             let mut m = CpuMesh::cone(128);
-            m.transform(&Mat4::from_nonuniform_scale(
+            m.transform(Mat4::from_nonuniform_scale(
                 cone.height,
                 cone.radius,
                 cone.radius,
@@ -168,17 +168,13 @@ fn primitive_to_mesh(primitive: &Primitive) -> CpuMesh {
         Primitive::Line(_line) => CpuMesh::cylinder(4),
         Primitive::Circle(circle) => {
             let mut m = CpuMesh::circle(128);
-            m.transform(&Mat4::from_scale(circle.radius)).unwrap();
+            m.transform(Mat4::from_scale(circle.radius)).unwrap();
             m
         }
         Primitive::ExtrudedRectangle(_extruded_rectangle) => {
             let mut m = CpuMesh::cube();
-            m.transform(&Mat4::from_nonuniform_scale(
-                1.0 / 2.0,
-                1.0 / 2.0,
-                1.0 / 2.0,
-            ))
-            .unwrap();
+            m.transform(Mat4::from_nonuniform_scale(1.0 / 2.0, 1.0 / 2.0, 1.0 / 2.0))
+                .unwrap();
             m
         }
     }

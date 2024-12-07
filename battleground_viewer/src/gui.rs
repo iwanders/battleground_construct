@@ -4,10 +4,22 @@ use three_d::egui;
 use three_d::egui::*;
 
 pub fn shadow_smaller_dark() -> epaint::Shadow {
-    epaint::Shadow {
-        extrusion: 4.0,
-        color: Color32::from_black_alpha(96),
-    }
+    /*
+
+    /// causing a drop-shadow effet.
+    pub offset: Vec2,
+    /// The width of the blur, i.e. the width of the fuzzy penumbra.
+    ///
+    /// A value of 0.0 means no blur.
+    pub blur: f32,
+    /// Expand the shadow in all directions by this much.
+    pub spread: f32,
+    */
+    // epaint::Shadow {
+    // extrusion: 4.0,
+    // color: Color32::from_black_alpha(96),
+    // }
+    epaint::Shadow::default()
 }
 
 #[derive(Debug)]

@@ -40,10 +40,18 @@ pub enum GeometryRef<'a> {
 }
 
 impl<'a> Geometry for GeometryRef<'a> {
+    fn draw(&self, viewer: &dyn Viewer, program: &Program, render_states: RenderStates) {}
+    fn vertex_shader_source(&self) -> String {
+        "".to_owned()
+    }
+    fn id(&self) -> GeometryId {
+        three_d::renderer::GeometryId(0x0001)
+    }
+
     fn render_with_material(
         &self,
         material: &dyn Material,
-        camera: &Camera,
+        camera: &dyn Viewer,
         lights: &[&dyn Light],
     ) {
         match self {
@@ -54,18 +62,18 @@ impl<'a> Geometry for GeometryRef<'a> {
 
     fn render_with_effect(
         &self,
-        material: &dyn PostMaterial,
-        camera: &Camera,
+        material: &dyn Effect,
+        camera: &dyn Viewer,
         lights: &[&dyn Light],
         color_texture: Option<ColorTexture>,
         depth_texture: Option<DepthTexture>,
     ) {
         match self {
             GeometryRef::InstancedMesh(m) => {
-                m.render_with_post_material(material, camera, lights, color_texture, depth_texture)
+                m.render_with_effect(material, camera, lights, color_texture, depth_texture)
             }
             GeometryRef::Mesh(m) => {
-                m.render_with_post_material(material, camera, lights, color_texture, depth_texture)
+                m.render_with_effect(material, camera, lights, color_texture, depth_texture)
             }
         }
     }
